@@ -6,7 +6,7 @@ import wasp
 from typing import List
 from utility import PerfectHash, debug, Group, mw, Interpretation, WeightFunction,\
     GroupFunction, not_, get_name, print_I, print_weights, print_groups, FOCUSED_GROUP, \
-    AggregateFunction, TrueGroupFunction
+    AggregateFunction, TrueGroupFunction, simplyLiterals
 import re
 
 '''
@@ -192,18 +192,6 @@ def getLiterals(*lits):
 
     return bind 
 
-def simplyLiterals(lits):
-    global aggregate, group
-    G : Group = None
-    for l in lits:
-        if aggregate[l]:
-            G = group[l]
-        elif aggregate[not_(l)]:
-            G = group[not_(l)]
-        else:
-            continue
-        G.decrease_und()
-        G.ord_l.remove(l)
 
 def simplifyAtLevelZero():
     global N,lb, I, weight, aggregate, groups, group, reason
@@ -214,7 +202,7 @@ def simplifyAtLevelZero():
     
     res = propagate_phase(None)
     
-    simplyLiterals(lits_level_0)
+    simplyLiterals(lits_level_0, aggregate, group)
 
     return res
 
@@ -248,7 +236,7 @@ def update_phase(l: int) -> (bool, Group):
                 w_p = weight[prev_max]
                 mps = mps - w_p + w_n  
                 if w_p == w_n:
-                    return False
+                    return (False, None)
             else:
                 return (False, G)   
         else:
@@ -298,10 +286,10 @@ def propagate_phase(G: Group):
     if len(S) != 0:
         for g in groups:
             # print_I(I, atomNames, aggregate)
-            mw_g = weight[mw(g)]
             if g.count_undef == 0 and true_group[g] is None:
                 R.extend(g.ord_l)
             elif true_group[g] is None:
+                mw_g = weight[mw(g)]
                 for i in range(len(g.ord_l) - 1, -1, -1):
                     l = g.ord_l[i]
                     if weight[l] <= mw_g:

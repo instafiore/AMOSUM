@@ -2,8 +2,8 @@
 import sys
 import os
 import re
-sys.path.append(os.environ.get('WASP_HOME'))
-import propagator_opt_dir.settings as settings
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../')))
+import settings
 import subprocess
 
 output = subprocess.run(f"ls instances", shell=True, capture_output=True, text=True)

@@ -3,10 +3,10 @@ node(2).
 node(3).
 node(4).
 node(5).
-% node(6).
-% node(7).
-% node(8).
-% node(9).
+node(6).
+node(7).
+node(8).
+node(9).
 link(1,17).
 link(17,1).
 link(1,25).

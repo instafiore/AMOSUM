@@ -1,0 +1,178 @@
+WASP 2.0 [script: PYTHON]
+
+
+---------------------------
+
+Output options                         
+
+--silent                               - Set verbosity of output
+       <1                              - Print models with no spaces and lines
+       =1                              - Print only the number of each model
+       >1                              - Print only the number of models
+--third-competition-output             - Print models according to the third competition output
+--competition-output                   - Print models according to the fourth competition output
+--id-output                            - Print models using the internal id of atoms
+--printlatestmodel                     - Print the latest computed model
+--printonlyoptimum                     - Print only optimum answer sets
+--printbounds                          - Print lower and upper bound during optimization of answer sets
+--printatomstable                      - Print internal dictionary for atoms used in wasp
+
+---------------------------
+
+Heuristics options                     
+
+--minisat-policy                       - Enable minisat policy for deletion
+--init-varinc=N                        - Initial value of variable increment [default: 1.0]
+--init-vardecay=N                      - Initial value of variable decay 1/0.N [default: 95]
+--init-strategy                        - Set the strategy to initialize minisat variable activities. N is the value specified by option --init-value
+       =all-equals                     - All activities are equal to N
+       =moms                           - Use moms (N is added to computed values)
+       =binary                         - Use binary clauses (N is added to computed values)
+       =watches                        - Use watches (N is added to computed values)
+       =propagators                    - Use propagators (N is added to computed values)
+       =visible-atoms                  - The activities of visible atoms are equal to N
+       =hidden-atoms                   - The activities of hidden atoms are equal to N
+       =combination                    - Use a combination of moms, watches and propagators (N is added to computed values)
+--init-value=N                         - Initial value of init-strategy [default: 0]
+--init-sign                            - Set the polarity of selected literals
+       =false                          - Choose always false
+       =true                           - Choose always true
+       =mixed                          - Choose always mixed
+
+---------------------------
+
+Glucose options                        
+
+--size-lbdqueue                        - Initial size of LBD queue [default: 50]
+--size-trailqueue                      - Initial size of trail queue [default: 5000]
+--K                                    - Value used for restarts, greater values increment restarts [default: 0.8]
+--R                                    - Value used for restarts, greater values reduce restarts [default: 1.4]
+--clauses-beforereduce                 - Number of clauses needed for deletion [default: 2000]
+--inc-reduceDB                         - Increment of the previous value after each deletion [default: 300]
+--specialinc-reduceDB                  - Special increment performed when clauses have low lbd [default: 1000]
+--lbd-frozenclause                     - Keep clauses with LBD lower than this value [default: 30]
+--lbd-minclause                        - Learned clauses with LBD lower than this value are minimized [default: 6]
+
+---------------------------
+
+External scripts options                     
+
+--interpreter                          - Set the interpreter for heuristics and plugins
+       =python                         - Use python as interpreter
+--heuristic-scriptname=file            - Specify the name of the script
+                                       - add "file param1 param2" for parameters (requires an empty list sys_parameters in the python file)
+--plugins-files=file1,file2,...,filen  - Specify a list of plugins
+                                       - add "file1 param1 param2" for parameters (requires an empty list sys_parameters in the python file)
+--script-directory=absolutepath        - Specify a different folder for retrieving the python modules (default is .)
+--lazy-weakconstraints                 - Enable the algorithm to lazily add weak constraints
+
+---------------------------
+
+Model Checker options                  
+
+--modelchecker-algorithm               - Compute the unfounded check for HC components using the specified algorithm
+       =reduct                         - Algorithm based on the GL-reduct
+       =unfounded                      - Algorithm based on the unfounded sets conditions
+--modelchecker-compactreasons          - Enable a different strategy to compute reasons. (Note: it enables the option --disjunction=auto)
+--forward-partialchecks                - Enable forward partial checks
+--heuristic-partialchecks              - Enable heuristic to activate or disactivate partial checks during the search
+
+---------------------------
+
+Weak Constraints options               
+
+--weakconstraints-algorithm            - Compute optimization problems using the specified algorithm
+       =basic                          - Model-guided algorithm basic
+       =basic-bt                       - Model-guided algorithm basic with classical backtracking after first model
+       =mgd                            - Model-guided algorithm mgd
+       =opt                            - Model-guided algorithm opt
+       =one                            - Core-guided algorithm one (default)
+       =one-multi                      - Core-guided algorithm one implemented with multi aggregates
+       =pmres                          - Core-guided algorithm pmres
+       =k                              - Core-guided algorithm k
+       =interleaving-restarts          - Mixed approach between one and basic - restarts based
+       =interleaving-choices           - Mixed approach between one and basic - choices based
+--k-threshold                          - Initialization for algorithm k. Must be >= 0
+       =0                              - Special case for a dynamic choice of k threshold
+       =1                              - Special case for algorithm one with cardinality constraints
+--one-multi-threshold                  - Use one-multi only for cores whose size is greater than or equal to this threshold (default 0), for smaller cores use one. Must be >= 0
+--enable-disjcores                     - Enable disjoint cores preprocessing (only for core-guided)
+--trim-core                            - Enable polynomial trim of unsat cores (only for core-guided)
+--disable-stratification               - Disable stratification (only for core-guided)
+--compute-firstmodel=budget            - Compute a model before starting the algorithm. In addition, budget may specify the maximum number of seconds allowed
+--shrinking-strategy                   - Expensive minimization of unsat cores (only for core-guided)
+       =progression                    - Use progression
+       =linearsearch                   - Use linear search
+--shrinking-budget=budget              - Limit the running time (in seconds) of the solver during the minimization
+
+---------------------------
+
+Query options                          
+
+--query-algorithm                      - Compute cautious consequences according to the specified algorithm
+       =ict                            - Enable iterative coherence testing
+       =or                             - Enable overestimate reduction
+       =cb                             - Enable core-based algorithm (chunk size or percentage can be also specified)
+       =chunk-static                   - Enable algorithm based on static chunks (Default size=2)
+       =chunk-dynamic                  - Enable algorithm based on dynamic chunks (Default size=2)
+       =preferences                    - Enable algorithm based on preferences
+       =one                            - Enable algorithm based on algorithm one
+       =kdyn                           - Enable algorithm based on algorithm kdyn
+       =pmres                          - Enable algorithm based on algorithm pmres
+       =pi                             - Enable algorithm based on prime implicate
+       =ict-preferences                - Combines algorithm iterative coherence testing with algorithm based on preferences
+--query-verbosity=(0,...,4)            - Enable verbosity of queries algorithms
+--query-chunk-size=n                   - Specify the size of each chunk
+--query-chunk-percentage=(1,...,100)   - The size of each chunk is a percentage of the number of candidates
+--query-enable-core-cache              - Enable caching of cores for algorithms one, kdyn and pmres
+
+---------------------------
+
+Predicates minimization                
+
+--minimize-predicates=pred1;...;predn  - Find the answer set subset-minimal w.r.t. atoms over specified predicates. It can be combined with:
+                                           -n to enumerate answer sets
+                                           --minimization-cautious to compute cautious consequences using algorithm minimize
+                                           --minimization-cautious-enum to compute cautious consequences using algorithm enum
+--minimization-algorithm               - Specify the algorithm to use for the minimization
+       =enumeration                    - Enumerate all answer sets and select the cardinality minimum (not supported with -n0)
+       =guess-check                    - Guess an answer set and check the minimality (not supported with -n0)
+       =guess-check-minimize           - Guess an answer set and check the minimality. In case of failure reiterate the check
+       =guess-check-split              - Guess an answer set and check the minimality of each atom
+       =preferences                    - Use the always-false heuristic
+       =core-based                     - Use algorithm based on unsatisfiable cores
+--minimization-cautious[-enum]         - Compute cautious consequences of subset-minimal, w.r.t. atoms over predicates specified with --minimize-predicates, answer sets (-enum enables algorithm based on enumeration)
+       =[pred1;...;predn]              - Optional: restrict the computation of cautious consequences on atoms over specified predicates
+
+---------------------------
+
+Disjunction options                    
+
+--disjunction                          - Enable options for handling disjunctive rules
+       =shift                          - Perform the shift of disjunctive rules
+       =propagator                     - Use propagator for inferences
+       =compv                          - Perform the disjunctive completion
+       =auto                           - Perform an automatic choice between propagator and disjunctive completion
+--enable-shift-onedef                  - Enable shift also for atoms with one defition
+
+---------------------------
+
+General options                        
+
+--stats=verbosity                      - Print statistics (verbosity is optional 0=basic stats, 1=more stats, 2=dynamic stats)
+-n                                     - Specify the answers to compute
+       <=0                             - To compute all answers
+       =k                              - To compute at most k answers
+--dimacs                               - Enable dimacs format as input and outputs
+--help                                 - Print this guide and exit
+--fast-exit                            - Quit wasp without calling most of the distructors
+--disable-simplifications              - Disable the simplifications of satelite
+--enable-multiaggregates               - Share aggregate sets if possible
+--enumeration-strategy                 - Select different strategy for enumeration of answer sets
+       =bt                             - Use backtracking for enumeration
+       =bt-reorder                     - Use backtracking for enumeration with reorder of assumptions
+       =bc                             - Use blocking clause
+--mus=pred1;...;predn                  - Compute MUS w.r.t. atoms over specified predicates. Can be combined with -n to enumerate MUSes
+--mus-algorithm                        - Change algorithm for computing muses
+       =emax                           - Enable algorithm emax
+       =camus,[mcs_th,[mus_th]]        - Enable algorithm camus. (Options) After mcs_th mcses try to compute mus_th muses

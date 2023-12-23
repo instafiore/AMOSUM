@@ -108,6 +108,19 @@ class Group:
     def __str__(self) -> str:
         return str(self.id)
 
+# removes useless literals
+def simplyLiterals(lits, aggregate: 'AggregateFunction', group: 'GroupFunction'):
+    G : Group = None
+    for l in lits:
+        if aggregate[l]:
+            G = group[l]
+        elif aggregate[not_(l)]:
+            G = group[not_(l)]
+            l = not_(l)
+        else:
+            continue
+        G.decrease_und()
+        G.ord_l.remove(l)
 
 # This function returns the max UNDEFINED literal
 def mw(g: Group):
@@ -152,7 +165,7 @@ class WeightFunction(PerfectHash):
     
     def __getitem__(self, lit: int) -> any:
         if lit is None:
-            return -1 
+             raise ValueError("Invalid argument: 'lit' must be an integer.")
         return super().__getitem__(lit)
 
 

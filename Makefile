@@ -9,51 +9,23 @@ PROPAGATOR_DIR=.
 # n = number of instances
 # lb = lower bound
 # l = light
+# enc = encoding type
 run_tests:
-	$(TEST)/run_tests.py $(p) $(lb) $(l) $(n)
+	$(TEST)/run_tests.py $(p) $(lb) $(l) $(enc) $(n)
 
 # p = problem
 # i = instance
 # lb = lower bound
 # l = light
+# enc = encoding type
 # t = timestamp
 run_test:
-	$(TEST)/run_test.py $(p) $(i) $(lb) $(l) $(t)
+	$(TEST)/run_test.py $(p) $(i) $(lb) $(l) $(enc) $(t)
 
 # s=start lb
 # e=end lb
 # i=instance
 # l=boolean for light (1 = light)
+# enc = encoding type
 run_test_lb:
-	$(TEST)/run_test_lb.sh $(s) $(e) $(i) $(l)
-
-# p = problem
-# i = instance
-run_solver_e:
-	gringo $(TEST)/$(i).asp \
-		./tests/benchmarks/$(p)/weights.asp   \
-	    ./tests/benchmarks/$(p)/encoding_with_group_e.asp \
-		./tests/benchmarks/$(p)/lb.asp   \
-		--output=smodels \
-		| wasp  --silent=2 --interpreter=python \
-		--script-directory=$(PROPAGATOR_DIR) --plugins-file=$(PROPAGATOR_E) -n0
-
-# p = problem
-# i = instance
-run_solver_le:
-	gringo $(TEST)/$(i).asp \
-		./tests/benchmarks/$(p)/weights.asp   \
-	    ./tests/benchmarks/$(p)/encoding_with_group_le.asp \
-		./tests/benchmarks/$(p)/lb.asp   \
-		--output=smodels \
-		| wasp  --silent=2 --interpreter=python \
-		--script-directory=$(PROPAGATOR_DIR) --plugins-file=$(PROPAGATOR_LE) -n0
-
-# p = problem
-# i = instance
-run_solver_aggr:
-	gringo tests/temp/$(i).asp \
-	./tests/benchmarks/$(p)/weights.asp   \
-	./tests/benchmarks/$(p)/encoding_with_group_e.asp \
-	./tests/benchmarks/$(p)/lb.asp   \
-	--output=smodels | wasp_python --silent=2  -n0
+	$(TEST)/run_test_lb.sh $(s) $(e) $(i) $(l) $(enc)
