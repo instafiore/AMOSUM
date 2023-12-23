@@ -4,9 +4,8 @@ import subprocess
 import sys
 import os
 import re
-sys.path.append(os.environ.get('WASP_HOME'))
-import propagator_opt_dir.settings as settings
-
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+import settings 
 
 PROBLEM = sys.argv[1]
 INSTANCE = sys.argv[2]
@@ -14,31 +13,27 @@ LB = sys.argv[3]
 light = sys.argv[4]
 TIMESTAMP = sys.argv[5] if len(sys.argv) >= 6 else subprocess.run('date +"%Y-%m-%d.%H.%M"', shell=True, capture_output=True, text=True).stdout
 TIMESTAMP = TIMESTAMP.splitlines()[0]
+WEIGHTS = "weights"
+
 if light == "1":
     light = True
 else:
     light = False
-
-WEIGHTS = "weights"
-
 light_print = "light" if light else "normal"
+
 print(f"{PROBLEM} {INSTANCE} {TIMESTAMP} {LB} {light_print}")
 
-
 subprocess.run(f"echo 'lb({LB},0).' > {settings.BENCHMARKS_LOCATION}/{PROBLEM}/lb.asp", shell=True)
-
-# gringo benchmarks/simple_tests/test.asp --output=smodels | wasp --interpreter=python --script-directory=/home/instafiore/git/wasp/propagator_opt_dir --plugins-file=propagator_opt -n0
 
 answer_sets_aggr : list
 answer_sets_group : list
 
-regex_instance_file : str = r"^(?P<number>\d+)-(?P<problem>\w+)-(?P<number_nodes>\d+)-(\d+)"
-
+regex_instance_file : str = r"^(?P<number>\d+)-(?P<problem>\w+)-(?P<size>\d+)-(\d+)"
 groups = re.search(regex_instance_file, INSTANCE)
 
 number = groups.group("number")
 problem = groups.group("problem")
-number_nodes = groups.group("number_nodes")
+size = groups.group("size")
 
 time_group : float
 time_aggr : float
@@ -73,15 +68,15 @@ for encoding  in (
     if group_e :
         run += f"--interpreter=python \
         --script-directory={settings.PROPAGATOR_DIR_LOCATION} \
-        --plugins-file={settings.PROPAGATOR_NAME_e} "
+        --plugins-file=\"{settings.PROPAGATOR_NAME_e} 0\""
     elif group_le:
         run += f"--interpreter=python \
         --script-directory={settings.PROPAGATOR_DIR_LOCATION} \
-        --plugins-file={settings.PROPAGATOR_NAME_le} "
+        --plugins-file=\"{settings.PROPAGATOR_NAME_le} 0\""
 
-    # print("\nRUN\n")
-    # print(run)
-    # print("\n")
+    print("\nRUN\n")
+    print(run)
+    print("\n")
         
     output = subprocess.run(run, shell=True, capture_output=True).stdout.decode() + \
         subprocess.run(run, shell=True, capture_output=True).stderr.decode()
@@ -115,7 +110,7 @@ for encoding  in (
     elif encoding == settings.ENCODING_WITH_AGGR:
         answer_sets_aggr = answer_sets
 
-    # print(f"{encoding} {time} {len(answer_sets)}")
+    print(f"{encoding} {time} {len(answer_sets)}")
 
 ng = len(answer_sets_group)
 na = len(answer_sets_aggr)
@@ -127,13 +122,14 @@ else:
     for ans_1 in answer_sets_aggr:
         if not ans_1 in answer_sets_group:
             correct = False
-            print(ans_1)
+            # print(ans_1)
             break
 
 equal = "equal" if correct else "not_equal" 
 
 if not correct:
     print("DIFFERENT")
-new_line = f"{number},{problem},{number_nodes},{time_aggr},{time_group},{na},{ng},{equal},{LB}"
+
+new_line = f"{number},{problem},{size},{time_aggr},{time_group},{na},{ng},{equal},{LB}"
 subprocess.run(f"echo '{new_line}' >> {settings.RESULTS_TESTS_LOCATION}/{PROBLEM}.{TIMESTAMP}.res ", shell=True, capture_output=True)
 

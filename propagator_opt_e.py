@@ -4,7 +4,7 @@ import os
 sys.path.append(os.environ.get('WASP_HOME'))
 import wasp
 from typing import List
-from propagator_opt_dir.utility import PerfectHash, debug, Group, mw, Interpretation, WeightFunction,\
+from utility import PerfectHash, debug, Group, mw, Interpretation, WeightFunction,\
     GroupFunction, not_, get_name, print_I, print_weights, print_groups, FOCUSED_GROUP, \
     AggregateFunction, TrueGroupFunction
 import re
@@ -24,12 +24,6 @@ Propagator for ' = 1 ' constraint
 '''
 
 sys_parameters=[]
-
-# GROUP
-# gringo tests/temp/0035-graph_colouring-140-0_encoding_with_group.asp --output=smodels | wasp --interpreter=python --script-directory=/home/instafiore/git/wasp/propagator_opt_dir --plugins-file=propagator_opt -n0
-# clingo $1 $2 --output=smodels | wasp --interpreter=python --plugins-files=propagator_opt --script-directory=/home/instafiore/git/wasp/propagator_opt_dir/"
-# AGGREGATE
-# gringo tests/temp/0001-graph_colouring-125-0_encoding_with_aggregates.asp --output=smodels | wasp --interpreter=python -n0
 
 # Aggregate id
 # ID
@@ -228,7 +222,7 @@ def update_phase(l: int) -> (bool, Group):
     if aggregate[l]:
         G = group[l]
         G.decrease_und()
-        debug("true", get_name(atomNames, l), G = G)
+        # debug("true", get_name(atomNames, l), G = G)
         
         true_group[G] = l
         w_max = weight[mw(G)]
@@ -239,7 +233,7 @@ def update_phase(l: int) -> (bool, Group):
     elif aggregate[not_(l)]:
         G = group[not_(l)]
         G.decrease_und()
-        debug("false", get_name(atomNames, not_(l)), G = G)
+        # debug("false", get_name(atomNames, not_(l)), G = G)
 
         if not_(l) == mw(G):
             new_max, prev_max = G.update_max(I)
@@ -308,22 +302,22 @@ def propagate_phase(G: Group):
         # updating the reason
         reason = R
 
-        debug("mps",mps, G = G)
-        for g in groups:
-            if true_group[g]:
-                debug(get_name(atomNames, true_group[g]), weight[true_group[g]] , "true", G = G, end= " ")
-            else:
-                debug(get_name(atomNames, mw(g)), weight[mw(g)], "undef", G = G, end= " ")
-            debug("", G = G)
+        # debug("mps",mps, G = G)
+        # for g in groups:
+        #     if true_group[g]:
+        #         debug(get_name(atomNames, true_group[g]), weight[true_group[g]] , "true", G = G, end= " ")
+        #     else:
+        #         debug(get_name(atomNames, mw(g)), weight[mw(g)], "undef", G = G, end= " ")
+        #     debug("", G = G)
 
-        debug("S => ", G = G)
-        for s in S :
-            debug(get_name(atomNames, s), G = G)
-        debug("END S", G = G)
-        debug("R: ", G = G)
-        for r in R :
-            debug(get_name(atomNames, r), G = G)
-        debug("END R", G = G)
+        # debug("S => ", G = G)
+        # for s in S :
+        #     debug(get_name(atomNames, s), G = G)
+        # debug("END S", G = G)
+        # debug("R: ", G = G)
+        # for r in R :
+        #     debug(get_name(atomNames, r), G = G)
+        # debug("END R", G = G)
 
     return S
 
@@ -357,7 +351,7 @@ def onLiteralsUndefined(*lits):
             G = group[not_(l)]
             l = not_(l)
 
-        debug("undefined ", get_name(atomNames, l), G = G)
+        # debug("undefined ", get_name(atomNames, l), G = G)
 
         tg = true_group[G]
 

@@ -10,7 +10,7 @@ ENCODING_WITH_GROUP_LE = "encoding_with_group_le"
 ENCODING_WITH_AGGR = "encoding_with_aggregates"
 
 WASP_HOME = os.environ.get('WASP_HOME')
-PROPAGATOR_DIR_LOCATION = f"{WASP_HOME}/propagator_opt_dir"
+PROPAGATOR_DIR_LOCATION = f"."
 TESTS_LOCATION = f"{PROPAGATOR_DIR_LOCATION}/tests"
 BENCHMARKS_LOCATION = f"{TESTS_LOCATION}/benchmarks"
 TEMP_TESTS_LOCATION = f"{TESTS_LOCATION}/temp"

@@ -4,9 +4,8 @@ import subprocess
 import sys
 import os
 import re
-sys.path.append(os.environ.get('WASP_HOME'))
-import propagator_opt_dir.settings as settings
-
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+import settings
 assert len(sys.argv) >= 2
 
 problem = sys.argv[1]

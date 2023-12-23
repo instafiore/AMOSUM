@@ -1,1 +1,0 @@
-clingo tests/benchmarks/simple_tests/test_group_e.asp --output=smodels |  wasp  -n0 --interpreter=python  --script-directory=/home/instafiore/git/wasp/propagator_opt_dir         --plugins-file=propagator_opt_e 
