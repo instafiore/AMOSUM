@@ -4,6 +4,7 @@ from typing import List
 
 FOCUSED_GROUP = 2
 FOCUSING = False
+
 DEBUG = False
 def debug(*message: str, G: 'Group' = None , end ="\n"):
     if DEBUG and ( G is None or G.id == FOCUSED_GROUP or not FOCUSING):

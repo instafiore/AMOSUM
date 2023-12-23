@@ -10,7 +10,7 @@ PROPAGATOR_DIR=.
 # lb = lower bound
 # l = light
 run_tests:
-	$(TEST)/run_tests.py $(p) $(n) $(lb) $(l)
+	$(TEST)/run_tests.py $(p) $(lb) $(l) $(n)
 
 # p = problem
 # i = instance
@@ -19,8 +19,6 @@ run_tests:
 # t = timestamp
 run_test:
 	$(TEST)/run_test.py $(p) $(i) $(lb) $(l) $(t)
-
-
 
 # s=start lb
 # e=end lb

@@ -14,8 +14,7 @@ done
 
 T=$(date "+%Y-%m-%d.%H.%M")
 echo "$T"
-echo "$my_array"
-# Print the array elements
+
 for lb in "${my_array[@]}"; do
   make run_test p=graph_colouring i="$i" lb="$lb" l="$l" t="$T"
 done

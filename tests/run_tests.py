@@ -21,7 +21,13 @@ head = ""
 if number_of_tests != -1:
     head = f"| head -n {number_of_tests}"
 
-output = subprocess.run(f"ls {settings.BENCHMARKS_LOCATION}/{problem}/instances {head}", shell=True, capture_output=True, text=True)
+instances = "instances"
+
+
+if light == "1":
+    instance = "instances_light"
+
+output = subprocess.run(f"ls {settings.BENCHMARKS_LOCATION}/{problem}/{instances} {head}", shell=True, capture_output=True, text=True)
 
 output = output.stdout.splitlines()
 

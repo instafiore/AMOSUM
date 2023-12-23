@@ -7,6 +7,9 @@ import re
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import settings 
 
+
+PRINT_RUN = False
+
 PROBLEM = sys.argv[1]
 INSTANCE = sys.argv[2]
 LB = sys.argv[3]
@@ -21,7 +24,7 @@ else:
     light = False
 light_print = "light" if light else "normal"
 
-print(f"{PROBLEM} {INSTANCE} {TIMESTAMP} {LB} {light_print}")
+print(f"RUNNING TEST {PROBLEM} {INSTANCE} {TIMESTAMP} {LB} {light_print}")
 
 subprocess.run(f"echo 'lb({LB},0).' > {settings.BENCHMARKS_LOCATION}/{PROBLEM}/lb.asp", shell=True)
 
@@ -54,7 +57,7 @@ for encoding  in (
 
     location = f"{settings.BENCHMARKS_LOCATION}/{problem}"
     if light:
-        location_instance = f"{settings.BENCHMARKS_LOCATION}/{problem}/light"
+        location_instance = f"{settings.BENCHMARKS_LOCATION}/{problem}/instances_light"
     else:
         location_instance = f"{settings.BENCHMARKS_LOCATION}/{problem}/instances"
 
@@ -74,9 +77,10 @@ for encoding  in (
         --script-directory={settings.PROPAGATOR_DIR_LOCATION} \
         --plugins-file=\"{settings.PROPAGATOR_NAME_le} 0\""
 
-    print("\nRUN\n")
-    print(run)
-    print("\n")
+    if PRINT_RUN:
+        print("RUN:")
+        print(run)
+        print("\n")
         
     output = subprocess.run(run, shell=True, capture_output=True).stdout.decode() + \
         subprocess.run(run, shell=True, capture_output=True).stderr.decode()
