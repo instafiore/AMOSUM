@@ -159,4 +159,4 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
-/home/instafiore/git/propagator_opt/tests/results/*
+tests/results/*
