@@ -9,24 +9,49 @@ from scipy.stats import norm
 import numpy as np
 import math
 
+light = sys.argv[1] if len(sys.argv) > 1 else "normal"
+if light == "light":
+    light = True
+elif light == "normal":
+    light = False
+else:
+    raise Exception("invalid parameter")
+
+
 # std dev of the weight lb
-std_dev_weight = 20000
+std_dev_weight = 2000
 
 # std dev of the value lb
-std_dev_value = 2000
+std_dev_value = 20000
 
-min_value = 100
-max_value = 200
+min_value = 1000
+max_value = 2000
+mean_object_value = (max_value + min_value)//2
 
-min_weight= 1000
-max_weight = 2000
+min_weight= 100
+max_weight = 200
+mean_object_weight = (max_weight + min_weight)//2
 
 instances = []
 k=20
 
 ind = 0 
-for n in range(100,145+1,5):
-    size = 2
+
+start_n : int
+end_n : int
+instances_str : str
+
+if light:
+    start_n = 5
+    end_n = 10
+    instances_str = "instances_light"
+else:
+    start_n = 100
+    end_n = 145
+    instances_str = "instances"
+
+for n in range(start_n,end_n+1,5):
+    size = 1
     for i in range(size):
 
         # generating objects
@@ -37,17 +62,15 @@ for n in range(100,145+1,5):
         weights = np.around(weights).astype(int)
 
         # generating lbs
-        for p in (0.15, 0.30, 0.45, 0.60, 0.75):
+        for p in (0.15, 0.30, 0.45, 0.60, 0.75, 0.90, 1.05, 1.20, 1.35, 1.50):
             
-            mean_object_weight = (max_weight + min_weight)//2
             mean_lb_weight =  n*k*mean_object_weight*p
             lbs_weight = np.random.normal(mean_lb_weight, std_dev_weight, 1)
 
-            mean_object_value = (max_value + min_value)//2
             mean_lb_value =  n*k*mean_object_value*p
             lbs_values = np.random.normal(mean_lb_value, std_dev_value, 1)    
 
-        # adding rows
+            # adding rows
             instance = [
                 f"{ind:04}",
                 n,
@@ -59,6 +82,40 @@ for n in range(100,145+1,5):
             ]
             instances.append(instance)
             ind+=1
-            print(f"{instance[2]} {p} {mean_lb_weight}")
+            print(f"{instance[0]} {instance[2]} {p} {mean_lb_weight} {n*k*mean_object_weight}")
+
+
+
+
+'''
+object(1,100,1000).
+object(2,200,4000).
+object(3,120,2500).
+object(4,100,1000).
+object(5,200,4000).
+'''
+
+subprocess.run(f"rm -rf {instances_str}/*", shell=True)
+
+# creating instances
+for instance in instances:
+    with open(f'{instances_str}/{instance[0]}-knapsack-{instance[1]}-{instance[2]}-{instance[3]}.asp', 'w') as file:
+
+        # writing objects 
+        lb_0 = instance[2]
+        lb_1 = instance[3]
+        weights = instance[4]
+        values  = instance[5]
+
+        n = len(values)
+        for i in range(n):
+            file.write(f"object({i+1},{values[i]},{weights[i]}).\n")
+        
+        # writing bounds
+        file.write(f"lb({-lb_0},0).\n")
+        file.write(f"lb({lb_1},1).\n")
+        
+
+        
 
 

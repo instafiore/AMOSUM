@@ -50,6 +50,7 @@ if LB != "none":
         for lbi in range(len(LB)):
             b = LB[lbi]
             subprocess.run(f"echo 'lb({b},{lbi}).' >> {settings.BENCHMARKS_LOCATION}/{PROBLEM}/lb.asp", shell=True)
+        LB = "-".join(LB)
     elif re.match(r"\d+", LB):
         subprocess.run(f"echo 'lb({LB},0).' > {settings.BENCHMARKS_LOCATION}/{PROBLEM}/lb.asp", shell=True)
     else:
