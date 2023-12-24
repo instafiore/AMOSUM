@@ -74,6 +74,9 @@ size = groups.group("size")
 silent = ""
 # silent = "--silent=2"
 
+# timeout in minutes
+timeout_m = 10
+
 # defining encodings
 encodings = [settings.ENCODING_WITH_AGGR]
 if ENCODING_TYPE == "e":        
@@ -103,7 +106,7 @@ for encoding  in encodings:
         {str_weights} \
         {location}/{encoding}.asp \
         {str_lb}\
-        --output=smodels | timeout 20m time -p wasp {silent} -n0 "
+        --output=smodels | timeout {timeout_m}m time -p wasp_python {silent} -n0 "
     
     if group_e :
         run += f"--interpreter=python \

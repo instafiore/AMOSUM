@@ -1,73 +1,7 @@
-tests/run_tests.py graph_colouring 
-graph_colouring 0001-graph_colouring-125-0 2023-12-16.10.23.15
-started encoding_with_group
-gringo /home/s.fiorentino/Wasp_instafiore/propagator_opt_dir/tests/temp/0001-graph_colouring-125-0_encoding_with_group.asp --output=smodels         | timeout 20m time -p wasp_python  -n0 --interpreter=python         --script-directory=/home/s.fiorentino/Wasp_instafiore/propagator_opt_dir         --plugins-file=propagator_opt 
-encoding_with_group 21.95 0
-started encoding_with_aggregates
-gringo /home/s.fiorentino/Wasp_instafiore/propagator_opt_dir/tests/temp/0001-graph_colouring-125-0_encoding_with_aggregates.asp --output=smodels         | timeout 20m time -p wasp_python  -n0 
+tests/run_tests.py knapsack none 0 e 
+RUNNING TEST knapsack 0000-knapsack-100-178855-1774572 2023-12-24.09.25.38 none normal
+encoding_with_group_e timeout 0
 encoding_with_aggregates timeout 0
-graph_colouring 0002-graph_colouring-125-0 2023-12-16.10.23.15
-started encoding_with_group
-gringo /home/s.fiorentino/Wasp_instafiore/propagator_opt_dir/tests/temp/0002-graph_colouring-125-0_encoding_with_group.asp --output=smodels         | timeout 20m time -p wasp_python  -n0 --interpreter=python         --script-directory=/home/s.fiorentino/Wasp_instafiore/propagator_opt_dir         --plugins-file=propagator_opt 
-encoding_with_group 9.70 0
-started encoding_with_aggregates
-gringo /home/s.fiorentino/Wasp_instafiore/propagator_opt_dir/tests/temp/0002-graph_colouring-125-0_encoding_with_aggregates.asp --output=smodels         | timeout 20m time -p wasp_python  -n0 
+RUNNING TEST knapsack 0001-knapsack-100-224625-2280613 2023-12-24.09.25.38 none normal
+encoding_with_group_e timeout 0
 encoding_with_aggregates timeout 0
-graph_colouring 0003-graph_colouring-125-0 2023-12-16.10.23.15
-started encoding_with_group
-gringo /home/s.fiorentino/Wasp_instafiore/propagator_opt_dir/tests/temp/0003-graph_colouring-125-0_encoding_with_group.asp --output=smodels         | timeout 20m time -p wasp_python  -n0 --interpreter=python         --script-directory=/home/s.fiorentino/Wasp_instafiore/propagator_opt_dir         --plugins-file=propagator_opt 
-encoding_with_group 22.97 0
-started encoding_with_aggregates
-gringo /home/s.fiorentino/Wasp_instafiore/propagator_opt_dir/tests/temp/0003-graph_colouring-125-0_encoding_with_aggregates.asp --output=smodels         | timeout 20m time -p wasp_python  -n0 
-encoding_with_aggregates timeout 0
-graph_colouring 0004-graph_colouring-125-0 2023-12-16.10.23.15
-started encoding_with_group
-gringo /home/s.fiorentino/Wasp_instafiore/propagator_opt_dir/tests/temp/0004-graph_colouring-125-0_encoding_with_group.asp --output=smodels         | timeout 20m time -p wasp_python  -n0 --interpreter=python         --script-directory=/home/s.fiorentino/Wasp_instafiore/propagator_opt_dir         --plugins-file=propagator_opt 
-encoding_with_group 16.46 0
-started encoding_with_aggregates
-gringo /home/s.fiorentino/Wasp_instafiore/propagator_opt_dir/tests/temp/0004-graph_colouring-125-0_encoding_with_aggregates.asp --output=smodels         | timeout 20m time -p wasp_python  -n0 
-encoding_with_aggregates timeout 0
-graph_colouring 0005-graph_colouring-125-0 2023-12-16.10.23.15
-started encoding_with_group
-gringo /home/s.fiorentino/Wasp_instafiore/propagator_opt_dir/tests/temp/0005-graph_colouring-125-0_encoding_with_group.asp --output=smodels         | timeout 20m time -p wasp_python  -n0 --interpreter=python         --script-directory=/home/s.fiorentino/Wasp_instafiore/propagator_opt_dir         --plugins-file=propagator_opt 
-encoding_with_group 15.04 0
-started encoding_with_aggregates
-gringo /home/s.fiorentino/Wasp_instafiore/propagator_opt_dir/tests/temp/0005-graph_colouring-125-0_encoding_with_aggregates.asp --output=smodels         | timeout 20m time -p wasp_python  -n0 
-encoding_with_aggregates timeout 0
-graph_colouring 0006-graph_colouring-125-0 2023-12-16.10.23.15
-started encoding_with_group
-gringo /home/s.fiorentino/Wasp_instafiore/propagator_opt_dir/tests/temp/0006-graph_colouring-125-0_encoding_with_group.asp --output=smodels         | timeout 20m time -p wasp_python  -n0 --interpreter=python         --script-directory=/home/s.fiorentino/Wasp_instafiore/propagator_opt_dir         --plugins-file=propagator_opt 
-encoding_with_group 17.83 0
-started encoding_with_aggregates
-gringo /home/s.fiorentino/Wasp_instafiore/propagator_opt_dir/tests/temp/0006-graph_colouring-125-0_encoding_with_aggregates.asp --output=smodels         | timeout 20m time -p wasp_python  -n0 
-encoding_with_aggregates timeout 0
-graph_colouring 0007-graph_colouring-125-0 2023-12-16.10.23.15
-started encoding_with_group
-gringo /home/s.fiorentino/Wasp_instafiore/propagator_opt_dir/tests/temp/0007-graph_colouring-125-0_encoding_with_group.asp --output=smodels         | timeout 20m time -p wasp_python  -n0 --interpreter=python         --script-directory=/home/s.fiorentino/Wasp_instafiore/propagator_opt_dir         --plugins-file=propagator_opt 
-encoding_with_group 25.30 0
-started encoding_with_aggregates
-gringo /home/s.fiorentino/Wasp_instafiore/propagator_opt_dir/tests/temp/0007-graph_colouring-125-0_encoding_with_aggregates.asp --output=smodels         | timeout 20m time -p wasp_python  -n0 
-encoding_with_aggregates timeout 0
-graph_colouring 0008-graph_colouring-125-0 2023-12-16.10.23.15
-started encoding_with_group
-gringo /home/s.fiorentino/Wasp_instafiore/propagator_opt_dir/tests/temp/0008-graph_colouring-125-0_encoding_with_group.asp --output=smodels         | timeout 20m time -p wasp_python  -n0 --interpreter=python         --script-directory=/home/s.fiorentino/Wasp_instafiore/propagator_opt_dir         --plugins-file=propagator_opt 
-encoding_with_group 45.74 0
-started encoding_with_aggregates
-gringo /home/s.fiorentino/Wasp_instafiore/propagator_opt_dir/tests/temp/0008-graph_colouring-125-0_encoding_with_aggregates.asp --output=smodels         | timeout 20m time -p wasp_python  -n0 
-encoding_with_aggregates timeout 0
-graph_colouring 0009-graph_colouring-125-0 2023-12-16.10.23.15
-started encoding_with_group
-gringo /home/s.fiorentino/Wasp_instafiore/propagator_opt_dir/tests/temp/0009-graph_colouring-125-0_encoding_with_group.asp --output=smodels         | timeout 20m time -p wasp_python  -n0 --interpreter=python         --script-directory=/home/s.fiorentino/Wasp_instafiore/propagator_opt_dir         --plugins-file=propagator_opt 
-encoding_with_group 24.77 0
-started encoding_with_aggregates
-gringo /home/s.fiorentino/Wasp_instafiore/propagator_opt_dir/tests/temp/0009-graph_colouring-125-0_encoding_with_aggregates.asp --output=smodels         | timeout 20m time -p wasp_python  -n0 
-encoding_with_aggregates timeout 0
-graph_colouring 0010-graph_colouring-125-0 2023-12-16.10.23.15
-started encoding_with_group
-gringo /home/s.fiorentino/Wasp_instafiore/propagator_opt_dir/tests/temp/0010-graph_colouring-125-0_encoding_with_group.asp --output=smodels         | timeout 20m time -p wasp_python  -n0 --interpreter=python         --script-directory=/home/s.fiorentino/Wasp_instafiore/propagator_opt_dir         --plugins-file=propagator_opt 
-encoding_with_group 19.49 0
-started encoding_with_aggregates
-gringo /home/s.fiorentino/Wasp_instafiore/propagator_opt_dir/tests/temp/0010-graph_colouring-125-0_encoding_with_aggregates.asp --output=smodels         | timeout 20m time -p wasp_python  -n0 
-encoding_with_aggregates timeout 0
-make: *** [Makefile:15: run_tests] Terminated
-Terminated
