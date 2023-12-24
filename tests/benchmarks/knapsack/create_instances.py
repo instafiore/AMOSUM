@@ -62,7 +62,7 @@ for n in range(start_n,end_n+1,5):
         weights = np.around(weights).astype(int)
 
         # generating lbs
-        for p in (0.15, 0.30, 0.45, 0.60, 0.75, 0.90, 1.05, 1.20, 1.35, 1.50):
+        for p in (0.60, 0.75, 0.90, 1.05, 1.20, 1.35, 1.50):
             
             mean_lb_weight =  n*k*mean_object_weight*p
             lbs_weight = np.random.normal(mean_lb_weight, std_dev_weight, 1)
