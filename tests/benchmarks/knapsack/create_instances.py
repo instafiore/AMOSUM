@@ -43,7 +43,7 @@ instances_str : str
 
 if light:
     start_n = 5
-    end_n = 10
+    end_n = 40
     instances_str = "instances_light"
 else:
     start_n = 100

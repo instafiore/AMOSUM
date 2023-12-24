@@ -1,7 +1,0 @@
-tests/run_tests.py knapsack none 0 e 
-RUNNING TEST knapsack 0000-knapsack-100-178855-1774572 2023-12-24.09.25.38 none normal
-encoding_with_group_e timeout 0
-encoding_with_aggregates timeout 0
-RUNNING TEST knapsack 0001-knapsack-100-224625-2280613 2023-12-24.09.25.38 none normal
-encoding_with_group_e timeout 0
-encoding_with_aggregates timeout 0
