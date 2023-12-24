@@ -46,8 +46,8 @@ if light:
     end_n = 10
     instances_str = "instances_light"
 else:
-    start_n = 100
-    end_n = 145
+    start_n = 50
+    end_n = 95
     instances_str = "instances"
 
 for n in range(start_n,end_n+1,5):
