@@ -8,7 +8,13 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import settings 
 import json
 
-#wether printing or not the run command
+# using solver
+solver = "wasp"
+
+# whether or not running a test for the correctness
+checking_correctness = False
+
+# whether printing or not the run command
 PRINT_RUN = False
 
 # initialization parameters
@@ -75,7 +81,9 @@ silent = ""
 # silent = "--silent=2"
 
 # timeout in minutes
-timeout_m = 10
+timeout_m = 20
+if light:
+    timeout_m = 5
 
 # defining encodings
 encodings = [settings.ENCODING_WITH_AGGR]
@@ -86,6 +94,8 @@ elif ENCODING_TYPE == "le":
 else:
     raise Exception("Invalid encoding type, allowe types: [e, le]")
 encodings.reverse()
+
+n0 = "-n0" if checking_correctness else ""
 
 for encoding  in encodings:
     
@@ -106,16 +116,16 @@ for encoding  in encodings:
         {str_weights} \
         {location}/{encoding}.asp \
         {str_lb}\
-        --output=smodels | timeout {timeout_m}m time -p wasp_python {silent} -n0 "
+        --output=smodels | timeout {timeout_m}m time -p {solver} {silent} {n0} "
     
     if group_e :
         run += f"--interpreter=python \
         --script-directory={settings.PROPAGATOR_DIR_LOCATION} \
-        --plugins-file=\"{settings.PROPAGATOR_NAME_e} 0\""
+        --plugins-file=\"{settings.PROPAGATOR_NAME_e} 1\""
     elif group_le:
         run += f"--interpreter=python \
         --script-directory={settings.PROPAGATOR_DIR_LOCATION} \
-        --plugins-file=\"{settings.PROPAGATOR_NAME_le} 0\""
+        --plugins-file=\"{settings.PROPAGATOR_NAME_le} 1\""
 
     if PRINT_RUN:
         print("RUN:")
@@ -167,22 +177,32 @@ for encoding  in encodings:
 ng = len(answer_sets_group)
 na = len(answer_sets_aggr)
 
-if na != ng:
-    correct = False
+if checking_correctness:
+    if na != ng:
+        correct = False
+    else:
+        correct = True
+        for ans_1 in answer_sets_aggr:
+            if not ans_1 in answer_sets_group:
+                correct = False
+                # print(ans_1)
+                break
+    equal = ",equal" if correct or not checking_correctness else ",not_equal" 
+    if not correct:
+        print("DIFFERENT")
 else:
-    correct = True
-    for ans_1 in answer_sets_aggr:
-        if not ans_1 in answer_sets_group:
-            correct = False
-            # print(ans_1)
-            break
+    equal = ""
 
-equal = "equal" if correct else "not_equal" 
-
-if not correct:
-    print("DIFFERENT")
 
 # printing the new line of the test
-new_line = f"{number},{problem},{size},{time_aggr},{time_group},{na},{ng},{equal},{LB}"
+if LB == "none" and type_of_problem == 1:
+    groups = re.search(r"^\d+?-\w+?-\d+?-(?P<lb0>\d+)-(?P<lb1>\d+)-(?P<p>\d+\.\d+)", INSTANCE)
+    lb0 = groups.group("lb0")
+    lb1 = groups.group("lb1")
+    p = groups.group("p")
+    new_line = f"{number},{problem},{size},{time_aggr},{time_group},{na},{ng}{equal},{lb0},{lb1},{p}"
+else:
+    new_line = f"{number},{problem},{size},{time_aggr},{time_group},{na},{ng}{equal},{LB}"
+
 subprocess.run(f"echo '{new_line}' >> {settings.RESULTS_TESTS_LOCATION}/{PROBLEM}.{TIMESTAMP}.res ", shell=True, capture_output=True)
 

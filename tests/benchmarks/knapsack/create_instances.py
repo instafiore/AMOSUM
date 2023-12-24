@@ -19,18 +19,18 @@ else:
 
 
 # std dev of the weight lb
-std_dev_weight = 2000
-
-# std dev of the value lb
-std_dev_value = 20000
-
-min_value = 1000
-max_value = 2000
-mean_object_value = (max_value + min_value)//2
+std_dev_weight = 500
 
 min_weight= 100
 max_weight = 200
 mean_object_weight = (max_weight + min_weight)//2
+
+# std dev of the value lb
+std_dev_value = 5000
+
+min_value = 1000
+max_value = 2000
+mean_object_value = (max_value + min_value)//2
 
 instances = []
 k=20
@@ -43,7 +43,7 @@ instances_str : str
 
 if light:
     start_n = 5
-    end_n = 40
+    end_n = 10
     instances_str = "instances_light"
 else:
     start_n = 100
@@ -74,15 +74,20 @@ for n in range(start_n,end_n+1,5):
             instance = [
                 f"{ind:04}",
                 n,
-                int(lbs_weight[0]),
+                # int(lbs_weight[0]),
+                10000000,
                 int(lbs_values[0]),
                 list(weights),
                 list(values),
                 p,
+                int(mean_lb_weight),
+                int(mean_lb_value)
             ]
             instances.append(instance)
             ind+=1
-            print(f"{instance[0]} {instance[2]} {p} {mean_lb_weight} {n*k*mean_object_weight}")
+            print(f"{instance[0]} {instance[1]} \
+                [{instance[2]}, {instance[7]}] \
+                [{instance[3]}, {instance[8]}] {instance[6]}")
 
 
 
@@ -99,7 +104,7 @@ subprocess.run(f"rm -rf {instances_str}/*", shell=True)
 
 # creating instances
 for instance in instances:
-    with open(f'{instances_str}/{instance[0]}-knapsack-{instance[1]}-{instance[2]}-{instance[3]}.asp', 'w') as file:
+    with open(f'{instances_str}/{instance[0]}-knapsack-{instance[1]}-{instance[2]}-{instance[3]}-{instance[6]}.asp', 'w') as file:
 
         # writing objects 
         lb_0 = instance[2]
@@ -107,9 +112,14 @@ for instance in instances:
         weights = instance[4]
         values  = instance[5]
 
+        if(lb_0 < 0 or lb_1 < 0):
+            print(f"INVALID VALUES ! -> {instance[0]} {instance[1]} \
+                [{instance[2]}, {instance[7]}] \
+                [{instance[3]}, {instance[8]}] {instance[6]}")
+
         n = len(values)
         for i in range(n):
-            file.write(f"object({i+1},{values[i]},{weights[i]}).\n")
+            file.write(f"object({i+1},{weights[i]},{values[i]}).\n")
         
         # writing bounds
         file.write(f"lb({-lb_0},0).\n")

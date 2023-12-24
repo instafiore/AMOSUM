@@ -1,0 +1,28 @@
+0000-knapsack-5-2210-11846-0.15.asp
+0001-knapsack-5-4819-51991-0.3.asp
+0002-knapsack-5-7068-73342-0.45.asp
+0003-knapsack-5-9116-85572-0.6.asp
+0004-knapsack-5-11311-109564-0.75.asp
+0005-knapsack-5-13796-139741-0.9.asp
+0006-knapsack-5-15801-158969-1.05.asp
+0007-knapsack-5-17568-181866-1.2.asp
+0008-knapsack-5-19888-197596-1.35.asp
+0009-knapsack-5-22792-226109-1.5.asp
+0010-knapsack-10-4773-39277-0.15.asp
+0011-knapsack-10-9083-92146-0.3.asp
+0012-knapsack-10-13506-134328-0.45.asp
+0013-knapsack-10-18608-182215-0.6.asp
+0014-knapsack-10-22476-220821-0.75.asp
+0015-knapsack-10-27010-264430-0.9.asp
+0016-knapsack-10-31044-323745-1.05.asp
+0017-knapsack-10-36165-356781-1.2.asp
+0018-knapsack-10-41188-406542-1.35.asp
+0019-knapsack-10-45306-444347-1.5.asp
+
+
+make run_test p=knapsack i=0002-knapsack-5-7068-73342-0.45 lb=none l=1 enc=e
+make run_test p=knapsack i=0003-knapsack-5-9116-85572-0.6 lb=none l=1 enc=e
+make run_test p=knapsack i=0004-knapsack-5-11311-109564-0.75 lb=none l=1 enc=e
+make run_test p=knapsack i=0005-knapsack-5-13796-139741-0.9 lb=none l=1 enc=e
+make run_test p=knapsack i=0009-knapsack-5-22792-226109-1.5 lb=none l=1 enc=e
+

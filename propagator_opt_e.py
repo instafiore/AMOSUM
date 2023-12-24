@@ -26,7 +26,7 @@ Propagator for ' = 1 ' constraint
 sys_parameters=[]
 
 # Aggregate id
-# ID
+ID : int
 
 # N: number of atoms in the program
 # n: number of atoms in the aggregate
@@ -66,13 +66,19 @@ def getReason():
     global reason
     return reason
 
+def process_sys_parameters():
+    global ID
+    ID = sys_parameters.pop()
+    sys_parameters.pop()
+
 def getLiterals(*lits):
-    global N,lb, I, weight, aggregate, groups, mps, group, atomNames, true_group, lits_level_0
+    global N,lb, I, weight, aggregate, groups, mps, group, atomNames, true_group, lits_level_0, ID
 
     lb = None
     bind = []
     negative_lit_regex = re.compile(r"^not\s+(?P<atom_name>[\w()]+)")
-    ID = sys_parameters[1]
+    ID = sys_parameters[-1]
+    print(sys_parameters)
 
     # initializing 
     N = lits[0] + 1
