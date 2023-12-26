@@ -9,7 +9,7 @@ import settings
 import json
 
 # using solver
-solver = "wasp"
+solver = "wasp_python"
 
 # whether or not running a test for the correctness
 checking_correctness = False
@@ -177,21 +177,22 @@ for encoding  in encodings:
 ng = len(answer_sets_group)
 na = len(answer_sets_aggr)
 
-if checking_correctness:
-    if na != ng:
-        correct = False
-    else:
-        correct = True
-        for ans_1 in answer_sets_aggr:
-            if not ans_1 in answer_sets_group:
-                correct = False
-                # print(ans_1)
-                break
-    equal = ",equal" if correct or not checking_correctness else ",not_equal" 
-    if not correct:
-        print("DIFFERENT")
+
+if na != ng:
+    correct = False
+elif checking_correctness:
+    correct = True
+    for ans_1 in answer_sets_aggr:
+        if not ans_1 in answer_sets_group:
+            correct = False
+            # print(ans_1)
+            break
 else:
-    equal = ""
+    correct = True
+equal = "equal" if correct  else "not_equal" 
+if not correct:
+    print("DIFFERENT")
+
 
 
 # printing the new line of the test
@@ -200,9 +201,9 @@ if LB == "none" and type_of_problem == 1:
     lb0 = groups.group("lb0")
     lb1 = groups.group("lb1")
     p = groups.group("p")
-    new_line = f"{number},{problem},{size},{time_aggr},{time_group},{na},{ng}{equal},{lb0},{lb1},{p}"
+    new_line = f"{number},{problem},{size},{time_aggr},{time_group},{na},{ng},{equal},{lb0},{lb1},{p}"
 else:
-    new_line = f"{number},{problem},{size},{time_aggr},{time_group},{na},{ng}{equal},{LB}"
+    new_line = f"{number},{problem},{size},{time_aggr},{time_group},{na},{ng},{equal},{LB}"
 
 subprocess.run(f"echo '{new_line}' >> {settings.RESULTS_TESTS_LOCATION}/{PROBLEM}.{TIMESTAMP}.res ", shell=True, capture_output=True)
 

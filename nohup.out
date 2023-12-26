@@ -1,0 +1,225 @@
+tests/run_tests.py knapsack none 0 e 
+RUNNING TEST knapsack 0000-knapsack-50-10000000-232324-0.15 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.17 1
+encoding_with_aggregates timeout 0
+DIFFERENT
+RUNNING TEST knapsack 0001-knapsack-50-10000000-450097-0.3 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.16 1
+encoding_with_aggregates timeout 0
+DIFFERENT
+RUNNING TEST knapsack 0002-knapsack-50-10000000-676809-0.45 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.15 1
+encoding_with_aggregates timeout 0
+DIFFERENT
+RUNNING TEST knapsack 0003-knapsack-50-10000000-902478-0.6 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.13 1
+encoding_with_aggregates timeout 0
+DIFFERENT
+RUNNING TEST knapsack 0004-knapsack-50-10000000-1125865-0.75 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.12 1
+encoding_with_aggregates timeout 0
+DIFFERENT
+RUNNING TEST knapsack 0005-knapsack-50-10000000-1350549-0.9 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.10 1
+encoding_with_aggregates timeout 0
+DIFFERENT
+RUNNING TEST knapsack 0006-knapsack-50-10000000-1569293-1.05 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.08 0
+encoding_with_aggregates timeout 0
+RUNNING TEST knapsack 0007-knapsack-50-10000000-1798752-1.2 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.08 0
+encoding_with_aggregates timeout 0
+RUNNING TEST knapsack 0008-knapsack-50-10000000-2030315-1.35 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.08 0
+encoding_with_aggregates timeout 0
+RUNNING TEST knapsack 0009-knapsack-50-10000000-2257948-1.5 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.08 0
+encoding_with_aggregates timeout 0
+RUNNING TEST knapsack 0010-knapsack-55-10000000-239813-0.15 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.19 1
+encoding_with_aggregates timeout 0
+DIFFERENT
+RUNNING TEST knapsack 0011-knapsack-55-10000000-501076-0.3 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.18 1
+encoding_with_aggregates timeout 0
+DIFFERENT
+RUNNING TEST knapsack 0012-knapsack-55-10000000-754175-0.45 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.17 1
+encoding_with_aggregates timeout 0
+DIFFERENT
+RUNNING TEST knapsack 0013-knapsack-55-10000000-989209-0.6 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.14 1
+encoding_with_aggregates timeout 0
+DIFFERENT
+RUNNING TEST knapsack 0014-knapsack-55-10000000-1243644-0.75 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.13 1
+encoding_with_aggregates timeout 0
+DIFFERENT
+RUNNING TEST knapsack 0015-knapsack-55-10000000-1488704-0.9 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.11 1
+encoding_with_aggregates timeout 0
+DIFFERENT
+RUNNING TEST knapsack 0016-knapsack-55-10000000-1735620-1.05 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.08 0
+encoding_with_aggregates timeout 0
+RUNNING TEST knapsack 0017-knapsack-55-10000000-1978487-1.2 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.08 0
+encoding_with_aggregates timeout 0
+RUNNING TEST knapsack 0018-knapsack-55-10000000-2230231-1.35 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.08 0
+encoding_with_aggregates timeout 0
+RUNNING TEST knapsack 0019-knapsack-55-10000000-2473550-1.5 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.08 0
+encoding_with_aggregates timeout 0
+RUNNING TEST knapsack 0020-knapsack-60-10000000-265620-0.15 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.22 1
+encoding_with_aggregates timeout 0
+DIFFERENT
+RUNNING TEST knapsack 0021-knapsack-60-10000000-542986-0.3 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.20 1
+encoding_with_aggregates timeout 0
+DIFFERENT
+RUNNING TEST knapsack 0022-knapsack-60-10000000-815882-0.45 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.18 1
+encoding_with_aggregates timeout 0
+DIFFERENT
+RUNNING TEST knapsack 0023-knapsack-60-10000000-1075012-0.6 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.17 1
+encoding_with_aggregates timeout 0
+DIFFERENT
+RUNNING TEST knapsack 0024-knapsack-60-10000000-1353830-0.75 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.14 1
+encoding_with_aggregates timeout 0
+DIFFERENT
+RUNNING TEST knapsack 0025-knapsack-60-10000000-1624936-0.9 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.12 1
+encoding_with_aggregates timeout 0
+DIFFERENT
+RUNNING TEST knapsack 0026-knapsack-60-10000000-1884442-1.05 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.09 0
+encoding_with_aggregates timeout 0
+RUNNING TEST knapsack 0027-knapsack-60-10000000-2160613-1.2 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.09 0
+encoding_with_aggregates timeout 0
+RUNNING TEST knapsack 0028-knapsack-60-10000000-2426874-1.35 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.09 0
+encoding_with_aggregates timeout 0
+RUNNING TEST knapsack 0029-knapsack-60-10000000-2708594-1.5 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.09 0
+encoding_with_aggregates timeout 0
+RUNNING TEST knapsack 0030-knapsack-65-10000000-294609-0.15 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.25 1
+encoding_with_aggregates timeout 0
+DIFFERENT
+RUNNING TEST knapsack 0031-knapsack-65-10000000-583964-0.3 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.23 1
+encoding_with_aggregates timeout 0
+DIFFERENT
+RUNNING TEST knapsack 0032-knapsack-65-10000000-870685-0.45 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.20 1
+encoding_with_aggregates timeout 0
+DIFFERENT
+RUNNING TEST knapsack 0033-knapsack-65-10000000-1164795-0.6 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.18 1
+encoding_with_aggregates timeout 0
+DIFFERENT
+RUNNING TEST knapsack 0034-knapsack-65-10000000-1468360-0.75 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.15 1
+encoding_with_aggregates timeout 0
+DIFFERENT
+RUNNING TEST knapsack 0035-knapsack-65-10000000-1763274-0.9 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.13 1
+encoding_with_aggregates timeout 0
+DIFFERENT
+RUNNING TEST knapsack 0036-knapsack-65-10000000-2049265-1.05 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.09 0
+encoding_with_aggregates timeout 0
+RUNNING TEST knapsack 0037-knapsack-65-10000000-2347233-1.2 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.09 0
+encoding_with_aggregates timeout 0
+RUNNING TEST knapsack 0038-knapsack-65-10000000-2627907-1.35 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.09 0
+encoding_with_aggregates timeout 0
+RUNNING TEST knapsack 0039-knapsack-65-10000000-2931719-1.5 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.09 0
+encoding_with_aggregates timeout 0
+RUNNING TEST knapsack 0040-knapsack-70-10000000-313824-0.15 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.27 1
+encoding_with_aggregates timeout 0
+DIFFERENT
+RUNNING TEST knapsack 0041-knapsack-70-10000000-633018-0.3 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.25 1
+encoding_with_aggregates timeout 0
+DIFFERENT
+RUNNING TEST knapsack 0042-knapsack-70-10000000-939782-0.45 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.22 1
+encoding_with_aggregates timeout 0
+DIFFERENT
+RUNNING TEST knapsack 0043-knapsack-70-10000000-1253848-0.6 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.19 1
+encoding_with_aggregates timeout 0
+DIFFERENT
+RUNNING TEST knapsack 0044-knapsack-70-10000000-1577834-0.75 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.16 1
+encoding_with_aggregates timeout 0
+DIFFERENT
+RUNNING TEST knapsack 0045-knapsack-70-10000000-1893741-0.9 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.13 1
+encoding_with_aggregates timeout 0
+DIFFERENT
+RUNNING TEST knapsack 0046-knapsack-70-10000000-2204951-1.05 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.09 0
+encoding_with_aggregates timeout 0
+RUNNING TEST knapsack 0047-knapsack-70-10000000-2515842-1.2 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.09 0
+encoding_with_aggregates timeout 0
+RUNNING TEST knapsack 0048-knapsack-70-10000000-2841787-1.35 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.09 0
+encoding_with_aggregates timeout 0
+RUNNING TEST knapsack 0049-knapsack-70-10000000-3153479-1.5 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.09 0
+encoding_with_aggregates timeout 0
+RUNNING TEST knapsack 0050-knapsack-75-10000000-335192-0.15 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.30 1
+encoding_with_aggregates timeout 0
+DIFFERENT
+RUNNING TEST knapsack 0051-knapsack-75-10000000-675421-0.3 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.28 1
+encoding_with_aggregates timeout 0
+DIFFERENT
+RUNNING TEST knapsack 0052-knapsack-75-10000000-1010207-0.45 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.24 1
+encoding_with_aggregates timeout 0
+DIFFERENT
+RUNNING TEST knapsack 0053-knapsack-75-10000000-1348306-0.6 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.21 1
+encoding_with_aggregates timeout 0
+DIFFERENT
+RUNNING TEST knapsack 0054-knapsack-75-10000000-1697820-0.75 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.18 1
+encoding_with_aggregates timeout 0
+DIFFERENT
+RUNNING TEST knapsack 0055-knapsack-75-10000000-2026909-0.9 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.14 1
+encoding_with_aggregates timeout 0
+DIFFERENT
+RUNNING TEST knapsack 0056-knapsack-75-10000000-2366543-1.05 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.10 0
+encoding_with_aggregates timeout 0
+RUNNING TEST knapsack 0057-knapsack-75-10000000-2703593-1.2 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.10 0
+encoding_with_aggregates 776.98 0
+RUNNING TEST knapsack 0058-knapsack-75-10000000-3040497-1.35 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.10 0
+encoding_with_aggregates timeout 0
+RUNNING TEST knapsack 0059-knapsack-75-10000000-3378567-1.5 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.10 0
+encoding_with_aggregates timeout 0
+RUNNING TEST knapsack 0060-knapsack-80-10000000-357289-0.15 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.34 1
+encoding_with_aggregates timeout 0
+DIFFERENT
+RUNNING TEST knapsack 0061-knapsack-80-10000000-713751-0.3 2023-12-24.19.59.13 none normal
+encoding_with_group_e 0.30 1
+encoding_with_aggregates timeout 0
+DIFFERENT

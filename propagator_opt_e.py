@@ -78,6 +78,7 @@ def getLiterals(*lits):
     bind = []
     negative_lit_regex = re.compile(r"^not\s+(?P<atom_name>[\w()]+)")
     ID = sys_parameters[-1]
+    print(ID)
     print(sys_parameters)
 
     # initializing 
