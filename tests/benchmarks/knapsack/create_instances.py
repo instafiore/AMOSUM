@@ -19,7 +19,7 @@ else:
 
 
 # std dev of the weight lb
-std_dev_weight = 500
+std_dev_weight = 1000
 
 min_weight= 100
 max_weight = 200
@@ -38,56 +38,88 @@ k=20
 ind = 0 
 
 start_n : int
-end_n : int
 instances_str : str
+step = 5
+nips = 10
 
 if light:
     start_n = 5
-    end_n = 10
     instances_str = "instances_light"
+    N = 20
 else:
-    start_n = 50
-    end_n = 95
+    start_n = 10
     instances_str = "instances"
+    N = 100
+
+end_n : int = step * ( N // nips - 1) + start_n
 
 for n in range(start_n,end_n+1,5):
-    size = 1
-    for i in range(size):
 
-        # generating objects
-        values = np.linspace(min_value, max_value, n)
-        weights = np.linspace(min_weight , max_weight, n)
+    # generating objects
+    values = np.random.uniform(min_value, max_value, n)
+    weights = np.random.uniform(min_weight , max_weight, n)
 
-        values = np.around(values).astype(int)
-        weights = np.around(weights).astype(int)
+    values = np.around(values).astype(int)
+    weights = np.around(weights).astype(int)
 
-        # generating lbs
-        for p in (0.15,0.30,0.45, 0.60, 0.75, 0.90, 1.05, 1.20, 1.35, 1.50):
-            
-            mean_lb_weight =  n*k*mean_object_weight*p
-            lbs_weight = np.random.normal(mean_lb_weight, std_dev_weight, 1)
+    C1_w =  n*k*mean_object_weight
+    
+    C1_v =  n*k*mean_object_value
+    C2_v =  n * mean_object_value * (k * (k+1)) / 2
 
-            mean_lb_value =  n*k*mean_object_value*p
-            lbs_values = np.random.normal(mean_lb_value, std_dev_value, 1)    
+    size_1 = int(nips * 0.6)
+    size_2 = size_1 + int(nips * 0.2)
+    size_3 = size_2 + int(nips * 0.2)
 
-            # adding rows
-            instance = [
-                f"{ind:04}",
-                n,
-                # int(lbs_weight[0]),
-                10000000,
-                int(lbs_values[0]),
-                list(weights),
-                list(values),
-                p,
-                int(mean_lb_weight),
-                int(mean_lb_value)
-            ]
-            instances.append(instance)
-            ind+=1
-            print(f"{instance[0]} {instance[1]} \
-                [{instance[2]}, {instance[7]}] \
-                [{instance[3]}, {instance[8]}] {instance[6]}")
+    for i in range(nips):
+
+        type : str
+        lbs_value : int
+
+        lbs_weight = int(np.random.normal(C1_w * 0.7, std_dev_weight))
+        
+
+        if i < size_1:
+
+            if i < size_1 * 0.5:
+                type = "type1"
+                C = C1_v
+            else:
+                type = "type2"
+                C = C2_v
+        
+            lbs_value = int(np.random.uniform(0, C))
+
+        elif i < size_2:
+
+            type = "type3" 
+            lbs_value = int(np.random.uniform(C1_v*0.10, C1_v*1.1))
+
+        else:
+
+            type = "type4" 
+            lbs_value = int(np.random.normal(C1_v, std_dev_value))
+
+        # adding rows
+        instance = [
+            f"{ind:04}",
+            n,
+            lbs_weight,
+            lbs_value,
+            list(weights),
+            list(values),
+            type,
+        ]
+        instances.append(instance)
+        ind+=1
+        print(f"{instance[0]} {instance[1]} {instance[2]} {instance[3]} {instance[6]}")
+        
+    
+
+
+        
+        
+    
 
 
 
@@ -122,7 +154,7 @@ for instance in instances:
             file.write(f"object({i+1},{weights[i]},{values[i]}).\n")
         
         # writing bounds
-        file.write(f"lb({-lb_0},0).\n")
+        file.write(f"lb({lb_0},0).\n")
         file.write(f"lb({lb_1},1).\n")
         
 

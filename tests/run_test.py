@@ -9,7 +9,7 @@ import settings
 import json
 
 # using solver
-solver = "wasp_python"
+solver = "wasp"
 
 # whether or not running a test for the correctness
 checking_correctness = False
@@ -197,11 +197,11 @@ if not correct:
 
 # printing the new line of the test
 if LB == "none" and type_of_problem == 1:
-    groups = re.search(r"^\d+?-\w+?-\d+?-(?P<lb0>\d+)-(?P<lb1>\d+)-(?P<p>\d+\.\d+)", INSTANCE)
+    groups = re.search(r"^\d+?-\w+?-\d+?-(?P<lb0>\d+)-(?P<lb1>\d+)-(?P<type>\w+)", INSTANCE)
     lb0 = groups.group("lb0")
     lb1 = groups.group("lb1")
-    p = groups.group("p")
-    new_line = f"{number},{problem},{size},{time_aggr},{time_group},{na},{ng},{equal},{lb0},{lb1},{p}"
+    type = groups.group("type")
+    new_line = f"{number},{problem},{size},{time_aggr},{time_group},{na},{ng},{equal},{lb0},{lb1},{type}"
 else:
     new_line = f"{number},{problem},{size},{time_aggr},{time_group},{na},{ng},{equal},{LB}"
 
