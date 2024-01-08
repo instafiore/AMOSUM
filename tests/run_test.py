@@ -9,7 +9,7 @@ import settings
 import json
 
 # using solver
-solver = "wasp"
+solver = "wasp_python"
 
 # whether or not running a test for the correctness
 checking_correctness = False
