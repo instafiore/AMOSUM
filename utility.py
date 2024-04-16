@@ -38,6 +38,7 @@ class Group:
     autoincrement = 0 
 
     def __init__(self, ord_l, ord_i, id) -> None:
+        # number of literals
         self.N = len(ord_l)
 
         # number of undefined literals
@@ -54,6 +55,9 @@ class Group:
 
         # It is the index of the maximum (weight) undefined literal in ord_l 
         self.max_und : int = self.N - 1
+
+        # It is the index of the minimum (weight) undefined literal in ord_l 
+        self.min_und : int = 0 
         
         # all false literals of the group
         self.falses : List[int] = []
@@ -78,6 +82,9 @@ class Group:
     def set_max(self, l: int):
         self.max_und = self.ord_i[l]
 
+    def set_min(self, l: int):
+        self.min_und = self.ord_i[l]
+
     def update_max(self, I: Interpretation, all = False):
         start = self.max_und - 1
         prev_max = self.ord_l[self.max_und]
@@ -97,6 +104,26 @@ class Group:
         
         # All are defined
         return (None, prev_max)
+    
+    def update_min(self, I: Interpretation, all = False):
+        start = self.min_und + 1
+        prev_min = self.ord_l[self.min_und]
+        
+        # All are defined
+        if start >= self.N:
+            return (None, prev_min)
+        
+        if all:
+            start = 0
+        for i in range(start, self.N, +1):
+            l = self.ord_l[i]
+            if I[l] is None:
+                self.min_und = i
+                new_min = self.ord_l[self.min_und]
+                return (new_min, prev_min)
+        
+        # All are defined
+        return (None, prev_min)
         
 
     def print_group(self, atomNames):
@@ -123,11 +150,19 @@ def simplyLiterals(lits, aggregate: 'AggregateFunction', group: 'GroupFunction')
         G.ord_l.remove(l)
 
 # This function returns the max UNDEFINED literal
-def mw(g: Group):
+def max_w(g: Group):
     max_und = g.max_und
     if(max_und is None):
         return None
     return g.ord_l[max_und]
+
+
+# This function returns the min UNDEFINED literal
+def min_w(g: Group):
+    min_und = g.min_und
+    if(min_und is None):
+        return None
+    return g.ord_l[min_und]
 
 def not_(l: int):
     return l * -1

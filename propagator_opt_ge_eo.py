@@ -1,10 +1,7 @@
 #!/usr/bin/python3
-import sys
-import os
-sys.path.append(os.environ.get('WASP_HOME'))
 import wasp
 from typing import List
-from utility import PerfectHash, debug, Group, mw, Interpretation, WeightFunction,\
+from utility import PerfectHash, debug, Group, max_w, Interpretation, WeightFunction,\
     GroupFunction, not_, get_name, print_I, print_weights, print_groups, FOCUSED_GROUP, \
     AggregateFunction, TrueGroupFunction, simplyLiterals
 import re
@@ -20,10 +17,11 @@ import re
 atomNames = {}
 
 '''
-Propagator for ' <= 1 ' constraint 
+Propagator for ' >= LB ' constraint with Exactly One constraint 
 '''
 
 sys_parameters=[]
+
 # Aggregate id
 ID : int
 
@@ -52,22 +50,18 @@ groups : set[Group]
 # lower bound
 lb : int
 
+
 # max possible sum
 mps : int
 
 # literals derived at level 0
 lits_level_0 : List[int] = []
 
-# reason for falses literals 
-reason_falses : List[int] = []
+reason : List[int] = []
 
-# reason for true_literals
-reason_trues : PerfectHash
 
-def getReasonForLiteral(lit):
-    global reason_falses, reason_trues
-    reason = reason_falses + reason_trues[lit]
-    reason_trues[lit] = []
+def getReason():
+    global reason
     return reason
 
 def process_sys_parameters():
@@ -76,11 +70,14 @@ def process_sys_parameters():
     sys_parameters.pop()
 
 def getLiterals(*lits):
-    global N,lb, I, weight, aggregate, groups, mps, group, atomNames, true_group, lits_level_0, reason_trues, ID
+    global N,lb, I, weight, aggregate, groups, mps, group, atomNames, true_group, lits_level_0, ID
 
     lb = None
     bind = []
     negative_lit_regex = re.compile(r"^not\s+(?P<atom_name>[\w()]+)")
+    ID = sys_parameters[-1]
+    print(ID)
+    print(sys_parameters)
 
     # initializing 
     N = lits[0] + 1
@@ -88,15 +85,12 @@ def getLiterals(*lits):
     weight = WeightFunction(N)
     group = GroupFunction(N)
     aggregate = AggregateFunction(N, False)
-    reason_trues = PerfectHash(N,[])
     mps = 0
-    ID = sys_parameters[1]
 
     #used to create the groups
     groups_raw : dict[int, List[int]] = {}
     groups = set()
-
-    # debug("atomNames", atomNames)
+    print(f"parameters {sys_parameters}")
     
     # selecting the interested literals
     for a in atomNames:
@@ -131,12 +125,6 @@ def getLiterals(*lits):
             bind.append(lit)
             bind.append(-lit)
 
-            # debug()
-            # debug("lit_name", get_name(atomNames, lit))
-            # debug("weight[lit]",  weight[lit])
-            # debug("group_id", group_id)
-            # debug()
-        
         elif a.startswith("lb("):
             terms = wasp.getTerms('lb',a)
             if len(terms) != 2 or terms[1] != ID:
@@ -147,7 +135,7 @@ def getLiterals(*lits):
 
     assert not lb is None
     
-    # debug("lb", lb)
+    debug("lb", lb)
 
     # creating groups
     for group_id in groups_raw:
@@ -172,7 +160,7 @@ def getLiterals(*lits):
         G = Group(ord_l,ord_i,group_id)
         
         # updatind the max possible sum
-        mps = mps + weight[mw(G)]
+        mps = mps + weight[max_w(G)]
     
         # adding the group to the set of groups
         groups.add(G)
@@ -191,9 +179,9 @@ def getLiterals(*lits):
 
     lits_level_0 = lits
 
-    # print_I(I, atomNames, aggregate)
-    # print_weights(weight, atomNames, aggregate)
-    # print_groups(group, atomNames, aggregate)
+    print_I(I, atomNames, aggregate)
+    print_weights(weight, atomNames, aggregate)
+    print_groups(group, atomNames, aggregate)
 
     return bind 
 
@@ -219,10 +207,9 @@ def update_phase(l: int) -> (bool, Group):
     if aggregate[l]:
         G = group[l]
         G.decrease_und()
-        # debug("true", get_name(atomNames, l), G = G)
-        
+  
         true_group[G] = l
-        w_max = weight[mw(G)]
+        w_max = weight[max_w(G)]
         mps = mps - w_max + weight[l]
         if w_max == weight[l]:
             return (False, G)
@@ -230,14 +217,12 @@ def update_phase(l: int) -> (bool, Group):
     elif aggregate[not_(l)]:
         G = group[not_(l)]
         G.decrease_und()
-        # debug("false", get_name(atomNames, not_(l)), G = G)
 
-        if not_(l) == mw(G):
+        if not_(l) == max_w(G):
             new_max, prev_max = G.update_max(I)
             if true_group[G] is None :
                 w_n : int  = 0
                 w_n = weight[new_max]
-
                 w_p = weight[prev_max]
                 mps = mps - w_p + w_n  
                 if w_p == w_n:
@@ -248,13 +233,13 @@ def update_phase(l: int) -> (bool, Group):
             return (False, None)      
     else:
         return (False, None)
-
+    
     # the mps has changed
     return (True, G)
 
 
 def propagate_phase(G: Group):
-    global N,lb, I, weight, aggregate, groups, mps, group, true_group, reason_falses, reason_trues
+    global N,lb, I, weight, aggregate, groups, mps, group, reason, true_group
 
     # set of derived literals
     S : List[int] = []
@@ -263,38 +248,27 @@ def propagate_phase(G: Group):
     R : List[int] = []
 
     for g in groups:
+        if not G is None and ( g == G or not true_group[g] is None ):
+            continue
 
-        ml_g =  mw(g)
+        ml_g =  max_w(g)
         mw_g = weight[ml_g]
 
-        count_infered_falses = 0 
-        false_lits_g = []
-        # infer falsity
         for l in g.ord_l:
+            # print(get_name(atomNames, l))
             if I[l] is None:
                 if mps - mw_g + weight[l] < lb:
+                    # infer l as false
                     S.append(not_(l))
-                    count_infered_falses += 1
+                    g.decrease_und()
                 else:
                     break
-            elif I[l] is False:
-                false_lits_g.append(l)
 
-        # infer the truth
-        if g.count_undef - count_infered_falses == 1 and true_group[g] is None:
-            # the last remained literal 
-            l = mw(g)
-            if mps - weight[l] < lb:
-                S.append(l)
-                reason_trues[l] = false_lits_g
-
+    
     if len(S) != 0:
         for g in groups:
-            # print_I(I, atomNames, aggregate)
-            if g.count_undef == 0 and true_group[g] is None:
-                R.extend(g.ord_l)
-            elif true_group[g] is None:
-                mw_g = weight[mw(g)]
+            if true_group[g] is None:
+                mw_g = weight[max_w(g)]
                 for i in range(len(g.ord_l) - 1, -1, -1):
                     l = g.ord_l[i]
                     if weight[l] <= mw_g:
@@ -302,34 +276,13 @@ def propagate_phase(G: Group):
                     R.append(l)
             else:
                 R.append(not_(true_group[g]))
-
+   
         # updating the reason
-        reason_falses = R
-
-        # debug("mps",mps, G = G)
-        # for g in groups:
-        #     if true_group[g]:
-        #         debug(get_name(atomNames, true_group[g]), weight[true_group[g]] , "true", G = G, end= " ")
-        #     else:
-        #         debug(get_name(atomNames, mw(g)), weight[mw(g)], "undef", G = G, end= " ")
-        #     debug("", G = G)
-
-        # debug("S => ", G = G)
-        # for s in S :
-        #     debug(get_name(atomNames, s), G = G)
-        # debug("END S", G = G)
-        # debug("R: ", G = G)
-        
-        # for r in R :
-        #     debug(get_name(atomNames, r), G = G)
-        # debug("END R", G = G)
-
+        reason = R
 
     return S
 
 def onLiteralTrue(lit, dl):
-
-    # debug("lit true", get_name(atomNames, lit))
 
     (next_phase, G) = update_phase(lit)
 
@@ -348,19 +301,12 @@ def onLiteralsUndefined(*lits):
         # updating interpretation
         I[l] = None
 
-        # print_I(I, atomNames, aggregate)
-
         # updating max weight for group(l)
-        G : Group = group[l] 
+        G = group[l]
 
         if G is None:
             G = group[not_(l)]
             l = not_(l)
-
-        # increasing the number of undefined for G
-        G.increase_und()
-
-        # debug("undefined ", get_name(atomNames, l), G = G)
 
         tg = true_group[G]
 
@@ -368,7 +314,7 @@ def onLiteralsUndefined(*lits):
         if tg == l:
             true_group[G] = None
 
-        max_und = mw(G)
+        max_und = max_w(G)
 
         '''
         if G has all literals defined
@@ -399,7 +345,7 @@ def onLiteralsUndefined(*lits):
         
         pos_max = G.ord_i[max_und]
         pos_l   = G.ord_i[l]
-        max_w = weight[mw(G)]
+        max_w = weight[max_w(G)]
         
         mps_p = mps 
         if tg == l:
@@ -407,9 +353,7 @@ def onLiteralsUndefined(*lits):
             # updating the mps
             if max_w > weight[l]: 
                 mps = mps - weight[l] + max_w
-                # debug(f"prev mps {mps_p} new mps {mps}")
-
-
+   
             # updating the max undefined
             if pos_max < pos_l:
                 G.set_max(l)
@@ -420,8 +364,7 @@ def onLiteralsUndefined(*lits):
                 G.set_max(l)
                 if tg is None:
                     mps = mps - max_w + w_l
-                    # debug(f"prev mps {mps_p} new mps {mps}")
-
+       
         
 
         

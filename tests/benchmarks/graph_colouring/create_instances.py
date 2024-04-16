@@ -8,7 +8,7 @@ import subprocess
 
 output = subprocess.run(f"ls instances", shell=True, capture_output=True, text=True)
 output = output.stdout.splitlines()
-weights = settings.WEIGHTS_TESTS_LOCATION
+weights = settings.WEIGHTS_GC_TESTS_LOCATION
 
 
 output_weights = subprocess.run(f"cat {weights}", shell=True, capture_output=True, text=True)

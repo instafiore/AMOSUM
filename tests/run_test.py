@@ -86,21 +86,22 @@ if light:
     timeout_m = 5
 
 # defining encodings
-encodings = [settings.ENCODING_WITH_AGGR]
-if ENCODING_TYPE == "e":        
-    encodings.append(settings.ENCODING_WITH_GROUP_E)  
-elif ENCODING_TYPE == "le":
-    encodings.append(settings.ENCODING_WITH_GROUP_LE)  
+encodings = [settings.ENCODING_WITH_AGGR_GE_EO]
+if ENCODING_TYPE == settings.TYPE_GE_EO:        
+    encodings.append(settings.ENCODING_WITH_GROUP_GE_EO)  
+elif ENCODING_TYPE ==  settings.TYPE_GE_AMO:
+    encodings.append(settings.ENCODING_WITH_GROUP_GE_AMO)  
 else:
     raise Exception("Invalid encoding type, allowe types: [e, le]")
+
 encodings.reverse()
 
 n0 = "-n0" if checking_correctness else ""
 
 for encoding  in encodings:
     
-    group_le = encoding == settings.ENCODING_WITH_GROUP_LE
-    group_e = encoding == settings.ENCODING_WITH_GROUP_E
+    group_le = encoding == settings.ENCODING_WITH_GROUP_GE_AMO
+    group_e = encoding == settings.ENCODING_WITH_GROUP_GE_EO
     group = group_le or group_e
     
     location = f"{settings.BENCHMARKS_LOCATION}/{problem}"
@@ -121,17 +122,16 @@ for encoding  in encodings:
     if group_e :
         run += f"--interpreter=python \
         --script-directory={settings.PROPAGATOR_DIR_LOCATION} \
-        --plugins-file=\"{settings.PROPAGATOR_NAME_e} 1\""
+        --plugins-file=\"{settings.PROPAGATOR_NAME_ge_eo} 1\""
     elif group_le:
         run += f"--interpreter=python \
         --script-directory={settings.PROPAGATOR_DIR_LOCATION} \
-        --plugins-file=\"{settings.PROPAGATOR_NAME_le} 1\""
+        --plugins-file=\"{settings.PROPAGATOR_NAME_ge_amo} 1\""
 
     if PRINT_RUN:
-        print("RUN:")
-        print(run)
-        print("\n")
+        print(f"RUN: {run}")
         
+    # running test
     output = subprocess.run(run, shell=True, capture_output=True).stdout.decode() + \
         subprocess.run(run, shell=True, capture_output=True).stderr.decode()
     lines = output.splitlines() 
@@ -169,7 +169,7 @@ for encoding  in encodings:
 
     if group:     
         answer_sets_group = answer_sets
-    elif encoding == settings.ENCODING_WITH_AGGR:
+    elif encoding == settings.ENCODING_WITH_AGGR_GE_EO:
         answer_sets_aggr = answer_sets
 
     print(f"{encoding} {time} {len(answer_sets)}")
