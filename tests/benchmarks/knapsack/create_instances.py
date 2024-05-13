@@ -139,12 +139,12 @@ for instance in instances:
     with open(f'{instances_str}/{instance[0]}-knapsack-{instance[1]}-{instance[2]}-{instance[3]}-{instance[6]}.asp', 'w') as file:
 
         # writing objects 
-        lb_0 = instance[2]
+        up_0 = instance[2]
         lb_1 = instance[3]
         weights = instance[4]
         values  = instance[5]
 
-        if(lb_0 < 0 or lb_1 < 0):
+        if(up_0 < 0 or lb_1 < 0):
             print(f"INVALID VALUES ! -> {instance[0]} {instance[1]} \
                 [{instance[2]}, {instance[7]}] \
                 [{instance[3]}, {instance[8]}] {instance[6]}")
@@ -154,7 +154,7 @@ for instance in instances:
             file.write(f"object({i+1},{weights[i]},{values[i]}).\n")
         
         # writing bounds
-        file.write(f"lb({lb_0},0).\n")
+        file.write(f"ub({up_0},0).\n")
         file.write(f"lb({lb_1},1).\n")
         
 

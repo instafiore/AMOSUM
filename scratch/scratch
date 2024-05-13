@@ -1,0 +1,150 @@
+MPS := current Maximum Possible Sum
+B := Bound
+SMPS := Starting Maximum Possible Sum 
+CS := Current Sum (initially 0)
+a0 := aggregate id
+
+# Classical aggregate
+
+w0 =  max{ SMPS-B + 1, B }
+C1 := w0 + B - 1 - CS
+C2 := MPS - B + wo
+
+1)  C1 is updated when some literal li in the aggregate is satisfied
+    C1 = C1 - wi (that is increasing the CS = CS + wi )
+
+2) C2 is updated when some literal li in the aggregate is not satisfied
+    C2 = C2 - wi (that is decreasing MPS - B = MPS - B - wi)
+
+# Inference rules
+Given li an undefined literal in the aggregate
+1) li and 1<=i<=n: 
+    
+    case:   wi > C1 -> a0 is false 
+            proof by contradiction: 
+                if a0 is true then
+                C1 = w0 + B - 1 - CS 
+                since w0 >= SMPS - B + 1 -> C1 = w0 + B - 1 - CS >=  SMPS - B + 1 + B - 1 - CS = SMPS - CS
+                wi > C1 -> wi > SMPS - CS -> wi + CS > SMPS
+                and this is absurd
+            So,
+            C1 = w0 + B - 1 - ( CS + w0 ) = 
+               = B - 1 - CS => 
+            wi > B - 1 - CS => 
+            CS + wi > B - 1
+            This means that putting li to true would lead to have a current sum >= B, that is satisfyng the aggregate, but the aggregate id is false.
+            so li is set to false
+    
+    case:   wi > C2 -> a0 is true 
+            proof by contradiction
+                if a0 is false
+                C2 = MPS - B + wo 
+                Since w0 >= B -> MPS - B + wo  >= MPS - B + B
+                wi > MPS - B + wo  >= MPS - B + B = MPS - B + B = MPS 
+                so wi > MPS 
+                But since li is undefined it is absurd
+            So,
+            C2 = MPS - B
+            wi > MPS - B -> MPS - wi < B 
+            So, it means that if li is false that would lead to have a MPS < B and to not satisfy the aggregate.
+            So li is set to true.
+
+2) li and i = 0
+    case:   w0 > C1 
+            C1 =  w0 + B - 1 - CS 
+            w0 > w0 + B - 1 - CS ->
+            CS > B - 1
+            Hence the aggregate is satisfied and aggregate id is has to be set to true
+    case:   w0 > C2
+            C2 = MPS - B + wo
+            w0 > MPS - B + wo ->
+            MPS < B 
+            Hence the aggregate is not satisfied and the aggregate id has to be set to false
+
+
+# AMO aggregate
+
+MPS := current Maximum Possible Sum (Considering the max for each group)
+B := Bound
+SMPS := Starting Maximum Possible Sum (Considering the max for each group)
+CS := Current Sum (initially 0)
+a0 := aggregate id, it is in a group = {a}
+
+w0 =  max{ SMPS-B + 1, B }
+C1 := w0 + B - 1 - CS
+C2 := MPS - B + wo
+
+1)  C1 is updated when some literal li in the aggregate is satisfied
+    C1 = C1 - wi (that is increasing the CS = CS + wi )
+
+2) C2 is updated when some literal li in the aggregate is not satisfied and li was the maximum of its group
+    G := group(li)
+    update_max(G)
+    C2 = C2 - wi + w(max(G)) (that is decreasing MPS = MPS - wi + w(max(G)))
+
+# Inference rules
+Given li an undefined literal in the aggregate
+G = group(li)
+1) li and 1<=i<=n 
+    
+    case:   wi > C1 
+            a0 is false 
+            proof by contradiction: 
+                if a0 is true then
+                C1 = w0 + B - 1 - CS 
+                since w0 >= SMPS - B + 1 -> C1 = w0 + B - 1 - CS >=  SMPS - B + 1 + B - 1 - CS = SMPS - CS
+                wi > C1 -> wi > SMPS - CS -> wi + CS > SMPS 
+                and this is absurd
+            So,
+            C1 = w0 + B - 1 - ( CS + w0 ) = 
+                = B - 1 - CS => 
+            wi > B - 1 - CS => 
+            CS + wi > B - 1
+            This means that putting li to true would lead to have a current sum >= B, that is satisfyng the aggregate, but the aggregate id is false.
+            so li is set to false
+    
+    case:   -wi > C2 - w(max(G)) and is not the only undefined in G
+            a0 is true 
+            proof by contradiction
+                if a0 is false
+                C2 = MPS - B + wo
+                Since w0 >= B -> C2 - w(max(G)) = MPS - B + wo - w(max(G)) >= C2 = MPS - B + B - w(max(G)) = MPS - w(max(G))
+                -wi > MPS - B + wo - w(max(G))  >= MPS - w(max(G)) -> 
+                wi < -MPS +  w(max(G))
+                since MPS >= w(max(G)) -> wi < 0 
+                that is absurd
+            So,
+            -wi > MPS - B - w(max(G)) -> MPS + wi - w(max(G)) < B 
+            So, it means that if li was true that would lead to have a MPS < B and to not satisfy the aggregate.
+            So li is set to false.
+
+    case:   -wi > C2  and is not the only undefined in G
+            -wi > MPS - B + wo
+            a0 is true 
+            proof by contradiction
+                if a0 is false
+                C2 = MPS - B + wo
+                Since w0 >= B -> C2 = MPS - B + wo >= C2 = MPS - B + B = MPS
+                -wi > MPS - B + wo >= MPS -> 
+                wi < -MPS
+                since MPS >= 0 -> wi < 0 
+                that is absurd
+            So,
+            -wi > MPS - B -> 
+            wi < -MPS + B ->
+            MPS - wi < B 
+            So it means that if li was false that would lead to have a MPS < B and to not satisfy the aggregate.
+            So li is set to true
+
+
+2) li and i = 0
+    case:   w0 > C1 
+            C1 =  w0 + B - 1 - CS 
+            w0 > w0 + B - 1 - CS ->
+            CS > B - 1
+            Hence the aggregate is satisfied and aggregate id is has to be set to true
+    case:   w0 > C2
+            C2 = MPS - B + wo
+            w0 > MPS - B + wo ->
+            MPS < B 
+            Hence the aggregate is not satisfied and the aggregate id has to be set to false

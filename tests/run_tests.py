@@ -6,15 +6,26 @@ import os
 import re
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import settings
-assert len(sys.argv) >= 2
 
+assert len(sys.argv) >= 5
+
+# the problem name
 problem = sys.argv[1]
+
+# the lower bound (if any otherwise 'none')
 lb = sys.argv[2]
+
+# whether or not using the light version 
 light = sys.argv[3]
+
+# the encoding type
 enc = sys.argv[4]
+
+
 if(len(sys.argv) > 5):
     number_of_tests = int(sys.argv[5])
 else:
+    # all the instances
     number_of_tests = -1
 
 head = ""
