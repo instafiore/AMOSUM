@@ -1,9 +1,10 @@
 
 # starting from directory "propagator_opt"
 import os
+import subprocess
 
 # name of the file where the weights are
-WEIGHTS = "wieghts"
+WEIGHTS = "weights"
 
 PROPAGATOR_NAME_ge_eo = "propagator_opt_ge_eo"
 PROPAGATOR_NAME_ge_amo = "propagator_opt_ge_amo"

@@ -380,14 +380,14 @@ def onLiteralsUndefined(*lits):
         
         pos_min = G.ord_i[min_und]
         pos_l   = G.ord_i[l]
-        min_w = weight[min_w(G)]
+        minw = weight[min_w(G)]
         
         mps_p = mps 
         if tg == l:
 
             # updating the mps
-            if min_w < weight[l]: 
-                mps = mps - weight[l] + min_w
+            if minw < weight[l]: 
+                mps = mps - weight[l] + minw
                 # debug(f"prev mps {mps_p} new mps {mps}")
 
 
@@ -397,10 +397,10 @@ def onLiteralsUndefined(*lits):
 
         else:
             w_l = weight[l]
-            if w_l <= min_w and pos_l < pos_min:
+            if w_l <= minw and pos_l < pos_min:
                 G.set_min(l)
                 if tg is None:
-                    mps = mps - min_w + w_l
+                    mps = mps - minw + w_l
                     # debug(f"prev mps {mps_p} new mps {mps}")
 
         

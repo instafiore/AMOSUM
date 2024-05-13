@@ -128,6 +128,7 @@ def getLiterals(*lits):
         elif a.startswith("lb("):
             terms = wasp.getTerms('lb',a)
             if len(terms) != 2 or terms[1] != ID:
+                print(terms)
                 continue
             if not lb is None:
                 assert False     
@@ -345,14 +346,14 @@ def onLiteralsUndefined(*lits):
         
         pos_max = G.ord_i[max_und]
         pos_l   = G.ord_i[l]
-        max_w = weight[max_w(G)]
+        maxw = weight[max_w(G)]
         
         mps_p = mps 
         if tg == l:
 
             # updating the mps
-            if max_w > weight[l]: 
-                mps = mps - weight[l] + max_w
+            if maxw > weight[l]: 
+                mps = mps - weight[l] + maxw
    
             # updating the max undefined
             if pos_max < pos_l:
@@ -360,10 +361,10 @@ def onLiteralsUndefined(*lits):
 
         else:
             w_l = weight[l]
-            if w_l >= max_w and pos_l > pos_max:
+            if w_l >= maxw and pos_l > pos_max:
                 G.set_max(l)
                 if tg is None:
-                    mps = mps - max_w + w_l
+                    mps = mps - maxw + w_l
        
         
 
