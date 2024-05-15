@@ -22,10 +22,10 @@ class Runner:
     PRINT_RUN = False
 
     # whether printing the output of the solver
-    PRINT_OUTPUT_SOLVER = False
+    PRINT_OUTPUT_SOLVER = True
 
     # whether printing the error output of the solver
-    PRINT_ERROR_SOLVER = False
+    PRINT_ERROR_SOLVER = True
 
     # REGEXs
     KNAPSACK_REGEX = r'^(knapsack|kn|ks)$'
@@ -193,7 +193,8 @@ class Runner:
         else:
             new_line = f"{number},{problem},{size},{time_aggr},{time_group},{na},{ng},{equal}{lb_string}{ub_string}"
 
-        subprocess.run(f"echo '{new_line}' >> {settings.RESULTS_TESTS_LOCATION}/{self.problem}.{self.timestamp}.res ", shell=True, capture_output=True)
+        if not "write_res" in self.param or self.param["write_res"] == "y":
+            subprocess.run(f"echo '{new_line}' >> {settings.RESULTS_TESTS_LOCATION}/{self.problem}.{self.timestamp}.res ", shell=True, capture_output=True)
 
 
 

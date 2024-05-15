@@ -5,7 +5,7 @@ from typing import List
 FOCUSED_GROUP = 2
 FOCUSING = False
 
-DEBUG = False
+DEBUG = True
 def debug(*message: str, G: 'Group' = None , end ="\n"):
     if DEBUG and ( G is None or G.id == FOCUSED_GROUP or not FOCUSING):
         print(message, end=end)
@@ -200,7 +200,7 @@ class WeightFunction(PerfectHash):
     
     def __getitem__(self, lit: int) -> any:
         if lit is None:
-             raise ValueError("Invalid argument: 'lit' must be an integer.")
+            return 0
         return super().__getitem__(lit)
 
 

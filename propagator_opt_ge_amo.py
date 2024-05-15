@@ -178,6 +178,7 @@ def getLiterals(*lits):
 
     lits_level_0 = lits
 
+
     return bind 
 
 
@@ -199,6 +200,7 @@ def update_phase(l: int) -> (bool, Group):
 
     I[l] = True
     G : Group
+    debug("True",get_name(lit=l, atomNames=atomNames))
     if aggregate[l]:
         G = group[l]
         G.decrease_und()
@@ -218,10 +220,14 @@ def update_phase(l: int) -> (bool, Group):
                 w_n = weight[new_max]
                 w_p = weight[prev_max]
                 mps = mps - w_p + w_n  
+                print(f"MPS: {mps}")
+                print_I(I=I, atomNames=atomNames, aggregate=aggregate, G=G, group=group)
                 if w_p == w_n:
                     return (False, None)
             else:
                 return (False, G)   
+        elif G.count_undef == 1:
+            return (True, G)
         else:
             return (False, None)      
     else:
@@ -232,6 +238,7 @@ def update_phase(l: int) -> (bool, Group):
 
 
 def propagate_phase(G: Group):
+    debug("ENTERED IN THE PROPAGATION PHASE")
     global N,lb, I, weight, aggregate, groups, mps, group, true_group, reason_falses, reason_trues
 
     # set of derived literals
@@ -259,13 +266,14 @@ def propagate_phase(G: Group):
                 false_lits_g.append(l)
 
         # infer the truth
+        debug("UNDE N:",g.count_undef, "INF FALSE:", count_infered_falses)
         if g.count_undef - count_infered_falses == 1 and true_group[g] is None:
             # the last remained literal 
             l = max_w(g)
             if mps - weight[l] < lb:
                 S.append(l)
                 reason_trues[l] = false_lits_g
-
+                debug("Inferred as True", get_name(atomNames, lit=l))
     if len(S) != 0:
         for g in groups:
             if g.count_undef == 0 and true_group[g] is None:
@@ -303,6 +311,8 @@ def onLiteralsUndefined(*lits):
 
         # updating interpretation
         I[l] = None
+
+        debug("Undef",get_name(atomNames=atomNames, lit=l))
 
         # updating max weight for group(l)
         G : Group = group[l] 
@@ -370,6 +380,9 @@ def onLiteralsUndefined(*lits):
                 G.set_max(l)
                 if tg is None:
                     mps = mps - maxw + w_l
+
+        debug("MPS UND", mps)
+
 
         
 
