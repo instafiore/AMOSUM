@@ -1,14 +1,15 @@
 # utility module
 
+import sys
 from typing import List
 
 FOCUSED_GROUP = 2
 FOCUSING = False
 
-DEBUG = True
+DEBUG = False
 def debug(*message: str, G: 'Group' = None , end ="\n"):
     if DEBUG and ( G is None or G.id == FOCUSED_GROUP or not FOCUSING):
-        print(message, end=end)
+        print(message, end=end, file=sys.stderr)
 
 class Interpretation:
     
@@ -91,6 +92,7 @@ class Group:
         
         # All are defined
         if start < 0:
+            self.max_und = None
             return (None, prev_max)
         
         if all:
@@ -103,6 +105,7 @@ class Group:
                 return (new_max, prev_max)
         
         # All are defined
+        self.max_und = None
         return (None, prev_max)
     
     def update_min(self, I: Interpretation, all = False):
@@ -111,6 +114,7 @@ class Group:
         
         # All are defined
         if start >= self.N:
+            self.min_und = None
             return (None, prev_min)
         
         if all:
@@ -123,6 +127,7 @@ class Group:
                 return (new_min, prev_min)
         
         # All are defined
+        self.min_und = None
         return (None, prev_min)
         
 
@@ -219,11 +224,15 @@ def get_name(atomNames, lit):
     if not DEBUG:
         return "DEBUG FALSE"
     prefix = ""
+    if lit is None:
+        return "None"
     if lit < 0:
         prefix = "not "
     for a in atomNames:
         if atomNames[a] == abs(lit):
             return prefix + a
+    debug(f"{lit}")
+    
 
 
 def print_I(I, atomNames, aggregate, G = None, group = None):

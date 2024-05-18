@@ -69,14 +69,14 @@ def process_sys_parameters():
     sys_parameters.pop()
 
 def getLiterals(*lits):
-    global N,up, I, weight, aggregate, groups, mps, group, atomNames, true_group, lits_level_0, ID
+    global N,ub, I, weight, aggregate, groups, mps, group, atomNames, true_group, lits_level_0, ID
 
-    up = None
+    ub = None
     bind = []
     negative_lit_regex = re.compile(r"^not\s+(?P<atom_name>[\w()]+)")
     ID = sys_parameters[-1]
-    print(ID)
-    print(sys_parameters)
+    debug(ID)
+    debug(sys_parameters)
 
     # initializing 
     N = lits[0] + 1
@@ -132,17 +132,17 @@ def getLiterals(*lits):
             # debug("group_id", group_id)
             # debug()
         
-        elif a.startswith("up("):
-            terms = wasp.getTerms('up',a)
+        elif a.startswith("ub("):
+            terms = wasp.getTerms('ub',a)
             if len(terms) != 2 or terms[1] != ID:
                 continue
-            if not up is None:
+            if not ub is None:
                 assert False     
-            up = int(terms[0])
+            ub = int(terms[0])
 
-    assert not up is None
+    assert not ub is None
     
-    debug("up", up)
+    debug("ub", ub)
 
     # creating groups
     for group_id in groups_raw:
@@ -186,18 +186,14 @@ def getLiterals(*lits):
 
     lits_level_0 = lits
 
-    print_I(I, atomNames, aggregate)
-    print_weights(weight, atomNames, aggregate)
-    print_groups(group, atomNames, aggregate)
-
     return bind 
 
 
 def simplifyAtLevelZero():
-    global N,up, I, weight, aggregate, groups, group, reason
+    global N,ub, I, weight, aggregate, groups, group, reason
 
     # INCOHERENT
-    if mps > up:
+    if mps > ub:
         return [1]
     
     res = propagate_phase(None)
@@ -206,8 +202,24 @@ def simplifyAtLevelZero():
 
     return res
 
+def onLiteralTrue(lit, dl):
+
+    if dl == 1:
+        debug("MPS:",mps)
+
+    debug("True",get_name(lit=lit, atomNames=atomNames), "DL: ", dl)
+
+    (next_phase, G) = update_phase(lit)
+
+    propagated_lits = []
+    if next_phase:
+        propagated_lits = propagate_phase(G)
+
+    return propagated_lits    
+
+
 def update_phase(l: int) -> (bool, Group):
-    global N,up, I, weight, aggregate, groups, mps, group, true_group
+    global N,ub, I, weight, aggregate, groups, mps, group, true_group
 
     I[l] = True
     G : Group
@@ -229,6 +241,7 @@ def update_phase(l: int) -> (bool, Group):
 
         if not_(l) == min_w(G):
             new_min, prev_min = G.update_min(I)
+            debug("prev_min", get_name(atomNames=atomNames, lit=prev_min), "new_min", get_name(atomNames=atomNames, lit=new_min))
             if true_group[G] is None :
                 w_n : int  = 0
                 w_n = weight[new_min]
@@ -248,7 +261,7 @@ def update_phase(l: int) -> (bool, Group):
 
 
 def propagate_phase(G: Group):
-    global N,up, I, weight, aggregate, groups, mps, group, reason, true_group
+    global N,ub, I, weight, aggregate, groups, mps, group, reason, true_group
 
     # set of derived literals
     S : List[int] = []
@@ -256,9 +269,9 @@ def propagate_phase(G: Group):
     # reason
     R : List[int] = []
 
+    print_I(I=I, atomNames=atomNames, aggregate=aggregate)
+
     for g in groups:
-        # name = get_name(atomNames, true_group[g]) if not true_group[g] is None else "none"
-        # print(f" true group for {g.id} {name}")
         if not G is None and ( g == G or not true_group[g] is None ):
             continue
 
@@ -269,7 +282,7 @@ def propagate_phase(G: Group):
             l = g.ord_l[i]
             # print(get_name(atomNames, l))
             if I[l] is None:
-                if mps - mw_g + weight[l] > up:
+                if mps - mw_g + weight[l] > ub:
                     # infer l as false
                     S.append(not_(l))
                     g.decrease_und()
@@ -281,6 +294,7 @@ def propagate_phase(G: Group):
         for g in groups:
             # print_I(I, atomNames, aggregate)
             if true_group[g] is None:
+                debug("g", g.id, "min_w", get_name(atomNames, min_w(g)))
                 mw_g = weight[min_w(g)]
                 for l in g.ord_l:
                     if weight[l] >= mw_g:
@@ -300,32 +314,19 @@ def propagate_phase(G: Group):
         #         debug(get_name(atomNames, mw(g)), weight[mw(g)], "undef", G = G, end= " ")
         #     debug("", G = G)
 
-        # debug("S => ", G = G)
-        # for s in S :
-        #     debug(get_name(atomNames, s), G = G)
-        # debug("END S", G = G)
-        # debug("R: ", G = G)
-        # for r in R :
-        #     debug(get_name(atomNames, r), G = G)
-        # debug("END R", G = G)
+        debug("S => ")
+        for s in S :
+            debug(get_name(atomNames, s))
+        debug("END S")
+        debug("R: ")
+        for r in R :
+            debug(get_name(atomNames, r))
+        debug("END R")
 
     return S
 
-def onLiteralTrue(lit, dl):
-
-    # debug("lit true", get_name(atomNames, lit))
-
-    (next_phase, G) = update_phase(lit)
-
-    propagated_lits = []
-    if next_phase:
-        propagated_lits = propagate_phase(G)
-
-    return propagated_lits    
-
-
 def onLiteralsUndefined(*lits):
-    global N,up, I, weight, aggregate, groups,  mps, group, reason, true_group
+    global N,ub, I, weight, aggregate, groups,  mps, group, reason, true_group
     for i in range(1,len(lits)):
         l = lits[i]
 
@@ -350,6 +351,9 @@ def onLiteralsUndefined(*lits):
             true_group[G] = None
 
         min_und = min_w(G)
+        debug("Undef",get_name(atomNames=atomNames, lit=l), "tg",\
+               get_name(atomNames=atomNames, lit=tg), "min_und", \
+                get_name(atomNames=atomNames, lit=min_und))
 
         '''
         if G has all literals defined
@@ -376,7 +380,9 @@ def onLiteralsUndefined(*lits):
 
         if min_und is None:
             G.set_min(l)
-            return
+            if true_group[G] is None:
+                assert False
+            continue
         
         pos_min = G.ord_i[min_und]
         pos_l   = G.ord_i[l]
@@ -392,7 +398,7 @@ def onLiteralsUndefined(*lits):
 
 
             # updating the min undefined
-            if pos_min < pos_l:
+            if pos_min > pos_l:
                 G.set_min(l)
 
         else:

@@ -11,12 +11,15 @@ PROPAGATOR_NAME_ge_amo = "propagator_opt_ge_amo"
 PROPAGATOR_NAME_le_eo = "propagator_opt_le_eo"
 
 ENCODING_WITH_GROUP_GE_EO = "encoding_with_group_ge_eo"
-ENCODING_WITH_GROUP_GE_AMO = "encoding_with_group_ge_amo"
 ENCODING_WITH_AGGR_GE_EO = "encoding_with_aggregates_ge_eo"
+
+ENCODING_WITH_GROUP_GE_AMO = "encoding_with_group_ge_amo"
 ENCODING_WITH_AGGR_GE_AMO = "encoding_with_aggregates_ge_amo"
 
 ENCODING_WITH_GROUP_LE_EO = "encoding_with_group_le_eo"
 ENCODING_WITH_AGGR_LE_EO = "encoding_with_aggregates_le_eo"
+
+ENCODING_WITH_GROUP_LE_AMO = "encoding_with_group_le_amo"
 ENCODING_WITH_AGGR_LE_AMO = "encoding_with_aggregates_le_amo"
 
 PROPAGATOR_DIR_LOCATION = f"."

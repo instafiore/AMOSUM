@@ -342,8 +342,10 @@ def onLiteralsUndefined(*lits):
 
         if max_und is None:
             G.set_max(l)
-            return
-        
+            if true_group[G] is None:
+                assert False
+            continue
+
         pos_max = G.ord_i[max_und]
         pos_l   = G.ord_i[l]
         maxw = weight[max_w(G)]

@@ -187,6 +187,7 @@ def simplifyAtLevelZero():
 
     # INCOHERENT
     if mps < lb:
+        debug("MPS < LB !!!!!")
         return [1]
     
     res = propagate_phase(None)
@@ -195,12 +196,25 @@ def simplifyAtLevelZero():
 
     return res
 
-def update_phase(l: int) -> (bool, Group):
+def onLiteralTrue(lit, dl):
     global N,lb, I, weight, aggregate, groups, mps, group, true_group
 
+    if dl == 1:
+        debug("MPS:",mps)
+
+    debug("True",get_name(lit=lit, atomNames=atomNames), "DL: ", dl)
+    (next_phase, G) = update_phase(lit)
+
+    propagated_lits = []
+    if next_phase:
+        propagated_lits = propagate_phase(G)
+
+    return propagated_lits    
+
+def update_phase(l: int) -> (bool, Group):
+    global N,lb, I, weight, aggregate, groups, mps, group, true_group
     I[l] = True
     G : Group
-    debug("True",get_name(lit=l, atomNames=atomNames))
     if aggregate[l]:
         G = group[l]
         G.decrease_und()
@@ -220,16 +234,17 @@ def update_phase(l: int) -> (bool, Group):
                 w_n = weight[new_max]
                 w_p = weight[prev_max]
                 mps = mps - w_p + w_n  
-                print(f"MPS: {mps}")
                 print_I(I=I, atomNames=atomNames, aggregate=aggregate, G=G, group=group)
-                if w_p == w_n:
-                    return (False, None)
+                # if w_p == w_n:
+                #     return (False, None)
+                debug("MPS: ",mps, "new max", get_name(atomNames=atomNames, lit = new_max), "MAX: ",  \
+                      get_name(atomNames=atomNames, lit = max_w(G)))
             else:
-                return (False, G)   
+                return (True, G)   
         elif G.count_undef == 1:
             return (True, G)
         else:
-            return (False, None)      
+            return (False, G)      
     else:
         return (False, None)
 
@@ -238,7 +253,7 @@ def update_phase(l: int) -> (bool, Group):
 
 
 def propagate_phase(G: Group):
-    debug("ENTERED IN THE PROPAGATION PHASE")
+    
     global N,lb, I, weight, aggregate, groups, mps, group, true_group, reason_falses, reason_trues
 
     # set of derived literals
@@ -259,6 +274,7 @@ def propagate_phase(G: Group):
             if I[l] is None:
                 if mps - mw_g + weight[l] < lb:
                     S.append(not_(l))
+                    debug("APPENDED: ", get_name(atomNames=atomNames,lit=not_(l)), "MPS: ", mps, "mw_g", mw_g)
                     count_infered_falses += 1
                 else:
                     break
@@ -266,14 +282,13 @@ def propagate_phase(G: Group):
                 false_lits_g.append(l)
 
         # infer the truth
-        debug("UNDE N:",g.count_undef, "INF FALSE:", count_infered_falses)
+        debug("UNDEF N:",g.count_undef, "INF FALSE:", count_infered_falses, "GROUP: ", g.id)
         if g.count_undef - count_infered_falses == 1 and true_group[g] is None:
             # the last remained literal 
             l = max_w(g)
             if mps - weight[l] < lb:
                 S.append(l)
                 reason_trues[l] = false_lits_g
-                debug("Inferred as True", get_name(atomNames, lit=l))
     if len(S) != 0:
         for g in groups:
             if g.count_undef == 0 and true_group[g] is None:
@@ -291,28 +306,27 @@ def propagate_phase(G: Group):
         # updating the reason
         reason_falses = R
 
+    for l in S:
+        debug("TRUE IN S", get_name(atomNames=atomNames, lit=l))
+        
+    print_I(I=I, atomNames=atomNames, aggregate=aggregate)
+
     return S
 
-def onLiteralTrue(lit, dl):
 
-    (next_phase, G) = update_phase(lit)
-
-    propagated_lits = []
-    if next_phase:
-        propagated_lits = propagate_phase(G)
-
-    return propagated_lits    
-
+def minimize_reason(self):
+    pass
 
 def onLiteralsUndefined(*lits):
     global N,lb, I, weight, aggregate, groups,  mps, group, reason, true_group
+    
     for i in range(1,len(lits)):
+
         l = lits[i]
 
         # updating interpretation
         I[l] = None
 
-        debug("Undef",get_name(atomNames=atomNames, lit=l))
 
         # updating max weight for group(l)
         G : Group = group[l] 
@@ -331,6 +345,9 @@ def onLiteralsUndefined(*lits):
             true_group[G] = None
 
         max_und = max_w(G)
+        debug("Undef",get_name(atomNames=atomNames, lit=l), "tg",\
+               get_name(atomNames=atomNames, lit=tg), "max_und", \
+                get_name(atomNames=atomNames, lit=max_und))
 
         '''
         if G has all literals defined
@@ -357,7 +374,9 @@ def onLiteralsUndefined(*lits):
 
         if max_und is None:
             G.set_max(l)
-            return
+            if true_group[G] is None:
+                mps += weight[l]
+            continue
         
         pos_max = G.ord_i[max_und]
         pos_l   = G.ord_i[l]
@@ -380,8 +399,6 @@ def onLiteralsUndefined(*lits):
                 G.set_max(l)
                 if tg is None:
                     mps = mps - maxw + w_l
-
-        debug("MPS UND", mps)
 
 
         

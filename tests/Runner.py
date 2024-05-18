@@ -17,20 +17,28 @@ class Runner:
 
     # whether or not running a test for the correctness
     CHECKING_CORRECTNESS = True
+    # whether to print or not that an answer set is not in another answerset
+    PRINT_NOT_SUBSET = False
+    # whether to print or not the answerset aggr with its mps in the checking correctness 
+    PRINT_ANS_AGGR = False
+    # whether to print or not the answerset group with its mps in the checking correctness 
+    PRINT_ANS_GROUP = False
 
     # whether printing or not the run command
     PRINT_RUN = False
 
     # whether printing the output of the solver
-    PRINT_OUTPUT_SOLVER = True
+    PRINT_OUTPUT_SOLVER = False
 
     # whether printing the error output of the solver
-    PRINT_ERROR_SOLVER = True
+    PRINT_ERROR_SOLVER = False
 
     # REGEXs
     KNAPSACK_REGEX = r'^(knapsack|kn|ks)$'
     GRAPH_COLOURING_REGEX = r'^(graph_colouring|gc)$'
     VALID_REGEX = [KNAPSACK_REGEX, GRAPH_COLOURING_REGEX]
+    REGEX_WEIGHT_ATOM_KN = r"object\((\d+),(\d+),(\d+)\)\."
+    REGEX_WEIGHT_ATOM_GC = r"colour_weight\((\w+),(\d+)\).\."
 
     # PROBLEMS
     KNAPSACK = "knapsack"
@@ -62,9 +70,14 @@ class Runner:
         if re.match(Runner.KNAPSACK_REGEX,self.problem):
             self.problem = Runner.KNAPSACK
             self.problem_number = Runner.KNAPSACK_CODE
+            # object\((\d+),(\d+),(\d+)\)\.
+            self.weight_parm_id = 3
         elif re.match(Runner.GRAPH_COLOURING_REGEX,self.problem):
             self.problem_number = Runner.GRAPH_COLOURING_CODE
+            # colour_weight\((\w+),(\d+)\).\.
             self.problem = Runner.GRAPH_COLOURING
+            self.weight_parm_id = 2
+
         else:
             assert False
 
@@ -103,6 +116,25 @@ class Runner:
         if self.light:
             instances = "instances_light"
 
+
+        self.n0 = "-n0" if Runner.CHECKING_CORRECTNESS else "" 
+        # timeout in minutes
+        self.timeout_m = Runner.TIMEOUT
+        if self.light:
+            self.timeout_m = Runner.TIMEOUT_LIGHT
+        
+        self.location = f"{settings.BENCHMARKS_LOCATION}/{self.problem}"
+
+        self.str_weights = f"{self.location}/{settings.WEIGHTS}.asp" if self.weights else ""
+        self.str_lb = f"{self.location}/lb.asp" if self.lb else ""
+        self.str_ub = f"{self.location}/ub.asp" if self.ub else ""
+
+
+        if self.light:
+            self.location_instance = f"{settings.BENCHMARKS_LOCATION}/{self.problem}/instances_light"
+        else:
+            self.location_instance = f"{settings.BENCHMARKS_LOCATION}/{self.problem}/instances"
+
         getting_instance_command = f"ls {settings.BENCHMARKS_LOCATION}/{self.problem}/{instances} {head}"
         output = subprocess.run(getting_instance_command, shell=True, capture_output=True, text=True)
         if output.stderr:
@@ -124,14 +156,11 @@ class Runner:
         print(f"RUNNING {self.param} with instance: {instance}")
     
         # defining the lower bound(s)
-        if self.lb:
-            self.create_lower_bound()
+        self.create_bound(instance=instance, ub=False)
     
-         # defining the lower bound(s)
-        if self.ub:
-            self.create_upper_bound()
+        # defining the upper bound(s)
+        self.create_bound(instance=instance, ub=True)
             
-      
         # regex for file 
         regex_instance_file : str = r"^(?P<number>\d+)-(?P<problem>\w+)-(?P<size>\d+).*"
         groups = re.search(regex_instance_file, instance)
@@ -159,22 +188,24 @@ class Runner:
                 answer_sets_aggr = answer_sets
                 time_aggr = time
 
-            print(f"{encoding} {time} {len(answer_sets)}")
+            print(f"[{encoding} {time} {len(answer_sets)}]",end="\t")
 
-                   
+        
         ng = len(answer_sets_group)
         na = len(answer_sets_aggr)
-
-        if na != ng:
-            correct = False
-        elif Runner.CHECKING_CORRECTNESS:
-            correct = self.check_correctness(answer_sets_aggr=answer_sets_aggr, answer_sets_group=answer_sets_group)
+        
+        if Runner.CHECKING_CORRECTNESS:
+            correct = self.check_correctness(answer_sets_aggr=answer_sets_aggr, answer_sets_group=answer_sets_group, instance=instance)
         else:
             correct = True
 
         equal = "equal" if correct  else "not_equal" 
         if not correct:
             print("NOT CORRECT")
+        else:
+            print("CORRENT", end = "")
+
+        print()
 
         # printing the new line of the test
         lb_string = ""
@@ -197,6 +228,9 @@ class Runner:
             subprocess.run(f"echo '{new_line}' >> {settings.RESULTS_TESTS_LOCATION}/{self.problem}.{self.timestamp}.res ", shell=True, capture_output=True)
 
 
+        # restoring the instance.asp file
+        self.comment_bound(instance=instance, ub=False, restore=True)
+        self.comment_bound(instance=instance, ub=True, restore=True)
 
     def run(self):
         
@@ -204,44 +238,90 @@ class Runner:
         for instance in self.instances:
             self.run_test(instance=instance)
 
-    def check_correctness(self, answer_sets_aggr, answer_sets_group):
+   
+
+    def check_correctness(self, answer_sets_aggr, answer_sets_group, instance):
+   
+        if self.problem == Runner.KNAPSACK:
+            weights_file = f"{self.location_instance}/{instance}.asp"
+            regex_weights = Runner.REGEX_WEIGHT_ATOM_KN
+            atom_re = r"in_knapsack\((\w+),(\w+?)\)"
+        elif self.problem == Runner.GRAPH_COLOURING:
+            weights_file = self.str_weights
+            regex_weights = Runner.REGEX_WEIGHT_ATOM_GC
+            atom_re= r"col\((\w+),(\w+?)\)"
+
+
+        maps_weights = self.create_maps_weights(weights_file, regex_weights=regex_weights)
+
+        correct = True
+
         for ans_1 in answer_sets_aggr:
             if not ans_1 in answer_sets_group:
-                return False
+                if Runner.PRINT_NOT_SUBSET:
+                    print(f"The answer set {ans_1} is not it answer_sets_group. MPS: {self.compute_mps(ans=ans_1, maps_weights=maps_weights, atom_re=atom_re)}")
+                correct = False
+
+        for ans_2 in answer_sets_group:
+            if not ans_2 in answer_sets_aggr:
+                if Runner.PRINT_NOT_SUBSET:
+                    print(f"The answer set {ans_2} is not it answer_sets_aggr. MPS: {self.compute_mps(ans=ans_2, maps_weights=maps_weights, atom_re=atom_re)}")
+                correct = False
+    
+        if not correct and Runner.PRINT_ANS_GROUP:
+            print("Answer_sets_group")
+            self.print_ans(answer_sets=answer_sets_group, maps_weight=maps_weights, atom_re=atom_re)
+        if not correct and Runner.PRINT_ANS_AGGR:
+            print("Answer_sets_aggr")
+            self.print_ans(answer_sets=answer_sets_aggr, maps_weight=maps_weights, atom_re=atom_re)
+
+        return correct
+
+    def print_ans(self,answer_sets, atom_re, maps_weight):
+
+        for ans in answer_sets:
+            print(f"ans: {ans} mps: {self.compute_mps(ans, maps_weights=maps_weight, atom_re=atom_re)}")
             
-        return True
+    def compute_mps(self, ans, maps_weights, atom_re):
+        mps = 0
+        for atom in ans:
+            match = re.match(atom_re, atom)
+            key = match.group(1)
+            mult = int(match.group(2)) if self.problem == Runner.KNAPSACK else 1
+            # print(f"atom {atom} key: {key} mult: {mult} weight: {maps_weights[key]}")
+            mps += mult * maps_weights[key]    
+
+        return mps    
+        
+
+    def create_maps_weights(self, file_weights, regex_weights):
+
+        pattern = re.compile(regex_weights)
+        maps = {}
+
+        with open(file_weights, 'r') as file:
+            for line in file:
+                match = pattern.match(line.strip())
+                if match:
+                    key = match.group(1)
+                    value = int(match.group(self.weight_parm_id))
+                    maps[key] = value
+
+        return maps
+
 
     
     def run_instance(self, instance, encoding, group_type):
         
-        n0 = "-n0" if Runner.CHECKING_CORRECTNESS else "" 
-        # timeout in minutes
-        timeout_m = Runner.TIMEOUT
-        if self.light:
-            timeout_m = Runner.TIMEOUT_LIGHT
-        location = f"{settings.BENCHMARKS_LOCATION}/{self.problem}"
-
-        if self.light:
-            location_instance = f"{settings.BENCHMARKS_LOCATION}/{self.problem}/instances_light"
-        else:
-            location_instance = f"{settings.BENCHMARKS_LOCATION}/{self.problem}/instances"
-
-        str_weights = f"{location}/{settings.WEIGHTS}.asp" if self.weights else ""
-        
-        str_lb = f"{location}/lb.asp" if self.lb else ""
-        str_ub = f"{location}/ub.asp" if self.ub else ""
-
 
         run = f"clingo \
-            {location_instance}/{instance}.asp \
-            {str_weights} \
-            {location}/{encoding}.asp \
-            {str_lb} \
-            {str_ub} \
-            --output=smodels | timeout {timeout_m}m time -p {Runner.SOLVER} {Runner.SILENT} {n0} "
+            {self.location_instance}/{instance}.asp \
+            {self.str_weights} \
+            {self.location}/{encoding}.asp \
+            {self.str_lb} \
+            {self.str_ub} \
+            --output=smodels | timeout {self.timeout_m}m time -p {Runner.SOLVER} {Runner.SILENT} {self.n0} "
         
-
-
         if group_type :
             propagator = settings.MAP_ENC_PROP[self.enc_type]
             run += f"--interpreter=python \
@@ -249,7 +329,7 @@ class Runner:
             --plugins-file=\"{propagator} {self.id}\""
 
         if self.PRINT_RUN:
-            print(f"RUN: {run}")
+            print(f"\nRUN:\n{run}")
             
         # running test
         output = subprocess.run(run, shell=True, capture_output=True).stdout.decode()
@@ -286,36 +366,47 @@ class Runner:
                 time = "timeout"
 
         return (answer_sets, time)
+    
+
+
+    def comment_bound(self, instance, ub = False, restore=False):
+        b_str = "ub" if ub else "lb" 
+        b = self.ub if ub else self.lb
+
+        comment_r = "%" if restore else ""
+        comment_w = "" if restore else "%"
+        pattern = re.compile(rf"{comment_r}({b_str}\(\d+,\d+\))\.")
+
+        instace_path = f"{self.location_instance}/{instance}.asp"
+
+        with open(instace_path, "r") as file:
+            lines = file.readlines()
+
+        with open(instace_path, "w") as file:
+            for line in lines:
+                match = re.match(pattern, line)
+                if match:
+                    file.write(f"{comment_w}{match.group(1)}.\n")
+                else:
+                    file.write(line)
+
+    def create_bound(self, instance, ub = False):
+        b = self.ub if ub else self.lb
+        b_str = "ub" if ub else "lb" 
+        if b:
+            if re.match(r"\[(\d+)(,\d+)*\]",b):
+                b = json.loads(b)
+                subprocess.run(f"echo '' > {settings.BENCHMARKS_LOCATION}/{self.problem}/{b_str}.asp", shell=True)
+                for bi in range(len(b)):
+                    b = b[bi]
+                    subprocess.run(f"echo '{b_str}({b},{bi}).' >> {settings.BENCHMARKS_LOCATION}/{self.problem}/{b_str}.asp", shell=True)
+                B = "-".join(b)
+            elif re.match(r"\d+", b):
+                subprocess.run(f"echo '{b_str}({b},{self.id}).' > {settings.BENCHMARKS_LOCATION}/{self.problem}/{b_str}.asp", shell=True)
+            else:
+                raise Exception(f"invalid {b_str} insert, it has to be an integer or a list of pairs of integers(json like)") 
+            
+            self.comment_bound(instance=instance, ub=ub, restore=False)
        
 
-    def create_lower_bound(self):
-        lb = self.lb
-        if lb:
-            if re.match(r"\[(\d+)(,\d+)*\]",lb):
-                lb = json.loads(lb)
-                subprocess.run(f"echo '' > {settings.BENCHMARKS_LOCATION}/{self.problem}/lb.asp", shell=True)
-                for lbi in range(len(lb)):
-                    b = lb[lbi]
-                    subprocess.run(f"echo 'lb({b},{lbi}).' >> {settings.BENCHMARKS_LOCATION}/{self.problem}/lb.asp", shell=True)
-                LB = "-".join(lb)
-            elif re.match(r"\d+", lb):
-                subprocess.run(f"echo 'lb({lb},{self.id}).' > {settings.BENCHMARKS_LOCATION}/{self.problem}/lb.asp", shell=True)
-            else:
-                raise Exception("invalid ub insert, it has to be an integer or a list of pairs of integers(json like)")
-            
-    def create_upper_bound(self):
-        ub = self.ub
-        # defining the upper bound(s)
-        if ub:
-            if re.match(r"\[(\d+)(,\d+)*\]",ub):
-                ub = json.loads(ub)
-                subprocess.run(f"echo '' > {settings.BENCHMARKS_LOCATION}/{self.problem}/ub.asp", shell=True)
-                for ubi in range(len(ub)):
-                    b = ub[ubi]
-                    subprocess.run(f"echo 'lb({b},{ubi}).' >> {settings.BENCHMARKS_LOCATION}/{self.problem}/lb.asp", shell=True)
-                LB = "-".join(ub)
-            elif re.match(r"\d+", ub):
-                subprocess.run(f"echo 'lb({ub},{self.id}).' > {settings.BENCHMARKS_LOCATION}/{self.problem}/ub.asp", shell=True)
-            else:
-                raise Exception("invalid lb insert, it has to be an integer or a list of pairs of integers(json like)")
-            
+    
