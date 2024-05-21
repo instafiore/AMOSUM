@@ -1,5 +1,6 @@
 # utility module
 
+import re
 import sys
 from typing import List
 
@@ -7,9 +8,48 @@ FOCUSED_GROUP = 2
 FOCUSING = False
 
 DEBUG = True
+
+SEPARATOR = ":"
+NOT = "~"
+REGEX_LIT = rf"{NOT}?(\w+(\(\w+({SEPARATOR}\w+)*\))?)" 
+REGEX_ASSUMPTIONS = rf"^\[{REGEX_LIT}({SEPARATOR}{NOT}?{REGEX_LIT})*\]$"
+VALID_VALUES_ASS = f"[[{NOT}]<atom_name>[(param1,parm2,...)],...] "
+
 def debug(*message: str, G: 'Group' = None , end ="\n"):
     if DEBUG and ( G is None or G.id == FOCUSED_GROUP or not FOCUSING):
         print(message, end=end, file=sys.stderr)
+
+def create_assumptions_lits(assumptions, atomNames):
+
+    if not assumptions:
+        return []
+
+    res = []
+    
+    r2 = rf"^{NOT}.+$" 
+    for ass in assumptions:
+        atom = re.match(REGEX_LIT,ass).group(1)
+        if not atom in atomNames:
+            continue
+        lit = atomNames[atom]
+        if re.match(r2,ass):
+            lit *= -1
+        res.append(lit)
+
+    return res
+
+def convert_assparam_to_assarray(assumptions):
+ 
+    # Strip the square brackets
+    stripped_string = assumptions.strip("[]")
+
+    # Split the string by comma
+    array = stripped_string.split(SEPARATOR)
+
+    # If there might be extra spaces around the elements, you can also strip each element
+    array = [element.strip() for element in array]
+
+    return array
 
 class Interpretation:
     
@@ -240,12 +280,13 @@ def print_I(I, atomNames, aggregate, G = None, group = None):
         return
     assert (G is None and group is None) or (not G is None and not group is None) 
     if G is None:
-        debug("Interpretation")
+        debug("Interpretation", end=" ")
     else:
         debug("Intepretation for group: " + str(G))
     for l in range(len(I.intepretation)):
         if (aggregate[l] or  aggregate[not_(l)]) and (G is None or group[l] == G):
-            debug(get_name(atomNames,l), I[l])
+            debug(get_name(atomNames,l), I[l],end=" ")
+    debug("")
 
 def print_perfect_hash(ph: PerfectHash, atomNames, aggregate):
     if not DEBUG:

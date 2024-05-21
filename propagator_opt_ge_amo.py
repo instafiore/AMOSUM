@@ -1,9 +1,10 @@
 #!/usr/bin/python3
 import json
+import utility
 import wasp
 from typing import List
 from utility import PerfectHash, debug, Group, max_w, Interpretation, WeightFunction,\
-    GroupFunction, not_, get_name, print_I, print_weights, print_groups, FOCUSED_GROUP, \
+    GroupFunction, not_, get_name, print_I, print_weights, print_groups, FOCUSED_GROUP, convert_assparam_to_assarray, create_assumptions_lits, \
     AggregateFunction, TrueGroupFunction, simplyLiterals
 import re
 
@@ -62,11 +63,20 @@ reason_falses : List[int] = []
 # reason for true_literals
 reason_trues : PerfectHash
 
+# redundant literals in reason of a literal l
+# it is a funtion lits -> 2^(lits)
+redundant_lits : PerfectHash
+
 # assumptions as a list of atom names
 assumptions : List[str]
 
 # parameters from standard input
 param : dict
+
+# global array of ordered lit per weight (ascending order)
+global_ord_lit : List[int]
+
+
 
 def getReasonForLiteral(lit):
     global reason_falses, reason_trues
@@ -81,7 +91,7 @@ def process_sys_parameters():
     regex = r"^-(.+)" 
     
     i = 1
-    debug("sys_parameters",sys_parameters)
+
     while i < len(sys_parameters):
         
         # creating the key
@@ -108,7 +118,7 @@ def process_sys_parameters():
     
 
 def getLiterals(*lits):
-    global N,lb, I, weight, aggregate, groups, mps, group, atomNames, true_group, lits_level_0, reason_trues, ID, param, assumptions
+    global N,lb, I, weight, aggregate, groups, mps, group, atomNames, true_group, lits_level_0, reason_trues, ID, param, assumptions, global_ord_lit, redundant_lits
 
     process_sys_parameters()
 
@@ -125,12 +135,12 @@ def getLiterals(*lits):
     group = GroupFunction(N)
     aggregate = AggregateFunction(N, False)
     reason_trues = PerfectHash(N,[])
+    redundant_lits = PerfectHash(N,[])
+    global_ord_lit = []
     mps = 0
     ID = param["id"]
 
     assumptions = param["ass"] if "ass" in param else False
-
-    debug("ID",ID)
 
     #used to create the groups
     groups_raw : dict[int, List[int]] = {}
@@ -138,7 +148,7 @@ def getLiterals(*lits):
 
     # selecting the interested literals
     for a in atomNames:
-        debug("Atom",a)
+        debug("Atom",a, end=" ")
         if  a.startswith('group('):
             terms = wasp.getTerms('group',a)
             # group(lit_name, weight, group_id)
@@ -166,7 +176,10 @@ def getLiterals(*lits):
 
             # adding to the aggregate
             aggregate[lit] = True
-
+            
+            # adding the literal to the global array of literals
+            global_ord_lit.append(lit)
+            
             bind.append(lit)
             bind.append(-lit)
         
@@ -177,8 +190,19 @@ def getLiterals(*lits):
             if not lb is None:
                 assert False     
             lb = int(terms[0])
-
+    debug("",end="\n")
     assert not lb is None
+
+    # ordering literals in the global array
+    global_ord_lit = [(lit, weight[lit]) for lit in global_ord_lit]
+    global_ord_lit = sorted(global_ord_lit, key = lambda x: x[1])
+    global_ord_lit = [lit for lit, w in global_ord_lit]
+
+
+    # debug("global_ord_lit: ", end=" ")
+    # for l in global_ord_lit:
+    #     debug(get_name(atomNames=atomNames, lit = l), end=" ")
+    # debug("", end="\n")
 
     # creating groups
     for group_id in groups_raw:
@@ -225,39 +249,6 @@ def getLiterals(*lits):
 
     return bind 
 
-def create_assumptions_lits(assumptions):
-
-    if not assumptions:
-        return []
-
-    res = []
-    r1 = r"!?(?P<atom>\w+(\(\w+(,\w+)*\))?)" 
-    r2 = r"^!.+$" 
-    for ass in assumptions:
-        atom = re.match(r1,ass).group("atom")
-        if not atom in atomNames:
-            continue
-        lit = atomNames[atom]
-        if re.match(r2,ass):
-            lit *= -1
-        res.append(lit)
-
-    return res
-
-def convert_assparam_to_assarray(assumptions):
- 
-    # Strip the square brackets
-    stripped_string = assumptions.strip("[]")
-
-    # Split the string by comma
-    array = stripped_string.split(",")
-
-    # If there might be extra spaces around the elements, you can also strip each element
-    array = [element.strip() for element in array]
-
-    return array
-
-
 def simplifyAtLevelZero():
     global N,lb, I, weight, aggregate, groups, group, reason, assumptions
 
@@ -274,7 +265,7 @@ def simplifyAtLevelZero():
     if assumptions:
         assumptions = convert_assparam_to_assarray(assumptions)
 
-    return res + create_assumptions_lits(assumptions)
+    return res + create_assumptions_lits(assumptions=assumptions,atomNames=atomNames)
 
 def onLiteralTrue(lit, dl):
     global N,lb, I, weight, aggregate, groups, mps, group, true_group
@@ -394,9 +385,38 @@ def propagate_phase(G: Group):
     return S
 
 
-def minimize_reason(reason: List[int]):
-    global N,lb, I, weight, aggregate, groups,  mps, group, true_group
+def minimize_reason(reason: List[int], trues: List[int]):
+    global N,lb, I, weight, aggregate, groups,  mps, group, true_group, global_ord_lit, redundant_lits
 
+    for li in trues:
+        redundant_lits_li = []
+        gi= group[li]
+        for lj in global_ord_lit:
+            gj = group[lj]
+            if gi.id == gj.id:
+                continue
+            if not I[lj] is None:
+                if I[lj] == True and not not_(lj) in reason: 
+                    continue
+                elif I[lj] == False and not lj in reason:
+                    continue
+                
+                tg = true_group[gj]
+                mw_g = max_w(gj)
+                if I[lj] == True:             
+                    # tg == lj
+                    if mps - weight[lj] + weight[mw_g] < lb:
+                        redundant_lits_li.append(not_(lj))
+
+                elif I[lj] == False and tg is None and weight[lj] > weight[mw_g]:
+                    if mps - weight[mw_g] + weight[lj] < lb:
+                        redundant_lits_li.append(lj)
+        if len(redundant_lits_li) != 0:
+            debug(f"Redundant lits for {li}", end=" ")
+            for l in redundant_lits:
+                debug(get_name(atomNames=atomNames, lit = l), end=" ")
+            debug("")
+        redundant_lits[li] = redundant_lits_li
 
 
 

@@ -1,0 +1,35 @@
+utility.REGEX_ASSUMPTIONS ^\[~?(\w+(\(\w+(:\w+)*\))?)(:~?~?(\w+(\(\w+(:\w+)*\))?))*\]$
+self.ass [~c(4):~c(3)]
+assumptions: [~c(4):~c(3)]
+
+RUN:
+clingo             ./tests/benchmarks/simple_tests/test_group_e.asp                                                                 --output=smodels | timeout 20m time -p wasp_python   --interpreter=python             --script-directory=.             --plugins-file="propagator_opt_ge_amo -id 0 -ass [~c(4):~c(3)]"
+WASP 2.0 [script: PYTHON]
+
+{b(1,0), b(2,0), b(3,0), b(4,0), group(c(1),1,1,0), group(c(2),2,1,0), group(c(3),3,1,0), group(c(4),4,1,0), group(a(1),1,0,0), group(a(2),2,0,0), group(a(3),3,0,0), group(a(4),4,0,0), lb(3,0), c(2), a(3)}
+('param', {'id': '0', 'ass': '[~c(4):~c(3)]'})
+('Atom', 'c(1)') ('Atom', 'c(2)') ('Atom', 'c(3)') ('Atom', 'c(4)') ('Atom', 'a(1)') ('Atom', 'a(2)') ('Atom', 'a(3)') ('Atom', 'a(4)') ('Atom', 'b(1,0)') ('Atom', 'b(2,0)') ('Atom', 'b(3,0)') ('Atom', 'b(4,0)') ('Atom', 'group(c(1),1,1,0)') ('Atom', 'group(c(2),2,1,0)') ('Atom', 'group(c(3),3,1,0)') ('Atom', 'group(c(4),4,1,0)') ('Atom', 'group(a(1),1,0,0)') ('Atom', 'group(a(2),2,0,0)') ('Atom', 'group(a(3),3,0,0)') ('Atom', 'group(a(4),4,0,0)') ('Atom', 'lb(3,0)') ('',)
+('Interpretation',) ('c(1)', None) ('c(2)', None) ('c(3)', None) ('c(4)', None) ('a(1)', None) ('a(2)', None) ('a(3)', None) ('a(4)', None) ('',)
+('True', 'not c(3)', 'DL: ', 0)
+('True', 'not c(4)', 'DL: ', 0)
+('Intepretation for group: 1',)
+('c(1)', None) ('c(2)', None) ('c(3)', False) ('c(4)', False) ('',)
+('MPS: ', 6, 'new max', 'c(2)', 'MAX: ', 'c(2)')
+('Interpretation',) ('c(1)', None) ('c(2)', None) ('c(3)', False) ('c(4)', False) ('a(1)', None) ('a(2)', None) ('a(3)', None) ('a(4)', None) ('',)
+('MPS:', 6)
+('True', 'not a(4)', 'DL: ', 1)
+('Intepretation for group: 0',)
+('a(1)', None) ('a(2)', None) ('a(3)', None) ('a(4)', False) ('',)
+('MPS: ', 5, 'new max', 'a(3)', 'MAX: ', 'a(3)')
+('Interpretation',) ('c(1)', None) ('c(2)', None) ('c(3)', False) ('c(4)', False) ('a(1)', None) ('a(2)', None) ('a(3)', None) ('a(4)', False) ('',)
+('True', 'not c(1)', 'DL: ', 2)
+('Interpretation',) ('c(1)', False) ('c(2)', None) ('c(3)', False) ('c(4)', False) ('a(1)', None) ('a(2)', None) ('a(3)', None) ('a(4)', False) ('',)
+('True', 'c(2)', 'DL: ', 2)
+('True', 'not a(1)', 'DL: ', 3)
+('True', 'not a(2)', 'DL: ', 4)
+('TRUE IN S', 'a(3)')
+('Interpretation',) ('c(1)', False) ('c(2)', True) ('c(3)', False) ('c(4)', False) ('a(1)', False) ('a(2)', False) ('a(3)', None) ('a(4)', False) ('',)
+('True', 'a(3)', 'DL: ', 4)
+real 0.05
+user 0.04
+sys 0.00

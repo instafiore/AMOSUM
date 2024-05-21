@@ -4,6 +4,8 @@ from typing import Dict, List
 import re
 import sys
 import os
+
+import utility
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import settings
 
@@ -40,8 +42,7 @@ class Runner:
     VALID_REGEX = [KNAPSACK_REGEX, GRAPH_COLOURING_REGEX, SIMPLE_TEST_REGEX]
     REGEX_WEIGHT_ATOM_KN = r"object\((\d+),(\d+),(\d+)\)\."
     REGEX_WEIGHT_ATOM_GC = r"colour_weight\((\w+),(\d+)\).\."
-    REGEX_ASSUMPTIONS = r"^\[!?\w+(\(\w+(,\w+)*\))?(,\w+(\(\w+(,\w+)*\))?)*\]$"
-    VALID_VALUES_ASS = "[[!]<atom_name>[(param1,parm2,...)],...] "
+
 
     # PROBLEMS
     KNAPSACK = "knapsack"
@@ -85,8 +86,10 @@ class Runner:
         self.n0 = "-n0" if "n0" in self.param or Runner.CHECKING_CORRECTNESS else ""
         self.ass = self.param["ass"] if "ass" in self.param else ""
 
-        if self.ass != "" and re.match(Runner.REGEX_ASSUMPTIONS, self.ass) is None:
-            raise  Exception(f"No valid assumptions defined, feasible values are: {Runner.VALID_VALUES_ASS}")
+        print("utility.REGEX_ASSUMPTIONS", utility.REGEX_ASSUMPTIONS)
+        print("self.ass", self.ass)
+        if self.ass != "" and re.match(utility.REGEX_ASSUMPTIONS, self.ass) is None:
+            raise  Exception(f"No valid assumptions defined, feasible values are: {utility.VALID_VALUES_ASS}")
 
 
         print("assumptions:", self.ass)
@@ -343,7 +346,7 @@ class Runner:
             --output=smodels | timeout {self.timeout_m}m time -p {Runner.SOLVER} {Runner.SILENT} {self.n0} "
         
         id_param = f"-id {self.id}"
-        ass_param = f"-ass \"{self.ass}\"" if self.ass != "" else ""
+        ass_param = f"-ass {self.ass}" if self.ass != "" else ""
         
         if group_type :
             propagator = settings.MAP_ENC_PROP[self.enc_type]
@@ -381,6 +384,7 @@ class Runner:
 
         answer_sets = []
         for line in lines:
+            print(line)
             if not re.search(regex_real, line) is None:
                 time = re.search(regex_real, line).group(1)
             elif not re.search(regex_answer_set, line) is None:
