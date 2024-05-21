@@ -16,7 +16,7 @@ class Runner:
     SOLVER = "wasp_python"
 
     # whether or not running a test for the correctness
-    CHECKING_CORRECTNESS = True
+    CHECKING_CORRECTNESS = False
     # whether to print or not that an answer set is not in another answerset
     PRINT_NOT_SUBSET = False
     # whether to print or not the answerset aggr with its mps in the checking correctness 
@@ -25,26 +25,28 @@ class Runner:
     PRINT_ANS_GROUP = False
 
     # whether printing or not the run command
-    PRINT_RUN = False
+    PRINT_RUN = True
 
     # whether printing the output of the solver
-    PRINT_OUTPUT_SOLVER = False
+    PRINT_OUTPUT_SOLVER = True
 
     # whether printing the error output of the solver
-    PRINT_ERROR_SOLVER = False
+    PRINT_ERROR_SOLVER = True
 
     # REGEXs
     KNAPSACK_REGEX = r'^(knapsack|kn|ks)$'
     GRAPH_COLOURING_REGEX = r'^(graph_colouring|gc)$'
-    VALID_REGEX = [KNAPSACK_REGEX, GRAPH_COLOURING_REGEX]
+    SIMPLE_TEST_REGEX = r'^(simple_tests?|st)$'
+    VALID_REGEX = [KNAPSACK_REGEX, GRAPH_COLOURING_REGEX, SIMPLE_TEST_REGEX]
     REGEX_WEIGHT_ATOM_KN = r"object\((\d+),(\d+),(\d+)\)\."
     REGEX_WEIGHT_ATOM_GC = r"colour_weight\((\w+),(\d+)\).\."
+    REGEX_ASSUMPTIONS = r"^\[!?\w+(\(\w+(,\w+)*\))?(,\w+(\(\w+(,\w+)*\))?)*\]$"
+    VALID_VALUES_ASS = "[[!]<atom_name>[(param1,parm2,...)],...] "
 
     # PROBLEMS
     KNAPSACK = "knapsack"
-    KNAPSACK_CODE = 0
     GRAPH_COLOURING = "graph_colouring"
-    GRAPH_COLOURING_CODE = 1
+    SIMPLE_TEST = "simple_tests"
 
     # silent mode
     SILENT = ""
@@ -59,29 +61,35 @@ class Runner:
         valid_enc_type = settings.MAP_ENC_PROP.keys()
 
         if not "problem" in self.param:
-            raise Exception(f"No problem inserted Feasible key:'problem'")
+            raise Exception(f"No problem inserted. Feasible key:'problem'")
 
         self.problem = self.param["problem"]
-
         
-        if not re.match(Runner.KNAPSACK_REGEX,self.problem) and not re.match(Runner.GRAPH_COLOURING_REGEX,self.problem):
+        if not any([not re.match(r, self.problem) is None for r in Runner.VALID_REGEX]) :
             raise Exception(f"Invalid problem inserted! Valid Regex: {str(Runner.VALID_REGEX)}")
         
         if re.match(Runner.KNAPSACK_REGEX,self.problem):
             self.problem = Runner.KNAPSACK
-            self.problem_number = Runner.KNAPSACK_CODE
             # object\((\d+),(\d+),(\d+)\)\.
             self.weight_parm_id = 3
         elif re.match(Runner.GRAPH_COLOURING_REGEX,self.problem):
-            self.problem_number = Runner.GRAPH_COLOURING_CODE
             # colour_weight\((\w+),(\d+)\).\.
             self.problem = Runner.GRAPH_COLOURING
             self.weight_parm_id = 2
-
+        elif re.match(Runner.SIMPLE_TEST_REGEX,self.problem):
+            self.problem = Runner.SIMPLE_TEST
         else:
             assert False
 
         self.light = self.param["l"] if "l" in self.param else None
+        self.n0 = "-n0" if "n0" in self.param or Runner.CHECKING_CORRECTNESS else ""
+        self.ass = self.param["ass"] if "ass" in self.param else ""
+
+        if self.ass != "" and re.match(Runner.REGEX_ASSUMPTIONS, self.ass) is None:
+            raise  Exception(f"No valid assumptions defined, feasible values are: {Runner.VALID_VALUES_ASS}")
+
+
+        print("assumptions:", self.ass)
        
         self.enc_type = self.param["enc_type"] if "enc_type" in self.param else None
         self.id = self.param["id"] if "id" in self.param else "0"
@@ -117,7 +125,6 @@ class Runner:
             instances = "instances_light"
 
 
-        self.n0 = "-n0" if Runner.CHECKING_CORRECTNESS else "" 
         # timeout in minutes
         self.timeout_m = Runner.TIMEOUT
         if self.light:
@@ -129,12 +136,25 @@ class Runner:
         self.str_lb = f"{self.location}/lb.asp" if self.lb else ""
         self.str_ub = f"{self.location}/ub.asp" if self.ub else ""
 
-
         if self.light:
             self.location_instance = f"{settings.BENCHMARKS_LOCATION}/{self.problem}/instances_light"
         else:
             self.location_instance = f"{settings.BENCHMARKS_LOCATION}/{self.problem}/instances"
 
+        self.specific_instance = self.param["i"]  if "i" in self.param else None
+
+        if self.specific_instance and self.problem == Runner.SIMPLE_TEST:
+            self.location_instance = f"{settings.BENCHMARKS_LOCATION}/{self.problem}"
+    
+        if self.specific_instance is None:
+            self.create_instances(instances=instances, head=head)
+        else:
+            self.instances = False
+
+        self.timestamp = subprocess.run('date +"%Y-%m-%d.%H.%M.%S"', shell=True, capture_output=True, text=True).stdout
+        self.timestamp = self.timestamp.strip()
+
+    def create_instances(self, instances, head):
         getting_instance_command = f"ls {settings.BENCHMARKS_LOCATION}/{self.problem}/{instances} {head}"
         output = subprocess.run(getting_instance_command, shell=True, capture_output=True, text=True)
         if output.stderr:
@@ -149,10 +169,7 @@ class Runner:
                 instance = res_regex.group(1)
                 self.instances.append(instance)
 
-        self.timestamp = subprocess.run('date +"%Y-%m-%d.%H.%M.%S"', shell=True, capture_output=True, text=True).stdout
-        self.timestamp = self.timestamp.strip()
-
-    def run_test(self, instance: str):
+    def run_classical_test(self, instance: str):
         print(f"RUNNING {self.param} with instance: {instance}")
     
         # defining the lower bound(s)
@@ -234,9 +251,13 @@ class Runner:
 
     def run(self):
         
-       
-        for instance in self.instances:
-            self.run_test(instance=instance)
+        if self.instances:
+            for instance in self.instances:
+                self.run_classical_test(instance=instance)
+        elif self.specific_instance:
+            self.run_instance(self.specific_instance)
+        else:
+            assert False
 
    
 
@@ -308,25 +329,27 @@ class Runner:
                     maps[key] = value
 
         return maps
-
-
     
-    def run_instance(self, instance, encoding, group_type):
+    def run_instance(self, instance, encoding = None, group_type = True):
         
+        location_encoding = {self.location}/{encoding}.asp if encoding else ""
 
         run = f"clingo \
             {self.location_instance}/{instance}.asp \
             {self.str_weights} \
-            {self.location}/{encoding}.asp \
+            {location_encoding} \
             {self.str_lb} \
             {self.str_ub} \
             --output=smodels | timeout {self.timeout_m}m time -p {Runner.SOLVER} {Runner.SILENT} {self.n0} "
+        
+        id_param = f"-id {self.id}"
+        ass_param = f"-ass \"{self.ass}\"" if self.ass != "" else ""
         
         if group_type :
             propagator = settings.MAP_ENC_PROP[self.enc_type]
             run += f"--interpreter=python \
             --script-directory={settings.PROPAGATOR_DIR_LOCATION} \
-            --plugins-file=\"{propagator} {self.id}\""
+            --plugins-file=\"{propagator} {id_param} {ass_param}\""
 
         if self.PRINT_RUN:
             print(f"\nRUN:\n{run}")
@@ -349,10 +372,12 @@ class Runner:
         
         # regex for the interested atoms of a given problem
         regex_query : str
-        if self.problem_number == Runner.GRAPH_COLOURING_CODE:
+        if self.problem == Runner.GRAPH_COLOURING:
             regex_query = r"(?<=[\s,{])col\(\w+,\w+?\)"
-        elif self.problem_number == Runner.KNAPSACK_CODE:
+        elif self.problem == Runner.KNAPSACK:
             regex_query = r"(?<=[\s,{])in_knapsack\(\w+,\w+?\)"
+        elif self.problem == Runner.SIMPLE_TEST:
+            regex_query = r"\w+\([\w,]+?\)"
 
         answer_sets = []
         for line in lines:

@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+import json
 import wasp
 from typing import List
 from utility import PerfectHash, debug, Group, max_w, Interpretation, WeightFunction,\
@@ -61,6 +62,12 @@ reason_falses : List[int] = []
 # reason for true_literals
 reason_trues : PerfectHash
 
+# assumptions as a list of atom names
+assumptions : List[str]
+
+# parameters from standard input
+param : dict
+
 def getReasonForLiteral(lit):
     global reason_falses, reason_trues
     reason = reason_falses + reason_trues[lit]
@@ -68,12 +75,44 @@ def getReasonForLiteral(lit):
     return reason
 
 def process_sys_parameters():
-    global ID
-    ID = sys_parameters.pop()
-    sys_parameters.pop()
+    global param, sys_parameters
+
+    param = {}
+    regex = r"^-(.+)" 
+    
+    i = 1
+    debug("sys_parameters",sys_parameters)
+    while i < len(sys_parameters):
+        
+        # creating the key
+        key = sys_parameters[i] 
+        res_regex = re.match(regex, key)
+        if res_regex is None:
+            raise Exception("Every key has to start with a dash! Ex: -problem knapsack")
+        key = res_regex.group(1)
+
+        if i + 1 >= len(sys_parameters) :
+            param[key] = True
+            break
+        
+        value = sys_parameters[i+1] 
+        res_regex = re.match(regex, value)
+        if res_regex is None:
+            i += 2
+            param[key] = value
+            
+        else:
+            i += 1
+            param[key] = True
+
+    
 
 def getLiterals(*lits):
-    global N,lb, I, weight, aggregate, groups, mps, group, atomNames, true_group, lits_level_0, reason_trues, ID
+    global N,lb, I, weight, aggregate, groups, mps, group, atomNames, true_group, lits_level_0, reason_trues, ID, param, assumptions
+
+    process_sys_parameters()
+
+    debug("param", param)
 
     lb = None
     bind = []
@@ -87,7 +126,11 @@ def getLiterals(*lits):
     aggregate = AggregateFunction(N, False)
     reason_trues = PerfectHash(N,[])
     mps = 0
-    ID = sys_parameters[1]
+    ID = param["id"]
+
+    assumptions = param["ass"] if "ass" in param else False
+
+    debug("ID",ID)
 
     #used to create the groups
     groups_raw : dict[int, List[int]] = {}
@@ -95,6 +138,7 @@ def getLiterals(*lits):
 
     # selecting the interested literals
     for a in atomNames:
+        debug("Atom",a)
         if  a.startswith('group('):
             terms = wasp.getTerms('group',a)
             # group(lit_name, weight, group_id)
@@ -181,9 +225,41 @@ def getLiterals(*lits):
 
     return bind 
 
+def create_assumptions_lits(assumptions):
+
+    if not assumptions:
+        return []
+
+    res = []
+    r1 = r"!?(?P<atom>\w+(\(\w+(,\w+)*\))?)" 
+    r2 = r"^!.+$" 
+    for ass in assumptions:
+        atom = re.match(r1,ass).group("atom")
+        if not atom in atomNames:
+            continue
+        lit = atomNames[atom]
+        if re.match(r2,ass):
+            lit *= -1
+        res.append(lit)
+
+    return res
+
+def convert_assparam_to_assarray(assumptions):
+ 
+    # Strip the square brackets
+    stripped_string = assumptions.strip("[]")
+
+    # Split the string by comma
+    array = stripped_string.split(",")
+
+    # If there might be extra spaces around the elements, you can also strip each element
+    array = [element.strip() for element in array]
+
+    return array
+
 
 def simplifyAtLevelZero():
-    global N,lb, I, weight, aggregate, groups, group, reason
+    global N,lb, I, weight, aggregate, groups, group, reason, assumptions
 
     # INCOHERENT
     if mps < lb:
@@ -194,7 +270,11 @@ def simplifyAtLevelZero():
     
     simplyLiterals(lits_level_0, aggregate, group)
 
-    return res
+
+    if assumptions:
+        assumptions = convert_assparam_to_assarray(assumptions)
+
+    return res + create_assumptions_lits(assumptions)
 
 def onLiteralTrue(lit, dl):
     global N,lb, I, weight, aggregate, groups, mps, group, true_group
@@ -282,7 +362,7 @@ def propagate_phase(G: Group):
                 false_lits_g.append(l)
 
         # infer the truth
-        debug("UNDEF N:",g.count_undef, "INF FALSE:", count_infered_falses, "GROUP: ", g.id)
+        # debug("UNDEF N:",g.count_undef, "INF FALSE:", count_infered_falses, "GROUP: ", g.id)
         if g.count_undef - count_infered_falses == 1 and true_group[g] is None:
             # the last remained literal 
             l = max_w(g)
@@ -314,8 +394,11 @@ def propagate_phase(G: Group):
     return S
 
 
-def minimize_reason(self):
-    pass
+def minimize_reason(reason: List[int]):
+    global N,lb, I, weight, aggregate, groups,  mps, group, true_group
+
+
+
 
 def onLiteralsUndefined(*lits):
     global N,lb, I, weight, aggregate, groups,  mps, group, reason, true_group
