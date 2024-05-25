@@ -346,28 +346,31 @@ class Runner:
             --output=smodels | timeout {self.timeout_m}m time -p {Runner.SOLVER} {Runner.SILENT} {self.n0} "
         
         id_param = f"-id {self.id}"
-        ass_param = f"-ass {self.ass}" if self.ass != "" else ""
+        ass_param = f" -ass {self.ass}" if self.ass != "" else ""
         
         if group_type :
             propagator = settings.MAP_ENC_PROP[self.enc_type]
             run += f"--interpreter=python \
             --script-directory={settings.PROPAGATOR_DIR_LOCATION} \
-            --plugins-file=\"{propagator} {id_param} {ass_param}\""
+            --plugins-file=\"{propagator} {id_param}{ass_param}\""
 
         if self.PRINT_RUN:
             print(f"\nRUN:\n{run}")
             
         # running test
-        output = subprocess.run(run, shell=True, capture_output=True).stdout.decode()
-            
-        error = subprocess.run(run, shell=True, capture_output=True).stderr.decode()
+        run_process = subprocess.run(run, shell=True, capture_output=True)
+
+        output = run_process.stdout.decode()
+        error = run_process.stderr.decode()
         output_error = output + error
+
         lines = output_error.splitlines() 
+        
         if Runner.PRINT_OUTPUT_SOLVER:
             print(output)
 
         if Runner.PRINT_ERROR_SOLVER:
-            print(error)
+            print(error, file=sys.stderr)
 
         regex_real = r"^real\s(\d+\.\d+)"
         # regex for the answer set of a given problem
@@ -384,7 +387,6 @@ class Runner:
 
         answer_sets = []
         for line in lines:
-            print(line)
             if not re.search(regex_real, line) is None:
                 time = re.search(regex_real, line).group(1)
             elif not re.search(regex_answer_set, line) is None:

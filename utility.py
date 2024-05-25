@@ -272,8 +272,16 @@ def get_name(atomNames, lit):
         if atomNames[a] == abs(lit):
             return prefix + a
     debug(f"{lit}")
-    
 
+def convert_array_to_string(name, array, atomNames, array_of_lits = True):
+
+    res = ""
+    res += f"{name} [ "
+    for l in array:
+        l = get_name(atomNames=atomNames, lit = l) if array_of_lits else l
+        res+= f"{l} "
+    res += "]"
+    return res
 
 def print_I(I, atomNames, aggregate, G = None, group = None):
     if not DEBUG:
@@ -282,7 +290,7 @@ def print_I(I, atomNames, aggregate, G = None, group = None):
     if G is None:
         debug("Interpretation", end=" ")
     else:
-        debug("Intepretation for group: " + str(G))
+        debug("Intepretation for group: " + str(G), end=" ")
     for l in range(len(I.intepretation)):
         if (aggregate[l] or  aggregate[not_(l)]) and (G is None or group[l] == G):
             debug(get_name(atomNames,l), I[l],end=" ")
