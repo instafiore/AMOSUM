@@ -10,18 +10,18 @@ from utility import GroupFunction, WeightFunction
 
 
 
-def get_all_lit_below_you(lits, l):
+def get_all_lit_below_you(lits, l, weight):
 
     res = []
     found = False
     for i in range(len(lits) - 1, -1, -1):
         lit = lits[i]
-        if lit == l:
+        if weight[lit] == weight[l]:
             found = True
         if found:
             res.append(lit)
 
-    return frozenset(res)
+    return set(res)
 
 def all_subsets(s):
 
@@ -116,7 +116,20 @@ def maximum_subset_sum_less_than_s_with_groups(s: int, literals : List[list], gr
     
     return maximum_subset
 
-def maximum_subset_sum_less_than_s_with_groups_without_memory(s: int, literals : List[list], group: dict, weight: dict):
+def compute_sum(subset, group, weight):
+    sum = 0
+    grouped_lits = {id: [] for _,id in group.values()}
+    for l in subset:
+        id = group[l][1]
+        grouped_lits[id].append(l)
+    for id in grouped_lits:
+        lits_g = grouped_lits[id]
+        if len(lits_g) > 0:
+            sum += weight[max(lits_g, key= lambda x: weight[x])]
+
+    return sum
+
+def maximum_subset_sum_less_than_s_with_groups(s: int, literals : List[list], group: dict, weight: dict):
     
     n = len(literals)
     subset = [[None for _ in range(n + 1)]
@@ -149,7 +162,19 @@ def maximum_subset_sum_less_than_s_with_groups_without_memory(s: int, literals :
                 sum_got = not subset[i][j] is None or not subset[i - w ][j - 1] is None
                 if (sum_got):
                     group_lits = group[lit][0]
-                    with_lit_subset = subset[i - w][j - 1].union(set(get_all_lit_below_you(group_lits, l=lit))) if not subset[i - w][j - 1] is None else None
+                    correct_subset = True
+                    k = j
+                    while True:
+                        if not subset[i - w][k - 1] is None:
+                            if not lit in subset[i - w][k - 1]:
+                                break
+                        else:
+                            correct_subset = False
+                            break
+                        k -= 1
+                        if k <= 0:
+                            break
+                    with_lit_subset = subset[i - w][k - 1].union(set(get_all_lit_below_you(group_lits, l=lit, weight=weight))) if correct_subset else None
                     subset[i][j] = max( 
                             subset[i][j - 1], 
                             with_lit_subset,
@@ -157,6 +182,12 @@ def maximum_subset_sum_less_than_s_with_groups_without_memory(s: int, literals :
                         )
                     
     maximum_subset = subset[s][n]
+
+    # print(f"\"W\"", end=",")
+    # print(f"\"N\"", end=",")
+    # for l in literals:
+    #     print(f"\"{group[l][1]}:{weight[l]}\"", end=",")
+    # print()
 
     # print(f"\"X\"", end=",")
     # print(f"\"N\"", end=",")
@@ -185,12 +216,12 @@ def maximum_subset_sum_less_than_s_with_groups_without_memory(s: int, literals :
 def create_random_instance():
 
     # number of literals 
-    n = random.randint(17, 23)
+    n = random.randint(15, 25)
     literals = [i+1 for i in range(n)]
 
     weight = {}
     for l in literals:
-        weight[l] = random.randint(0,10)
+        weight[l] = random.randint(0,30)
 
     # number of groups
     ng = random.randint(n//4, n//1.5)
@@ -209,7 +240,7 @@ def create_random_instance():
             group[l] = [lits,gid]
         group_dict[gid][0] = lits
 
-    lb = n * random.randint(2, 4)
+    lb = n * random.randint(1, 2)
 
     grouped_dict = {id: [] for _,id in group_dict.values()}
     for l in literals:
@@ -238,28 +269,27 @@ def checkcorrectness(tries):
         # print("weight", weight)
         # print("group", group)
 
-        maximum_subset_dp = maximum_subset_sum_less_than_s_with_groups_without_memory(s = lb - 1 , literals=literals, group=group, weight=weight )
-        print("DP FINISHED")
+        maximum_subset_dp = maximum_subset_sum_less_than_s_with_groups(s = lb - 1 , literals=literals, group=group, weight=weight )
         maximum_subset_exp =  correct_maximum_subset_sum_less_than_s_with_groups(s = lb - 1 , literals=literals,  group=group, weight=weight)
-        print("EXP FINISHED")
         len_maximum_subset_dp = len(maximum_subset_dp) if not maximum_subset_dp is None else -1
         len_maximum_subset_exp = len(maximum_subset_exp) if not maximum_subset_exp is None else -1
         print("try",t,"dp",maximum_subset_dp,"exp",maximum_subset_exp,  len_maximum_subset_dp == len_maximum_subset_exp)
         if len(maximum_subset_dp) != len(maximum_subset_exp):
-            print("lb", lb)
-            print("literals", literals)
-            print("weight", weight)
-            print("group", group)
+            print("lb=", lb)
+            print("literals=", literals)
+            print("weight=", weight)
+            print("group=", group)
 
 
 def create_settings_from_failed_run():
 
-    lb = 9
-    literals = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
-    weight = {1: 3, 2: 5, 3: 5, 4: 10, 5: 4, 6: 10, 7: 0, 8: 3, 9: 2, 10: 3, 11: 6}
-    group = {7: [[7, 9, 1, 8, 10, 3], 0], 9: [[7, 9, 1, 8, 10, 3], 0], 1: [[7, 9, 1, 8, 10, 3], 0], 8: [[7, 9, 1, 8, 10, 3], 0], 10: [[7, 9, 1, 8, 10, 3], 0], 3: [[7, 9, 1, 8, 10, 3], 0], 5: [[5, 2, 11, 4, 6], 1], 2: [[5, 2, 11, 4, 6], 1], 11: [[5, 2, 11, 4, 6], 1], 4: [[5, 2, 11, 4, 6], 1], 6: [[5, 2, 11, 4, 6], 1]}
-
+    lb = 10
+    literals = [1,2,5,4,3,]
+    weight = {5:5, 4:4, 3:3, 1:5, 2:1}
+    group = {5: [[3,4,5],1], 4:[[3,4,5],1], 3:[[3,4,5],1], 1:[[2,1],0], 2:[[2,1],0]}
+    
     grouped_dict = {id: [] for _,id in group.values()}
+    
     for l in literals:
         id = group[l][1]
         grouped_dict[id].append(l)
@@ -274,18 +304,25 @@ def create_settings_from_failed_run():
         literals += lits
 
     # print(grouped_dict)
-    
+    literals = [1,2,5,4,3,]
     return (literals, lb, group, weight)
 
 def main():
 
     # literals, lb, group, weight = create_settings_from_failed_run()
-    # maximum_subset_dp = maximum_subset_sum_less_than_s_with_groups_without_memory(s = lb - 1 , literals=literals, group=group, weight=weight )
-    # print(maximum_subset_dp)
+    
+    # print(compute_sum({1, 2, 4, 6, 7, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21, 22}, group, weight))
+    
+    subset_failed = {1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 16, 17, 18, 19, 20, 21}    
+    # print(group_lits)
+    # print(compute_sum(subset_failed, group, weight))
+    
+    # maximum_subset_dp = maximum_subset_sum_less_than_s_with_groups(s = lb - 1 , literals=literals, group=group, weight=weight )
+    # # print(maximum_subset_dp)
     # maximum_subset_exp =  correct_maximum_subset_sum_less_than_s_with_groups(s = lb - 1 , literals=literals, group=group, weight=weight)
     # print("dp",maximum_subset_dp,"exp",maximum_subset_exp, len(maximum_subset_dp) == len(maximum_subset_exp))
 
-    tries = 100
+    tries = 1000
     checkcorrectness(tries)
     
 if __name__ == "__main__":
