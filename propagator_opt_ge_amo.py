@@ -253,6 +253,7 @@ def getLiterals(*lits):
 def simplifyAtLevelZero():
     global N,lb, I, weight, aggregate, groups, group, reason, assumptions
 
+
     # INCOHERENT
     if mps < lb:
         debug("MPS < LB !!!!!")
@@ -385,29 +386,29 @@ def propagate_phase(G: Group):
     debug(S_str)
 
     print_I(I=I, atomNames=atomNames, aggregate=aggregate)
-    minimize_reason_old(reason=R, trues=trues)
+    # minimize_reason_old(reason=R, trues=trues)
         
     return S
 
 def compute_increment_literals(literals):
     global N,lb, I, weight, aggregate, groups,  mps, group, true_group, global_ord_lit, redundant_lits, reason_trues
+    pass
+    # increment = {}
+    # for l in reason:
+    #     g = group[l]
+    #     if I[l] == True:  
+    #             # tg == lj
+    #             if mps - weight[lj] + weight[mw_g] - wli < lb:
+    #                 redundant_lits_li.append(not_(lj))
+    #             else:
+    #                 break
 
-    increment = {}
-    for l in reason:
-        g = group[l]
-        if I[l] == True:  
-                # tg == lj
-                if mps - weight[lj] + weight[mw_g] - wli < lb:
-                    redundant_lits_li.append(not_(lj))
-                else:
-                    break
-
-        elif I[lj] == False and tg is None and weight[lj] > weight[mw_g]:
-            # debug("mps",mps,"weight[mw_g]",weight[mw_g],"weight[lj]",weight[lj],"gj.id", gj.id)
-            if mps - weight[mw_g] + weight[lj] - wli < lb:
-                redundant_lits_li.append(lj)
-            else:
-                break
+    #     elif I[lj] == False and tg is None and weight[lj] > weight[mw_g]:
+    #         # debug("mps",mps,"weight[mw_g]",weight[mw_g],"weight[lj]",weight[lj],"gj.id", gj.id)
+    #         if mps - weight[mw_g] + weight[lj] - wli < lb:
+    #             redundant_lits_li.append(lj)
+    #         else:
+    #             break
 
 
 

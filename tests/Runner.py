@@ -4,7 +4,7 @@ from typing import Dict, List
 import re
 import sys
 import os
-
+import ast
 import utility
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import settings
@@ -15,25 +15,27 @@ class Runner:
     '''
 
     # the solver that you are using
-    SOLVER = "wasp_python"
+    # SOLVER = "wasp_python"
+    SOLVER = "wasp"
 
     # whether or not running a test for the correctness
-    CHECKING_CORRECTNESS = False
+    CHECKING_CORRECTNESS = True
     # whether to print or not that an answer set is not in another answerset
-    PRINT_NOT_SUBSET = False
+    PRINT_NOT_SUBSET = True
     # whether to print or not the answerset aggr with its mps in the checking correctness 
     PRINT_ANS_AGGR = False
     # whether to print or not the answerset group with its mps in the checking correctness 
     PRINT_ANS_GROUP = False
 
     # whether printing or not the run command
-    PRINT_RUN = True
+    PRINT_RUN = False
 
     # whether printing the output of the solver
-    PRINT_OUTPUT_SOLVER = True
+    PRINT_OUTPUT_SOLVER = False
 
     # whether printing the error output of the solver
-    PRINT_ERROR_SOLVER = True
+    PRINT_ERROR_SOLVER = False
+
 
     # REGEXs
     KNAPSACK_REGEX = r'^(knapsack|kn|ks)$'
@@ -86,8 +88,7 @@ class Runner:
         self.n0 = "-n0" if "n0" in self.param or Runner.CHECKING_CORRECTNESS else ""
         self.ass = self.param["ass"] if "ass" in self.param else ""
 
-        print("utility.REGEX_ASSUMPTIONS", utility.REGEX_ASSUMPTIONS)
-        print("self.ass", self.ass)
+        # print("utility.REGEX_ASSUMPTIONS", utility.REGEX_ASSUMPTIONS)
         if self.ass != "" and re.match(utility.REGEX_ASSUMPTIONS, self.ass) is None:
             raise  Exception(f"No valid assumptions defined, feasible values are: {utility.VALID_VALUES_ASS}")
 
@@ -172,6 +173,13 @@ class Runner:
                 instance = res_regex.group(1)
                 self.instances.append(instance)
 
+    def get_number_answersets(self, answer_sets):
+        # for a in answer_sets:
+        #     if len(a) == 0:
+        #         return 0
+        #     break
+        return len(answer_sets)
+
     def run_classical_test(self, instance: str):
         print(f"RUNNING {self.param} with instance: {instance}")
     
@@ -201,6 +209,7 @@ class Runner:
             encoding = encodings[i]
             group = (i + 1)%2 == 0
             (answer_sets, time) = self.run_instance(instance, encoding, group )
+            # print(f"encoding {encoding} answer_sets {answer_sets}")
             if group:
                 answer_sets_group = answer_sets
                 time_group = time
@@ -208,14 +217,20 @@ class Runner:
                 answer_sets_aggr = answer_sets
                 time_aggr = time
 
-            print(f"[{encoding} {time} {len(answer_sets)}]",end="\t")
+            print(f"[{encoding} {time} {self.get_number_answersets(answer_sets)}]",end="\t")
 
         
-        ng = len(answer_sets_group)
-        na = len(answer_sets_aggr)
+
+        ng = self.get_number_answersets(answer_sets_group)
+        na = self.get_number_answersets(answer_sets_aggr)
+
         
+    
+
         if Runner.CHECKING_CORRECTNESS:
             correct = self.check_correctness(answer_sets_aggr=answer_sets_aggr, answer_sets_group=answer_sets_group, instance=instance)
+        elif ng != na:
+            correct = False
         else:
             correct = True
 
@@ -227,6 +242,9 @@ class Runner:
 
         print()
 
+        # print(answer_sets_group)
+        # print(answer_sets_group)
+
         # printing the new line of the test
         lb_string = ""
         if self.lb:
@@ -235,7 +253,7 @@ class Runner:
         if self.lb:
             ub_string = "," + str(self.ub) 
 
-        if self.problem_number == Runner.KNAPSACK_CODE:
+        if self.problem == Runner.KNAPSACK:
             groups = re.search(r"^\d+?-\w+?-\d+?-(?P<b0>\d+)-(?P<b1>\d+)-(?P<type>\w+)", instance)
             b0 = groups.group("b0")
             b1 = groups.group("b1")
@@ -335,7 +353,7 @@ class Runner:
     
     def run_instance(self, instance, encoding = None, group_type = True):
         
-        location_encoding = {self.location}/{encoding}.asp if encoding else ""
+        location_encoding = f"{self.location}/{encoding}.asp" if encoding else ""
 
         run = f"clingo \
             {self.location_instance}/{instance}.asp \
@@ -425,17 +443,15 @@ class Runner:
         b = self.ub if ub else self.lb
         b_str = "ub" if ub else "lb" 
         if b:
-            if re.match(r"\[(\d+)(,\d+)*\]",b):
-                b = json.loads(b)
+            if re.match(r"\[\((\d+),(\d+)\)(,\((\d+),(\d+)\))*\]",b):
+                b_list = ast.literal_eval(b)
                 subprocess.run(f"echo '' > {settings.BENCHMARKS_LOCATION}/{self.problem}/{b_str}.asp", shell=True)
-                for bi in range(len(b)):
-                    b = b[bi]
+                for b, bi in b_list:
                     subprocess.run(f"echo '{b_str}({b},{bi}).' >> {settings.BENCHMARKS_LOCATION}/{self.problem}/{b_str}.asp", shell=True)
-                B = "-".join(b)
             elif re.match(r"\d+", b):
                 subprocess.run(f"echo '{b_str}({b},{self.id}).' > {settings.BENCHMARKS_LOCATION}/{self.problem}/{b_str}.asp", shell=True)
             else:
-                raise Exception(f"invalid {b_str} insert, it has to be an integer or a list of pairs of integers(json like)") 
+                raise Exception(f"invalid {b_str} insert, it has to be two integers: value id ; or a list of pairs of integers(json like)") 
             
             self.comment_bound(instance=instance, ub=ub, restore=False)
        

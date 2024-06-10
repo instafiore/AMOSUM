@@ -7,7 +7,7 @@ from typing import List
 FOCUSED_GROUP = 2
 FOCUSING = False
 
-DEBUG = True
+DEBUG = False
 
 SEPARATOR = ":"
 NOT = "~"
