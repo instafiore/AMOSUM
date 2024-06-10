@@ -36,7 +36,6 @@ class Runner:
     # whether printing the error output of the solver
     PRINT_ERROR_SOLVER = False
 
-
     # REGEXs
     KNAPSACK_REGEX = r'^(knapsack|kn|ks)$'
     GRAPH_COLOURING_REGEX = r'^(graph_colouring|gc)$'
