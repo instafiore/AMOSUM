@@ -4,8 +4,8 @@ import utility
 import wasp
 from typing import List
 from utility import PerfectHash, debug, Group, max_w, Interpretation, WeightFunction,\
-    GroupFunction, not_, get_name, print_I, convert_array_to_string, print_weights, print_groups, FOCUSED_GROUP, convert_assparam_to_assarray, create_assumptions_lits, \
-    AggregateFunction, TrueGroupFunction, simplyLiterals
+    GroupFunction, not_, get_name, print_I, convert_array_to_string, print_perfect_hash, print_weights, print_groups, FOCUSED_GROUP, convert_assparam_to_assarray, create_assumptions_lits, \
+    AggregateFunction, TrueGroupFunction, remove_elements, simplyLiterals
 import re
 
 '''
@@ -76,12 +76,18 @@ param : dict
 # global array of ordered lit per weight (ascending order)
 global_ord_lit : List[int]
 
+# strategy with which to create the minimal reason, default is the order given in input
+strategy = 'default'
 
 
 def getReasonForLiteral(lit):
-    global reason_falses, reason_trues
+    global reason_falses, reason_trues, redundant_lits
     reason = reason_falses + reason_trues[lit]
+    rl = redundant_lits[lit]
+    if len(rl) > 0:
+        reason = remove_elements(reason, rl)
     reason_trues[lit] = []
+    redundant_lits[lit] = []
     return reason
 
 def process_sys_parameters():
@@ -119,7 +125,7 @@ def process_sys_parameters():
     
 
 def getLiterals(*lits):
-    global N,lb, I, weight, aggregate, groups, mps, group, atomNames, true_group, lits_level_0, reason_trues, ID, param, assumptions, global_ord_lit, redundant_lits
+    global N,lb, I, weight, aggregate, groups, mps, group, atomNames, true_group, lits_level_0, reason_trues, ID, param, assumptions, global_ord_lit, redundant_lits, strategy
 
     process_sys_parameters()
 
@@ -128,6 +134,8 @@ def getLiterals(*lits):
     lb = None
     bind = []
     negative_lit_regex = re.compile(r"^not\s+(?P<atom_name>[\w()]+)")
+
+    strategy = param.get("strategy",strategy)
 
     # initializing 
     N = lits[0] + 1
@@ -199,12 +207,6 @@ def getLiterals(*lits):
     global_ord_lit = sorted(global_ord_lit, key = lambda x: x[1])
     global_ord_lit = [lit for lit, w in global_ord_lit]
 
-
-    # debug("global_ord_lit: ", end=" ")
-    # for l in global_ord_lit:
-    #     debug(get_name(atomNames=atomNames, lit = l), end=" ")
-    # debug("", end="\n")
-
     # creating groups
     for group_id in groups_raw:
         
@@ -256,7 +258,7 @@ def simplifyAtLevelZero():
 
     # INCOHERENT
     if mps < lb:
-        debug("MPS < LB !!!!!")
+        debug("MPS < LB !!!")
         return [1]
     
     res = propagate_phase(None)
@@ -271,9 +273,6 @@ def simplifyAtLevelZero():
 
 def onLiteralTrue(lit, dl):
     global N,lb, I, weight, aggregate, groups, mps, group, true_group
-
-    # if dl == 1:
-    #     debug("MPS:",mps)
 
     debug("True",get_name(lit=lit, atomNames=atomNames), "DL", dl)
     (next_phase, G) = update_phase(lit)
@@ -307,11 +306,6 @@ def update_phase(l: int) -> (bool, Group):
                 w_n = weight[new_max]
                 w_p = weight[prev_max]
                 mps = mps - w_p + w_n  
-                # print_I(I=I, atomNames=atomNames, aggregate=aggregate)
-                # if w_p == w_n:
-                #     return (False, None)
-                # debug("MPS: ",mps, "new max", get_name(atomNames=atomNames, lit = new_max), "MAX: ",  \
-                #       get_name(atomNames=atomNames, lit = max_w(G)))
             else:
                 return (True, G)   
         elif G.count_undef == 1:
@@ -349,15 +343,12 @@ def propagate_phase(G: Group):
             if I[l] is None:
                 if mps - mw_g + weight[l] < lb:
                     S.append(not_(l))
-                    # debug("APPENDED: ", get_name(atomNames=atomNames,lit=not_(l)), "MPS: ", mps, "mw_g", mw_g)
                     count_infered_falses += 1
                 else:
                     break
             elif I[l] is False:
                 false_lits_g.append(l)
 
-        # infer the truth
-        # debug("UNDEF N:",g.count_undef, "INF FALSE:", count_infered_falses, "GROUP: ", g.id)
         if g.count_undef - count_infered_falses == 1 and true_group[g] is None:
             # the last remained literal 
             l = max_w(g)
@@ -384,41 +375,115 @@ def propagate_phase(G: Group):
 
     S_str = convert_array_to_string(name="Derived", array=S, atomNames=atomNames)
     debug(S_str)
+    R_str = convert_array_to_string(name="Reason", array=R, atomNames=atomNames)
+    debug(R_str)
 
     print_I(I=I, atomNames=atomNames, aggregate=aggregate)
-    # minimize_reason_old(reason=R, trues=trues)
-        
+    compute_minimal_reason(reason=R, trues=trues)
+     
     return S
+
+def get_increment_name(increment):
+    increment_name = {}
+    for i in increment:
+        increment_name[f"{get_name(atomNames=atomNames,lit=i)}"] = increment[i]
+    return increment_name
 
 def compute_increment_literals(literals):
     global N,lb, I, weight, aggregate, groups,  mps, group, true_group, global_ord_lit, redundant_lits, reason_trues
-    pass
-    # increment = {}
-    # for l in reason:
-    #     g = group[l]
-    #     if I[l] == True:  
-    #             # tg == lj
-    #             if mps - weight[lj] + weight[mw_g] - wli < lb:
-    #                 redundant_lits_li.append(not_(lj))
-    #             else:
-    #                 break
+    increment = {}
+    for l in literals:
+        g : Group
+        g = group[l] 
+        if g is None:
+            g = group[not_(l)]
+        assert not g is None 
+        mw_g = max_w(g)
+        w_mw_g = weight[mw_g]
+        w = weight[l]
+        if w is None:
+            w =  weight[not_(l)]
+             # it means that the literal has been flipped in the reason
+            l = not_(l)
+        assert not w  is None
+        i : int
+        if I[l] == True:  
+            w_mw_g = weight[g.ord_l[-1]]
+            # if is true: if it was false in the worst case the maxiumum literal of the group could be true
+            i = w_mw_g - w
+        elif I[l] == False:
+            # if l false: if it was true it would be the true_group[g] 
+            i = w - w_mw_g
+        increment[l] = i
 
-    #     elif I[lj] == False and tg is None and weight[lj] > weight[mw_g]:
-    #         # debug("mps",mps,"weight[mw_g]",weight[mw_g],"weight[lj]",weight[lj],"gj.id", gj.id)
-    #         if mps - weight[mw_g] + weight[lj] - wli < lb:
-    #             redundant_lits_li.append(lj)
-    #         else:
-    #             break
+    return increment
+
+def increment_f(l: int, current_subset_maximal):
+    g = group[l] 
+    w = weight[l]
+    if I[l] == True:  
+        w_mw_g = weight[g.ord_l[-1]]
+        i = w_mw_g - w
 
 
 
 def compute_minimal_reason(reason: List[int], trues: List[int]):
-    global N,lb, I, weight, aggregate, groups,  mps, group, true_group, global_ord_lit, redundant_lits, reason_trues
+    global N,lb, I, weight, aggregate, groups,  mps, group, true_group, global_ord_lit, redundant_lits, reason_trues, strategy_minimal
 
     # computing increment for each literal 
     increment = compute_increment_literals(literals=reason)
+    debug(f"increment {get_increment_name(increment=increment)}")
+    
+    for l in trues:
+        redundant_lits_l = []
+        g = group[l]
+        assert not g is None
+        increment_l = 0
+        s = lb - (mps - weight[l]) - 1 
+        for lr in reason:
+            lr_copy = lr
+            glr = group[lr] 
+            if g is None:
+                g = group[not_(lr)]
+                lr = not_(lr)
+            if g.id == glr.id:
+                continue
+            # if increment_l + increment[lr] <= s:
+            #     increment_l += increment[lr]
+            #     redundant_lits_l.append(lr_copy)
+        redundant_lits[l] = redundant_lits_l
+        if len(redundant_lits_l) != 0: 
+            redundant_lits_str = convert_array_to_string(name=f"redundant lits for {get_name(atomNames=atomNames,lit=l)}", array=redundant_lits_l, atomNames=atomNames)
+            debug(redundant_lits_str)
+
+def maximal_subset_sum_with_groups(set: List[int], s: int, w: dict):
+    global N,lb, I, weight, aggregate, groups,  mps, group, true_group, global_ord_lit, redundant_lits, reason_trues
 
 
+def compute_minimum_reason(reason: List[int], trues: List[int]):
+    global N,lb, I, weight, aggregate, groups,  mps, group, true_group, global_ord_lit, redundant_lits, reason_trues
+
+    for l in trues:
+        g = group[l]
+        literals_l = []
+        assert not g is None
+        s = lb - (mps - weight[l]) - 1 
+        for lr in reason:
+            lr_copy = lr
+            glr = group[lr] 
+            if g is None:
+                g = group[not_(lr)]
+                lr = not_(lr)
+            if g.id != glr.id:
+                literals_l.append(lr)
+            
+        redundant_lits_l = maximum_subset_sum_less_than_s_with_groups(s=s, literals= literals_l, weight = increment)
+        redundant_lits[l] = redundant_lits_l
+        if len(redundant_lits_l) != 0: 
+            redundant_lits_str = convert_array_to_string(name=f"redundant lits for {get_name(atomNames=atomNames,lit=l)}", array=redundant_lits_l, atomNames=atomNames)
+            debug(redundant_lits_str)
+
+    
 def minimize_reason_old(reason: List[int], trues: List[int]):
     global N,lb, I, weight, aggregate, groups,  mps, group, true_group, global_ord_lit, redundant_lits, reason_trues
 

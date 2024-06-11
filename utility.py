@@ -7,13 +7,13 @@ from typing import List
 FOCUSED_GROUP = 2
 FOCUSING = False
 
-DEBUG = False
+DEBUG = True
 
 SEPARATOR = ":"
 NOT = "~"
 REGEX_LIT = rf"{NOT}?(\w+(\(\w+({SEPARATOR}\w+)*\))?)" 
 REGEX_ASSUMPTIONS = rf"^\[{REGEX_LIT}({SEPARATOR}{NOT}?{REGEX_LIT})*\]$"
-VALID_VALUES_ASS = f"[[{NOT}]<atom_name>[(param1,parm2,...)],...] "
+VALID_VALUES_ASS = f"[[{NOT}]<atom_name>[(param1,parm2,...)]:...] "
 
 def debug(*message: str, G: 'Group' = None , end ="\n"):
     if DEBUG and ( G is None or G.id == FOCUSED_GROUP or not FOCUSING):
@@ -212,6 +212,9 @@ def min_w(g: Group):
 def not_(l: int):
     return l * -1
 
+def remove_elements(original, to_remove):
+    return [element for element in original if element not in to_remove]
+
 class PerfectHash:
 
     def __getitem__(self, lit: int) -> any:
@@ -296,7 +299,7 @@ def print_I(I, atomNames, aggregate, G = None, group = None):
             debug(get_name(atomNames,l), I[l],end=" ")
     debug("")
 
-def print_perfect_hash(ph: PerfectHash, atomNames, aggregate):
+def print_perfect_hash(ph: PerfectHash, atomNames, aggregate: AggregateFunction):
     if not DEBUG:
         return
     
@@ -307,7 +310,7 @@ def print_perfect_hash(ph: PerfectHash, atomNames, aggregate):
         if aggregate[l] or aggregate[not_(l)]:
             debug(get_name(atomNames,l), str(ph[l]))
 
-def print_weights(weight: WeightFunction, atomNames, aggregate):
+def print_weights(weight: WeightFunction, atomNames, aggregate: AggregateFunction):
     debug("Weights")
     print_perfect_hash(weight, atomNames, aggregate)
 

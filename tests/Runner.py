@@ -31,10 +31,10 @@ class Runner:
     PRINT_RUN = False
 
     # whether printing the output of the solver
-    PRINT_OUTPUT_SOLVER = False
+    PRINT_OUTPUT_SOLVER = True
 
     # whether printing the error output of the solver
-    PRINT_ERROR_SOLVER = False
+    PRINT_ERROR_SOLVER = True
 
     # REGEXs
     KNAPSACK_REGEX = r'^(knapsack|kn|ks)$'
