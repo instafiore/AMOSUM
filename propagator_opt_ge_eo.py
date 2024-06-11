@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 import wasp
 from typing import List
-from utility import PerfectHash, debug, Group, max_w, Interpretation, WeightFunction,\
+from utility import PerfectHash, debug, Group, max_w, SymmetricFunction, WeightFunction,\
     GroupFunction, not_, get_name, print_I, print_weights, print_groups, FOCUSED_GROUP, \
     AggregateFunction, TrueGroupFunction, simplyLiterals
 import re
@@ -30,7 +30,7 @@ ID : int
 N: int
 
 # a function from literals -> {True, False, None}
-I : Interpretation
+I : SymmetricFunction
 
 # a function from literals -> weights
 weight : WeightFunction
@@ -81,7 +81,7 @@ def getLiterals(*lits):
 
     # initializing 
     N = lits[0] + 1
-    I = Interpretation(N)
+    I = SymmetricFunction(N)
     weight = WeightFunction(N)
     group = GroupFunction(N)
     aggregate = AggregateFunction(N, False)

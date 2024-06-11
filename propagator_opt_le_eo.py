@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 import wasp
 from typing import List
-from utility import PerfectHash, debug, Group, Interpretation, WeightFunction,\
+from utility import PerfectHash, debug, Group, SymmetricFunction, WeightFunction,\
     GroupFunction, min_w, not_, get_name, print_I, print_weights, print_groups, FOCUSED_GROUP, \
     AggregateFunction, TrueGroupFunction, simplyLiterals
 import re
@@ -30,7 +30,7 @@ ID : int
 N: int
 
 # a function from literals -> {True, False, None}
-I : Interpretation
+I : SymmetricFunction
 
 # a function from literals -> weights
 weight : WeightFunction
@@ -80,7 +80,7 @@ def getLiterals(*lits):
 
     # initializing 
     N = lits[0] + 1
-    I = Interpretation(N)
+    I = SymmetricFunction(N)
     weight = WeightFunction(N)
     group = GroupFunction(N)
     aggregate = AggregateFunction(N, False)
@@ -91,8 +91,6 @@ def getLiterals(*lits):
     groups = set()
     print(f"parameters {sys_parameters}")
 
-    # debug("atomNames", atomNames)
-    
     # selecting the interested literals
     for a in atomNames:
         if  a.startswith('group('):
@@ -126,12 +124,6 @@ def getLiterals(*lits):
             bind.append(lit)
             bind.append(-lit)
 
-            # debug()
-            # debug("lit_name", get_name(atomNames, lit))
-            # debug("weight[lit]",  weight[lit])
-            # debug("group_id", group_id)
-            # debug()
-        
         elif a.startswith("ub("):
             terms = wasp.getTerms('ub',a)
             if len(terms) != 2 or terms[1] != ID:
@@ -226,7 +218,6 @@ def update_phase(l: int) -> (bool, Group):
     if aggregate[l]:
         G = group[l]
         G.decrease_und()
-        # debug("true", get_name(atomNames, l), G = G)
         
         true_group[G] = l
         w_min = weight[min_w(G)]
@@ -237,8 +228,6 @@ def update_phase(l: int) -> (bool, Group):
     elif aggregate[not_(l)]:
         G = group[not_(l)]
         G.decrease_und()
-        # debug("false", get_name(atomNames, not_(l)), G = G)
-
         if not_(l) == min_w(G):
             new_min, prev_min = G.update_min(I)
             debug("prev_min", get_name(atomNames=atomNames, lit=prev_min), "new_min", get_name(atomNames=atomNames, lit=new_min))
@@ -280,7 +269,6 @@ def propagate_phase(G: Group):
 
         for i in range(len(g.ord_l)-1,-1,-1):
             l = g.ord_l[i]
-            # print(get_name(atomNames, l))
             if I[l] is None:
                 if mps - mw_g + weight[l] > ub:
                     # infer l as false
@@ -292,7 +280,6 @@ def propagate_phase(G: Group):
     
     if len(S) != 0:
         for g in groups:
-            # print_I(I, atomNames, aggregate)
             if true_group[g] is None:
                 debug("g", g.id, "min_w", get_name(atomNames, min_w(g)))
                 mw_g = weight[min_w(g)]
@@ -305,24 +292,6 @@ def propagate_phase(G: Group):
    
         # updating the reason
         reason = R
-
-        # debug("mps",mps, G = G)
-        # for g in groups:
-        #     if true_group[g]:
-        #         debug(get_name(atomNames, true_group[g]), weight[true_group[g]] , "true", G = G, end= " ")
-        #     else:
-        #         debug(get_name(atomNames, mw(g)), weight[mw(g)], "undef", G = G, end= " ")
-        #     debug("", G = G)
-
-        debug("S => ")
-        for s in S :
-            debug(get_name(atomNames, s))
-        debug("END S")
-        debug("R: ")
-        for r in R :
-            debug(get_name(atomNames, r))
-        debug("END R")
-
     return S
 
 def onLiteralsUndefined(*lits):
@@ -333,16 +302,12 @@ def onLiteralsUndefined(*lits):
         # updating interpretation
         I[l] = None
 
-        # print_I(I, atomNames, aggregate)
-
         # updating min weight for group(l)
         G = group[l]
 
         if G is None:
             G = group[not_(l)]
             l = not_(l)
-
-        # debug("undefined ", get_name(atomNames, l), G = G)
 
         tg = true_group[G]
 
@@ -394,8 +359,6 @@ def onLiteralsUndefined(*lits):
             # updating the mps
             if minw < weight[l]: 
                 mps = mps - weight[l] + minw
-                # debug(f"prev mps {mps_p} new mps {mps}")
-
 
             # updating the min undefined
             if pos_min > pos_l:
@@ -407,8 +370,6 @@ def onLiteralsUndefined(*lits):
                 G.set_min(l)
                 if tg is None:
                     mps = mps - minw + w_l
-                    # debug(f"prev mps {mps_p} new mps {mps}")
-
         
 
         

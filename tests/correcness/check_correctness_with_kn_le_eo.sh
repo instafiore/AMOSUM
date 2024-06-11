@@ -18,5 +18,5 @@ done
 
 # Iterate over the list and call run.py with each integer as a parameter
 for number in "${numbers[@]}"; do
-    ./run.py -problem kn -enc_type le_eo -nt 1 -l -write_res false  -ub "$number"
+    ../../run.py -problem kn -enc_type le_eo -nt 1 -l -write_res false  -ub "$number"
 done
