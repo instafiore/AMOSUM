@@ -3,9 +3,7 @@ import json
 import utility
 import wasp
 from typing import List
-from utility import PerfectHash, debug, Group, get_increment_name, max_w, SymmetricFunction, WeightFunction,\
-    GroupFunction, not_, get_name, print_I, convert_array_to_string, print_perfect_hash, print_weights, print_groups, FOCUSED_GROUP, convert_assparam_to_assarray, create_assumptions_lits, \
-    AggregateFunction, TrueGroupFunction, remove_elements, simplyLiterals
+from utility import *
 import re
 
 atomNames = {}
@@ -75,14 +73,31 @@ global_ord_lit : List[int]
 # strategy with which to create the minimal reason, default is the order given in input
 strategy = 'default'
 
+# the last decision literal
+last_decision_lit = 0
+
+# type of minimization, default no minimization
+minimization = Minimize.NO_MINIMIZATION
+
+
 def getReasonForLiteral(lit):
     global reason_falses, reason_trues, redundant_lits
     reason = reason_falses + reason_trues[lit]
     rl = redundant_lits[lit]
+    removed = False
     if len(rl) > 0:
+        removed = True
+        reason_c = reason
         reason = remove_elements(reason, rl)
     reason_trues[lit] = []
     redundant_lits[lit] = []
+    if removed:
+        p = (1 - (len(reason) / len(reason_c)))*100
+        # print(f"reduction of the reason of {p}%", file = sys.stderr)
+        redundant_lits_str = convert_array_to_string(name=f"reason of {get_name(atomNames=atomNames, lit=lit)} before ", array=reason_c, atomNames=atomNames)
+        debug(redundant_lits_str)
+        redundant_lits_str = convert_array_to_string(name=f"reason of {get_name(atomNames=atomNames, lit=lit)} ", array=reason, atomNames=atomNames)
+        debug(redundant_lits_str)
     return reason
 
 def process_sys_parameters():
@@ -118,10 +133,12 @@ def process_sys_parameters():
             param[key] = True
 
 def getLiterals(*lits):
-    global N,lb, I, weight, aggregate, groups, mps, group, atomNames, true_group, lits_level_0, reason_trues, ID, param, assumptions, global_ord_lit, redundant_lits, strategy
+    global N,lb, I, weight, aggregate, groups, mps, group, atomNames, true_group, lits_level_0, reason_trues, ID, param, assumptions, global_ord_lit, redundant_lits, strategy, minimization
 
     process_sys_parameters()
     debug("param", param)
+
+    minimization = Minimize.CARDINALITY_MINIMAL
 
     lb = None
     bind = []
@@ -262,9 +279,10 @@ def simplifyAtLevelZero():
     return res + create_assumptions_lits(assumptions=assumptions,atomNames=atomNames)
 
 def onLiteralTrue(lit, dl):
-    global N,lb, I, weight, aggregate, groups, mps, group, true_group
+    global N,lb, I, weight, aggregate, groups, mps, group, true_group, last_decision_lit
 
-    debug("True",get_name(lit=lit, atomNames=atomNames), "DL", dl)
+    last_decision_lit = lit
+    debug(f"True {get_name(lit=lit, atomNames=atomNames)} id {lit} DL {dl}")
     (next_phase, G) = update_phase(lit)
 
     propagated_lits = []
@@ -295,7 +313,9 @@ def update_phase(l: int) -> (bool, Group):
                 w_n : int  = 0
                 w_n = weight[new_max]
                 w_p = weight[prev_max]
+                mps_prev = mps
                 mps = mps - w_p + w_n  
+                debug(f"mps_prev {mps_prev} mps {mps}")
             else:
                 return (True, G)   
         elif G.count_undef == 1:
@@ -351,7 +371,7 @@ def propagate_phase(G: Group):
     if len(S) != 0:
         for g in groups:
             if g.count_undef == 0 and true_group[g] is None:
-                R.extend(g.ord_l)
+                R.extend(reversed(g.ord_l))
             elif true_group[g] is None:
                 mw_g = weight[max_w(g)]
                 for i in range(len(g.ord_l) - 1, -1, -1):
@@ -371,9 +391,60 @@ def propagate_phase(G: Group):
     debug(R_str)
 
     print_I(I=I, atomNames=atomNames, aggregate=aggregate)
-    # compute_minimal_reason(reason=R, trues=trues)
+    compute_minimal_reason(reason=R, trues=trues)
      
     return S
+
+def compute_minimal_reason(reason: List[int], trues: List[int]):
+    global N,lb, I, weight, aggregate, groups, mps, group, true_group, reason_falses, reason_trues, redundant_lits
+
+    '''
+    Invariants reason is grouped by group id and in each group the literals are sort in descending order
+    '''
+
+    if minimization == Minimize.NO_MINIMIZATION:
+        return
+
+    '''
+    IMPORTANT: It is not possible to eliminate the decision literal at the highest level, since it is for sure in the reason.
+    Otherwise can happen the, let !li be a decision literal of the last level and !li -> !lj. If there exists
+    a group G = {lj, lk, ... } where lj and all the others literals are false except for lk
+    maybe lk is derived, since lj is false. Can happen that lk can be derived even if li is true, but lj is false because of li.
+    So li is mandatory in the reason.
+    '''
+    
+    # computing increment for each literal 
+    # increment = compute_increment_literals(literals=reason)
+    # debug(f"increment {get_increment_name(increment=increment)}")
+    
+    for l in trues:
+        reason_l_to_minimize = []
+        g = group[l]
+        assert not g is None
+        s = lb - (mps - weight[l]) - 1 
+        for lr in reason:
+            glr = group[lr] 
+            # it means that the literal is true, since for sure has been flipped (it has not group otherwise)
+            # so cannot be the same group of l, since l is also true 
+            if not glr is None and g.id == glr.id or lr == -last_decision_lit:
+                continue
+            reason_l_to_minimize.append(lr)
+
+        redundant_lits_str = convert_array_to_string(name=f"reason_l_to_minimize for {get_name(atomNames=atomNames,lit=l)}", array=reason_l_to_minimize, atomNames=atomNames)
+        debug(redundant_lits_str)
+
+        if minimization == Minimize.MINIMAL:
+            redundant_lits[l] = maximal_subset_sum_less_than_s_with_groups(literals=reason_l_to_minimize, s = s, weight= weight, group=group, true_group=true_group)
+        elif minimization == Minimize.CARDINALITY_MINIMAL:
+            increment = compute_increment_literals(literals=reason_l_to_minimize, group=group, weight=weight)
+            redundant_lits[l]  = maximum_subset_sum_less_than_s_with_groups(literals= reason_l_to_minimize, s = s, weight = increment, group=group, I=I)
+        else:
+            assert False
+            
+        # TODO: REMOVE
+        if len(redundant_lits[l]) != 0: 
+            redundant_lits_str = convert_array_to_string(name=f"redundant lits for {get_name(atomNames=atomNames,lit=l)}", array=redundant_lits[l], atomNames=atomNames)
+            debug(redundant_lits_str)
 
 def onLiteralsUndefined(*lits):
     global N,lb, I, weight, aggregate, groups,  mps, group, reason, true_group

@@ -26,8 +26,6 @@ ENCODING_WITH_AGGR_LE_AMO = "encoding_with_aggregates_le_amo"
 
 
 PROPAGATOR_DIR_LOCATION = os.path.dirname(os.path.abspath(__file__))
-# You can print it to verify
-print("The directory of utility.py is:", PROPAGATOR_DIR_LOCATION)
 TESTS_LOCATION = f"{PROPAGATOR_DIR_LOCATION}/tests"
 BENCHMARKS_LOCATION = f"{TESTS_LOCATION}/benchmarks"
 TEMP_TESTS_LOCATION = f"{TESTS_LOCATION}/temp"

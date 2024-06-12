@@ -52,7 +52,7 @@ def correct_maximum_subset_sum_less_than_s_with_groups(s: int, literals : List[l
     return maximum_subset
             
 
-def maximum_subset_sum_less_than_s_with_groups(s: int, literals : List[list], group: dict, weight: dict):
+def maximum_subset_sum_less_than_s_with_groups_unaltrochenonsochecifacciaqui(s: int, literals : List[list], group: dict, weight: dict):
     
     n = len(literals)
     subset = [[None for _ in range(n + 1)]

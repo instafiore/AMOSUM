@@ -1,5 +1,6 @@
 # utility module
 
+from enum import Enum
 import re
 import sys
 from typing import Any, List
@@ -7,7 +8,7 @@ from typing import Any, List
 FOCUSED_GROUP = 2
 FOCUSING = False
 
-DEBUG = True
+DEBUG = False
 
 SEPARATOR = ":"
 NOT = "~"
@@ -282,8 +283,8 @@ def convert_array_to_string(name, array, atomNames, array_of_lits = True):
     res = ""
     res += f"{name} [ "
     for l in array:
-        l = get_name(atomNames=atomNames, lit = l) if array_of_lits else l
-        res+= f"{l} "
+        ln = get_name(atomNames=atomNames, lit = l) if array_of_lits else l
+        res+= f"{ln} {l}, "
     res += "]"
     return res
 
@@ -327,7 +328,10 @@ def get_increment_name(increment: dict, atomNames: dict):
 
 # MINIMIZING REASON 
 #################################################################################################################################################
-    
+class Minimize(Enum):
+    NO_MINIMIZATION = "default"
+    MINIMAL = "min"
+    CARDINALITY_MINIMAL = "c_min"
 
 def is_true_in_reason(lit, group: GroupFunction):
     '''
@@ -354,7 +358,7 @@ def increment_f(l: int, current_subset_maximal, true_group: TrueGroupFunction, w
         # i = g.ord_i[l]
         i = len(g.ord_i) - 1
         mw_g = weight[max_w(g)]
-        current_l = l
+        current_l = g.ord_l[i]
         increment = w - mw_g
         while mw_g < weight[current_l]:
             if current_l in current_subset_maximal:
@@ -363,55 +367,35 @@ def increment_f(l: int, current_subset_maximal, true_group: TrueGroupFunction, w
                 #  but higher weight
                 break
             i -= 1
+            if i <= 0:
+                break
             current_l = g.ord_l[i]
         return increment
 
 # TODO: remove the parameter true_group and atomNames
-def compute_minimal_reason(reason: List[int], trues: List[int], weight: WeightFunction, true_group: TrueGroupFunction, group: Group, atomNames: dict):
- 
-    # computing increment for each literal 
-    increment = compute_increment_literals(literals=reason)
-    debug(f"increment {get_increment_name(increment=increment)}")
-    
-    for l in trues:
-        reason_l_to_minimize = []
-        g = group[l]
-        assert not g is None
-        s = lb - (mps - weight[l]) - 1 
-        for lr in reason:
-            glr = group[lr] 
-            # it means that the literal is true, since for sure has been flipped (it has not group otherwise)
-            # so cannot be the same group of l, since l is also true 
-            if not glr is None and g.id == glr.id:
-                continue
-            reason_l_to_minimize.append(l)
 
-        redundant_lits[l] = maximal_subset_sum_with_groups(literals=reason_l_to_minimize, s = s, w= weight, true_group=true_group, group=group)
-        # TODO: REMOVE
-        if len(redundant_lits[l]) != 0: 
-            redundant_lits_str = convert_array_to_string(name=f"redundant lits for {get_name(atomNames=atomNames,lit=l)}", array=redundant_lits[l], atomNames=atomNames)
-            debug(redundant_lits_str)
-
-def maximal_subset_sum_with_groups(literals: List[int], s: int, w: WeightFunction, true_group : TrueGroupFunction, group: GroupFunction):
+def maximal_subset_sum_less_than_s_with_groups(literals: List[int], s: int, weight: WeightFunction,  group: GroupFunction, true_group : TrueGroupFunction):
 
     current_subset_maximal = []
     current_sum = 0
 
     for l in literals:
-        inc = increment_f(l, current_subset_maximal, true_group, w, group)
+        inc = increment_f(l, current_subset_maximal, true_group, weight, group)
         if current_sum + inc <= s:
-                increment_l += inc
+                current_sum += inc
                 current_subset_maximal.append(l)
     
     return current_subset_maximal
 
-def compute_increment_literals(literals):
+def compute_increment_literals(literals: List[int], group: GroupFunction, weight: WeightFunction):
     increment = {}
     for l in literals:
         g : Group
         g = group[l] 
-        if G is None:
-            G = group[not_(l)]
+        tg = False
+        if g is None:
+            g = group[not_(l)]
+            tg = True
             # l = not_(l)
         assert not g is None 
         mw_g = max_w(g)
@@ -419,38 +403,95 @@ def compute_increment_literals(literals):
         w = weight[l]
         assert not w  is None
         i : int
-        if I[l] == True:  
+        if tg:  
             w_mw_g = weight[g.ord_l[-1]]
-            # if is true: if it was false in the worst case the maxiumum literal of the group could be true
+            # l is true: if it was false in the worst case the maxiumum literal of the group could be true
             i = w_mw_g - w
-        elif I[l] == False:
-            # if l false: if it was true it would be the true_group[g] 
+        else:
+            # l is false: if it was true it would be the true_group[g] 
             i = w - w_mw_g
         increment[l] = i
 
     return increment
-def compute_minimum_reason(reason: List[int], trues: List[int]):
-    global N,lb, I, weight, aggregate, groups,  mps, group, true_group, global_ord_lit, redundant_lits, reason_trues
 
-    for l in trues:
-        g = group[l]
-        literals_l = []
-        assert not g is None
-        s = lb - (mps - weight[l]) - 1 
-        for lr in reason:
-            lr_copy = lr
-            glr = group[lr] 
-            if g is None:
-                g = group[not_(lr)]
-                lr = not_(lr)
-            if g.id != glr.id:
-                literals_l.append(lr)
-            
-        redundant_lits_l = maximum_subset_sum_less_than_s_with_groups(s=s, literals= literals_l, weight = increment)
-        redundant_lits[l] = redundant_lits_l
-        if len(redundant_lits_l) != 0: 
-            redundant_lits_str = convert_array_to_string(name=f"redundant lits for {get_name(atomNames=atomNames,lit=l)}", array=redundant_lits_l, atomNames=atomNames)
-            debug(redundant_lits_str)
+def get_all_lit_below_you(lit: int, group: GroupFunction, I: SymmetricFunction, reason: List[int]):
 
+    lit_c = lit
+    g = group[lit]
+    if g is None:
+        g = group[not_(lit)]
+        lit = not_(lit)
+
+    res = []
+    start = g.ord_i[lit]
+    for i in range(start,-1,-1):
+        l = g.ord_l[i]
+        if I[l] is None:
+            # you found the maximum undefined
+            break
+        if l in reason or not_(l) in reason:
+            res.append(l)
+    return set(res)
+
+
+def maximum_subset_sum_less_than_s_with_groups(literals : List[int], s: int, group: GroupFunction, weight: dict, I: SymmetricFunction):
+    
+    n = len(literals)
+    subset = [[None for _ in range(n + 1)]
+                    for _ in range (s + 1)]
+
+    # If sum is 0, then the maximal subset is empty 
+    for i in range (n + 1):
+        subset[0][i] = set([])
+        if i == 0: 
+            continue
+        l = literals[i-1]
+        cell = set([l]) if weight[l] == 0 else set()
+        subset[0][i] = subset[0][i-1].union(cell)
+
+    # Fill the subset table in bottom up manner 
+    for i in range (1, s + 1): 
+        for j in range (1, n + 1):
+            lit = literals[j - 1]
+            w = weight[lit]
+            subset[i][j] = subset[i][j - 1]
+            if (i >= w) :
+                sum_got = not subset[i][j] is None or not subset[i - w ][j - 1] is None
+                if (sum_got):
+                    correct_subset = True
+                    k = j
+                    while True:
+                        if not subset[i - w][k - 1] is None:
+                            # it is sufficient to controll that lit is not in subset[i - w][k - 1] and instead of also checking that 
+                            # some literals of the same group are in the subset[i - w][k - 1] because since the literals are grouped and 
+                            # ordered by weight if some literal before lit has been choose implies that also lit is already in subset[i - w][k - 1]
+                            # and viceversa
+                            if not lit in subset[i - w][k - 1]:
+                                break
+                        else:
+                            correct_subset = False
+                            break
+                        k -= 1
+                        if k <= 0:
+                            break
+                    with_lit_subset = subset[i - w][k - 1].union(get_all_lit_below_you(lit=lit, group=group, I=I, reason=literals)) if correct_subset else None
+                    subset[i][j] = max( 
+                            subset[i][j - 1], 
+                            with_lit_subset,
+                            key= lambda x: len(x) if not x is None else -1
+                        )
+                    
+    maximum_subset = subset[s][n]
+
+    len_subset_max = len(maximum_subset) if subset[i][n] else -1
+    for i in range(s+1):
+        len_subset_max = len(maximum_subset) if not maximum_subset is None else -1
+        len_subset = len(subset[i][n]) if not subset[i][n] is None  else -1
+        # print("len_subset_max", len_subset_max)
+        # print("len_subset", len_subset)
+        if len_subset > len_subset_max:
+            maximum_subset = subset[i][n]
+    
+    return list(maximum_subset)
 #################################################################################################################################################
 # END MINIMIZING REASON

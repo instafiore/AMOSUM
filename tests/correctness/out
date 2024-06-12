@@ -1,0 +1,610 @@
+real 0.16
+user 0.15
+sys 0.00
+
+real 6.44
+user 6.41
+sys 0.01
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '30000'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.16 6923]	[encoding_with_group_ge_amo 6.44 6923]	CORRENT
+real 0.13
+user 0.11
+sys 0.02
+
+real 6.56
+user 6.53
+sys 0.02
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '29500'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.13 7024]	[encoding_with_group_ge_amo 6.56 7024]	CORRENT
+real 0.15
+user 0.14
+sys 0.01
+
+real 6.93
+user 6.91
+sys 0.01
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '29000'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.15 7123]	[encoding_with_group_ge_amo 6.93 7123]	CORRENT
+real 0.30
+user 0.26
+sys 0.04
+
+real 7.78
+user 7.77
+sys 0.00
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '28500'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.30 7222]	[encoding_with_group_ge_amo 7.78 7222]	CORRENT
+real 0.11
+user 0.11
+sys 0.00
+
+real 8.07
+user 8.04
+sys 0.02
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '28000'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.11 7316]	[encoding_with_group_ge_amo 8.07 7316]	CORRENT
+real 0.11
+user 0.09
+sys 0.01
+
+real 8.27
+user 8.24
+sys 0.02
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '27500'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.11 7406]	[encoding_with_group_ge_amo 8.27 7406]	CORRENT
+real 0.17
+user 0.14
+sys 0.01
+
+real 9.16
+user 9.13
+sys 0.01
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '27000'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.17 7497]	[encoding_with_group_ge_amo 9.16 7497]	CORRENT
+real 0.14
+user 0.13
+sys 0.01
+
+real 8.82
+user 8.78
+sys 0.03
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '26500'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.14 7584]	[encoding_with_group_ge_amo 8.82 7584]	CORRENT
+real 0.28
+user 0.25
+sys 0.02
+
+real 8.94
+user 8.90
+sys 0.02
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '26000'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.28 7671]	[encoding_with_group_ge_amo 8.94 7671]	CORRENT
+real 0.22
+user 0.20
+sys 0.02
+
+real 9.06
+user 9.05
+sys 0.01
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '25500'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.22 7753]	[encoding_with_group_ge_amo 9.06 7753]	CORRENT
+real 0.10
+user 0.09
+sys 0.01
+
+real 9.07
+user 9.05
+sys 0.02
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '25000'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.10 7833]	[encoding_with_group_ge_amo 9.07 7833]	CORRENT
+real 0.09
+user 0.08
+sys 0.01
+
+real 9.44
+user 9.40
+sys 0.01
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '24500'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.09 7911]	[encoding_with_group_ge_amo 9.44 7911]	CORRENT
+real 0.09
+user 0.08
+sys 0.01
+
+real 9.68
+user 9.67
+sys 0.01
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '24000'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.09 7983]	[encoding_with_group_ge_amo 9.68 7983]	CORRENT
+real 0.24
+user 0.23
+sys 0.00
+
+real 9.81
+user 9.77
+sys 0.02
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '23500'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.24 8055]	[encoding_with_group_ge_amo 9.81 8055]	CORRENT
+real 0.22
+user 0.21
+sys 0.01
+
+real 8.80
+user 8.78
+sys 0.01
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '23000'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.22 8128]	[encoding_with_group_ge_amo 8.80 8128]	CORRENT
+real 0.10
+user 0.09
+sys 0.00
+
+real 9.32
+user 9.28
+sys 0.02
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '22500'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.10 8191]	[encoding_with_group_ge_amo 9.32 8191]	CORRENT
+real 0.14
+user 0.13
+sys 0.00
+
+real 11.52
+user 11.47
+sys 0.03
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '22000'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.14 8257]	[encoding_with_group_ge_amo 11.52 8257]	CORRENT
+real 0.27
+user 0.23
+sys 0.02
+
+real 9.34
+user 9.29
+sys 0.04
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '21500'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.27 8321]	[encoding_with_group_ge_amo 9.34 8321]	CORRENT
+real 0.10
+user 0.08
+sys 0.01
+
+real 10.27
+user 10.25
+sys 0.01
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '21000'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.10 8377]	[encoding_with_group_ge_amo 10.27 8377]	CORRENT
+real 0.09
+user 0.09
+sys 0.00
+
+real 11.82
+user 11.77
+sys 0.02
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '20500'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.09 8434]	[encoding_with_group_ge_amo 11.82 8434]	CORRENT
+real 0.11
+user 0.09
+sys 0.01
+
+real 10.54
+user 10.47
+sys 0.05
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '20000'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.11 8488]	[encoding_with_group_ge_amo 10.54 8488]	CORRENT
+real 0.13
+user 0.13
+sys 0.00
+
+real 10.74
+user 10.71
+sys 0.02
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '19500'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.13 8538]	[encoding_with_group_ge_amo 10.74 8538]	CORRENT
+real 0.18
+user 0.15
+sys 0.02
+
+real 10.35
+user 10.27
+sys 0.06
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '19000'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.18 8589]	[encoding_with_group_ge_amo 10.35 8589]	CORRENT
+real 0.09
+user 0.09
+sys 0.00
+
+real 10.14
+user 10.10
+sys 0.03
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '18500'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.09 8636]	[encoding_with_group_ge_amo 10.14 8636]	CORRENT
+real 0.08
+user 0.07
+sys 0.00
+
+real 10.54
+user 10.51
+sys 0.02
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '18000'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.08 8681]	[encoding_with_group_ge_amo 10.54 8681]	CORRENT
+real 0.07
+user 0.06
+sys 0.00
+
+real 10.64
+user 10.63
+sys 0.00
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '17500'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.07 8724]	[encoding_with_group_ge_amo 10.64 8724]	CORRENT
+real 0.18
+user 0.16
+sys 0.01
+
+real 9.77
+user 9.75
+sys 0.01
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '17000'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.18 8763]	[encoding_with_group_ge_amo 9.77 8763]	CORRENT
+real 0.07
+user 0.06
+sys 0.00
+
+real 10.49
+user 10.46
+sys 0.02
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '16500'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.07 8800]	[encoding_with_group_ge_amo 10.49 8800]	CORRENT
+real 0.09
+user 0.08
+sys 0.00
+
+real 12.32
+user 12.25
+sys 0.06
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '16000'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.09 8839]	[encoding_with_group_ge_amo 12.32 8839]	CORRENT
+real 0.20
+user 0.18
+sys 0.01
+
+real 11.60
+user 11.56
+sys 0.03
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '15500'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.20 8873]	[encoding_with_group_ge_amo 11.60 8873]	CORRENT
+real 0.09
+user 0.09
+sys 0.00
+
+real 11.34
+user 11.31
+sys 0.01
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '15000'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.09 8904]	[encoding_with_group_ge_amo 11.34 8904]	CORRENT
+real 0.10
+user 0.09
+sys 0.00
+
+real 11.70
+user 11.65
+sys 0.05
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '14500'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.10 8937]	[encoding_with_group_ge_amo 11.70 8937]	CORRENT
+real 0.17
+user 0.15
+sys 0.02
+
+real 11.13
+user 11.09
+sys 0.01
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '14000'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.17 8965]	[encoding_with_group_ge_amo 11.13 8965]	CORRENT
+real 0.06
+user 0.06
+sys 0.00
+
+real 11.25
+user 11.20
+sys 0.03
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '13500'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.06 8990]	[encoding_with_group_ge_amo 11.25 8990]	CORRENT
+real 0.22
+user 0.19
+sys 0.02
+
+real 9.89
+user 9.87
+sys 0.01
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '13000'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.22 9018]	[encoding_with_group_ge_amo 9.89 9018]	CORRENT
+real 0.08
+user 0.06
+sys 0.02
+
+real 10.60
+user 10.58
+sys 0.01
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '12500'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.08 9041]	[encoding_with_group_ge_amo 10.60 9041]	CORRENT
+real 0.15
+user 0.13
+sys 0.01
+
+real 10.40
+user 10.37
+sys 0.02
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '12000'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.15 9062]	[encoding_with_group_ge_amo 10.40 9062]	CORRENT
+real 0.15
+user 0.15
+sys 0.00
+
+real 9.86
+user 9.84
+sys 0.01
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '11500'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.15 9085]	[encoding_with_group_ge_amo 9.86 9085]	CORRENT
+real 0.11
+user 0.10
+sys 0.00
+
+real 10.67
+user 10.63
+sys 0.03
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '11000'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.11 9102]	[encoding_with_group_ge_amo 10.67 9102]	CORRENT
+real 0.16
+user 0.13
+sys 0.02
+
+real 10.75
+user 10.71
+sys 0.03
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '10500'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.16 9121]	[encoding_with_group_ge_amo 10.75 9121]	CORRENT
+real 0.07
+user 0.07
+sys 0.00
+
+real 10.27
+user 10.25
+sys 0.02
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '10000'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.07 9137]	[encoding_with_group_ge_amo 10.27 9137]	CORRENT
+real 0.20
+user 0.16
+sys 0.03
+
+real 10.70
+user 10.66
+sys 0.02
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '9500'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.20 9150]	[encoding_with_group_ge_amo 10.70 9150]	CORRENT
+real 0.06
+user 0.06
+sys 0.00
+
+real 10.84
+user 10.79
+sys 0.03
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '9000'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.06 9166]	[encoding_with_group_ge_amo 10.84 9166]	CORRENT
+real 0.12
+user 0.11
+sys 0.00
+
+real 11.02
+user 10.97
+sys 0.03
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '8500'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.12 9178]	[encoding_with_group_ge_amo 11.02 9178]	CORRENT
+real 0.06
+user 0.05
+sys 0.00
+
+real 11.29
+user 11.26
+sys 0.02
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '8000'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.06 9188]	[encoding_with_group_ge_amo 11.29 9188]	CORRENT
+real 0.16
+user 0.15
+sys 0.00
+
+real 11.25
+user 11.23
+sys 0.01
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '7500'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.16 9200]	[encoding_with_group_ge_amo 11.25 9200]	CORRENT
+real 0.07
+user 0.06
+sys 0.01
+
+real 12.40
+user 12.35
+sys 0.04
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '7000'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.07 9209]	[encoding_with_group_ge_amo 12.40 9209]	CORRENT
+real 0.07
+user 0.07
+sys 0.00
+
+real 11.07
+user 11.04
+sys 0.02
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '6500'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.07 9217]	[encoding_with_group_ge_amo 11.07 9217]	CORRENT
+real 0.19
+user 0.18
+sys 0.00
+
+real 10.98
+user 10.94
+sys 0.02
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '6000'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.19 9225]	[encoding_with_group_ge_amo 10.98 9225]	CORRENT
+real 0.08
+user 0.07
+sys 0.00
+
+real 10.95
+user 10.93
+sys 0.01
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '5500'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.08 9231]	[encoding_with_group_ge_amo 10.95 9231]	CORRENT
+real 0.07
+user 0.06
+sys 0.00
+
+real 11.35
+user 11.31
+sys 0.02
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '5000'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.07 9237]	[encoding_with_group_ge_amo 11.35 9237]	CORRENT
+real 0.18
+user 0.16
+sys 0.02
+
+real 10.85
+user 10.82
+sys 0.02
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '4500'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.18 9242]	[encoding_with_group_ge_amo 10.85 9242]	CORRENT
+real 0.09
+user 0.08
+sys 0.00
+
+real 10.83
+user 10.80
+sys 0.01
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '4000'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.09 9245]	[encoding_with_group_ge_amo 10.83 9245]	CORRENT
+real 0.14
+user 0.13
+sys 0.00
+
+real 10.43
+user 10.39
+sys 0.03
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '3500'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.14 9250]	[encoding_with_group_ge_amo 10.43 9250]	CORRENT
+real 0.06
+user 0.06
+sys 0.00
+
+real 11.40
+user 11.36
+sys 0.02
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '3000'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.06 9252]	[encoding_with_group_ge_amo 11.40 9252]	CORRENT
+real 0.17
+user 0.15
+sys 0.01
+
+real 11.61
+user 11.51
+sys 0.07
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '2500'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.17 9255]	[encoding_with_group_ge_amo 11.61 9255]	CORRENT
+real 0.07
+user 0.07
+sys 0.00
+
+real 11.63
+user 11.58
+sys 0.04
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '2000'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.07 9257]	[encoding_with_group_ge_amo 11.63 9257]	CORRENT
+real 0.07
+user 0.06
+sys 0.00
+
+real 11.18
+user 11.16
+sys 0.02
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '1500'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.07 9258]	[encoding_with_group_ge_amo 11.18 9258]	CORRENT
+real 0.18
+user 0.15
+sys 0.02
+
+real 12.59
+user 12.57
+sys 0.01
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '1000'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.18 9260]	[encoding_with_group_ge_amo 12.59 9260]	CORRENT
+real 0.17
+user 0.15
+sys 0.02
+
+real 10.78
+user 10.75
+sys 0.02
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '500'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.17 9260]	[encoding_with_group_ge_amo 10.78 9260]	CORRENT
+real 0.06
+user 0.06
+sys 0.00
+
+real 11.98
+user 11.92
+sys 0.04
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'lb': '0'} with instance: 0000-knapsack-5-11250-74950-type0
+[encoding_with_aggregates_ge_amo 0.06 9261]	[encoding_with_group_ge_amo 11.98 9261]	CORRENT

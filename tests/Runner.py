@@ -21,17 +21,17 @@ class Runner:
     # whether or not running a test for the correctness
     CHECKING_CORRECTNESS = True
     # whether to print or not that an answer set is not in another answerset
-    PRINT_NOT_SUBSET = True
+    PRINT_NOT_SUBSET = False
     # whether to print or not the answerset aggr with its mps in the checking correctness 
     PRINT_ANS_AGGR = False
     # whether to print or not the answerset group with its mps in the checking correctness 
     PRINT_ANS_GROUP = False
 
     # whether printing or not the run command
-    PRINT_RUN = True
+    PRINT_RUN = False
 
     # whether printing the output of the solver
-    PRINT_OUTPUT_SOLVER = True
+    PRINT_OUTPUT_SOLVER = False
 
     # whether printing the error output of the solver
     PRINT_ERROR_SOLVER = True
@@ -92,7 +92,7 @@ class Runner:
             raise  Exception(f"No valid assumptions defined, feasible values are: {utility.VALID_VALUES_ASS}")
 
 
-        print("assumptions:", self.ass)
+        utility.debug("assumptions:", self.ass)
        
         self.enc_type = self.param["enc_type"] if "enc_type" in self.param else None
         self.id = self.param["id"] if "id" in self.param else "0"
