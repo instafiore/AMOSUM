@@ -26,7 +26,10 @@ class Runner:
     PRINT_ANS_AGGR = False
     # whether to print or not the answerset group with its mps in the checking correctness 
     PRINT_ANS_GROUP = False
-
+    
+    # whether or not printing at the end just when the run failed (correctness)
+    PRINT_JUST_ERRORS = False
+    
     # whether printing or not the run command
     PRINT_RUN = False
 
@@ -204,6 +207,7 @@ class Runner:
         time_group : float
         time_aggr : float
 
+        output_strings = []
         for i in range(len(encodings)):
             encoding = encodings[i]
             group = (i + 1)%2 == 0
@@ -216,7 +220,7 @@ class Runner:
                 answer_sets_aggr = answer_sets
                 time_aggr = time
 
-            print(f"[{encoding} {time} {self.get_number_answersets(answer_sets)}]",end="\t")
+            output_strings.append(f"[{encoding} {time} {self.get_number_answersets(answer_sets)}]")
 
         
 
@@ -234,10 +238,11 @@ class Runner:
             correct = True
 
         equal = "equal" if correct  else "not_equal" 
+        final_string = " ".join(output_strings)
         if not correct:
-            print("NOT CORRECT")
-        else:
-            print("CORRENT", end = "")
+            print(f"{final_string} NOT CORRECT")
+        elif not Runner.PRINT_JUST_ERRORS:
+            print(f"{final_string} CORRECT")
 
         print()
 
