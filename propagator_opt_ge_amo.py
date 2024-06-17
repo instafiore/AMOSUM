@@ -1,10 +1,11 @@
-#!/usr/bin/python3
+#!/home/s.fiorentino/miniconda3/bin/python3
 import json
 import utility
 import wasp
 from typing import List
 from utility import *
 import re
+import settings
 
 atomNames = {}
 
@@ -79,26 +80,60 @@ last_decision_lit = 0
 # type of minimization, default no minimization
 minimization = Minimize.NO_MINIMIZATION
 
+# sum of percentage of redaction of reason
+sum_p = 0
+
+count_p = 0
 
 def getReasonForLiteral(lit):
-    global reason_falses, reason_trues, redundant_lits
+    global reason_falses, reason_trues, redundant_lits, sum_p,count_p
     reason = reason_falses + reason_trues[lit]
     rl = redundant_lits[lit]
     removed = False
+    reason_c = reason
     if len(rl) > 0:
         removed = True
-        reason_c = reason
         reason = remove_elements(reason, rl)
     reason_trues[lit] = []
-    redundant_lits[lit] = []
     if removed:
-        p = (1 - (len(reason) / len(reason_c)))*100
-        # print(f"reduction of the reason of {p}%", file = sys.stderr)
-        redundant_lits_str = convert_array_to_string(name=f"reason of {get_name(atomNames=atomNames, lit=lit)} before ", array=reason_c, atomNames=atomNames)
-        debug(redundant_lits_str)
-        redundant_lits_str = convert_array_to_string(name=f"reason of {get_name(atomNames=atomNames, lit=lit)} ", array=reason, atomNames=atomNames)
-        debug(redundant_lits_str)
+        p = (1 - (len(reason) / len(reason_c))) * 100
+        sum_p += p
+        count_p += 1
+        redundant_lits_str = convert_array_to_string(name=f"from {len(reason_c)} to {len(reason)} removed from reason of {get_name(atomNames=atomNames, lit=lit)} lit {lit}", array=redundant_lits[lit], atomNames=atomNames)
+        print_err(redundant_lits_str)
+        # redundant_lits_str = convert_array_to_string(name=f"removed from reason of {get_name(atomNames=atomNames, lit=lit)} ", array=redundant_lits[lit], atomNames=atomNames)
+        # print_err(redundant_lits_str)
+    redundant_lits[lit] = []
     return reason
+
+def checkAnswerSet(*answer_set):
+    global sum_p, count_p
+
+    if minimization == Minimize.NO_MINIMIZATION.value:
+        return wasp.coherent()
+
+    file_to_write : str
+
+    if minimization == Minimize.MINIMAL.value:
+        file_to_write = settings.STATISTICS_REASON_FILE_MINIMAL
+    elif minimization == Minimize.CARDINALITY_MINIMAL.value:
+        file_to_write = settings.STATISTICS_REASON_FILE_MINIMUM
+    else:
+        assert False
+
+    mean = sum_p/count_p if count_p != 0 else 0
+    try:
+        with open(file_to_write, 'a') as file:
+            if mean != 0:
+                file.write(f"{mean}\n")
+    except IOError as e:
+        print(f"An error occurred: {e}")
+    sum_p = 0
+    count_p = 0
+    return wasp.coherent()
+ 
+def getReasonsForCheckFailure():
+    return None
 
 def process_sys_parameters():
     global param, sys_parameters
@@ -137,8 +172,8 @@ def getLiterals(*lits):
 
     process_sys_parameters()
     debug("param", param)
-
-    minimization = Minimize.CARDINALITY_MINIMAL
+    
+    minimization = param["min_r"]
 
     lb = None
     bind = []
@@ -161,7 +196,8 @@ def getLiterals(*lits):
 
     #used to create the groups
     groups_raw : dict[int, List[int]] = {}
-    groups = set()
+    # groups = set()
+    groups = []
 
     # selecting the interested literals
     for a in atomNames:
@@ -241,7 +277,8 @@ def getLiterals(*lits):
         mps = mps + weight[max_w(G)]
     
         # adding the group to the set of groups
-        groups.add(G)
+        # groups.add(G)
+        groups.append(G)
 
         # defining the function group
         for lit in lits_group:
@@ -402,7 +439,7 @@ def compute_minimal_reason(reason: List[int], trues: List[int]):
     Invariants reason is grouped by group id and in each group the literals are sort in descending order
     '''
 
-    if minimization == Minimize.NO_MINIMIZATION:
+    if minimization == Minimize.NO_MINIMIZATION.value:
         return
 
     '''
@@ -412,10 +449,6 @@ def compute_minimal_reason(reason: List[int], trues: List[int]):
     maybe lk is derived, since lj is false. Can happen that lk can be derived even if li is true, but lj is false because of li.
     So li is mandatory in the reason.
     '''
-    
-    # computing increment for each literal 
-    # increment = compute_increment_literals(literals=reason)
-    # debug(f"increment {get_increment_name(increment=increment)}")
     
     for l in trues:
         reason_l_to_minimize = []
@@ -430,21 +463,14 @@ def compute_minimal_reason(reason: List[int], trues: List[int]):
                 continue
             reason_l_to_minimize.append(lr)
 
-        redundant_lits_str = convert_array_to_string(name=f"reason_l_to_minimize for {get_name(atomNames=atomNames,lit=l)}", array=reason_l_to_minimize, atomNames=atomNames)
-        debug(redundant_lits_str)
-
-        if minimization == Minimize.MINIMAL:
-            redundant_lits[l] = maximal_subset_sum_less_than_s_with_groups(literals=reason_l_to_minimize, s = s, weight= weight, group=group, true_group=true_group)
-        elif minimization == Minimize.CARDINALITY_MINIMAL:
+        if minimization == Minimize.MINIMAL.value:
+            redundant_lits[l] = maximal_subset_sum_less_than_s_with_groups(literals=reason_l_to_minimize, s = s, weight= weight, group=group)
+        elif minimization == Minimize.CARDINALITY_MINIMAL.value:
             increment = compute_increment_literals(literals=reason_l_to_minimize, group=group, weight=weight)
-            redundant_lits[l]  = maximum_subset_sum_less_than_s_with_groups(literals= reason_l_to_minimize, s = s, weight = increment, group=group, I=I)
+            redundant_lits[l]  = maximum_subset_sum_less_than_s_with_groups(literals= reason_l_to_minimize, s = s, weight = increment, group=group, I=I)            
         else:
             assert False
-            
-        # TODO: REMOVE
-        if len(redundant_lits[l]) != 0: 
-            redundant_lits_str = convert_array_to_string(name=f"redundant lits for {get_name(atomNames=atomNames,lit=l)}", array=redundant_lits[l], atomNames=atomNames)
-            debug(redundant_lits_str)
+
 
 def onLiteralsUndefined(*lits):
     global N,lb, I, weight, aggregate, groups,  mps, group, reason, true_group

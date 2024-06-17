@@ -5,6 +5,7 @@ import re
 import sys
 import os
 import ast
+from  utility import *
 import utility
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import settings
@@ -15,8 +16,8 @@ class Runner:
     '''
 
     # the solver that you are using
-    # SOLVER = "wasp_python"
-    SOLVER = "wasp"
+    SOLVER = "wasp_python"
+    # SOLVER = "wasp"
 
     # whether or not running a test for the correctness
     CHECKING_CORRECTNESS = True
@@ -160,6 +161,7 @@ class Runner:
         self.timestamp = subprocess.run('date +"%Y-%m-%d.%H.%M.%S"', shell=True, capture_output=True, text=True).stdout
         self.timestamp = self.timestamp.strip()
 
+        
     def create_instances(self, instances, head):
         getting_instance_command = f"ls {settings.BENCHMARKS_LOCATION}/{self.problem}/{instances} {head}"
         output = subprocess.run(getting_instance_command, shell=True, capture_output=True, text=True)
@@ -369,12 +371,32 @@ class Runner:
         
         id_param = f"-id {self.id}"
         ass_param = f" -ass {self.ass}" if self.ass != "" else ""
-        
+        minimization = self.param.get("min_r", Minimize.NO_MINIMIZATION.value)
+
+
+
+        possible_values_minimize = [member.value for member in Minimize]
+        if not minimization in possible_values_minimize:
+            raise Exception(f"The inserted value {minimization} is not valid, possible values are {possible_values_minimize}")
+        min_param = f" -min_r {minimization}"
         if group_type :
+
+            file_to_write : str
+            if minimization == Minimize.MINIMAL.value:
+                file_to_write = settings.STATISTICS_REASON_FILE_MINIMAL
+            elif minimization == Minimize.CARDINALITY_MINIMAL.value:
+                file_to_write = settings.STATISTICS_REASON_FILE_MINIMUM
+            else:
+                assert False
+                
+            with open(file_to_write, 'w') as file:
+                file.write(f"mean\n")
+
+
             propagator = settings.MAP_ENC_PROP[self.enc_type]
             run += f"--interpreter=python \
             --script-directory={settings.PROPAGATOR_DIR_LOCATION} \
-            --plugins-file=\"{propagator} {id_param}{ass_param}\""
+            --plugins-file=\"{propagator} {id_param}{min_param}{ass_param}\""
 
         if self.PRINT_RUN:
             print(f"\nRUN:\n{run}")
@@ -386,7 +408,8 @@ class Runner:
         error = run_process.stderr.decode()
         output_error = output + error
 
-        lines = output_error.splitlines() 
+        lines_output = output.splitlines() 
+        lines_error = error.splitlines() 
         
         if Runner.PRINT_OUTPUT_SOLVER:
             print(output)
@@ -396,7 +419,7 @@ class Runner:
 
         regex_real = r"^real\s(\d+\.\d+)"
         # regex for the answer set of a given problem
-        regex_answer_set = r"\{(.+)\}"
+        regex_answer_set = r"^\{(.+)\}"
         
         # regex for the interested atoms of a given problem
         regex_query : str
@@ -408,13 +431,18 @@ class Runner:
             regex_query = r"\w+\([\w,]+?\)"
 
         answer_sets = []
-        for line in lines:
-            if not re.search(regex_real, line) is None:
-                time = re.search(regex_real, line).group(1)
-            elif not re.search(regex_answer_set, line) is None:
+
+
+
+        for line in lines_output:
+            if not re.search(regex_answer_set, line) is None:
                 answer_set = re.search(regex_answer_set, line).group(1)
                 answer_set = set(re.findall(regex_query, answer_set))
                 answer_sets.append(set(answer_set))
+        
+        for line in lines_error:
+            if not re.search(regex_real, line) is None:
+                time = re.search(regex_real, line).group(1)
             elif not re.search(r"Killed: Bye!", line) is None:
                 time = "timeout"
 

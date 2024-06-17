@@ -1,9 +1,11 @@
+#!/home/s.fiorentino/miniconda3/bin/python3
 # utility module
-
 from enum import Enum
 import re
 import sys
 from typing import Any, List
+import sys
+
 
 FOCUSED_GROUP = 2
 FOCUSING = False
@@ -15,6 +17,10 @@ NOT = "~"
 REGEX_LIT = rf"{NOT}?(\w+(\(\w+({SEPARATOR}\w+)*\))?)" 
 REGEX_ASSUMPTIONS = rf"^\[{REGEX_LIT}({SEPARATOR}{NOT}?{REGEX_LIT})*\]$"
 VALID_VALUES_ASS = f"[[{NOT}]<atom_name>[(param1,parm2,...)]:...] "
+
+
+def print_err(*message: str, end ="\n"):
+    print(message, end=end, file=sys.stderr)
 
 def debug(*message: str, G: 'Group' = None , end ="\n"):
     if DEBUG and ( G is None or G.id == FOCUSED_GROUP or not FOCUSING):
@@ -58,18 +64,21 @@ class SymmetricFunction:
         # interpretation
         self.intepretation : List[Any] = [None] * N
 
+    def function_negative_lit(self, value):
+        return not value
+
     def __getitem__(self, lit: int) -> Any:
         i = abs(lit) 
         value = self.intepretation[i]
         if lit < 0:
-            value = not value
+            value = self.function_negative_lit(value)
         return value
     
     def __setitem__(self, lit: int, value: Any):
         i = abs(lit)
         if lit < 0 :
             if not value is None:
-                value = not value
+                value = self.function_negative_lit(value)
             else:
                 value = None
         self.intepretation[i] = value
@@ -80,6 +89,9 @@ class WeightFunction(SymmetricFunction):
         if lit is None:
             return 0
         return super().__getitem__(lit)
+
+    def function_negative_lit(self, value):
+        return value    
 
 
 class Group:
@@ -266,8 +278,6 @@ class TrueGroupFunction(PerfectHash):
 
 # utility function for debugging
 def get_name(atomNames, lit):
-    if not DEBUG:
-        return "DEBUG FALSE"
     prefix = ""
     if lit is None:
         return "None"
@@ -340,15 +350,14 @@ def is_true_in_reason(lit, group: GroupFunction):
     g = group[lit]
     return g is None
 
-# TODO: remove the parameter true_group
-def increment_f(l: int, current_subset_maximal, true_group: TrueGroupFunction, weight: WeightFunction, group: GroupFunction):
+def increment_f(l: int, current_subset_maximal, weight: WeightFunction, group: GroupFunction):
+
     g = group[l] 
-    tr = False # true_in_reason
+    tr = False # true in reason
     if g is None:
         l = not_(l)
         g = group[l]
         tr = True # it means that it has been flipped, so it is true in reason (is the true_group[g])
-        assert l == true_group[g]
 
     w = weight[l]
     if tr:  
@@ -372,15 +381,14 @@ def increment_f(l: int, current_subset_maximal, true_group: TrueGroupFunction, w
             current_l = g.ord_l[i]
         return increment
 
-# TODO: remove the parameter true_group and atomNames
 
-def maximal_subset_sum_less_than_s_with_groups(literals: List[int], s: int, weight: WeightFunction,  group: GroupFunction, true_group : TrueGroupFunction):
+def maximal_subset_sum_less_than_s_with_groups(literals: List[int], s: int, weight: WeightFunction,  group: GroupFunction):
 
     current_subset_maximal = []
     current_sum = 0
 
     for l in literals:
-        inc = increment_f(l, current_subset_maximal, true_group, weight, group)
+        inc = increment_f(l, current_subset_maximal, weight, group)
         if current_sum + inc <= s:
                 current_sum += inc
                 current_subset_maximal.append(l)
@@ -400,11 +408,13 @@ def compute_increment_literals(literals: List[int], group: GroupFunction, weight
         assert not g is None 
         mw_g = max_w(g)
         w_mw_g = weight[mw_g]
+        
         w = weight[l]
         assert not w  is None
         i : int
         if tg:  
             w_mw_g = weight[g.ord_l[-1]]
+            # print_err(f"w_mw_g {w_mw_g} l {l} w {w}" )
             # l is true: if it was false in the worst case the maxiumum literal of the group could be true
             i = w_mw_g - w
         else:
@@ -417,19 +427,21 @@ def compute_increment_literals(literals: List[int], group: GroupFunction, weight
 def get_all_lit_below_you(lit: int, group: GroupFunction, I: SymmetricFunction, reason: List[int]):
 
     lit_c = lit
+    res = []
+    res.append(lit_c)
     g = group[lit]
     if g is None:
         g = group[not_(lit)]
         lit = not_(lit)
+        return set(res) # it is true so there are no literals below it
 
-    res = []
     start = g.ord_i[lit]
-    for i in range(start,-1,-1):
+    for i in range(start-1,-1,-1):
         l = g.ord_l[i]
         if I[l] is None:
             # you found the maximum undefined
             break
-        if l in reason or not_(l) in reason:
+        if l in reason:
             res.append(l)
     return set(res)
 
@@ -483,6 +495,8 @@ def maximum_subset_sum_less_than_s_with_groups(literals : List[int], s: int, gro
                     
     maximum_subset = subset[s][n]
 
+    # print(subset[:][n], file = sys.stderr)
+
     len_subset_max = len(maximum_subset) if subset[i][n] else -1
     for i in range(s+1):
         len_subset_max = len(maximum_subset) if not maximum_subset is None else -1
@@ -491,7 +505,10 @@ def maximum_subset_sum_less_than_s_with_groups(literals : List[int], s: int, gro
         # print("len_subset", len_subset)
         if len_subset > len_subset_max:
             maximum_subset = subset[i][n]
+        # print(f"mio dio come bestemmio {subset[i][n]}", file = sys.stderr)
     
     return list(maximum_subset)
+
+
 #################################################################################################################################################
 # END MINIMIZING REASON
