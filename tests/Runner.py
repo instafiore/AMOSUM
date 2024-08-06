@@ -29,10 +29,10 @@ class Runner:
     PRINT_ANS_GROUP = False
     
     # whether or not printing at the end just when the run failed (correctness)
-    PRINT_JUST_ERRORS = False
+    PRINT_JUST_ERRORS = True
     
     # whether printing or not the run command
-    PRINT_RUN = False
+    PRINT_RUN = True
 
     # whether printing the output of the solver
     PRINT_OUTPUT_SOLVER = False
@@ -371,6 +371,7 @@ class Runner:
         
         id_param = f"-id {self.id}"
         ass_param = f" -ass {self.ass}" if self.ass != "" else ""
+        write_stats_reason = f" -write_stats_reason" if "write_stats_reason" in self.param else ""
         minimization = self.param.get("min_r", Minimize.NO_MINIMIZATION.value)
 
 
@@ -388,15 +389,15 @@ class Runner:
                 file_to_write = settings.STATISTICS_REASON_FILE_MINIMUM
             else:
                 assert False
-                
-            with open(file_to_write, 'w') as file:
-                file.write(f"mean\n")
+
+            # with open(file_to_write, 'w') as file:
+            #     file.write(f"mean\n")
 
 
             propagator = settings.MAP_ENC_PROP[self.enc_type]
             run += f"--interpreter=python \
             --script-directory={settings.PROPAGATOR_DIR_LOCATION} \
-            --plugins-file=\"{propagator} {id_param}{min_param}{ass_param}\""
+            --plugins-file=\"{propagator} {id_param}{min_param}{ass_param}{write_stats_reason}\""
 
         if self.PRINT_RUN:
             print(f"\nRUN:\n{run}")

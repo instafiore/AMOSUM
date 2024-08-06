@@ -1,0 +1,246 @@
+C_MIN
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '30000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '29500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '29000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '28500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '28000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '27500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '27000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '26500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '26000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '25500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '25000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '24500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '24000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '23500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '23000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '22500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '22000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '21500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '21000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '20500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '20000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '19500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '19000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '18500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '18000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '17500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '17000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '16500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '16000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '15500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '15000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '14500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '14000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '13500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '13000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '12500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '12000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '11500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '11000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '10500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '10000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '9500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '9000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '8500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '8000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '7500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '7000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '6500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '6000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '5500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '5000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '4500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '4000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '3500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '3000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '2500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '2000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '1500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '1000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'c_min', 'lb': '0'} with instance: 0000-knapsack-5-11250-74950-type0
+
+MIN
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '30000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '29500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '29000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '28500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '28000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '27500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '27000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '26500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '26000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '25500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '25000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '24500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '24000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '23500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '23000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '22500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '22000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '21500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '21000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '20500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '20000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '19500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '19000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '18500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '18000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '17500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '17000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '16500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '16000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '15500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '15000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '14500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '14000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '13500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '13000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '12500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '12000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '11500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '11000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '10500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '10000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '9500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '9000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '8500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '8000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '7500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '7000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '6500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '6000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '5500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '5000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '4500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '4000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '3500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '3000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '2500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '2000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '1500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '1000'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '500'} with instance: 0000-knapsack-5-11250-74950-type0
+
+RUNNING {'problem': 'kn', 'enc_type': 'ge_amo', 'nt': '1', 'l': True, 'id': '1', 'write_res': 'false', 'min_r': 'min', 'lb': '0'} with instance: 0000-knapsack-5-11250-74950-type0
+

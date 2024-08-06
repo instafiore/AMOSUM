@@ -99,8 +99,8 @@ def getReasonForLiteral(lit):
         p = (1 - (len(reason) / len(reason_c))) * 100
         sum_p += p
         count_p += 1
-        redundant_lits_str = convert_array_to_string(name=f"from {len(reason_c)} to {len(reason)} removed from reason of {get_name(atomNames=atomNames, lit=lit)} lit {lit}", array=redundant_lits[lit], atomNames=atomNames)
-        print_err(redundant_lits_str)
+        # redundant_lits_str = convert_array_to_string(name=f"from {len(reason_c)} to {len(reason)} removed from reason of {get_name(atomNames=atomNames, lit=lit)} lit {lit}", array=redundant_lits[lit], atomNames=atomNames)
+        # print_err(redundant_lits_str)
         # redundant_lits_str = convert_array_to_string(name=f"removed from reason of {get_name(atomNames=atomNames, lit=lit)} ", array=redundant_lits[lit], atomNames=atomNames)
         # print_err(redundant_lits_str)
     redundant_lits[lit] = []
@@ -109,7 +109,10 @@ def getReasonForLiteral(lit):
 def checkAnswerSet(*answer_set):
     global sum_p, count_p
 
-    if minimization == Minimize.NO_MINIMIZATION.value:
+    write = True if "write_stats_reason" in param else False
+
+    print(f"param {param}")
+    if minimization == Minimize.NO_MINIMIZATION.value or not write:
         return wasp.coherent()
 
     file_to_write : str
@@ -121,11 +124,10 @@ def checkAnswerSet(*answer_set):
     else:
         assert False
 
-    mean = sum_p/count_p if count_p != 0 else 0
     try:
         with open(file_to_write, 'a') as file:
-            if mean != 0:
-                file.write(f"{mean}\n")
+            if count_p != 0:
+                file.write(f"{sum_p},{count_p}\n")
     except IOError as e:
         print(f"An error occurred: {e}")
     sum_p = 0
@@ -173,7 +175,7 @@ def getLiterals(*lits):
     process_sys_parameters()
     debug("param", param)
     
-    minimization = param["min_r"]
+    minimization = param.get("min_r",Minimize.NO_MINIMIZATION.value)
 
     lb = None
     bind = []
@@ -190,7 +192,7 @@ def getLiterals(*lits):
     redundant_lits = PerfectHash(N,[])
     global_ord_lit = []
     mps = 0
-    ID = param["id"]
+    ID = param.get("id",0)
 
     assumptions = param["ass"] if "ass" in param else False
 
@@ -201,7 +203,7 @@ def getLiterals(*lits):
 
     # selecting the interested literals
     for a in atomNames:
-        # debug("Atom",a, end=" ")
+        debug("Atom",a, end=" ")
         if  a.startswith('group('):
             terms = wasp.getTerms('group',a)
             # group(lit_name, weight, group_id)
@@ -238,7 +240,7 @@ def getLiterals(*lits):
         
         elif a.startswith("lb("):
             terms = wasp.getTerms('lb',a)
-            if len(terms) != 2 or terms[1] != ID:
+            if (len(terms) != 2 or terms[1] != ID) and len(terms) != 1:
                 continue
             if not lb is None:
                 assert False     
@@ -502,9 +504,7 @@ def onLiteralsUndefined(*lits):
             true_group[G] = None
 
         max_und = max_w(G)
-        debug("Undef",get_name(atomNames=atomNames, lit=l), "tg",\
-               get_name(atomNames=atomNames, lit=tg), "max_und", \
-                get_name(atomNames=atomNames, lit=max_und))
+        debug("Undef",get_name(atomNames=atomNames, lit=l), "tg",get_name(atomNames=atomNames, lit=tg), "max_und", get_name(atomNames=atomNames, lit=max_und))
 
         '''
         if G has all literals defined
@@ -537,7 +537,7 @@ def onLiteralsUndefined(*lits):
         
         pos_max = G.ord_i[max_und]
         pos_l   = G.ord_i[l]
-        maxw = weight[max_w(G)]
+        maxw    = weight[max_w(G)]
         
         mps_p = mps 
         if tg == l:
