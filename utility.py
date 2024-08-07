@@ -341,7 +341,7 @@ def get_increment_name(increment: dict, atomNames: dict):
 class Minimize(Enum):
     NO_MINIMIZATION = "default"
     MINIMAL = "min"
-    CARDINALITY_MINIMAL = "c_min"
+    CARDINALITY_MINIMAL = "cmin"
 
 def is_true_in_reason(lit, group: GroupFunction):
     '''

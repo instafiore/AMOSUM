@@ -111,7 +111,6 @@ def checkAnswerSet(*answer_set):
 
     write = True if "write_stats_reason" in param else False
 
-    print(f"param {param}")
     if minimization == Minimize.NO_MINIMIZATION.value or not write:
         return wasp.coherent()
 
@@ -143,7 +142,7 @@ def process_sys_parameters():
     param = {}
     regex = r"^-(.+)" 
     
-    debug(sys_parameters)
+    # debug(sys_parameters)
     i = 1
 
     while i < len(sys_parameters):
@@ -173,7 +172,7 @@ def getLiterals(*lits):
     global N,lb, I, weight, aggregate, groups, mps, group, atomNames, true_group, lits_level_0, reason_trues, ID, param, assumptions, global_ord_lit, redundant_lits, strategy, minimization
 
     process_sys_parameters()
-    debug("param", param)
+    print(f"param {param}")
     
     minimization = param.get("min_r",Minimize.NO_MINIMIZATION.value)
 
@@ -203,7 +202,7 @@ def getLiterals(*lits):
 
     # selecting the interested literals
     for a in atomNames:
-        debug("Atom",a, end=" ")
+        # debug("Atom",a, end=" ")
         if  a.startswith('group('):
             terms = wasp.getTerms('group',a)
             # group(lit_name, weight, group_id)
@@ -245,7 +244,7 @@ def getLiterals(*lits):
             if not lb is None:
                 assert False     
             lb = int(terms[0])
-    debug("",end="\n")
+    # debug("",end="\n")
     assert not lb is None
 
     # ordering literals in the global array
@@ -305,7 +304,7 @@ def simplifyAtLevelZero():
 
     # INCOHERENT
     if mps < lb:
-        debug("MPS < LB !!!")
+        # debug("MPS < LB !!!")
         return [1]
     
     res = propagate_phase(None)
@@ -321,7 +320,7 @@ def onLiteralTrue(lit, dl):
     global N,lb, I, weight, aggregate, groups, mps, group, true_group, last_decision_lit
 
     last_decision_lit = lit
-    debug(f"True {get_name(lit=lit, atomNames=atomNames)} id {lit} DL {dl}")
+    # debug(f"True {get_name(lit=lit, atomNames=atomNames)} id {lit} DL {dl}")
     (next_phase, G) = update_phase(lit)
 
     propagated_lits = []
@@ -354,7 +353,7 @@ def update_phase(l: int) -> (bool, Group):
                 w_p = weight[prev_max]
                 mps_prev = mps
                 mps = mps - w_p + w_n  
-                debug(f"mps_prev {mps_prev} mps {mps}")
+                # debug(f"mps_prev {mps_prev} mps {mps}")
             else:
                 return (True, G)   
         elif G.count_undef == 1:
@@ -425,9 +424,9 @@ def propagate_phase(G: Group):
         reason_falses = R
 
     S_str = convert_array_to_string(name="Derived", array=S, atomNames=atomNames)
-    debug(S_str)
+    # debug(S_str)
     R_str = convert_array_to_string(name="Reason", array=R, atomNames=atomNames)
-    debug(R_str)
+    # debug(R_str)
 
     print_I(I=I, atomNames=atomNames, aggregate=aggregate)
     compute_minimal_reason(reason=R, trues=trues)
@@ -504,7 +503,7 @@ def onLiteralsUndefined(*lits):
             true_group[G] = None
 
         max_und = max_w(G)
-        debug("Undef",get_name(atomNames=atomNames, lit=l), "tg",get_name(atomNames=atomNames, lit=tg), "max_und", get_name(atomNames=atomNames, lit=max_und))
+        # debug("Undef",get_name(atomNames=atomNames, lit=l), "tg",get_name(atomNames=atomNames, lit=tg), "max_und", get_name(atomNames=atomNames, lit=max_und))
 
         '''
         if G has all literals defined
