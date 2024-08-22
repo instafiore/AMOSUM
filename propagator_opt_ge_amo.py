@@ -197,8 +197,8 @@ def getLiterals(*lits):
 
     #used to create the groups
     groups_raw : dict[int, List[int]] = {}
-    # groups = set()
-    groups = []
+    groups = set()
+    # groups = []
 
     # selecting the interested literals
     for a in atomNames:
@@ -278,8 +278,8 @@ def getLiterals(*lits):
         mps = mps + weight[max_w(G)]
     
         # adding the group to the set of groups
-        # groups.add(G)
-        groups.append(G)
+        groups.add(G)
+        # groups.append(G)
 
         # defining the function group
         for lit in lits_group:
