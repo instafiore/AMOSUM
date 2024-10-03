@@ -63,7 +63,7 @@ def maximum_subset_sum_less_than_s_with_groups_unaltrochenonsochecifacciaqui(s: 
         subset[0][i] = set([ frozenset([]) ])
 
 
-    # NOTE: it is not necessary
+    # NOTE: it is not necessary.
     # # If sum is not 0 and set e is empty, 
     # # then the maximal subset does not exist
     # for i in range (1, sum + 1):

@@ -5,7 +5,7 @@ b(1..4,0).
 b(5..8,1).
 
 % lb(weight, aggr_id)
-lb(7,0).
+ub(5,0).
 lb(3,1).
 
 group(a(X),X,0,ID) :- b(X,ID).

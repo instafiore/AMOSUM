@@ -1,22 +1,15 @@
-#!/home/s.fiorentino/miniconda3/bin/python3
-import json
-import utility
+from ast import Tuple
 import wasp
-from typing import List
+from typing import Callable, List
 from utility import *
 import re
 import settings
 
 atomNames = {}
 
-'''
-Propagator for ' >= LB  ' constraint and At Most One constraint
-
-Invariants:
-    In the aggregate set there are not two literals such that li = !lj
-'''
-
+# input parameters
 sys_parameters=[]
+
 # Aggregate id
 ID : int
 
@@ -42,12 +35,6 @@ true_group : TrueGroupFunction
 
 # a set of groups
 groups : set[Group]
-
-# lower bound
-lb : int
-
-# max possible sum
-mps : int
 
 # literals derived at level 0
 lits_level_0 : List[int] = []
@@ -83,10 +70,46 @@ minimization = Minimize.NO_MINIMIZATION
 # sum of percentage of redaction of reason
 sum_p = 0
 
+# count of reducted reasons
 count_p = 0
 
+# defining the problem type, possible values: AMO, EO
+PROB_TYPE : str
+
+# defining whether the propagator is for the constraint >=  (GE) or <= (LE) 
+GE : bool
+
+# propagate function to implement in propagator file
+propagate_phase : Callable[[Group],List[int]]
+
+# propagate function to implement in propagator file
+onLiteralsUndefined: Callable[[Tuple], None]
+
+
+# >= (ge) constraint
+# ----------------------------
+# lower bound
+lb : int
+
+# max possible sum
+mps : int 
+# ----------------------------
+
+# <= (ge) constraint
+# ----------------------------
+# upper bound
+ub : int
+
+# min possible sum
+mps : int 
+# ----------------------------
+
+def getReasonsForCheckFailure():
+    return None
+
 def getReasonForLiteral(lit):
-    global reason_falses, reason_trues, redundant_lits, sum_p,count_p
+    global reason_falses, reason_trues, redundant_lits, sum_p, count_p
+
     reason = reason_falses + reason_trues[lit]
     rl = redundant_lits[lit]
     removed = False
@@ -95,7 +118,9 @@ def getReasonForLiteral(lit):
         removed = True
         reason = remove_elements(reason, rl)
     reason_trues[lit] = []
-    if removed:
+    
+    write = True if "write_stats_reason" in param else False
+    if removed and write:
         p = (1 - (len(reason) / len(reason_c))) * 100
         sum_p += p
         count_p += 1
@@ -104,6 +129,7 @@ def getReasonForLiteral(lit):
         # redundant_lits_str = convert_array_to_string(name=f"removed from reason of {get_name(atomNames=atomNames, lit=lit)} ", array=redundant_lits[lit], atomNames=atomNames)
         # print_err(redundant_lits_str)
     redundant_lits[lit] = []
+
     return reason
 
 def checkAnswerSet(*answer_set):
@@ -129,59 +155,21 @@ def checkAnswerSet(*answer_set):
                 file.write(f"{sum_p},{count_p}\n")
     except IOError as e:
         print(f"An error occurred: {e}")
+
     sum_p = 0
     count_p = 0
+
     return wasp.coherent()
- 
-def getReasonsForCheckFailure():
-    return None
 
-def process_sys_parameters():
-    global param, sys_parameters
-
-    param = {}
-    regex = r"^-(.+)" 
-    
-    # debug(sys_parameters)
-    i = 1
-
-    while i < len(sys_parameters):
-        
-        # creating the key
-        key = sys_parameters[i] 
-        res_regex = re.match(regex, key)
-        if res_regex is None:
-            raise Exception("Every key has to start with a dash! Ex: -problem knapsack")
-        key = res_regex.group(1)
-
-        if i + 1 >= len(sys_parameters) :
-            param[key] = True
-            break
-        
-        value = sys_parameters[i+1] 
-        res_regex = re.match(regex, value)
-        if res_regex is None:
-            i += 2
-            param[key] = value
-            
-        else:
-            i += 1
-            param[key] = True
 
 def getLiterals(*lits):
-    global N,lb, I, weight, aggregate, groups, mps, group, atomNames, true_group, lits_level_0, reason_trues, ID, param, assumptions, global_ord_lit, redundant_lits, strategy, minimization
-
-    process_sys_parameters()
-    print(f"param {param}")
+    global N,lb, ub, I, weight, aggregate, groups, mps, group, atomNames, true_group, lits_level_0, reason_trues, ID, param, assumptions, global_ord_lit, redundant_lits, strategy, minimization
+    param = process_sys_parameters(sys_parameters)
+    debug(f"param {param}")
     
-    minimization = param.get("min_r",Minimize.NO_MINIMIZATION.value)
-
-    lb = None
-    bind = []
-    negative_lit_regex = re.compile(r"^not\s+(?P<atom_name>[\w()]+)")
-    strategy = param.get("strategy",strategy)
-
     # initializing 
+    minimization = param.get("min_r",Minimize.NO_MINIMIZATION.value)
+    strategy = param.get("strategy",strategy)
     N = lits[0] + 1
     I = SymmetricFunction(N)
     weight = WeightFunction(N)
@@ -189,20 +177,26 @@ def getLiterals(*lits):
     aggregate = AggregateFunction(N, False)
     reason_trues = PerfectHash(N,[])
     redundant_lits = PerfectHash(N,[])
-    global_ord_lit = []
     mps = 0
     ID = param.get("id",0)
-
-    assumptions = param["ass"] if "ass" in param else False
-
-    #used to create the groups
-    groups_raw : dict[int, List[int]] = {}
+    groups = set()
+    # groups = []
+    assumptions = param["ass"] if "ass" in param else False 
     groups = set()
     # groups = []
 
+    #used to create the groups
+    groups_raw : dict[int, List[int]] = {}
+
+    lb = None
+    bind = []
+    negative_lit_regex = re.compile(r"^not\s+(?P<atom_name>[\w()]+)")
+    bound_str = "lb" if GE else "ub" 
+    bound = None
+
     # selecting the interested literals
+    # debug("atomNames",atomNames)
     for a in atomNames:
-        # debug("Atom",a, end=" ")
         if  a.startswith('group('):
             terms = wasp.getTerms('group',a)
             # group(lit_name, weight, group_id)
@@ -231,26 +225,26 @@ def getLiterals(*lits):
             # adding to the aggregate
             aggregate[lit] = True
             
-            # adding the literal to the global array of literals
-            global_ord_lit.append(lit)
+
             
             bind.append(lit)
             bind.append(-lit)
         
-        elif a.startswith("lb("):
-            terms = wasp.getTerms('lb',a)
+        elif a.startswith(f"{bound_str}("):
+            terms = wasp.getTerms(f'{bound_str}',a)
             if (len(terms) != 2 or terms[1] != ID) and len(terms) != 1:
                 continue
-            if not lb is None:
+            if not bound is None:
                 assert False     
-            lb = int(terms[0])
-    # debug("",end="\n")
-    assert not lb is None
+            if GE:
+                lb = int(terms[0])
+            else:
+                ub = int(terms[0])
+            bound = lb if GE else ub 
 
-    # ordering literals in the global array
-    global_ord_lit = [(lit, weight[lit]) for lit in global_ord_lit]
-    global_ord_lit = sorted(global_ord_lit, key = lambda x: x[1])
-    global_ord_lit = [lit for lit, w in global_ord_lit]
+    
+    assert not bound is None
+
 
     # creating groups
     for group_id in groups_raw:
@@ -275,7 +269,7 @@ def getLiterals(*lits):
         G = Group(ord_l,ord_i,group_id)
         
         # updatind the max possible sum
-        mps = mps + weight[max_w(G)]
+        mps = mps + weight[m_w(G, max = GE)]
     
         # adding the group to the set of groups
         groups.add(G)
@@ -299,12 +293,12 @@ def getLiterals(*lits):
     return bind 
 
 def simplifyAtLevelZero():
-    global N,lb, I, weight, aggregate, groups, group, reason, assumptions
-
+    global N,lb, I, weight, aggregate, groups, group, reason, assumptions, mps
 
     # INCOHERENT
-    if mps < lb:
-        # debug("MPS < LB !!!")
+    error_string = "MPS < LB !!!" if GE else "MPS > UB !!!"
+    if (GE and mps < lb) or (not GE and mps > ub) :
+        debug(error_string)
         return [1]
     
     res = propagate_phase(None)
@@ -317,127 +311,57 @@ def simplifyAtLevelZero():
     return res + create_assumptions_lits(assumptions=assumptions,atomNames=atomNames)
 
 def onLiteralTrue(lit, dl):
-    global N,lb, I, weight, aggregate, groups, mps, group, true_group, last_decision_lit
+    global last_decision_lit
 
     last_decision_lit = lit
-    # debug(f"True {get_name(lit=lit, atomNames=atomNames)} id {lit} DL {dl}")
+    debug(f"True {get_name(lit=lit, atomNames=atomNames)} id {lit} DL {dl}")
     (next_phase, G) = update_phase(lit)
 
     propagated_lits = []
     if next_phase:
         propagated_lits = propagate_phase(G)
 
-    return propagated_lits    
+    return propagated_lits
 
 def update_phase(l: int) -> (bool, Group):
-    global N,lb, I, weight, aggregate, groups, mps, group, true_group
+    global N, lb, ub, I, weight, aggregate, groups, mps, group, true_group
+
+    w_p : int = 0
+    w_n : int = 0
     I[l] = True
+    tg = False
     G : Group
+
     if aggregate[l]:
         G = group[l]
         G.decrease_und()
         true_group[G] = l
-        w_max = weight[max_w(G)]
-        mps = mps - w_max + weight[l]
-        if w_max == weight[l]:
-            return (False, G)
+        w_p = weight[m_w(G, max = GE)]
+        w_n = weight[l]
+        tg = True
+        debug(f"w_p: {w_p} - w_n {w_n}")
         
     elif aggregate[not_(l)]:
         G = group[not_(l)]
         G.decrease_und()
-        if not_(l) == max_w(G):
-            new_max, prev_max = G.update_max(I)
+
+        if not_(l) == m_w(G, max = GE):
+            new, prev = G.update(I, max=GE)
             if true_group[G] is None :
-                w_n : int  = 0
-                w_n = weight[new_max]
-                w_p = weight[prev_max]
-                mps_prev = mps
-                mps = mps - w_p + w_n  
-                # debug(f"mps_prev {mps_prev} mps {mps}")
-            else:
-                return (True, G)   
-        elif G.count_undef == 1:
-            return (True, G)
-        else:
-            return (False, G)      
+                w_n = weight[new]
+                w_p = weight[prev]
     else:
         return (False, None)
 
-    # the mps has changed
-    return (True, G)
+    mps = mps - w_p + w_n
+    amocondition = ( G.count_undef == 1 and not tg ) and PROB_TYPE == "AMO"
+    return (w_p != w_n or amocondition,  G if not amocondition else None)
 
-
-def propagate_phase(G: Group):
-    
-    global N,lb, I, weight, aggregate, groups, mps, group, true_group, reason_falses, reason_trues
-
-    # set of derived literals
-    S : List[int] = []
-    
-    # reason
-    R : List[int] = []
-
-    # literals derived true
-    trues = []
-
-
-    for g in groups:
-
-        ml_g =  max_w(g)
-        mw_g = weight[ml_g]
-
-        count_infered_falses = 0 
-        false_lits_g = []
-        # infer falsity
-        for l in g.ord_l:
-            if I[l] is None:
-                if mps - mw_g + weight[l] < lb:
-                    S.append(not_(l))
-                    count_infered_falses += 1
-                else:
-                    break
-            elif I[l] is False:
-                false_lits_g.append(l)
-
-        if g.count_undef - count_infered_falses == 1 and true_group[g] is None:
-            # the last remained literal 
-            l = max_w(g)
-            if mps - weight[l] < lb:
-                S.append(l)
-                reason_trues[l] = false_lits_g
-                trues.append(l)
-    if len(S) != 0:
-        for g in groups:
-            if g.count_undef == 0 and true_group[g] is None:
-                R.extend(reversed(g.ord_l))
-            elif true_group[g] is None:
-                mw_g = weight[max_w(g)]
-                for i in range(len(g.ord_l) - 1, -1, -1):
-                    l = g.ord_l[i]
-                    if weight[l] <= mw_g:
-                        break
-                    R.append(l)
-            else:
-                R.append(not_(true_group[g]))
-
-        # updating the reason
-        reason_falses = R
-
-    S_str = convert_array_to_string(name="Derived", array=S, atomNames=atomNames)
-    # debug(S_str)
-    R_str = convert_array_to_string(name="Reason", array=R, atomNames=atomNames)
-    # debug(R_str)
-
-    print_I(I=I, atomNames=atomNames, aggregate=aggregate)
-    compute_minimal_reason(reason=R, trues=trues)
-     
-    return S
-
-def compute_minimal_reason(reason: List[int], trues: List[int]):
+def compute_minimal_reason(reason: List[int]):
     global N,lb, I, weight, aggregate, groups, mps, group, true_group, reason_falses, reason_trues, redundant_lits
 
     '''
-    Invariants reason is grouped by group id and in each group the literals are sort in descending order
+    Invariants (in case of cmin strategy) reason is grouped by group id and in each group the literals are sort in descending order
     '''
 
     if minimization == Minimize.NO_MINIMIZATION.value:
@@ -451,7 +375,7 @@ def compute_minimal_reason(reason: List[int], trues: List[int]):
     So li is mandatory in the reason.
     '''
     
-    for l in trues:
+    for l in reason:
         reason_l_to_minimize = []
         g = group[l]
         assert not g is None
@@ -472,13 +396,13 @@ def compute_minimal_reason(reason: List[int], trues: List[int]):
         else:
             assert False
 
+def onLiteralsUndefined(*lits) -> None:
+    global N, lb, ub, I, weight, aggregate, groups,  mps, group, reason, true_group
 
-def onLiteralsUndefined(*lits):
-    global N,lb, I, weight, aggregate, groups,  mps, group, reason, true_group
-    
     for i in range(1,len(lits)):
-
         l = lits[i]
+        
+        debug(f"Undef {get_name(lit=l, atomNames=atomNames)} id {l}")
 
         # updating interpretation
         I[l] = None
@@ -502,67 +426,58 @@ def onLiteralsUndefined(*lits):
         if tg == l:
             true_group[G] = None
 
-        max_und = max_w(G)
-        # debug("Undef",get_name(atomNames=atomNames, lit=l), "tg",get_name(atomNames=atomNames, lit=tg), "max_und", get_name(atomNames=atomNames, lit=max_und))
+        m_und = m_w(G, max = GE)
 
         '''
         if G has all literals defined
-            G.set_max(l)
+            G.set_max(l) if GE else G.set_min(l)
             return
 
         if l was the true literal of the group 
    
             # updating the mps
-            if weight[mw(G)] > weight[l] -> mps = mps - weight[l] + weight[mw(G)]
+            if weight[m_w(G, GE)] > if GE else < weight[l] -> mps = mps - weight[l] + weight[m_w(G, GE)]
             
             # updating the max undefined
-            if pos(mw(G)) < pos(l)  -> G.set_max(l)
+            if pos(m_w(G, GE)) > if GE else < pos(l) -> G.set_max(l) if GE else G.set_min(l)
 
         else
         
-            max_w = weight[mw(G)]
-            if weight[l] >= max_w and pos(l) > pos(mw(G))
-                G.set_max(l)
+            m_weight = weight[m_w(G, GE)]
+            if weight[l] >= if GE else <= m_weight and pos(l) > if GE else < pos(m_w(G, GE))
+                G.set_max(l) if GE else G.set_min(l)
             
             if G has not true literal
-                mps = mps - max_w + weight[mw(G)]
+                mps = mps - m_w + weight[m_w(G, GE)]
         '''
 
-        if max_und is None:
-            G.set_max(l)
-            if true_group[G] is None:
-                mps += weight[l]
+        if m_und is None:
+            G.set_max(l) if GE else G.set_min(l)
+            if tg is None:
+                if PROB_TYPE == "AMO":
+                    mps += weight[l]
+                else:
+                    assert False
             continue
         
-        pos_max = G.ord_i[max_und]
-        pos_l   = G.ord_i[l]
-        maxw    = weight[max_w(G)]
+        pos_m     =  G.ord_i[m_und]
+        pos_l     =  G.ord_i[l]
+        m_weight  =  weight[m_w(G, max = GE)]
         
         mps_p = mps 
         if tg == l:
 
             # updating the mps
-            if maxw > weight[l]: 
-                mps = mps - weight[l] + maxw
+            if (m_weight > weight[l] and GE) or (m_weight < weight[l] and not GE): 
+                mps = mps - weight[l] + m_weight
 
-            # updating the max undefined
-            if pos_max < pos_l:
-                G.set_max(l)
+            # updating the max undefined if GE else min undefined
+            if (GE and pos_m < pos_l) or (not GE and pos_m > pos_l):
+                G.set_max(l) if GE else G.set_min(l)
 
         else:
             w_l = weight[l]
-            if w_l >= maxw and pos_l > pos_max:
-                G.set_max(l)
+            if (GE and w_l >= m_weight and pos_l > pos_m) or (not GE and w_l <= m_weight and pos_l < pos_m ):
+                G.set_max(l) if GE else G.set_min(l)
                 if tg is None:
-                    mps = mps - maxw + w_l
-
-
-        
-
-        
-
-
-            
-
-        
-
+                    mps = mps - m_weight + w_l

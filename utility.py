@@ -45,6 +45,39 @@ def create_assumptions_lits(assumptions, atomNames):
 
     return res
 
+def process_sys_parameters(sys_parameters):
+
+    param = {}
+    regex = r"^-(.+)" 
+    
+    # debug(sys_parameters)
+    i = 1
+
+    while i < len(sys_parameters):
+        
+        # creating the key
+        key = sys_parameters[i] 
+        res_regex = re.match(regex, key)
+        if res_regex is None:
+            raise Exception("Every key has to start with a dash! Ex: -problem knapsack")
+        key = res_regex.group(1)
+
+        if i + 1 >= len(sys_parameters) :
+            param[key] = True
+            break
+        
+        value = sys_parameters[i+1] 
+        res_regex = re.match(regex, value)
+        if res_regex is None:
+            i += 2
+            param[key] = value
+            
+        else:
+            i += 1
+            param[key] = True
+
+    return param
+
 def convert_assparam_to_assarray(assumptions):
  
     # Strip the square brackets
@@ -144,6 +177,7 @@ class Group:
         self.max_und = self.ord_i[l]
 
     def set_min(self, l: int):
+        debug(f"setted min {l}")
         self.min_und = self.ord_i[l]
 
     def update_max(self, I: SymmetricFunction, all = False):
@@ -189,7 +223,13 @@ class Group:
         # All are defined
         self.min_und = None
         return (None, prev_min)
-        
+
+    def update(self, I: SymmetricFunction, max, all = False):
+        if max: 
+            return self.update_max(I,all=all)
+        else:
+            return self.update_min(I,all=all)
+
 
     def print_group(self, atomNames):
         lit_names = ""
@@ -228,6 +268,12 @@ def min_w(g: Group):
     if(min_und is None):
         return None
     return g.ord_l[min_und]
+
+def m_w(g: Group, max : bool):
+    if max: 
+        return max_w(g)
+    else:
+        return min_w(g)
 
 def not_(l: int):
     return l * -1

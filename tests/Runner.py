@@ -29,10 +29,10 @@ class Runner:
     PRINT_ANS_GROUP = False
     
     # whether or not printing at the end just when the run failed (correctness)
-    PRINT_JUST_ERRORS = True
+    PRINT_JUST_ERRORS = False
     
     # whether printing or not the run command
-    PRINT_RUN = True
+    PRINT_RUN = False
 
     # whether printing the output of the solver
     PRINT_OUTPUT_SOLVER = False
@@ -96,7 +96,7 @@ class Runner:
             raise  Exception(f"No valid assumptions defined, feasible values are: {utility.VALID_VALUES_ASS}")
 
 
-        utility.debug("assumptions:", self.ass)
+        # utility.debug("assumptions:", self.ass)
        
         self.enc_type = self.param["enc_type"] if "enc_type" in self.param else None
         self.id = self.param["id"] if "id" in self.param else "0"
@@ -185,7 +185,7 @@ class Runner:
         return len(answer_sets)
 
     def run_classical_test(self, instance: str):
-        print(f"RUNNING {self.param} with instance: {instance}")
+        # print(f"RUNNING {self.param} with instance: {instance}")
     
         # defining the lower bound(s)
         self.create_bound(instance=instance, ub=False)
@@ -224,13 +224,9 @@ class Runner:
 
             output_strings.append(f"[{encoding} {time} {self.get_number_answersets(answer_sets)}]")
 
-        
-
+    
         ng = self.get_number_answersets(answer_sets_group)
         na = self.get_number_answersets(answer_sets_aggr)
-
-        
-    
 
         if Runner.CHECKING_CORRECTNESS:
             correct = self.check_correctness(answer_sets_aggr=answer_sets_aggr, answer_sets_group=answer_sets_group, instance=instance)
@@ -382,18 +378,6 @@ class Runner:
         min_param = f" -min_r {minimization}"
         if group_type :
 
-            file_to_write : str
-            if minimization == Minimize.MINIMAL.value:
-                file_to_write = settings.STATISTICS_REASON_FILE_MINIMAL
-            elif minimization == Minimize.CARDINALITY_MINIMAL.value:
-                file_to_write = settings.STATISTICS_REASON_FILE_MINIMUM
-            else:
-                assert False
-
-            # with open(file_to_write, 'w') as file:
-            #     file.write(f"mean\n")
-
-
             propagator = settings.MAP_ENC_PROP[self.enc_type]
             run += f"--interpreter=python \
             --script-directory={settings.PROPAGATOR_DIR_LOCATION} \
@@ -432,8 +416,6 @@ class Runner:
             regex_query = r"\w+\([\w,]+?\)"
 
         answer_sets = []
-
-
 
         for line in lines_output:
             if not re.search(regex_answer_set, line) is None:
