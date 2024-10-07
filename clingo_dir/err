@@ -1,0 +1,32 @@
+Traceback (most recent call last):
+  File "/home/s.fiorentino/AMOSUM/clingo_dir/./run.py", line 22, in <module>
+    main()
+  File "/home/s.fiorentino/AMOSUM/clingo_dir/./run.py", line 19, in main
+    runner.run()
+  File "/home/s.fiorentino/AMOSUM/tests/RunnerWasp.py", line 281, in run
+    self.run_instance(self.specific_instance)
+  File "/home/s.fiorentino/AMOSUM/tests/RunnerClingo.py", line 35, in run_instance
+    print(ctl.solve(on_model=print))
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/s.fiorentino/miniconda3/lib/python3.11/site-packages/clingo/control.py", line 789, in solve
+    _c_call(
+  File "/home/s.fiorentino/miniconda3/lib/python3.11/site-packages/clingo/_internal.py", line 44, in _c_call
+    _handle_error(c_fun(*args, p_ret), handler)
+  File "/home/s.fiorentino/miniconda3/lib/python3.11/site-packages/clingo/_internal.py", line 71, in _handle_error
+    raise handler.error[0](handler.error[1]).with_traceback(handler.error[2])
+  File "/home/s.fiorentino/miniconda3/lib/python3.11/site-packages/clingo/propagator.py", line 885, in _pyclingo_propagator_init
+    propagator.init(PropagateInit(init))
+  File "/home/s.fiorentino/AMOSUM/clingo_dir/ge_amo.py", line 17, in init
+    print([a.symbol.string for a in init.symbolic_atoms])
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/s.fiorentino/AMOSUM/clingo_dir/ge_amo.py", line 17, in <listcomp>
+    print([a.symbol.string for a in init.symbolic_atoms])
+           ^^^^^^^^^^^^^^^
+  File "/home/s.fiorentino/miniconda3/lib/python3.11/site-packages/clingo/symbol.py", line 193, in string
+    return _to_str(_c_call("char*", _lib.clingo_symbol_string, self._rep))
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/s.fiorentino/miniconda3/lib/python3.11/site-packages/clingo/_internal.py", line 44, in _c_call
+    _handle_error(c_fun(*args, p_ret), handler)
+  File "/home/s.fiorentino/miniconda3/lib/python3.11/site-packages/clingo/_internal.py", line 75, in _handle_error
+    raise RuntimeError(msg)
+RuntimeError: unexpected

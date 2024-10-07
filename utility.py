@@ -10,7 +10,7 @@ import sys
 FOCUSED_GROUP = 2
 FOCUSING = False
 
-DEBUG = False
+DEBUG = True
 
 SEPARATOR = ":"
 NOT = "~"
@@ -25,6 +25,36 @@ def print_err(*message: str, end ="\n"):
 def debug(*message: str, G: 'Group' = None , end ="\n"):
     if DEBUG and ( G is None or G.id == FOCUSED_GROUP or not FOCUSING):
         print(message, end=end, file=sys.stderr)
+
+def init_run(argv):
+    param = {}
+    regex = r"^-(.+)" 
+    
+    i = 1
+    while i < len(argv):
+        
+        # creating the key
+        key = argv[i] 
+        res_regex = re.match(regex, key)
+        if res_regex is None:
+            raise Exception("Every key has to start with a dash! Ex: -problem knapsack")
+        key = res_regex.group(1)
+
+        if i + 1 >= len(argv) :
+            param[key] = True
+            break
+        
+        value = argv[i+1] 
+        res_regex = re.match(regex, value)
+        if res_regex is None:
+            i += 2
+            param[key] = value
+            
+        else:
+            i += 1
+            param[key] = True
+
+    return param
 
 def create_assumptions_lits(assumptions, atomNames):
 
