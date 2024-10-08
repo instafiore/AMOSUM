@@ -17,4 +17,4 @@ Invariants:
 '''
 
 functional_propagator.propagator.prob_type = "AMK"
-functional_propagator.propagator.GE = False
+functional_propagator.propagator.ge = False

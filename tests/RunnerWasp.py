@@ -35,7 +35,7 @@ class RunnerWasp:
     PRINT_RUN = False
 
     # whether printing the output of the solver
-    PRINT_OUTPUT_SOLVER = True
+    PRINT_OUTPUT_SOLVER = False
 
     # whether printing the error output of the solver
     PRINT_ERROR_SOLVER = True

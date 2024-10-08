@@ -18,5 +18,5 @@ done
 
 # Iterate over the list and call run.py with each integer as a parameter
 for number in "${numbers[@]}"; do
-    ../../wasp_dir/run.py -problem kn -enc_type ge_amo -nt 1 -l -id 1 -write_res false  -lb "$number"
+    ../../wasp_dir/run.py -problem kn -enc_type ge_amo  -prop_type ge_amo -nt 1 -l -id 1 -write_res false  -lb "$number"
 done

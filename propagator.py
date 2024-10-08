@@ -211,7 +211,7 @@ class Propagator:
         bound = None
 
         # selecting the interested literals
-        # debug("self.atomNames",self.atomNames)
+        debug("self.atomNames",self.atomNames)
         for a in self.atomNames:
             if  a.startswith('group('):
                 terms = wasp.getTerms('group',a)
