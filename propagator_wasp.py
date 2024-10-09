@@ -405,7 +405,7 @@ class PropagatorWasp:
                 assert False
 
     def onLiteralsUndefined(self, *lits, wasp: bool = True) -> None:
-        debug(f"litssss: {lits}")
+        
         for i in range(1 if wasp else 0,len(lits)):
             l = lits[i]
             

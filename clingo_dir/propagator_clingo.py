@@ -57,8 +57,8 @@ class PropagatorClingo(clingo.Propagator):
         self.map_plit_slit = map_plit_slit
         self.map_slit_plit = map_slit_plit
 
-        plit_list = self.prop.simplifyAtLevelZero()
-        slit_list = [map_plit_slit[plit] for plit in plit_list]
+        # plit_list = self.prop.simplifyAtLevelZero()
+        # slit_list = [map_plit_slit[plit] for plit in plit_list]
         
         #TODO: to finish the propagation at level 0
 

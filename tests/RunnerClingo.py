@@ -48,11 +48,11 @@ class RunnerClingo(RunnerWasp):
         ctl.register_propagator(ge_amo_propagator)
 
         # Collect all models
-        models = []
+        models = set()
 
         def on_model(model):
             # Append the model's symbols to the list
-            models.append(model.symbols(shown=True))
+            models.add(model.symbols(shown=True))
 
         # Solve and get all models
         start_time = time.time()  

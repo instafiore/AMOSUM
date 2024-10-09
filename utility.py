@@ -289,6 +289,7 @@ def max_w(g: Group):
     max_und = g.max_und
     if(max_und is None):
         return None
+    
     return g.ord_l[max_und]
 
 
