@@ -19,7 +19,7 @@ Invariants:
 functional_propagator.propagator.prob_type = "EO"
 functional_propagator.propagator.ge = False
 
-def propagate_phase(G: Group, propagator: Propagator):
+def propagate_phase(G: Group, propagator: PropagatorWasp):
     global N,ub, I, weight, aggregate, groups, mps, group, reason, true_group
 
     # set of derived literals

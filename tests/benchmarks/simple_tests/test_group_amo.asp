@@ -5,9 +5,9 @@ b(1..4,0).
 b(1..4,1).
 
 % lb(weight, aggr_id)
-lb(3,0).
+lb(5,0).
 % ub(weight, aggr_id)
-ub(5,1).
+ub(7,1).
 
 group(a(X),X,0,ID) :- b(X,ID).
 group(c(X),X,1,ID) :- b(X,ID).

@@ -35,7 +35,7 @@ class RunnerWasp:
     PRINT_RUN = False
 
     # whether printing the output of the solver
-    PRINT_OUTPUT_SOLVER = False
+    PRINT_OUTPUT_SOLVER = True
 
     # whether printing the error output of the solver
     PRINT_ERROR_SOLVER = True
@@ -289,6 +289,10 @@ class RunnerWasp:
             encoding = settings.MAP_ENC_ENCODING_FILES[self.enc_type][0 if enc_aggr else 1] \
                 if self.enc_type else None
             answersets, time = self.run_instance(self.specific_instance, encoding=encoding)
+            if RunnerWasp.PRINT_OUTPUT_SOLVER:
+                print(f"Time: {time}, found {len(answersets)} models:")
+                for i, model in enumerate(answersets):
+                    print(f"Model {i+1}: {model}")
         else:
             assert False
 

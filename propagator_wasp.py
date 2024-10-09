@@ -8,7 +8,7 @@ import wasp_dir.wasp as wasp
 import re
 import settings
 
-class Propagator:
+class PropagatorWasp:
 
     atomNames : dict[str: int]
 
@@ -85,7 +85,7 @@ class Propagator:
     ge : bool
 
     # propagate function to implement in propagator file
-    propagate_phase : Callable[[Group, 'Propagator'],List[int]]
+    propagate_phase : Callable[[Group, 'PropagatorWasp', dict],List[int]]
 
     # propagate function to implement in propagator file
     onLiteralsUndefined: Callable[[Tuple], None]
@@ -109,7 +109,7 @@ class Propagator:
     mps : int 
     # ----------------------------
 
-    def __init__(self, atomsNames: dict[str: int], sys_parameters: List[str], propagation_phase: Callable[[Group, 'Propagator'], List[int]] = None, ge: bool = True, prob_type: str = "AMO") -> None:
+    def __init__(self, atomsNames: dict[str: int], sys_parameters: List[str], propagation_phase: Callable[[Group, 'PropagatorWasp'], List[int]] = None, ge: bool = True, prob_type: str = "AMO") -> None:
         self.atomNames = atomsNames
         self.sys_parameters = sys_parameters
         self.lits_level_0 : List[int] = []
@@ -196,7 +196,7 @@ class Propagator:
         self.reason_trues = PerfectHash(self.N,[])
         self.redundant_lits = PerfectHash(self.N,[])
         self.mps = 0
-        self.ID = param.get("id",0)
+        self.ID = param.get("id","0")
         self.groups = set()
         # self.groups = []
         self.assumptions = param.get("ass", False)
@@ -211,11 +211,11 @@ class Propagator:
         bound = None
 
         # selecting the interested literals
-        debug("self.atomNames",self.atomNames)
+        # debug("self.atomNames",self.atomNames)
         for a in self.atomNames:
             if  a.startswith('group('):
                 terms = wasp.getTerms('group',a)
-                # Syntax: self.group(lit_name, self.weight, group_id)
+                # Syntax: self.group( lit_name, self.weight, group_id)
                 if len(terms) != 4 or terms[3] != self.ID:
                     continue
                 
@@ -254,7 +254,7 @@ class Propagator:
                     self.lb = int(terms[0])
                 else:
                     self.ub = int(terms[0])
-                bound = self.lb if self.ge else self.ub 
+                bound = self.lb if self.ge else self.ub
 
         assert not bound is None
 
@@ -312,7 +312,7 @@ class Propagator:
             debug(error_string)
             return [1]
         
-        res = self.propagate_phase(None, self)
+        res = self.propagate_phase(None, self, self.atomNames)
         
         simplyLiterals(self.lits_level_0, self.aggregate, self.group)
 
@@ -330,7 +330,7 @@ class Propagator:
 
         propagated_lits = []
         if next_phase:
-            propagated_lits = self.propagate_phase(G, self)
+            propagated_lits = self.propagate_phase(G, self, self.atomNames)
 
         return propagated_lits
 
@@ -404,9 +404,9 @@ class Propagator:
             else:
                 assert False
 
-    def onLiteralsUndefined(self, *lits) -> None:
-       
-        for i in range(1,len(lits)):
+    def onLiteralsUndefined(self, *lits, wasp: bool = True) -> None:
+        debug(f"litssss: {lits}")
+        for i in range(1 if wasp else 0,len(lits)):
             l = lits[i]
             
             debug(f"Undef {get_name(lit=l, atomNames = self.atomNames)} id {l}")

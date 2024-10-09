@@ -16,7 +16,7 @@ Invariants:
 functional_propagator.propagator.prob_type = "EO"
 functional_propagator.propagator.ge = True
 
-def propagate_phase(G: Group, propagator: Propagator):
+def propagate_phase(G: Group, propagator: PropagatorWasp):
 
     # set of derived literals
     S : List[int] = []

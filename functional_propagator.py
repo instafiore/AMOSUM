@@ -7,14 +7,14 @@ from utility import *
 import wasp_dir.wasp as wasp
 import re
 import settings
-from propagator import *
+from propagator_wasp import *
 
 atomNames = {}
 
 # input parameters
 sys_parameters = []
 
-propagator = Propagator(atomsNames=atomNames, sys_parameters=sys_parameters)
+propagator = PropagatorWasp(atomsNames=atomNames, sys_parameters=sys_parameters)
 
 def checkAnswerSet(*answer_set):
     global propagator
