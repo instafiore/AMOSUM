@@ -167,3 +167,9 @@ tests/results/**
 # Ignore all files containing 'out'
 *out*
 
+# Ignore all files with 'err' in the filename at any level
+**/*err*
+
+# Ignore all files with 'out' in the filename at any level
+**/*out*
+
