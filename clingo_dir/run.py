@@ -13,7 +13,7 @@ This is the entry file to run the tests on the AMO SUM propagator(s) CLINGO
 def main():
     
     param = init_run(sys.argv)
-    print(param)
+    # print(param)
     
     runner = RunnerClingo(parameters=param)
     runner.run()

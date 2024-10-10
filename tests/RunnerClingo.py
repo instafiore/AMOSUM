@@ -18,7 +18,6 @@ from  utility import *
 import utility
 import settings
 from clingo_dir.propagator_clingo import *
-from wasp_dir.ge_amo import propagate_phase
 
 class RunnerClingo(RunnerWasp):
     '''
@@ -43,9 +42,26 @@ class RunnerClingo(RunnerWasp):
         # Ground the base part of the program
         ctl.ground([("base", [])])  # Ensure you ground with the correct subprogram
 
+        # initializing parameters 
+        match self.param.get("prop_type"):
+            case "ge_amo":
+                ge = True
+                prop_type = "AMO"
+                from wasp_dir.ge_amo import propagate_phase
+            case "le_amo":
+                ge = False
+                prop_type = "AMO"
+                from wasp_dir.le_eo import propagate_phase
+            case "ge_eo":
+                ge = True
+                prop_type = "EO"
+                from wasp_dir.ge_eo import propagate_phase
+            case _:
+                assert False
+
         # Initialize and register the custom propagator
-        ge_amo_propagator = PropagatorClingo(self.param, propagation_phase=propagate_phase, ge=True, prop_type="AMO")
-        ctl.register_propagator(ge_amo_propagator)
+        propagator_clingo = PropagatorClingo(self.param, propagation_phase=propagate_phase, ge=ge, prop_type=prop_type)
+        ctl.register_propagator(propagator_clingo)
 
         # Collect all models
         models = set()

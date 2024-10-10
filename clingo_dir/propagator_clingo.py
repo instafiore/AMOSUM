@@ -47,8 +47,8 @@ class PropagatorClingo(clingo.Propagator):
                 map_slit_plit[slit] = plit
                 map_slit_plit[-slit] = -plit
 
-        facts = [max_plit] + map_slit_plit[1]
-        to_watch = self.prop.getLiterals(*facts)
+        lits = [max_plit] + map_slit_plit[1]
+        to_watch = self.prop.getLiterals(*lits)
 
         for plit in to_watch:
             slit = map_plit_slit[plit]
@@ -57,24 +57,31 @@ class PropagatorClingo(clingo.Propagator):
         self.map_plit_slit = map_plit_slit
         self.map_slit_plit = map_slit_plit
 
-        # plit_list = self.prop.simplifyAtLevelZero()
-        # slit_list = [map_plit_slit[plit] for plit in plit_list]
-        
-        #TODO: to finish the propagation at level 0
+        S_plit = self.prop.simplifyAtLevelZero()
 
+        self.add_clause_propagated_lits(control=init, S_plit=S_plit)
+
+        # print(f"atoms_list_for_mapping: {atoms_list_for_mapping}")
+        # print(f"facts: {self.prop.facts}")
+        # slit_prop_from_facts = [map_plit_slit[plit] for plit in S_plit]
+        # print(f"slit_list_prop_0: {slit_prop_from_facts}")
+
+    def add_clause_propagated_lits(self, control: clingo.PropagateControl | clingo.PropagateInit, S_plit):
+        for plit in S_plit:
+            R_plit = self.prop.getReasonForLiteral(plit)
+            slit = self.map_plit_slit[plit]
+            clause = [self.map_plit_slit[plit_r] for plit_r in R_plit]
+            clause.append(slit)
+            control.add_clause(clause)
 
     def propagate(self, control: clingo.PropagateControl, changes: Sequence[int]) -> None:
         dl = control.assignment.decision_level
+        # print(f"size {len(changes)} dl {dl}")
         for slit in changes:
             plit = self.map_slit_plit[slit]
             S_plit =  self.prop.onLiteralTrue(plit, dl)
+            self.add_clause_propagated_lits(control=control, S_plit=S_plit)
             
-            for plit in S_plit:
-                R_plit = self.prop.getReasonForLiteral(plit)
-                slit = self.map_plit_slit[plit]
-                clause = [self.map_plit_slit[plit_r] for plit_r in R_plit]
-                clause.append(slit)
-                control.add_clause(clause)
 
     def undo(self, thread_id: int, assignment: clingo.Assignment, changes: Sequence[int]) -> None:
         plit_list = [self.map_slit_plit[slit] for slit in changes]

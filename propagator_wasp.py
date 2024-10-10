@@ -42,7 +42,7 @@ class PropagatorWasp:
     groups : set[Group]
 
     # literals derived at level 0
-    lits_level_0 : List[int]
+    facts : List[int]
 
     # reason for falses literals 
     reason_falses : List[int] 
@@ -112,7 +112,7 @@ class PropagatorWasp:
     def __init__(self, atomsNames: dict[str: int], sys_parameters: List[str], propagation_phase: Callable[[Group, 'PropagatorWasp'], List[int]] = None, ge: bool = True, prob_type: str = "AMO") -> None:
         self.atomNames = atomsNames
         self.sys_parameters = sys_parameters
-        self.lits_level_0 : List[int] = []
+        self.facts : List[int] = []
         self.reason_falses : List[int] = []
         self.strategy = 'default'
         self.last_decision_lit = 0
@@ -211,6 +211,7 @@ class PropagatorWasp:
         bound = None
 
         # selecting the interested literals
+        # debug(f"lits {lits}")
         # debug("self.atomNames",self.atomNames)
         for a in self.atomNames:
             if  a.startswith('group('):
@@ -300,7 +301,7 @@ class PropagatorWasp:
             l = lits[i]
             self.update_phase(l)
 
-        self.lits_level_0 = lits
+        self.facts = lits[1:]
         self.param = param
         return bind 
 
@@ -312,14 +313,15 @@ class PropagatorWasp:
             debug(error_string)
             return [1]
         
-        res = self.propagate_phase(None, self, self.atomNames)
+        prop_from_facts = self.propagate_phase(None, self, self.atomNames)
         
-        simplyLiterals(self.lits_level_0, self.aggregate, self.group)
+        # TODO: try to add prop_from_facts to facts at level 0
+        simplyLiterals(self.facts, self.aggregate, self.group)
 
         if self.assumptions:
             self.assumptions = convert_assparam_to_assarray(self.assumptions)
 
-        return res + create_assumptions_lits(assumptions=self.assumptions,atomNames=self.atomNames)
+        return prop_from_facts + create_assumptions_lits(assumptions=self.assumptions,atomNames=self.atomNames)
 
     def onLiteralTrue(self, lit, dl):
         global last_decision_lit

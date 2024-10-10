@@ -10,7 +10,7 @@ import sys
 FOCUSED_GROUP = 2
 FOCUSING = False
 
-DEBUG = True
+DEBUG = False
 
 SEPARATOR = ":"
 NOT = "~"

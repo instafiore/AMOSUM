@@ -160,3 +160,10 @@ cython_debug/
 #.idea/
 
 tests/results/**
+
+# Ignore all files containing 'err'
+*err*
+
+# Ignore all files containing 'out'
+*out*
+
