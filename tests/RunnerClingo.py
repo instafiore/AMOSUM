@@ -1,4 +1,5 @@
 import json
+import math
 import subprocess
 import time
 from typing import Dict, List
@@ -34,16 +35,57 @@ class RunnerClingo(RunnerWasp):
         location_instance = f"{self.location_instance}/{instance}.asp"
 
         # Initialize the Clingo control object
-        ctl = Control(arguments=["--models=0"])
+        arguments = []
+        models = f"--models={self.num_models}" if self.num_models != "" else ""
+        arguments.append(models) if models != "" else ""
+        self.ctl = Control(arguments=arguments)
         
         # Load the instance file
-        ctl.load(location_instance)
+        self.ctl.load(location_instance)
+        self.ctl.load(location_encoding) if encoding else ""
+        self.ctl.load(self.str_weights) if self.str_weights != "" else ""
+        self.ctl.load(self.str_lb) if self.str_lb != "" else ""
+        self.ctl.load(self.str_ub) if self.str_ub != "" else ""
         
         # Ground the base part of the program
-        ctl.ground([("base", [])])  # Ensure you ground with the correct subprogram
+        self.ctl.ground([("base", [])])  # Ensure you ground with the correct subprogram
 
-        # initializing parameters 
-        match self.param.get("prop_type"):
+        if group_type: 
+            # initializing parameters 
+            self.registerPropagator(self.param.get("prop_type"))
+
+
+        # Collect all models
+        models = []
+
+        def on_model(model):
+            # Append the model's symbols to the list
+            regex_query = self.get_regex_query_atom_answerset()
+            model = set([str(atom) for atom in model.symbols(shown=True)])
+            filtered_model = set()
+            for atom in model:
+                string = f" {atom}"
+                result_match = re.search(regex_query, string)
+                # print(f"atom str: {atom} regex_query: {regex_query} match: {result_match}")
+                if result_match:
+                    filtered_model.add(atom)
+            # print(f"filtered_model: {filtered_model} model_str: {model} regex_query: {regex_query}")
+            models.append(set(filtered_model))
+
+            
+        # Solve and get all models
+        start_time = time.time()  
+        self.ctl.solve(on_model=on_model)
+        end_time = time.time()  # End time
+        
+        wall_time = end_time - start_time
+        wall_time = round(wall_time, 2)
+
+        # Return all models and a dummy time value 
+        return models, wall_time
+    
+    def registerPropagator(self, prop_type):
+        match prop_type:
             case "ge_amo":
                 ge = True
                 prop_type = "AMO"
@@ -61,24 +103,7 @@ class RunnerClingo(RunnerWasp):
 
         # Initialize and register the custom propagator
         propagator_clingo = PropagatorClingo(self.param, propagation_phase=propagate_phase, ge=ge, prop_type=prop_type)
-        ctl.register_propagator(propagator_clingo)
-
-        # Collect all models
-        models = set()
-
-        def on_model(model):
-            # Append the model's symbols to the list
-            models.add(model.symbols(shown=True))
-
-        # Solve and get all models
-        start_time = time.time()  
-        ctl.solve(on_model=on_model)
-        end_time = time.time()  # End time
-        
-        wall_time = end_time - start_time
-
-        # Return all models and a dummy time value 
-        return models, wall_time
+        self.ctl.register_propagator(propagator_clingo)
 
 
     

@@ -8,6 +8,8 @@ import wasp_dir.wasp as wasp
 import re
 import settings
 
+
+
 class PropagatorWasp:
 
     atomNames : dict[str: int]
@@ -79,7 +81,7 @@ class PropagatorWasp:
     count_p : int
 
     # defining the problem type, possible values: AMO, EO
-    PROB_TYPE : str
+    prob_type : str
 
     # defining whether the propagator is for the constraint >=  (ge) or <= (le) 
     ge : bool
@@ -216,7 +218,7 @@ class PropagatorWasp:
         for a in self.atomNames:
             if  a.startswith('group('):
                 terms = wasp.getTerms('group',a)
-                # Syntax: self.group( lit_name, self.weight, group_id)
+                # Syntax: group( lit_name, weight, group_id, aggregate_id)
                 if len(terms) != 4 or terms[3] != self.ID:
                     continue
                 
@@ -424,6 +426,8 @@ class PropagatorWasp:
                 G = self.group[not_(l)]
                 l = not_(l)
 
+            if G is None:
+                print(f"literal sinner of G none is: {get_name(atomNames=self.atomNames, lit=l)} plit {l}")
             assert not G is None
 
             # increasing the number of undefined literals for G
@@ -463,7 +467,7 @@ class PropagatorWasp:
             if m_und is None:
                 G.set_max(l) if self.ge else G.set_min(l)
                 if tg is None:
-                    if self.PROB_TYPE == "AMO":
+                    if self.prob_type == "AMO":
                         self.mps += self.weight[l]
                     else:
                         assert False

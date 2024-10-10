@@ -17,6 +17,13 @@ while [ $value -ge 0 ]; do
 done
 
 # Iterate over the list and call run.py with each integer as a parameter
+
+echo "C_MIN"
 for number in "${numbers[@]}"; do
-    ../../wasp_dir/run.py -problem kn -enc_type ge_eo  -prop_type ge_eo -nt 1 -l -id 1 -write_res false  -lb "$number"
+   ../../../clingo_dir/run.py -cc -problem kn -enc_type ge_amo -prop_type ge_amo  -nt 1 -l -id 1 -write_res false -min_r c_min -lb "$number"
+done
+
+echo "MIN"
+for number in "${numbers[@]}"; do
+    ../../../clingo_dir/run.py -cc -problem kn -enc_type ge_amo  -prop_type ge_amo -nt 1 -l -id 1 -write_res false -min_r min -lb "$number"
 done

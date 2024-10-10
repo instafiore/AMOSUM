@@ -5,18 +5,18 @@
 numbers=()
 
 # Set the initial value
-value=30000
+value=100
 
 # Loop until the value reaches 50000
-while [ $value -ge 0 ]; do
+while [ $value -le 20000 ]; do
     # Add the value to the array
     numbers+=("$value")
     
     # Decrement the value by 500
-    ((value -= 500))
+    ((value += 500))
 done
 
 # Iterate over the list and call run.py with each integer as a parameter
 for number in "${numbers[@]}"; do
-    ../../wasp_dir/run.py -problem kn -enc_type ge_amo  -prop_type ge_amo -nt 1 -l -id 1 -write_res false  -lb "$number"
+    ../../../wasp_dir/run.py -cc -problem kn -enc_type le_eo  -prop_type le_eo -nt 1 -l -write_res false  -ub "$number"
 done

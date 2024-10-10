@@ -20,9 +20,10 @@ class RunnerWasp:
     # SOLVER = "wasp"
 
     # whether or not running a test for the correctness
-    CHECKING_CORRECTNESS = True
+    CHECKING_CORRECTNESS = False
     # whether to print or not that an answer set is not in another answerset
-    PRINT_NOT_SUBSET = False
+    PRINT_ANS_AGGR_NOT_SUBSET_OF_ANS_GROUP = False
+    PRINT_ANS_GROUP_NOT_SUBSET_OF_ANS_AGGR = False
     # whether to print or not the answerset aggr with its mps in the checking correctness 
     PRINT_ANS_AGGR = False
     # whether to print or not the answerset group with its mps in the checking correctness 
@@ -38,7 +39,7 @@ class RunnerWasp:
     PRINT_OUTPUT_SOLVER = False
 
     # whether printing the output of the solver
-    PRINT_OUTPUT_SOLVER_RUN_INSTANCE = True
+    PRINT_ANSWERSETS = True
 
     # whether printing the error output of the solver
     PRINT_ERROR_SOLVER = True
@@ -92,7 +93,14 @@ class RunnerWasp:
             assert False
 
         self.light = self.param["l"] if "l" in self.param else None
-        self.n0 = "-n0" if "n0" in self.param or RunnerWasp.CHECKING_CORRECTNESS else ""
+        self.num_models = self.param.get("n","")
+        # if there is the checking correctness mode all answersets have to be returned
+        RunnerWasp.CHECKING_CORRECTNESS = self.param.get("cc", RunnerWasp.CHECKING_CORRECTNESS)
+        self.num_models = "0" if RunnerWasp.CHECKING_CORRECTNESS else self.num_models
+
+        self.n0 = f"-n{self.num_models}" if self.num_models != "" else ""
+        # print(f"num_models {num_models}")
+        # print(f"self.n0 {self.n0}")
         self.ass = self.param["ass"] if "ass" in self.param else ""
 
         # print("utility.REGEX_ASSUMPTIONS", utility.REGEX_ASSUMPTIONS)
@@ -120,11 +128,8 @@ class RunnerWasp:
 
         # whether or not the number of tests is specified, 
         # if it is not it will run all the instances for the given problem
-        if "nt" in self.param:
-            number_of_tests = self.param["nt"]
-        else:
-            number_of_tests = -1
-
+        number_of_tests = self.param.get("nt",-1)
+    
         head = ""
         if number_of_tests != -1:
             head = f"| head -n {number_of_tests}"
@@ -194,9 +199,185 @@ class RunnerWasp:
         #     break
         return len(answer_sets)
 
-    def run_classical_test(self, instance: str):
-        # print(f"RUNNING {self.param} with instance: {instance}")
+
+    def create_weights_atom_regexes(self, instance):
+        if self.problem == RunnerWasp.KNAPSACK:
+            weights_file = f"{self.location_instance}/{instance}.asp"
+            regex_weights = RunnerWasp.REGEX_WEIGHT_ATOM_KN
+            atom_re = r"in_knapsack\((\w+),(\w+?)\)"
+        elif self.problem == RunnerWasp.GRAPH_COLOURING:
+            weights_file = self.str_weights
+            regex_weights = RunnerWasp.REGEX_WEIGHT_ATOM_GC
+            atom_re= r"col\((\w+),(\w+?)\)"
+
+
+        maps_weights = self.create_maps_weights(weights_file, regex_weights=regex_weights)
+
+        return (maps_weights, atom_re)
+
+    def check_correctness(self, answer_sets_aggr, answer_sets_group, instance, time_group, time_aggr):
+   
+        maps_weights, atom_re = self.create_weights_atom_regexes(instance=instance)
+
+        correct = True
+
+        if RunnerWasp.PRINT_ANS_GROUP:
+            print("Answer_sets_group")
+            self.print_ans(answer_sets=answer_sets_group, maps_weight=maps_weights, atom_re=atom_re, time=time_aggr)
+        if RunnerWasp.PRINT_ANS_AGGR:
+            print("Answer_sets_aggr")
+            self.print_ans(answer_sets=answer_sets_aggr, maps_weight=maps_weights, atom_re=atom_re, time=time_group)
+
+        for ans_1 in answer_sets_aggr:
+            if not ans_1 in answer_sets_group:
+                if RunnerWasp.PRINT_ANS_AGGR_NOT_SUBSET_OF_ANS_GROUP:
+                    print(f"The answer set {ans_1} is not it answer_sets_group. MPS: {self.compute_mps(ans=ans_1, maps_weights=maps_weights, atom_re=atom_re)}")
+                correct = False
+
+        for ans_2 in answer_sets_group:
+            if not ans_2 in answer_sets_aggr:
+                if RunnerWasp.PRINT_ANS_GROUP_NOT_SUBSET_OF_ANS_AGGR:
+                    print(f"The answer set {ans_2} is not it answer_sets_aggr. MPS: {self.compute_mps(ans=ans_2, maps_weights=maps_weights, atom_re=atom_re)}")
+                correct = False
     
+
+        return correct
+
+    def print_ans(self,answer_sets, time, atom_re, maps_weight):
+
+        print(f"Time: {time}, found {len(answer_sets)} models:")
+        for i, model in enumerate(answer_sets):
+            print(f"Model {i+1}: {model} mps: {self.compute_mps(model, maps_weights=maps_weight, atom_re=atom_re)}")
+            
+    def compute_mps(self, ans, maps_weights, atom_re):
+        mps = 0
+        for atom in ans:
+            match = re.match(atom_re, atom)
+            key = match.group(1)
+            mult = int(match.group(2)) if self.problem == RunnerWasp.KNAPSACK else 1
+            # print(f"atom {atom} key: {key} mult: {mult} weight: {maps_weights[key]}")
+            mps += mult * maps_weights[key]    
+
+        return mps    
+        
+
+    def create_maps_weights(self, file_weights, regex_weights):
+
+        pattern = re.compile(regex_weights)
+        maps = {}
+
+        with open(file_weights, 'r') as file:
+            for line in file:
+                match = pattern.match(line.strip())
+                if match:
+                    key = match.group(1)
+                    value = int(match.group(self.weight_parm_id))
+                    maps[key] = value
+
+        return maps
+    
+    def get_regex_query_atom_answerset(self):
+        regex_query : str
+        if self.problem == RunnerWasp.GRAPH_COLOURING:
+            regex_query = r"(?<=[\s,{])col\(\w+,\w+?\)"
+        elif self.problem == RunnerWasp.KNAPSACK:
+            regex_query = r"(?<=[\s,{])in_knapsack\(\w+,\w+?\)"
+        elif self.problem == RunnerWasp.SIMPLE_TEST:
+            regex_query = r"\w+\([\w,]+?\)"
+        else:
+            assert False
+        
+        return regex_query
+    
+    def run(self):
+        
+        if self.instances:
+            for instance in self.instances:
+                self.run_classical_test(instance=instance)
+        elif self.specific_instance:
+            enc_aggr = self.param.get("enc_aggr", False)
+            encoding = settings.MAP_ENC_ENCODING_FILES[self.enc_type][0 if enc_aggr else 1] \
+                if self.enc_type else None
+            answersets, time = self.run_instance(self.specific_instance, encoding=encoding)
+            maps_weights, atom_re = self.create_weights_atom_regexes(instance=instance)
+            self.print_ans(answer_sets=answersets, time=time, atom_re=atom_re, maps_weight=maps_weights)
+        else:
+            assert False
+
+
+    def run_instance(self, instance, encoding = None, group_type = True):
+        
+        location_encoding = f"{self.location}/{encoding}.asp" if encoding else ""
+
+        run = f"clingo \
+            {self.location_instance}/{instance}.asp \
+            {self.str_weights} \
+            {location_encoding} \
+            {self.str_lb} \
+            {self.str_ub} \
+            --output=smodels | timeout {self.timeout_m}m time -p {RunnerWasp.SOLVER} {RunnerWasp.SILENT} {self.n0} "
+       
+        id_param = f"-id {self.id}"
+        ass_param = f" -ass {self.ass}" if self.ass != "" else ""
+        write_stats_reason = f" -write_stats_reason" if "write_stats_reason" in self.param else ""
+        minimization = self.param.get("min_r", Minimize.NO_MINIMIZATION.value)
+
+
+
+        possible_values_minimize = [member.value for member in Minimize]
+        if not minimization in possible_values_minimize:
+            raise Exception(f"The inserted value {minimization} is not valid, possible values are {possible_values_minimize}")
+        min_param = f" -min_r {minimization}"
+        if group_type and self.prop_type:
+            propagator = settings.MAP_PROPAGATOR[self.prop_type]
+            run += f"--interpreter=python \
+            --script-directory={settings.PROPAGATOR_DIR_LOCATION_WASP} \
+            --plugins-file=\"{propagator} {id_param}{min_param}{ass_param}{write_stats_reason}\""
+
+        if self.PRINT_RUN:
+            print(f"\nRUN:\n{run}")
+            
+        # running test
+        run_process = subprocess.run(run, shell=True, capture_output=True)
+
+        output = run_process.stdout.decode()
+        error = run_process.stderr.decode()
+        output_error = output + error
+
+        lines_output = output.splitlines() 
+        lines_error = error.splitlines() 
+        
+        if RunnerWasp.PRINT_OUTPUT_SOLVER:
+            print(output)
+
+        if RunnerWasp.PRINT_ERROR_SOLVER:
+            print(error, file=sys.stderr)
+
+        regex_real = r"^real\s(\d+\.\d+)"
+        # regex for the answer set of a given problem
+        regex_answer_set = r"^\{(.+)\}"
+        
+        # regex for the interested atoms of a given problem
+        regex_query = self.get_regex_query_atom_answerset()
+
+        answer_sets = []
+
+        for line in lines_output:
+            if not re.search(regex_answer_set, line) is None:
+                answer_set_str = re.search(regex_answer_set, line).group(1)
+                answer_set = set(re.findall(regex_query, answer_set_str))
+                answer_sets.append(set(answer_set))
+        
+        for line in lines_error:
+            if not re.search(regex_real, line) is None:
+                time = re.search(regex_real, line).group(1)
+            elif not re.search(r"Killed: Bye!", line) is None:
+                time = "timeout"
+
+        return (answer_sets, time)
+    
+    def run_classical_test(self, instance: str):
+
         # defining the lower bound(s)
         self.create_bound(instance=instance, ub=False)
     
@@ -239,23 +420,20 @@ class RunnerWasp:
         na = self.get_number_answersets(answer_sets_aggr)
 
         if RunnerWasp.CHECKING_CORRECTNESS:
-            correct = self.check_correctness(answer_sets_aggr=answer_sets_aggr, answer_sets_group=answer_sets_group, instance=instance)
+            correct = self.check_correctness(answer_sets_aggr=answer_sets_aggr, answer_sets_group=answer_sets_group, 
+                                            instance=instance,
+                                            time_group=time_group, time_aggr=time_aggr)
         elif ng != na:
             correct = False
         else:
             correct = True
 
         equal = "equal" if correct  else "not_equal" 
-        final_string = " ".join(output_strings)
+        final_string = f" ".join([f"{self.param} with instance: {instance}"] + output_strings)
         if not correct:
-            print(f"{final_string} NOT CORRECT")
+            print(f"{final_string} [NOT CORRECT]")
         elif not RunnerWasp.PRINT_JUST_ERRORS:
-            print(f"{final_string} CORRECT")
-
-        print()
-
-        # print(answer_sets_group)
-        # print(answer_sets_group)
+            print(f"{final_string} [CORRECT]")
 
         # printing the new line of the test
         lb_string = ""
@@ -281,171 +459,6 @@ class RunnerWasp:
         # restoring the instance.asp file
         self.comment_bound(instance=instance, ub=False, restore=True)
         self.comment_bound(instance=instance, ub=True, restore=True)
-
-    def run(self):
-        
-        if self.instances:
-            for instance in self.instances:
-                self.run_classical_test(instance=instance)
-        elif self.specific_instance:
-            enc_aggr = self.param.get("enc_aggr", False)
-            encoding = settings.MAP_ENC_ENCODING_FILES[self.enc_type][0 if enc_aggr else 1] \
-                if self.enc_type else None
-            answersets, time = self.run_instance(self.specific_instance, encoding=encoding)
-            if RunnerWasp.PRINT_OUTPUT_SOLVER_RUN_INSTANCE:
-                print(f"Time: {time}, found {len(answersets)} models:")
-                for i, model in enumerate(answersets):
-                    print(f"Model {i+1}: {model}")
-        else:
-            assert False
-
-   
-
-    def check_correctness(self, answer_sets_aggr, answer_sets_group, instance):
-   
-        if self.problem == RunnerWasp.KNAPSACK:
-            weights_file = f"{self.location_instance}/{instance}.asp"
-            regex_weights = RunnerWasp.REGEX_WEIGHT_ATOM_KN
-            atom_re = r"in_knapsack\((\w+),(\w+?)\)"
-        elif self.problem == RunnerWasp.GRAPH_COLOURING:
-            weights_file = self.str_weights
-            regex_weights = RunnerWasp.REGEX_WEIGHT_ATOM_GC
-            atom_re= r"col\((\w+),(\w+?)\)"
-
-
-        maps_weights = self.create_maps_weights(weights_file, regex_weights=regex_weights)
-
-        correct = True
-
-        for ans_1 in answer_sets_aggr:
-            if not ans_1 in answer_sets_group:
-                if RunnerWasp.PRINT_NOT_SUBSET:
-                    print(f"The answer set {ans_1} is not it answer_sets_group. MPS: {self.compute_mps(ans=ans_1, maps_weights=maps_weights, atom_re=atom_re)}")
-                correct = False
-
-        for ans_2 in answer_sets_group:
-            if not ans_2 in answer_sets_aggr:
-                if RunnerWasp.PRINT_NOT_SUBSET:
-                    print(f"The answer set {ans_2} is not it answer_sets_aggr. MPS: {self.compute_mps(ans=ans_2, maps_weights=maps_weights, atom_re=atom_re)}")
-                correct = False
-    
-        if not correct and RunnerWasp.PRINT_ANS_GROUP:
-            print("Answer_sets_group")
-            self.print_ans(answer_sets=answer_sets_group, maps_weight=maps_weights, atom_re=atom_re)
-        if not correct and RunnerWasp.PRINT_ANS_AGGR:
-            print("Answer_sets_aggr")
-            self.print_ans(answer_sets=answer_sets_aggr, maps_weight=maps_weights, atom_re=atom_re)
-
-        return correct
-
-    def print_ans(self,answer_sets, atom_re, maps_weight):
-
-        for ans in answer_sets:
-            print(f"ans: {ans} mps: {self.compute_mps(ans, maps_weights=maps_weight, atom_re=atom_re)}")
-            
-    def compute_mps(self, ans, maps_weights, atom_re):
-        mps = 0
-        for atom in ans:
-            match = re.match(atom_re, atom)
-            key = match.group(1)
-            mult = int(match.group(2)) if self.problem == RunnerWasp.KNAPSACK else 1
-            # print(f"atom {atom} key: {key} mult: {mult} weight: {maps_weights[key]}")
-            mps += mult * maps_weights[key]    
-
-        return mps    
-        
-
-    def create_maps_weights(self, file_weights, regex_weights):
-
-        pattern = re.compile(regex_weights)
-        maps = {}
-
-        with open(file_weights, 'r') as file:
-            for line in file:
-                match = pattern.match(line.strip())
-                if match:
-                    key = match.group(1)
-                    value = int(match.group(self.weight_parm_id))
-                    maps[key] = value
-
-        return maps
-    
-    def run_instance(self, instance, encoding = None, group_type = True):
-        
-        location_encoding = f"{self.location}/{encoding}.asp" if encoding else ""
-
-        run = f"clingo \
-            {self.location_instance}/{instance}.asp \
-            {self.str_weights} \
-            {location_encoding} \
-            {self.str_lb} \
-            {self.str_ub} \
-            --output=smodels | timeout {self.timeout_m}m time -p {RunnerWasp.SOLVER} {RunnerWasp.SILENT} {self.n0} "
-        
-        id_param = f"-id {self.id}"
-        ass_param = f" -ass {self.ass}" if self.ass != "" else ""
-        write_stats_reason = f" -write_stats_reason" if "write_stats_reason" in self.param else ""
-        minimization = self.param.get("min_r", Minimize.NO_MINIMIZATION.value)
-
-
-
-        possible_values_minimize = [member.value for member in Minimize]
-        if not minimization in possible_values_minimize:
-            raise Exception(f"The inserted value {minimization} is not valid, possible values are {possible_values_minimize}")
-        min_param = f" -min_r {minimization}"
-        if group_type and self.prop_type:
-            propagator = settings.MAP_PROPAGATOR[self.prop_type]
-            run += f"--interpreter=python \
-            --script-directory={settings.PROPAGATOR_DIR_LOCATION_WASP} \
-            --plugins-file=\"{propagator} {id_param}{min_param}{ass_param}{write_stats_reason}\""
-
-        if self.PRINT_RUN:
-            print(f"\nRUN:\n{run}")
-            
-        # running test
-        run_process = subprocess.run(run, shell=True, capture_output=True)
-
-        output = run_process.stdout.decode()
-        error = run_process.stderr.decode()
-        output_error = output + error
-
-        lines_output = output.splitlines() 
-        lines_error = error.splitlines() 
-        
-        if RunnerWasp.PRINT_OUTPUT_SOLVER:
-            print(output)
-
-        if RunnerWasp.PRINT_ERROR_SOLVER:
-            print(error, file=sys.stderr)
-
-        regex_real = r"^real\s(\d+\.\d+)"
-        # regex for the answer set of a given problem
-        regex_answer_set = r"^\{(.+)\}"
-        
-        # regex for the interested atoms of a given problem
-        regex_query : str
-        if self.problem == RunnerWasp.GRAPH_COLOURING:
-            regex_query = r"(?<=[\s,{])col\(\w+,\w+?\)"
-        elif self.problem == RunnerWasp.KNAPSACK:
-            regex_query = r"(?<=[\s,{])in_knapsack\(\w+,\w+?\)"
-        elif self.problem == RunnerWasp.SIMPLE_TEST:
-            regex_query = r"\w+\([\w,]+?\)"
-
-        answer_sets = []
-
-        for line in lines_output:
-            if not re.search(regex_answer_set, line) is None:
-                answer_set_str = re.search(regex_answer_set, line).group(1)
-                answer_set = set(re.findall(regex_query, answer_set_str))
-                answer_sets.append(set(answer_set))
-        
-        for line in lines_error:
-            if not re.search(regex_real, line) is None:
-                time = re.search(regex_real, line).group(1)
-            elif not re.search(r"Killed: Bye!", line) is None:
-                time = "timeout"
-
-        return (answer_sets, time)
     
 
 
