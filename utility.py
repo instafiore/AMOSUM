@@ -22,9 +22,9 @@ VALID_VALUES_ASS = f"[[{NOT}]<atom_name>[(param1,parm2,...)]:...] "
 def print_err(*message: str, end ="\n"):
     print(message, end=end, file=sys.stderr)
 
-def debug(*message: str, G: 'Group' = None , end ="\n"):
-    if DEBUG and ( G is None or G.id == FOCUSED_GROUP or not FOCUSING):
-        print(message, end=end, file=sys.stderr)
+def debug(*message: str, G: 'Group' = None , end ="\n", force_print = False, file = sys.stderr):
+    if force_print or (DEBUG and ( G is None or G.id == FOCUSED_GROUP or not FOCUSING)):
+        print(message, end=end, file=file)
 
 def init_run(argv):
     param = {}
@@ -133,6 +133,8 @@ class SymmetricFunction:
     def __getitem__(self, lit: int) -> Any:
         i = abs(lit) 
         value = self.intepretation[i]
+        if value is None:
+            return None
         if lit < 0:
             value = self.function_negative_lit(value)
         return value
@@ -375,18 +377,21 @@ def convert_array_to_string(name, array, atomNames, array_of_lits = True):
     res += "]"
     return res
 
-def print_I(I, atomNames, aggregate, G = None, group = None):
-    if not DEBUG:
+def print_I(I, atomNames, aggregate, G = None, group = None, force_print = False, file=sys.stderr, none_atom = True, map_plit_slit : dict = None, specific_list_literals_slits = None, supplementaty_str = ""):
+    if not DEBUG and not force_print:
         return
     assert (G is None and group is None) or (not G is None and not group is None) 
     if G is None:
-        debug("Interpretation", end=" ")
+        debug(f"Interpretation {supplementaty_str} ", end=" ", force_print=force_print, file=file)
     else:
-        debug("Intepretation for group: " + str(G), end=" ")
+        debug(f"Intepretation {supplementaty_str} for group: " + str(G), end=" ", force_print=force_print, file=file)
     for l in range(len(I.intepretation)):
-        if (aggregate[l] or  aggregate[not_(l)]) and (G is None or group[l] == G):
-            debug(get_name(atomNames,l), I[l],end=" ")
-    debug("")
+        if I[l] is None and not none_atom:
+            continue
+        if (aggregate[l] or  aggregate[not_(l)]) and (G is None or group[l] == G) and \
+            (specific_list_literals_slits is None or (map_plit_slit[l] in specific_list_literals_slits or map_plit_slit[-l] in specific_list_literals_slits)):
+            debug(f"{get_name(atomNames,l)}[{l}]{f'[{map_plit_slit[l]}]' if map_plit_slit else ''}: {I[l]}",end=" ", force_print=force_print, file=file)
+    debug("", force_print=force_print, file=file)
 
 def print_perfect_hash(ph: PerfectHash, atomNames, aggregate: AggregateFunction):
     if not DEBUG:

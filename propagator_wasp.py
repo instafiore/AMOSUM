@@ -259,7 +259,8 @@ class PropagatorWasp:
                     self.ub = int(terms[0])
                 bound = self.lb if self.ge else self.ub
 
-        assert not bound is None
+        self.bound = bound
+        assert not self.bound is None
 
 
         # creating self.groups
@@ -326,11 +327,19 @@ class PropagatorWasp:
         return prop_from_facts + create_assumptions_lits(assumptions=self.assumptions,atomNames=self.atomNames)
 
     def onLiteralTrue(self, lit, dl):
-        global last_decision_lit
 
-        last_decision_lit = lit
-        debug(f"True {get_name(lit=lit, atomNames=self.atomNames)} id {lit} DL {dl}")
-        (next_phase, G) = self.update_phase(lit)
+        self.last_decision_lit = lit
+
+        if self.I[lit]:
+            # If lit is already true then no progation will take place
+            debug(f"already true {self.I[lit]}[{lit}]", force_print=False)
+            print_I(self.I, atomNames=self.atomNames, aggregate=self.aggregate, force_print=False, file=sys.stdout, none_atom = True)
+            return []
+
+        assert not self.I[lit] == False
+
+        debug(f"True {get_name(lit=lit, atomNames=self.atomNames)} id {lit} dl {dl}")
+        (next_phase, G) = self.update_phase(lit) 
 
         propagated_lits = []
         if next_phase:
@@ -367,9 +376,20 @@ class PropagatorWasp:
             return (False, None)
 
         self.mps = self.mps - w_p + w_n
+        
+        assert_mps : bool
+        if self.ge:
+            assert_mps = self.mps >= self.lb 
+        else:
+            assert_mps = self.mps <= self.ub
+
+        if not assert_mps:
+            debug(f"mps {self.mps} incosistent with {self.bound}", force_print=False)
+            assert assert_mps
+
         amocondition = ( G.count_undef == 1 and not tg ) and self.prob_type == "AMO"
 
-        return (w_p != w_n or amocondition,  G if not amocondition else None)
+        return (w_p != w_n or amocondition,  None)
 
     def compute_minimal_reason(self, reason: List[int]):
         '''
@@ -396,7 +416,7 @@ class PropagatorWasp:
                 glr = self.group[lr] 
                 # it means that the literal is true, since for sure has been flipped (it has not self.group otherwise)
                 # so cannot be the same self.group of l, since l is also true 
-                if not glr is None and g.id == glr.id or lr == -last_decision_lit:
+                if not glr is None and g.id == glr.id or lr == -self.last_decision_lit:
                     continue
                 reason_l_to_minimize.append(lr)
 
@@ -413,6 +433,10 @@ class PropagatorWasp:
         for i in range(1 if wasp else 0,len(lits)):
             l = lits[i]
             
+            # This has been added to handle early stop in propagation phase (clingo propagation)
+            if self.I[l] is None:
+                continue
+
             debug(f"Undef {get_name(lit=l, atomNames = self.atomNames)} id {l}")
 
             # updating interpretation

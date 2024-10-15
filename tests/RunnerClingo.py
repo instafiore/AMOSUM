@@ -30,6 +30,12 @@ class RunnerClingo(RunnerWasp):
     
     def run_instance(self, instance, encoding=None, group_type=True):
         
+        # defining the lower bound(s)
+        self.create_bound(instance=instance, ub=False)
+    
+        # defining the upper bound(s)
+        self.create_bound(instance=instance, ub=True)
+
         # Setup encoding and instance file paths
         location_encoding = f"{self.location}/{encoding}.asp" if encoding else ""
         location_instance = f"{self.location_instance}/{instance}.asp"
@@ -75,13 +81,17 @@ class RunnerClingo(RunnerWasp):
             
         # Solve and get all models
         start_time = time.time()  
-        self.ctl.solve(on_model=on_model)
+        handle : clingo.SolveHandle = self.ctl.solve(on_model=on_model, async_ = True)
+        res = handle.wait(self.timeout_m * 60)
         end_time = time.time()  # End time
         
         wall_time = end_time - start_time
-        wall_time = round(wall_time, 2)
+        wall_time = round(wall_time, 2) if res else "timeout"
 
-        # Return all models and a dummy time value 
+        # restoring the instance.asp file
+        self.comment_bound(instance=instance, ub=False, restore=True)
+        self.comment_bound(instance=instance, ub=True, restore=True)
+        
         return models, wall_time
     
     def registerPropagator(self, prop_type):

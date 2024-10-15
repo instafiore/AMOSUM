@@ -18,8 +18,6 @@ from clingo.propagator import Propagator
             from this:      #amosum{ W : colour_weight(C,W), col(X,C) [X] }
             to this:        group(col(X,C), W, X,0) :- col(X,C), colour_weight(C,W).
             # TODO: TO FINISH SYNTAX and SEMANTIC DEFINITION
-        Indipendent literals:
-            The aggregate set must not contains two equivalent literals
 '''
 
 class PropagatorClingo(clingo.Propagator):
@@ -32,9 +30,10 @@ class PropagatorClingo(clingo.Propagator):
         self.prop_type = prop_type
 
     def init(self, init: clingo.PropagateInit) -> None:
-        atoms = list(init.symbolic_atoms)
+
         atoms_list_for_mapping = [(str(a.symbol), a.literal, init.solver_literal(a.literal)) for a in init.symbolic_atoms]
-        # print(f"atoms_list_for_mapping {atoms_list_for_mapping}")
+        nt = init.number_of_threads
+        # debug(f"number of threads {nt} atoms_list_for_mapping {atoms_list_for_mapping}", force_print = False)
         max_plit = 0
         for str_symbol, program_literal, solver_literal in atoms_list_for_mapping:
             if max_plit < program_literal:
@@ -42,14 +41,14 @@ class PropagatorClingo(clingo.Propagator):
 
         self.atomNames = { str_symbol : program_literal for str_symbol, program_literal, solver_literal in atoms_list_for_mapping}
 
-        self.prop = propagator_wasp.PropagatorWasp(atomsNames=self.atomNames, sys_parameters=self.sys_parameters,
-                                      propagation_phase=self.propagation_phase, ge=self.ge, prob_type=self.prop_type)
+        self.propagators = [propagator_wasp.PropagatorWasp(atomsNames=self.atomNames, sys_parameters=self.sys_parameters,
+                                      propagation_phase=self.propagation_phase, ge=self.ge, prob_type=self.prop_type) for i in range(nt)]
 
         # This is a map for mapping each solver literal (slit) to its program literal(s) (plit).
         # Can happend that some solver literal has more than one program literal
-        map_slit_plit_with_conflicts = {}
+        map_slit_plit = {}
 
-        # This map maps each solver literal (watched) to its unique program literal (watched)
+        # This map maps each solver literal (watched) to its program literals (watched)
         map_slit_plit_watched = {}
 
         map_plit_slit = {}
@@ -58,50 +57,87 @@ class PropagatorClingo(clingo.Propagator):
             map_plit_slit[plit] = slit
             map_plit_slit[-plit] = -slit
             
-            map_slit_plit_with_conflicts.setdefault(slit, [])
-            map_slit_plit_with_conflicts.setdefault(-slit, [])
-            map_slit_plit_with_conflicts[slit].append(plit)
-            map_slit_plit_with_conflicts[-slit].append(-plit)
+            map_slit_plit.setdefault(slit, [])
+            map_slit_plit.setdefault(-slit, [])
+            map_slit_plit[slit].append(plit)
+            map_slit_plit[-slit].append(-plit)
 
-        lits = [max_plit] + map_slit_plit_with_conflicts.setdefault(1,[])
-        to_watch = self.prop.getLiterals(*lits)
+        lits = [max_plit] + map_slit_plit.get(1,[])
+        for i in range(nt):
+            to_watch_plit = self.propagators[i].getLiterals(*lits)
 
-        for plit in to_watch:
+        for plit in to_watch_plit:
             slit = map_plit_slit[plit]
-            map_slit_plit_watched[slit] = plit
-            # print(f" watch: {get_name(atomNames=self.atomNames, lit=plit)} plit: {plit} slit: {slit}")
+            map_slit_plit_watched.setdefault(slit,[])
+            map_slit_plit_watched[slit].append(plit)
             init.add_watch(literal=slit)
 
         self.map_plit_slit = map_plit_slit
-        self.map_slit_plit_with_conflicts = map_slit_plit_with_conflicts
+        self.map_slit_plit = map_slit_plit
         self.map_slit_plit_watched = map_slit_plit_watched
 
-        S_plit = self.prop.simplifyAtLevelZero()
+        for i in range(nt):
+            S_plit = self.propagators[i].simplifyAtLevelZero()
 
-        self.add_clause_propagated_lits(control=init, S_plit=S_plit)
+        if S_plit == [1] or self.add_clauses_propagated_lits(control=init, S_plit=S_plit, dl = 0):
+            # adding empty clause
+            init.add_clause([])
+            return
 
-        # print(f"atoms_list_for_mapping: {atoms_list_for_mapping}")
-        # print(f"facts: {self.prop.facts}")
-        # slit_prop_from_facts = [map_plit_slit[plit] for plit in S_plit]
-        # print(f"slit_list_prop_0: {slit_prop_from_facts}")
-
-    def add_clause_propagated_lits(self, control: clingo.PropagateControl | clingo.PropagateInit, S_plit):
+    def add_clauses_propagated_lits(self, control: clingo.PropagateControl | clingo.PropagateInit, S_plit, dl):
+        td = 0 if dl == 0 else control.thread_id
+        prop = self.propagators[td]
         for plit in S_plit:
-            R_plit = self.prop.getReasonForLiteral(plit)
-            slit = self.map_plit_slit[plit]
+            R_plit = prop.getReasonForLiteral(plit)
+            slit   = self.map_plit_slit[plit]
+            # first part of the clause is the reason
             clause = [self.map_plit_slit[plit_r] for plit_r in R_plit]
+            # the last literal is the implied literal (undefined)
             clause.append(slit)
-            control.add_clause(clause)
+            if not control.add_clause(clause) or not control.propagate():
+                # propagation must return immediately, a conflict has been raised
+                return True
+        return False
+    
+    def print_propagate(self, changes: List[int], control: clingo.Control):
+        changes_str = [(get_name(atomNames=self.atomNames, lit=self.map_slit_plit_watched[slit]), self.map_slit_plit_watched[slit], slit) for slit in changes]
+        dl_plit = self.map_slit_plit_watched[control.assignment.decision(dl)]
+        debug(f"[{get_name(atomNames = self.atomNames, lit = dl_plit)}] propagate {changes_str} thread_id: {control.thread_id}", file = sys.stderr, force_print=False)
+        
 
     def propagate(self, control: clingo.PropagateControl, changes: Sequence[int]) -> None:
         dl = control.assignment.decision_level
-        # print(f"size {len(changes)} dl {dl}")
+        td = 0 if dl == 0 else control.thread_id
+        prop = self.propagators[td]
+        # self.print_propagate(changes=changes, control=control)
         for slit in changes:
-            plit = self.map_slit_plit_watched[slit]
-            S_plit =  self.prop.onLiteralTrue(plit, dl)
-            self.add_clause_propagated_lits(control=control, S_plit=S_plit)
-            
+            plit_list = self.map_slit_plit_watched[slit]
+            for plit in plit_list:
+                # propagated plits
+                S_plit = []
+                # propagating program literal
+                S_plit = prop.onLiteralTrue(plit, dl)
+                # adding clauses for propagated literals S_plit
+                if self.add_clauses_propagated_lits(control=control, S_plit=S_plit, dl = dl):
+                    # Conflict added hence propagation has to stop
+                    return 
 
     def undo(self, thread_id: int, assignment: clingo.Assignment, changes: Sequence[int]) -> None:
-        plit_list = [self.map_slit_plit_watched[slit] for slit in changes]
-        self.prop.onLiteralsUndefined(*plit_list, wasp=False)
+        prop = self.propagators[thread_id]
+        plit_list = []
+        for slit in changes:
+            for plit in self.map_slit_plit_watched[slit]:
+                plit_list.append(plit)
+        # self.print_undo(changes=changes, thread_id=thread_id)
+        prop.onLiteralsUndefined(*plit_list, wasp=False)
+
+    def print_undo(self, changes, thread_id):
+        changes_str = [(get_name(atomNames=self.atomNames, lit = self.map_slit_plit_watched[slit]), self.map_slit_plit_watched[slit], slit) for slit in changes]
+        debug(f"undo {changes_str} thread_id: {thread_id}", file = sys.stderr, force_print=False)
+
+    def createClingoInterpretation(self, slit_list: List[int], assignment: clingo.Assignment):
+        I_clingo = SymmetricFunction(self.propagators[0].N)
+        for slit in slit_list:
+            plit = self.map_slit_plit_watched[slit]
+            I_clingo[plit] = assignment.value(slit)
+        return I_clingo

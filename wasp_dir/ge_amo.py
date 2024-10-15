@@ -71,10 +71,10 @@ def propagate_phase(G: Group, propagator: PropagatorWasp, atomNames: dict):
         # updating the reason
         propagator.reason_falses = R
 
-    S_str = convert_array_to_string(name="Derived", array=S, atomNames=atomNames)
-    debug(S_str)
-    R_str = convert_array_to_string(name="Reason", array=R, atomNames=atomNames)
-    debug(R_str)
+    # S_str = convert_array_to_string(name="Derived", array=S, atomNames=atomNames)
+    # debug(S_str, file=sys.stderr, force_print=False)
+    # R_str = convert_array_to_string(name="Reason", array=R, atomNames=atomNames)
+    # debug(R_str, file=sys.stderr, force_print=False)
     
     # print_I(I=I, atomNames=atomNames, aggregate=aggregate)
     propagator.compute_minimal_reason(reason=R)

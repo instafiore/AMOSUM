@@ -63,7 +63,7 @@ class RunnerWasp:
     # SILENT = "--silent=2"
 
     TIMEOUT = 20
-    TIMEOUT_LIGHT = 5
+    TIMEOUT_LIGHT = 10
 
     def __init__(self, parameters: Dict[str,str]) -> None:
         self.param = parameters
@@ -172,6 +172,8 @@ class RunnerWasp:
             self.create_instances(instances=instances, head=head)
         else:
             self.instances = False
+        
+        self.compare =  self.param.get("compare", False)
 
         self.timestamp = subprocess.run('date +"%Y-%m-%d.%H.%M.%S"', shell=True, capture_output=True, text=True).stdout
         self.timestamp = self.timestamp.strip()
@@ -294,18 +296,26 @@ class RunnerWasp:
         if self.instances:
             for instance in self.instances:
                 self.run_classical_test(instance=instance)
+        elif self.compare and self.specific_instance:
+            self.run_classical_test(instance=self.specific_instance)
         elif self.specific_instance:
             enc_aggr = self.param.get("enc_aggr", False)
             encoding = settings.MAP_ENC_ENCODING_FILES[self.enc_type][0 if enc_aggr else 1] \
                 if self.enc_type else None
-            answersets, time = self.run_instance(self.specific_instance, encoding=encoding)
-            maps_weights, atom_re = self.create_weights_atom_regexes(instance=instance)
+            answersets, time = self.run_instance(self.specific_instance, encoding=encoding, group_type = not enc_aggr)
+            maps_weights, atom_re = self.create_weights_atom_regexes(instance=self.specific_instance)
             self.print_ans(answer_sets=answersets, time=time, atom_re=atom_re, maps_weight=maps_weights)
         else:
             assert False
 
 
     def run_instance(self, instance, encoding = None, group_type = True):
+
+        # defining the lower bound(s)
+        self.create_bound(instance=instance, ub=False)
+    
+        # defining the upper bound(s)
+        self.create_bound(instance=instance, ub=True)
         
         location_encoding = f"{self.location}/{encoding}.asp" if encoding else ""
 
@@ -347,10 +357,15 @@ class RunnerWasp:
         lines_output = output.splitlines() 
         lines_error = error.splitlines() 
         
-        if RunnerWasp.PRINT_OUTPUT_SOLVER:
+        output = output.strip()
+        if RunnerWasp.PRINT_OUTPUT_SOLVER and output != "" :
+            print(self.param)
             print(output)
 
-        if RunnerWasp.PRINT_ERROR_SOLVER:
+        avoiding_time_information_regex = r"(real \d+\.\d+|user \d+\.\d+|sys \d+\.\d+)"
+        error = re.sub(avoiding_time_information_regex, "", error, count=0, flags=0).strip()
+        if RunnerWasp.PRINT_ERROR_SOLVER and error != "":
+            print(self.param, file=sys.stderr)
             print(error, file=sys.stderr)
 
         regex_real = r"^real\s(\d+\.\d+)"
@@ -374,15 +389,13 @@ class RunnerWasp:
             elif not re.search(r"Killed: Bye!", line) is None:
                 time = "timeout"
 
+        # restoring the instance.asp file
+        self.comment_bound(instance=instance, ub=False, restore=True)
+        self.comment_bound(instance=instance, ub=True, restore=True)
+
         return (answer_sets, time)
     
     def run_classical_test(self, instance: str):
-
-        # defining the lower bound(s)
-        self.create_bound(instance=instance, ub=False)
-    
-        # defining the upper bound(s)
-        self.create_bound(instance=instance, ub=True)
             
         # regex for file 
         regex_instance_file : str = r"^(?P<number>\d+)-(?P<problem>\w+)-(?P<size>\d+).*"
@@ -454,12 +467,6 @@ class RunnerWasp:
 
         if not "write_res" in self.param or self.param["write_res"] == "y":
             subprocess.run(f"echo '{new_line}' >> {settings.RESULTS_TESTS_LOCATION}/{self.problem}.{self.timestamp}.res ", shell=True, capture_output=True)
-
-
-        # restoring the instance.asp file
-        self.comment_bound(instance=instance, ub=False, restore=True)
-        self.comment_bound(instance=instance, ub=True, restore=True)
-    
 
 
     def comment_bound(self, instance, ub = False, restore=False):
