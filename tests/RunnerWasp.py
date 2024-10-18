@@ -128,7 +128,7 @@ class RunnerWasp:
 
         # whether or not the number of tests is specified, 
         # if it is not it will run all the instances for the given problem
-        number_of_tests = self.param.get("nt",-1)
+        number_of_tests = self.param.get("nt",0)
     
         head = ""
         if number_of_tests != -1:
@@ -175,6 +175,8 @@ class RunnerWasp:
         
         self.compare =  self.param.get("compare", False)
 
+        self.exp = self.param.get("exp",False)
+
         self.timestamp = subprocess.run('date +"%Y-%m-%d.%H.%M.%S"', shell=True, capture_output=True, text=True).stdout
         self.timestamp = self.timestamp.strip()
 
@@ -204,10 +206,13 @@ class RunnerWasp:
 
     def create_weights_atom_regexes(self, instance):
         if self.problem == RunnerWasp.KNAPSACK:
-            weights_file = f"{self.location_instance}/{instance}.asp"
+            weights_file = f"{self.location_instance}/{instance}.asp" if not self.exp else instance
             regex_weights = RunnerWasp.REGEX_WEIGHT_ATOM_KN
             atom_re = r"in_knapsack\((\w+),(\w+?)\)"
         elif self.problem == RunnerWasp.GRAPH_COLOURING:
+            if self.exp:
+                # TODO: update this for expertiments with clingo 
+                assert False
             weights_file = self.str_weights
             regex_weights = RunnerWasp.REGEX_WEIGHT_ATOM_GC
             atom_re= r"col\((\w+),(\w+?)\)"
@@ -318,9 +323,10 @@ class RunnerWasp:
         self.create_bound(instance=instance, ub=True)
         
         location_encoding = f"{self.location}/{encoding}.asp" if encoding else ""
+        location_instance = f"{self.location_instance}/{instance}.asp" if not self.exp else instance
 
         run = f"clingo \
-            {self.location_instance}/{instance}.asp \
+            {location_instance} \
             {self.str_weights} \
             {location_encoding} \
             {self.str_lb} \
@@ -477,7 +483,7 @@ class RunnerWasp:
         comment_w = "" if restore else "%"
         pattern = re.compile(rf"{comment_r}({b_str}\(\d+,\d+\))\.")
 
-        instace_path = f"{self.location_instance}/{instance}.asp"
+        instace_path = f"{self.location_instance}/{instance}.asp" if not self.exp else instance
 
         with open(instace_path, "r") as file:
             lines = file.readlines()

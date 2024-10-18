@@ -38,7 +38,9 @@ class RunnerClingo(RunnerWasp):
 
         # Setup encoding and instance file paths
         location_encoding = f"{self.location}/{encoding}.asp" if encoding else ""
-        location_instance = f"{self.location_instance}/{instance}.asp"
+        location_instance = f"{self.location_instance}/{instance}.asp" if not self.exp else instance
+
+        print(f"location_instance {location_instance}")
 
         # Initialize the Clingo control object
         arguments = []
@@ -82,7 +84,7 @@ class RunnerClingo(RunnerWasp):
         # Solve and get all models
         start_time = time.time()  
         handle : clingo.SolveHandle = self.ctl.solve(on_model=on_model, async_ = True)
-        res = handle.wait(self.timeout_m * 60)
+        res = handle.wait(self.timeout_m * 60 if not self.exp else None)
         end_time = time.time()  # End time
         
         wall_time = end_time - start_time
