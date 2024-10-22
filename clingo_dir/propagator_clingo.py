@@ -14,10 +14,6 @@ from clingo.propagator import Propagator
 
 '''
     Invariants: 
-        Mapping from plit to slit
-            from this:      #amosum{ W : colour_weight(C,W), col(X,C) [X] }
-            to this:        group(col(X,C), W, X,0) :- col(X,C), colour_weight(C,W).
-            # TODO: TO FINISH SYNTAX and SEMANTIC DEFINITION
 '''
 
 class PropagatorClingo(clingo.Propagator):
@@ -91,25 +87,27 @@ class PropagatorClingo(clingo.Propagator):
             R_plit = prop.getReasonForLiteral(plit)
             slit   = self.map_plit_slit[plit]
             # first part of the clause is the reason
-            clause = [self.map_plit_slit[plit_r] for plit_r in R_plit]
-            # the last literal is the implied literal (undefined)
+            clause = []
+            clause = [self.map_plit_slit[plit_r] for plit_r in R_plit] 
             clause.append(slit)
+            # the last literal is the implied literal (undefined)
             if not control.add_clause(clause) or not control.propagate():
                 # propagation must return immediately, a conflict has been raised
                 return True
         return False
     
-    def print_propagate(self, changes: List[int], control: clingo.Control):
-        changes_str = [(get_name(atomNames=self.atomNames, lit=self.map_slit_plit_watched[slit]), self.map_slit_plit_watched[slit], slit) for slit in changes]
-        dl_plit = self.map_slit_plit_watched[control.assignment.decision(dl)]
-        debug(f"[{get_name(atomNames = self.atomNames, lit = dl_plit)}] propagate {changes_str} thread_id: {control.thread_id}", file = sys.stderr, force_print=False)
+    def print_propagate(self, changes: List[int], control: clingo.PropagateControl, dl):
+        changes_str  = self.compute_changes_str(changes=changes, thread_id=control.thread_id)
+        decision_slit = control.assignment.decision(dl)
+        decision_literal_name = get_name(atomNames = self.atomNames, lit = self.map_slit_plit_watched[decision_slit][0]) if decision_slit != 1 else "from facts"
+        debug(f"[{decision_literal_name}] propagate {changes_str} thread_id: {control.thread_id}")
         
 
     def propagate(self, control: clingo.PropagateControl, changes: Sequence[int]) -> None:
         dl = control.assignment.decision_level
         td = 0 if dl == 0 else control.thread_id
         prop = self.propagators[td]
-        # self.print_propagate(changes=changes, control=control)
+        self.print_propagate(changes=changes, control=control, dl=dl)
         for slit in changes:
             plit_list = self.map_slit_plit_watched[slit]
             for plit in plit_list:
@@ -128,11 +126,18 @@ class PropagatorClingo(clingo.Propagator):
         for slit in changes:
             for plit in self.map_slit_plit_watched[slit]:
                 plit_list.append(plit)
-        # self.print_undo(changes=changes, thread_id=thread_id)
+        self.print_undo(changes=changes, thread_id=thread_id)
         prop.onLiteralsUndefined(*plit_list, wasp=False)
 
+    def compute_changes_str(self, changes, thread_id):
+        changes_str = []
+        for slit in changes:
+             for plit in self.map_slit_plit_watched[slit]:
+                 changes_str.append((get_name(atomNames=self.atomNames, lit = plit), self.map_slit_plit_watched[slit], slit))
+        return changes_str
+    
     def print_undo(self, changes, thread_id):
-        changes_str = [(get_name(atomNames=self.atomNames, lit = self.map_slit_plit_watched[slit]), self.map_slit_plit_watched[slit], slit) for slit in changes]
+        changes_str = self.compute_changes_str(changes=changes, thread_id=thread_id)
         debug(f"undo {changes_str} thread_id: {thread_id}", file = sys.stderr, force_print=False)
 
     def createClingoInterpretation(self, slit_list: List[int], assignment: clingo.Assignment):

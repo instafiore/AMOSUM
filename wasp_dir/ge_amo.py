@@ -21,6 +21,8 @@ functional_propagator.propagator.ge = True
 
 
 def propagate_phase(G: Group, propagator: PropagatorWasp, atomNames: dict):
+    
+    # try:
 
     # set of derived literals
     S : List[int] = []
@@ -54,9 +56,11 @@ def propagate_phase(G: Group, propagator: PropagatorWasp, atomNames: dict):
             if propagator.mps - propagator.weight[l] < propagator.lb:
                 S.append(l)
                 propagator.reason_trues[l] = false_lits_g
+                
     if len(S) != 0:
         for g in propagator.groups:
             if g.count_undef == 0 and propagator.true_group[g] is None:
+                # R.extend(reversed(list(set(g.ord_l) - set({not_(propagator.last_decision_lit)}))))
                 R.extend(reversed(g.ord_l))
             elif propagator.true_group[g] is None:
                 mw_g = propagator.weight[max_w(g)]
@@ -64,21 +68,23 @@ def propagate_phase(G: Group, propagator: PropagatorWasp, atomNames: dict):
                     l = g.ord_l[i]
                     if propagator.weight[l] <= mw_g:
                         break
-                    R.append(l)
+                    R.append(l) if l != not_(propagator.last_decision_lit) or True  else ""
             else:
-                R.append(not_(propagator.true_group[g]))
-
+                R.append(not_(propagator.true_group[g])) if propagator.true_group[g] != propagator.last_decision_lit or True else ""
+    
         # updating the reason
+        # R.insert(0, not_(propagator.last_decision_lit)) 
+    
+        # TODO: UPDATED THIS CODE ENSURING THAT THE FIRST LITERAL IS OF THE LAST LEVEL
         propagator.reason_falses = R
 
-    # S_str = convert_array_to_string(name="Derived", array=S, atomNames=atomNames)
-    # debug(S_str, file=sys.stderr, force_print=False)
-    # R_str = convert_array_to_string(name="Reason", array=R, atomNames=atomNames)
-    # debug(R_str, file=sys.stderr, force_print=False)
-    
-    # print_I(I=I, atomNames=atomNames, aggregate=aggregate)
-    propagator.compute_minimal_reason(reason=R)
-     
+        S_str = convert_array_to_string(name="Derived", array=S, atomNames=atomNames)
+        debug(S_str, file=sys.stderr, force_print=False)
+        R_str = convert_array_to_string(name="Reason", array=R, atomNames=atomNames)
+        debug(R_str, file=sys.stderr, force_print=False)
+        # print_I(I=I, atomNames=atomNames, aggregate=aggregate)
+        propagator.compute_minimal_reason(reason=R)
+
     return S
 
 propagator.propagate_phase = propagate_phase

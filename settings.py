@@ -41,3 +41,5 @@ MAP_ENC_ENCODING_FILES = {
     "le_eo":  (ENCODING_WITH_AGGR_LE_EO, ENCODING_WITH_GROUP_LE_EO) }
 
 MAP_PROPAGATOR = {"ge_amo": PROPAGATOR_NAME_ge_amo, "ge_eo": PROPAGATOR_NAME_ge_eo, "le_eo": PROPAGATOR_NAME_le_eo}
+
+FILE_REGEX = r"^\/?[\w.]+((/[\w.]*)*[\w+.])?$"

@@ -36,16 +36,22 @@ class RunnerClingo(RunnerWasp):
         # defining the upper bound(s)
         self.create_bound(instance=instance, ub=True)
 
+
         # Setup encoding and instance file paths
         location_encoding = f"{self.location}/{encoding}.asp" if encoding else ""
+        location_encoding = encoding if self.enc else  location_encoding
+        location_encoding = f"{self.location}/{encoding}.asp" if self.enc and not self.exp else location_encoding
         location_instance = f"{self.location_instance}/{instance}.asp" if not self.exp else instance
 
+        print(f"location_encoding {location_encoding}")
         print(f"location_instance {location_instance}")
 
         # Initialize the Clingo control object
         arguments = []
         models = f"--models={self.num_models}" if self.num_models != "" else ""
+        seed = f"--seed={self.seed}" if self.seed != "" else ""
         arguments.append(models) if models != "" else ""
+        arguments.append(seed) if seed != "" else ""
         self.ctl = Control(arguments=arguments)
         
         # Load the instance file

@@ -119,6 +119,7 @@ class RunnerWasp:
 
         self.lb = self.param["lb"] if "lb" in self.param else None
         self.ub = self.param["ub"] if "ub" in self.param else None
+        self.seed = self.param.get("seed","")
 
         lb_gc_constraints = self.problem == RunnerWasp.GRAPH_COLOURING and (not self.lb or not self.weights)and re.match("ge",self.enc_type)
         up_gc_constraint = self.problem == RunnerWasp.GRAPH_COLOURING and (not self.ub or not self.weights) and re.match("le",self.enc_type)
@@ -177,6 +178,11 @@ class RunnerWasp:
 
         self.exp = self.param.get("exp",False)
 
+        self.enc = self.param.get("enc", False)
+
+        if self.enc and not re.match(settings.FILE_REGEX, self.enc):
+            raise Exception(f"Invalid file path for enc, {self.enc} is not a path !")
+        
         self.timestamp = subprocess.run('date +"%Y-%m-%d.%H.%M.%S"', shell=True, capture_output=True, text=True).stdout
         self.timestamp = self.timestamp.strip()
 
@@ -307,6 +313,7 @@ class RunnerWasp:
             enc_aggr = self.param.get("enc_aggr", False)
             encoding = settings.MAP_ENC_ENCODING_FILES[self.enc_type][0 if enc_aggr else 1] \
                 if self.enc_type else None
+            encoding = self.enc if self.enc else encoding
             answersets, time = self.run_instance(self.specific_instance, encoding=encoding, group_type = not enc_aggr)
             maps_weights, atom_re = self.create_weights_atom_regexes(instance=self.specific_instance)
             self.print_ans(answer_sets=answersets, time=time, atom_re=atom_re, maps_weight=maps_weights)
@@ -323,7 +330,11 @@ class RunnerWasp:
         self.create_bound(instance=instance, ub=True)
         
         location_encoding = f"{self.location}/{encoding}.asp" if encoding else ""
+        location_encoding = encoding if self.enc else  location_encoding
+        location_encoding = f"{self.location}/{encoding}.asp" if self.enc and not self.exp else location_encoding
         location_instance = f"{self.location_instance}/{instance}.asp" if not self.exp else instance
+
+        timeout_str = f"timeout {self.timeout_m}m" if not self.exp else ""
 
         run = f"clingo \
             {location_instance} \
@@ -331,7 +342,7 @@ class RunnerWasp:
             {location_encoding} \
             {self.str_lb} \
             {self.str_ub} \
-            --output=smodels | timeout {self.timeout_m}m time -p {RunnerWasp.SOLVER} {RunnerWasp.SILENT} {self.n0} "
+            --output=smodels | {timeout_str} time -p {RunnerWasp.SOLVER} {RunnerWasp.SILENT} {self.n0} "
        
         id_param = f"-id {self.id}"
         ass_param = f" -ass {self.ass}" if self.ass != "" else ""
@@ -471,7 +482,7 @@ class RunnerWasp:
         else:
             new_line = f"{number},{problem},{size},{time_aggr},{time_group},{na},{ng},{equal}{lb_string}{ub_string}"
 
-        if not "write_res" in self.param or self.param["write_res"] == "y":
+        if self.param.get("write_res",False):
             subprocess.run(f"echo '{new_line}' >> {settings.RESULTS_TESTS_LOCATION}/{self.problem}.{self.timestamp}.res ", shell=True, capture_output=True)
 
 

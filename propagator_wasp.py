@@ -199,8 +199,8 @@ class PropagatorWasp:
         self.redundant_lits = PerfectHash(self.N,[])
         self.mps = 0
         self.ID = param.get("id","0")
-        self.groups = set()
-        # self.groups = []
+        # self.groups = set()
+        self.groups = []
         self.assumptions = param.get("ass", False)
 
         #used to create the self.groups
@@ -214,7 +214,7 @@ class PropagatorWasp:
 
         # selecting the interested literals
         # debug(f"lits {lits}")
-        # debug("self.atomNames",self.atomNames)
+        # debug("self.atomNames",self.atomNames, file=sys.stdout, force_print=True)
         for a in self.atomNames:
             if  a.startswith('group('):
                 terms = wasp.getTerms('group',a)
@@ -289,8 +289,9 @@ class PropagatorWasp:
             self.mps = self.mps + self.weight[m_w(G, max = self.ge)]
         
             # adding the self.group to the set of self.groups
-            self.groups.add(G)
-            # self.groups.append(G)
+            # self.groups.add(G)
+            assert G not in self.groups
+            self.groups.append(G)
 
             # defining the function self.group
             for lit in lits_group:
@@ -318,8 +319,7 @@ class PropagatorWasp:
         
         prop_from_facts = self.propagate_phase(None, self, self.atomNames)
         
-        # TODO: try to add prop_from_facts to facts at level 0
-        simplyLiterals(self.facts, self.aggregate, self.group)
+        simplyLiterals(self.facts, self.aggregate, self.group, max = self.ge, I = self.I)
 
         if self.assumptions:
             self.assumptions = convert_assparam_to_assarray(self.assumptions)
@@ -332,18 +332,25 @@ class PropagatorWasp:
 
         if self.I[lit]:
             # If lit is already true then no progation will take place
-            debug(f"already true {self.I[lit]}[{lit}]", force_print=False)
-            print_I(self.I, atomNames=self.atomNames, aggregate=self.aggregate, force_print=False, file=sys.stdout, none_atom = True)
+            # debug(f"already true {self.I[lit]}[{lit}]", force_print=False)
+            # print_I(self.I, atomNames=self.atomNames, aggregate=self.aggregate, force_print=False, file=sys.stdout, none_atom = True)
             return []
 
         assert not self.I[lit] == False
 
-        debug(f"True {get_name(lit=lit, atomNames=self.atomNames)} id {lit} dl {dl}")
+        # debug(f"True {get_name(lit=lit, atomNames=self.atomNames)} id {lit} dl {dl}")
         (next_phase, G) = self.update_phase(lit) 
+
+        if dl == 0:
+            # this literal can be symplified given that it derives from facts
+            simplyLiterals([lit], self.aggregate, self.group, max = self.ge, I = self.I)
 
         propagated_lits = []
         if next_phase:
-            propagated_lits = self.propagate_phase(G, self, self.atomNames)
+            try:
+                propagated_lits = self.propagate_phase(G, self, self.atomNames)
+            except Exception as e:
+                print(e, file=sys.stderr)
 
         return propagated_lits
 
@@ -379,16 +386,17 @@ class PropagatorWasp:
         
         assert_mps : bool
         if self.ge:
-            assert_mps = self.mps >= self.lb 
+            assert_mps = self.mps >= self.lb
         else:
             assert_mps = self.mps <= self.ub
 
         if not assert_mps:
-            debug(f"mps {self.mps} incosistent with {self.bound}", force_print=False)
+            debug(f"mps {self.mps} inconsistent with {self.bound}", force_print=True)
             assert assert_mps
 
         amocondition = ( G.count_undef == 1 and not tg ) and self.prob_type == "AMO"
-
+       
+        # return (True ,  None)
         return (w_p != w_n or amocondition,  None)
 
     def compute_minimal_reason(self, reason: List[int]):
@@ -437,7 +445,7 @@ class PropagatorWasp:
             if self.I[l] is None:
                 continue
 
-            debug(f"Undef {get_name(lit=l, atomNames = self.atomNames)} id {l}")
+            # debug(f"Undef {get_name(lit=l, atomNames = self.atomNames)} id {l}")
 
             # updating interpretation
             self.I[l] = None

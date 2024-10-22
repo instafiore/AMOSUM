@@ -10,7 +10,7 @@ import sys
 FOCUSED_GROUP = 2
 FOCUSING = False
 
-DEBUG = False
+DEBUG = True
 
 SEPARATOR = ":"
 NOT = "~"
@@ -209,20 +209,20 @@ class Group:
         self.max_und = self.ord_i[l]
 
     def set_min(self, l: int):
-        debug(f"setted min {l}")
         self.min_und = self.ord_i[l]
 
     def update_max(self, I: SymmetricFunction, all = False):
-        start = self.max_und - 1
-        prev_max = self.ord_l[self.max_und]
-        
-        # All are defined
-        if start < 0:
-            self.max_und = None
-            return (None, prev_max)
+        prev_max = self.ord_l[self.max_und] if not self.max_und is None else None
         
         if all:
             start = self.N - 1
+        else:
+            start = self.max_und - 1 if not self.max_und is None else -1
+            # All are defined
+            if start < 0:
+                self.max_und = None
+                return (None, prev_max)
+            
         for i in range(start, -1, -1):
             l = self.ord_l[i]
             if I[l] is None:
@@ -235,16 +235,17 @@ class Group:
         return (None, prev_max)
     
     def update_min(self, I: SymmetricFunction, all = False):
-        start = self.min_und + 1
-        prev_min = self.ord_l[self.min_und]
-        
-        # All are defined
-        if start >= self.N:
-            self.min_und = None
-            return (None, prev_min)
+        prev_min = self.ord_l[self.min_und] if not self.min_und is None else None
         
         if all:
             start = 0
+        else:
+            start = self.min_und + 1 if not self.min_und is None else self.N
+            # All are defined
+            if start >= self.N:
+                self.min_und = None
+                return (None, prev_min)
+
         for i in range(start, self.N, +1):
             l = self.ord_l[i]
             if I[l] is None:
@@ -273,8 +274,10 @@ class Group:
         return str(self.id)
 
 # removes useless literals
-def simplyLiterals(lits, aggregate: 'AggregateFunction', group: 'GroupFunction'):
+def simplyLiterals(lits, aggregate: 'AggregateFunction', group: 'GroupFunction', max, I: SymmetricFunction ):
     G : Group = None
+    
+
     for l in lits:
         if aggregate[l]:
             G = group[l]
@@ -284,16 +287,27 @@ def simplyLiterals(lits, aggregate: 'AggregateFunction', group: 'GroupFunction')
         else:
             continue
         G.decrease_und()
+        G.update(I, max=max, all=False)
+        n = len(G.ord_l)
+        li = G.ord_i[l]
+        G.ord_i[l] = -1
+        for lit in range(li+1,n):
+            i = G.ord_l[lit]
+            G.ord_i[i] -= 1
         G.ord_l.remove(l)
+  
+            
 
 # This function returns the max UNDEFINED literal
 def max_w(g: Group):
     max_und = g.max_und
     if(max_und is None):
         return None
-    
-    return g.ord_l[max_und]
-
+    try:
+        return g.ord_l[max_und]
+    except Exception as e:
+        print(f"g.ord_l {g.ord_l} max_und {max_und}")
+        raise e
 
 # This function returns the min UNDEFINED literal
 def min_w(g: Group):
