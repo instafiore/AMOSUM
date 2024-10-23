@@ -346,11 +346,16 @@ class PropagatorWasp:
             simplyLiterals([lit], self.aggregate, self.group, max = self.ge, I = self.I)
 
         propagated_lits = []
+        name = get_name(lit=lit, atomNames=self.atomNames)
         if next_phase:
             try:
+                debug(f"Propagation phase of {name} started:")
                 propagated_lits = self.propagate_phase(G, self, self.atomNames)
             except Exception as e:
                 print(e, file=sys.stderr)
+        else:
+            debug(f"Propagation phase of {name} not started:")
+
 
         return propagated_lits
 
@@ -366,7 +371,7 @@ class PropagatorWasp:
             G = self.group[l]
             G.decrease_und()
             self.true_group[G] = l
-            w_p = self.weight[m_w(G, max =self.ge)]
+            w_p = self.weight[m_w(G, max = self.ge)]
             w_n = self.weight[l]
             tg = True
             
@@ -383,17 +388,6 @@ class PropagatorWasp:
             return (False, None)
 
         self.mps = self.mps - w_p + w_n
-        
-        assert_mps : bool
-        if self.ge:
-            assert_mps = self.mps >= self.lb
-        else:
-            assert_mps = self.mps <= self.ub
-
-        if not assert_mps:
-            debug(f"mps {self.mps} inconsistent with {self.bound}", force_print=True)
-            assert assert_mps
-
         amocondition = ( G.count_undef == 1 and not tg ) and self.prob_type == "AMO"
        
         # return (True ,  None)

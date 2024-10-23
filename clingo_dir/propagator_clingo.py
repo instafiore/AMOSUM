@@ -95,19 +95,13 @@ class PropagatorClingo(clingo.Propagator):
                 # propagation must return immediately, a conflict has been raised
                 return True
         return False
-    
-    def print_propagate(self, changes: List[int], control: clingo.PropagateControl, dl):
-        changes_str  = self.compute_changes_str(changes=changes, thread_id=control.thread_id)
-        decision_slit = control.assignment.decision(dl)
-        decision_literal_name = get_name(atomNames = self.atomNames, lit = self.map_slit_plit_watched[decision_slit][0]) if decision_slit != 1 else "from facts"
-        debug(f"[{decision_literal_name}] propagate {changes_str} thread_id: {control.thread_id}")
         
 
     def propagate(self, control: clingo.PropagateControl, changes: Sequence[int]) -> None:
         dl = control.assignment.decision_level
         td = 0 if dl == 0 else control.thread_id
         prop = self.propagators[td]
-        self.print_propagate(changes=changes, control=control, dl=dl)
+        print_propagate(self, changes=changes, control=control, dl=dl)
         for slit in changes:
             plit_list = self.map_slit_plit_watched[slit]
             for plit in plit_list:

@@ -5,12 +5,17 @@ import re
 import sys
 from typing import Any, List
 import sys
+import clingo
+
+# Debug mode
+DEBUG = False
+
+
 
 
 FOCUSED_GROUP = 2
 FOCUSING = False
 
-DEBUG = True
 
 SEPARATOR = ":"
 NOT = "~"
@@ -21,6 +26,22 @@ VALID_VALUES_ASS = f"[[{NOT}]<atom_name>[(param1,parm2,...)]:...] "
 
 def print_err(*message: str, end ="\n"):
     print(message, end=end, file=sys.stderr)
+
+def print_propagate(self, changes: List[int], control: clingo.PropagateControl, dl, force_print = False):
+    if not force_print and not DEBUG:
+        return 
+    changes_str  = self.compute_changes_str(changes=changes, thread_id=control.thread_id)
+    decision_slit = control.assignment.decision(dl)
+    decision_literal_name = get_name(atomNames = self.atomNames, lit = self.map_slit_plit_watched[decision_slit][0]) if decision_slit != 1 else "from facts"
+    debug(f"[{decision_literal_name}] propagate {changes_str} thread_id: {control.thread_id}")
+
+def print_derivation(atomNames, S, R, aggregate, I, force_print = False):
+    if not force_print and not DEBUG:
+            return 
+    S_str = convert_array_to_string(name="Derived", array=S, atomNames=atomNames)
+    debug(S_str, file=sys.stderr, force_print=False)
+    R_str = convert_array_to_string(name="Reason", array=R, atomNames=atomNames)
+    debug(R_str, file=sys.stderr, force_print=False)
 
 def debug(*message: str, G: 'Group' = None , end ="\n", force_print = False, file = sys.stderr):
     if force_print or (DEBUG and ( G is None or G.id == FOCUSED_GROUP or not FOCUSING)):
