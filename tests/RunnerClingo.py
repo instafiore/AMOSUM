@@ -92,6 +92,9 @@ class RunnerClingo(RunnerWasp):
         handle : clingo.SolveHandle = self.ctl.solve(on_model=on_model, async_ = True)
         res = handle.wait(self.timeout_m * 60 if not self.exp else None)
         end_time = time.time()  # End time
+
+        # stats = self.ctl.statistics
+        # print("Statistics:", stats)
         
         wall_time = end_time - start_time
         wall_time = round(wall_time, 2) if res else "timeout"

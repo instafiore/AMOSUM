@@ -3,7 +3,6 @@ import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from ast import Tuple
 from typing import Callable, List
-from utility import *
 import wasp_dir.wasp as wasp
 import re
 import settings
@@ -26,17 +25,21 @@ def getReasonsForCheckFailure():
 
 def getLiterals(*lits):
     global propagator
+    debug(f"atoms names: {atomNames}")
     get_literals = propagator.getLiterals(*lits)
     return get_literals
 
 def simplifyAtLevelZero():
     global propagator
-    simplify_atLevel_zero = propagator.simplifyAtLevelZero()
+    simplify_atLevel_zero = propagator.simplifyAtLevelZero(delete_lits=True)
     return simplify_atLevel_zero
 
 def onLiteralTrue(lit, dl):
     global propagator
-    return propagator.onLiteralTrue(lit, dl)
+    name = get_name(lit=lit, atomNames=atomNames)
+    debug(f"propagate [{name}, {dl}]")
+    S = propagator.onLiteralTrue(lit, dl)
+    return S
 
 def getReasonForLiteral(lit):
     global propagator
@@ -44,4 +47,6 @@ def getReasonForLiteral(lit):
 
 def onLiteralsUndefined(*lits) -> None:
     global propagator
+    undefined_lits = [get_name(lit=l, atomNames = atomNames) for l in lits]
+    debug(f"undo {undefined_lits}")
     return propagator.onLiteralsUndefined(*lits)

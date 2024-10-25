@@ -5,9 +5,9 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import wasp
 from typing import List
-from utility import *
 from functional_propagator import *
 import functional_propagator
+from utility import *
 
 '''
 Propagator for ' >= LB  ' constraint and At Most One constraint
@@ -45,8 +45,6 @@ def propagate_phase(G: Group, propagator: PropagatorWasp, atomNames: dict):
                 if propagator.mps - mw_g + propagator.weight[l] < propagator.lb:
                     S.append(not_(l))
                     count_infered_falses += 1
-                else:
-                    break
             elif propagator.I[l] is False:
                 false_lits_g.append(l)
         
@@ -55,16 +53,16 @@ def propagate_phase(G: Group, propagator: PropagatorWasp, atomNames: dict):
             l = max_w(g)
             if propagator.mps - propagator.weight[l] < propagator.lb:
                 S.append(l)
-                propagator.reason_trues[l] = false_lits_g
+                propagator.reason_trues[l] = false_lits_g + g.falses_facts
                 
     if len(S) != 0:
         for g in propagator.groups:
             if g.count_undef == 0 and propagator.true_group[g] is None:
-                R.extend(reversed(g.ord_l))
+                R.extend(reversed(g.ord_l_origin))
             elif propagator.true_group[g] is None:
                 mw_g = propagator.weight[max_w(g)]
-                for i in range(len(g.ord_l) - 1, -1, -1):
-                    l = g.ord_l[i]
+                for i in range(len(g.ord_l_origin) - 1, -1, -1):
+                    l = g.ord_l_origin[i]
                     if propagator.weight[l] <= mw_g:
                         break
                     R.append(l) 
@@ -72,8 +70,9 @@ def propagate_phase(G: Group, propagator: PropagatorWasp, atomNames: dict):
                 R.append(not_(propagator.true_group[g]))
     
         propagator.reason_falses = R
-        print_derivation(propagator.atomNames, S, R, propagator.aggregate, propagator.I)
         propagator.compute_minimal_reason(reason=R)
+
+    print_derivation(propagator.atomNames, S)
 
     return S
 

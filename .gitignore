@@ -173,3 +173,7 @@ tests/results/**
 # Ignore all files with 'out' in the filename at any level
 **/*out*
 
+# log files
+*verbose*
+
+

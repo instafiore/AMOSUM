@@ -131,6 +131,7 @@ class PropagatorWasp:
     def getReasonForLiteral(self, lit):
     
         reason = self.reason_falses + self.reason_trues[lit]
+        print_reason(atomNames=self.atomNames, R=reason, literal=lit)
         rl = self.redundant_lits[lit]
         removed = False
         reason_c = reason
@@ -213,8 +214,6 @@ class PropagatorWasp:
         bound = None
 
         # selecting the interested literals
-        # debug(f"lits {lits}")
-        # debug("self.atomNames",self.atomNames, file=sys.stdout, force_print=True)
         for a in self.atomNames:
             if  a.startswith('group('):
                 terms = wasp.getTerms('group',a)
@@ -293,6 +292,7 @@ class PropagatorWasp:
             assert G not in self.groups
             self.groups.append(G)
 
+
             # defining the function self.group
             for lit in lits_group:
                 self.group[lit] = G
@@ -307,9 +307,12 @@ class PropagatorWasp:
 
         self.facts = lits[1:]
         self.param = param
+
+        
+
         return bind 
 
-    def simplifyAtLevelZero(self):
+    def simplifyAtLevelZero(self, delete_lits = False):
 
         # INCOHERENT
         error_string = "self.mps < self.lb !!!" if self.ge else "self.mps > self.ub !!!"
@@ -319,12 +322,15 @@ class PropagatorWasp:
         
         prop_from_facts = self.propagate_phase(None, self, self.atomNames)
         
-        simplyLiterals(self.facts, self.aggregate, self.group, max = self.ge, I = self.I)
+        if delete_lits:
+            simplifyLiterals(self.facts, self.aggregate, self.group, max = self.ge, I = self.I)
+
+        
 
         if self.assumptions:
             self.assumptions = convert_assparam_to_assarray(self.assumptions)
 
-        return prop_from_facts + create_assumptions_lits(assumptions=self.assumptions,atomNames=self.atomNames)
+        return  create_assumptions_lits(assumptions=self.assumptions,atomNames=self.atomNames) + prop_from_facts
 
     def onLiteralTrue(self, lit, dl):
 
@@ -332,18 +338,21 @@ class PropagatorWasp:
 
         if self.I[lit]:
             # If lit is already true then no progation will take place
-            # debug(f"already true {self.I[lit]}[{lit}]", force_print=False)
-            # print_I(self.I, atomNames=self.atomNames, aggregate=self.aggregate, force_print=False, file=sys.stdout, none_atom = True)
             return []
 
         assert not self.I[lit] == False
 
-        # debug(f"True {get_name(lit=lit, atomNames=self.atomNames)} id {lit} dl {dl}")
-        (next_phase, G) = self.update_phase(lit) 
+        
 
+        try:
+            (next_phase, G) = self.update_phase(lit) 
+        except Exception as e:
+            raise e
+        
         if dl == 0:
             # this literal can be symplified given that it derives from facts
-            simplyLiterals([lit], self.aggregate, self.group, max = self.ge, I = self.I)
+            simplifyLiterals([lit], self.aggregate, self.group, max = self.ge, I = self.I)
+        
 
         propagated_lits = []
         name = get_name(lit=lit, atomNames=self.atomNames)
@@ -388,10 +397,26 @@ class PropagatorWasp:
             return (False, None)
 
         self.mps = self.mps - w_p + w_n
+
+        assert_mps : bool
+        if self.ge:
+            assert_mps = self.mps >= self.lb 
+        else:
+            assert_mps = self.mps <= self.ub
+
+
+        if not assert_mps:
+            name = get_name(atomNames=self.atomNames, lit=l)
+            undefined_literals_names = [get_name(atomNames=self.atomNames, lit=literal) for literal in G.ord_l if self.I[literal] is None]
+            error = f"{name} true led to mps {self.mps} to be incosistent with {self.bound} \
+                G.count_undef:{G.count_undef} len(undefined_literals_names):{len(undefined_literals_names)} undefined_literals_names:{undefined_literals_names}"
+            raise Exception(error)
+
+
         amocondition = ( G.count_undef == 1 and not tg ) and self.prob_type == "AMO"
        
-        # return (True ,  None)
-        return (w_p != w_n or amocondition,  None)
+        # return (w_p != w_n or amocondition,  None)
+        return (True ,  None)
 
     def compute_minimal_reason(self, reason: List[int]):
         '''
@@ -439,7 +464,6 @@ class PropagatorWasp:
             if self.I[l] is None:
                 continue
 
-            # debug(f"Undef {get_name(lit=l, atomNames = self.atomNames)} id {l}")
 
             # updating interpretation
             self.I[l] = None

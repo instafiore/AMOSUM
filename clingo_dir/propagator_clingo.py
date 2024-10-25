@@ -29,7 +29,8 @@ class PropagatorClingo(clingo.Propagator):
 
         atoms_list_for_mapping = [(str(a.symbol), a.literal, init.solver_literal(a.literal)) for a in init.symbolic_atoms]
         nt = init.number_of_threads
-        # debug(f"number of threads {nt} atoms_list_for_mapping {atoms_list_for_mapping}", force_print = False)
+        debug(f"number of threads {nt}", force_print = True)
+        debug(f"atoms_list_for_mapping {atoms_list_for_mapping}", force_print = False)
         max_plit = 0
         for str_symbol, program_literal, solver_literal in atoms_list_for_mapping:
             if max_plit < program_literal:
@@ -72,8 +73,9 @@ class PropagatorClingo(clingo.Propagator):
         self.map_slit_plit = map_slit_plit
         self.map_slit_plit_watched = map_slit_plit_watched
 
+        debug("Propagation ad level 0 started")
         for i in range(nt):
-            S_plit = self.propagators[i].simplifyAtLevelZero()
+            S_plit = self.propagators[i].simplifyAtLevelZero(delete_lits=True)
 
         if S_plit == [1] or self.add_clauses_propagated_lits(control=init, S_plit=S_plit, dl = 0):
             # adding empty clause
@@ -81,21 +83,23 @@ class PropagatorClingo(clingo.Propagator):
             return
 
     def add_clauses_propagated_lits(self, control: clingo.PropagateControl | clingo.PropagateInit, S_plit, dl):
-        td = 0 if dl == 0 else control.thread_id
+        td = 0 if isinstance(control, clingo.PropagateInit) else control.thread_id
         prop = self.propagators[td]
         for plit in S_plit:
             R_plit = prop.getReasonForLiteral(plit)
+            
             slit   = self.map_plit_slit[plit]
             # first part of the clause is the reason
-            clause = []
             clause = [self.map_plit_slit[plit_r] for plit_r in R_plit] 
             clause.append(slit)
+            # print_clause(propagator=self, clause=clause)
             # the last literal is the implied literal (undefined)
             if not control.add_clause(clause) or not control.propagate():
                 # propagation must return immediately, a conflict has been raised
+                print_clause(propagator=self, clause=clause, conflict=True)
                 return True
         return False
-        
+    
 
     def propagate(self, control: clingo.PropagateControl, changes: Sequence[int]) -> None:
         dl = control.assignment.decision_level
@@ -108,7 +112,11 @@ class PropagatorClingo(clingo.Propagator):
                 # propagated plits
                 S_plit = []
                 # propagating program literal
-                S_plit = prop.onLiteralTrue(plit, dl)
+                try:
+                    S_plit = prop.onLiteralTrue(plit, dl)
+                except Exception as e:
+                    debug(e, force_print=True)
+                    raise e
                 # adding clauses for propagated literals S_plit
                 if self.add_clauses_propagated_lits(control=control, S_plit=S_plit, dl = dl):
                     # Conflict added hence propagation has to stop
@@ -120,8 +128,12 @@ class PropagatorClingo(clingo.Propagator):
         for slit in changes:
             for plit in self.map_slit_plit_watched[slit]:
                 plit_list.append(plit)
-        self.print_undo(changes=changes, thread_id=thread_id)
-        prop.onLiteralsUndefined(*plit_list, wasp=False)
+        print_undo(self, changes=changes, thread_id=thread_id)
+        try:
+            prop.onLiteralsUndefined(*plit_list, wasp=False)
+        except Exception as e:
+            debug(e, force_print=True)
+            raise e
 
     def compute_changes_str(self, changes, thread_id):
         changes_str = []
@@ -130,10 +142,7 @@ class PropagatorClingo(clingo.Propagator):
                  changes_str.append((get_name(atomNames=self.atomNames, lit = plit), self.map_slit_plit_watched[slit], slit))
         return changes_str
     
-    def print_undo(self, changes, thread_id):
-        changes_str = self.compute_changes_str(changes=changes, thread_id=thread_id)
-        debug(f"undo {changes_str} thread_id: {thread_id}", file = sys.stderr, force_print=False)
-
+    
     def createClingoInterpretation(self, slit_list: List[int], assignment: clingo.Assignment):
         I_clingo = SymmetricFunction(self.propagators[0].N)
         for slit in slit_list:

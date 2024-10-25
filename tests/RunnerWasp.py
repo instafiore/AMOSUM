@@ -66,7 +66,11 @@ class RunnerWasp:
     TIMEOUT_LIGHT = 10
 
     def __init__(self, parameters: Dict[str,str]) -> None:
+
         self.param = parameters
+
+        debug = self.param.get("d","")
+        utility.DEBUG = debug if debug != "" else DEBUG
 
         valid_enc_type = settings.MAP_ENC_ENCODING_FILES.keys()
         valid_prop_type = settings.MAP_PROPAGATOR.keys()
@@ -211,6 +215,9 @@ class RunnerWasp:
 
 
     def create_weights_atom_regexes(self, instance):
+
+        weights_file = None 
+        atom_re = None
         if self.problem == RunnerWasp.KNAPSACK:
             weights_file = f"{self.location_instance}/{instance}.asp" if not self.exp else instance
             regex_weights = RunnerWasp.REGEX_WEIGHT_ATOM_KN
@@ -222,9 +229,12 @@ class RunnerWasp:
             weights_file = self.str_weights
             regex_weights = RunnerWasp.REGEX_WEIGHT_ATOM_GC
             atom_re= r"col\((\w+),(\w+?)\)"
+        
 
 
-        maps_weights = self.create_maps_weights(weights_file, regex_weights=regex_weights)
+        maps_weights = self.create_maps_weights(weights_file, regex_weights=regex_weights) \
+            if not atom_re is None and not weights_file is None else None
+        
 
         return (maps_weights, atom_re)
 
@@ -260,7 +270,9 @@ class RunnerWasp:
 
         print(f"Time: {time}, found {len(answer_sets)} models:")
         for i, model in enumerate(answer_sets):
-            print(f"Model {i+1}: {model} mps: {self.compute_mps(model, maps_weights=maps_weight, atom_re=atom_re)}")
+            mps_str = f" mps: {self.compute_mps(model, maps_weights=maps_weight, atom_re=atom_re)}"\
+                  if not maps_weight is None and not atom_re is None else ""
+            print(f"Model {i+1}: {model} {mps_str}")
             
     def compute_mps(self, ans, maps_weights, atom_re):
         mps = 0
@@ -290,13 +302,14 @@ class RunnerWasp:
         return maps
     
     def get_regex_query_atom_answerset(self):
+        
         regex_query : str
         if self.problem == RunnerWasp.GRAPH_COLOURING:
-            regex_query = r"(?<=[\s,{])col\(\w+,\w+?\)"
+            regex_query = r"(?<=[\s,{])col\(\w+,\w+?\)" 
         elif self.problem == RunnerWasp.KNAPSACK:
-            regex_query = r"(?<=[\s,{])in_knapsack\(\w+,\w+?\)"
+            regex_query = r"(?<=[\s,{])in_knapsack\(\w+,\w+?\)" 
         elif self.problem == RunnerWasp.SIMPLE_TEST:
-            regex_query = r"\w+\([\w,]+?\)"
+            regex_query = r"\w+[\(]?[\w,]*[\)]?" 
         else:
             assert False
         
@@ -343,7 +356,7 @@ class RunnerWasp:
             {self.str_lb} \
             {self.str_ub} \
             --output=smodels | {timeout_str} time -p {RunnerWasp.SOLVER} {RunnerWasp.SILENT} {self.n0} "
-       
+        
         id_param = f"-id {self.id}"
         ass_param = f" -ass {self.ass}" if self.ass != "" else ""
         write_stats_reason = f" -write_stats_reason" if "write_stats_reason" in self.param else ""
@@ -360,9 +373,9 @@ class RunnerWasp:
             run += f"--interpreter=python \
             --script-directory={settings.PROPAGATOR_DIR_LOCATION_WASP} \
             --plugins-file=\"{propagator} {id_param}{min_param}{ass_param}{write_stats_reason}\""
-
+  
         if self.PRINT_RUN:
-            print(f"\nRUN:\n{run}")
+            print(f"\run:\n{run}")
             
         # running test
         run_process = subprocess.run(run, shell=True, capture_output=True)
@@ -410,7 +423,7 @@ class RunnerWasp:
         self.comment_bound(instance=instance, ub=False, restore=True)
         self.comment_bound(instance=instance, ub=True, restore=True)
 
-        return (answer_sets, time)
+        return answer_sets, time
     
     def run_classical_test(self, instance: str):
             

@@ -5,18 +5,16 @@ import re
 import sys
 from typing import Any, List
 import sys
-import clingo
+# import clingo 
 
 # Debug mode
-DEBUG = False
+DEBUG = True
 
-
-
-
+# focusing print for a particular group
 FOCUSED_GROUP = 2
 FOCUSING = False
 
-
+# assumptions
 SEPARATOR = ":"
 NOT = "~"
 REGEX_LIT = rf"{NOT}?(\w+(\(\w+({SEPARATOR}\w+)*\))?)" 
@@ -27,21 +25,40 @@ VALID_VALUES_ASS = f"[[{NOT}]<atom_name>[(param1,parm2,...)]:...] "
 def print_err(*message: str, end ="\n"):
     print(message, end=end, file=sys.stderr)
 
-def print_propagate(self, changes: List[int], control: clingo.PropagateControl, dl, force_print = False):
+# clingo.PropagateControl
+def print_propagate(propagator, changes: List[int], control, dl, force_print = False):
     if not force_print and not DEBUG:
         return 
-    changes_str  = self.compute_changes_str(changes=changes, thread_id=control.thread_id)
+    changes_str  = propagator.compute_changes_str(changes=changes, thread_id=control.thread_id)
     decision_slit = control.assignment.decision(dl)
-    decision_literal_name = get_name(atomNames = self.atomNames, lit = self.map_slit_plit_watched[decision_slit][0]) if decision_slit != 1 else "from facts"
-    debug(f"[{decision_literal_name}] propagate {changes_str} thread_id: {control.thread_id}")
+    decision_literal_name = get_name(atomNames = propagator.atomNames, lit = propagator.map_slit_plit_watched[decision_slit][0]) if decision_slit != 1 else "from facts"
+    debug(f"[{decision_literal_name}, {dl}] propagate {changes_str} thread_id: {control.thread_id}", force_print=force_print)
 
-def print_derivation(atomNames, S, R, aggregate, I, force_print = False):
+def print_clause(propagator, clause, force_print = False, conflict = False):
+    if not force_print and not DEBUG:
+        return 
+    clause_names = [get_name(atomNames=propagator.atomNames, lit=propagator.map_slit_plit_watched[literal][0]) for literal in clause]
+    confict_str = "Conflict with " if conflict else ""
+    debug(f"{confict_str}clause_names {clause_names} clause_slits {clause}", force_print=force_print)
+
+def print_undo(propagator, changes, thread_id, force_print = False):
+    if not force_print and not DEBUG:
+        return 
+    changes_str = propagator.compute_changes_str(changes=changes, thread_id=thread_id)
+    debug(f"undo {changes_str} thread_id: {thread_id}", file = sys.stderr, force_print=force_print)
+
+
+def print_derivation(atomNames, S, force_print = False):
     if not force_print and not DEBUG:
             return 
     S_str = convert_array_to_string(name="Derived", array=S, atomNames=atomNames)
-    debug(S_str, file=sys.stderr, force_print=False)
-    R_str = convert_array_to_string(name="Reason", array=R, atomNames=atomNames)
-    debug(R_str, file=sys.stderr, force_print=False)
+    debug(S_str, file=sys.stderr, force_print=force_print)
+
+def print_reason(atomNames, R, literal, force_print = False):
+    if not force_print and not DEBUG:
+            return 
+    R_str = convert_array_to_string(name=f"Reason({get_name(atomNames=atomNames, lit=literal)})", array=R, atomNames=atomNames)
+    debug(R_str, file=sys.stderr, force_print=force_print)
 
 def debug(*message: str, G: 'Group' = None , end ="\n", force_print = False, file = sys.stderr):
     if force_print or (DEBUG and ( G is None or G.id == FOCUSED_GROUP or not FOCUSING)):
@@ -194,8 +211,11 @@ class Group:
         #  ord_l[i] = l 
         #  is the i-th literal orderded by weight
         self.ord_l : List[int] = ord_l
+        #  it is a copy of ord_l and it is used to create reasons
+        self.ord_l_origin : List[int] = ord_l.copy()
 
-        # a function literals -> int that takes in input the literal l and gives as output the index of a in ord_lit:
+
+        # a function literals -> int that takes in input the literal l and gives as output the index of l in ord_lit:
         #   ord_i[l] = i 
         #   it is the inverse of ord_l function
         self.ord_i : dict[int, int] = ord_i
@@ -206,8 +226,9 @@ class Group:
         # It is the index of the minimum (weight) undefined literal in ord_l 
         self.min_und : int = 0 
         
-        # all false literals of the group
-        self.falses : List[int] = []
+        # all falses facts literals of the group
+        self.falses_facts : List[int] = []
+
 
         # id of the group
         self.id = id
@@ -221,10 +242,10 @@ class Group:
         self.count_undef -= 1
 
     def add_false_lit(self, lit: int):
-        self.falses.append(lit)
+        self.falses_facts.append(lit)
 
     def remove_false_lit(self, lit: int):
-        self.falses.remove(lit)
+        self.falses_facts.remove(lit)
 
     def set_max(self, l: int):
         self.max_und = self.ord_i[l]
@@ -233,7 +254,8 @@ class Group:
         self.min_und = self.ord_i[l]
 
     def update_max(self, I: SymmetricFunction, all = False):
-        prev_max = self.ord_l[self.max_und] if not self.max_und is None else None
+
+        prev_max = self.ord_l[self.max_und] if not self.max_und is None and self.max_und < len(self.ord_l) else None
         
         if all:
             start = self.N - 1
@@ -295,27 +317,46 @@ class Group:
         return str(self.id)
 
 # removes useless literals
-def simplyLiterals(lits, aggregate: 'AggregateFunction', group: 'GroupFunction', max, I: SymmetricFunction ):
+def simplifyLiterals(lits, aggregate: 'AggregateFunction', group: 'GroupFunction', max, I: SymmetricFunction ):
+    '''
+    Invariants: all literals inside lits have to be already assigned to a truth value
+    '''
+    
     G : Group = None
     
-
     for l in lits:
         if aggregate[l]:
             G = group[l]
+            G.add_false_lit(not_(l))
         elif aggregate[not_(l)]:
             G = group[not_(l)]
             l = not_(l)
+            G.add_false_lit(l)
         else:
             continue
-        G.decrease_und()
-        G.update(I, max=max, all=False)
+
+    
         n = len(G.ord_l)
         li = G.ord_i[l]
         G.ord_i[l] = -1
-        for lit in range(li+1,n):
-            i = G.ord_l[lit]
-            G.ord_i[i] -= 1
+        # updating position of next literals (shifting)
+        for lit_i in range(li+1,n):
+            lit = G.ord_l[lit_i]
+            G.ord_i[lit] -= 1
+
+        # removing literal
         G.ord_l.remove(l)
+        G.N = len(G.ord_l)
+
+        # updating max_und 
+        G.update(I, max=max, all=True)
+
+        # removing from aggregate
+        aggregate[l] = False
+        aggregate[not_(l)] = False
+
+        assert G.count_undef >= 0
+
   
             
 
@@ -325,6 +366,7 @@ def max_w(g: Group):
     if(max_und is None):
         return None
     try:
+
         return g.ord_l[max_und]
     except Exception as e:
         print(f"g.ord_l {g.ord_l} max_und {max_und}")
@@ -400,7 +442,8 @@ def get_name(atomNames, lit):
     for a in atomNames:
         if atomNames[a] == abs(lit):
             return prefix + a
-    debug(f"{lit}")
+    debug(f"{lit} is not present in atomNames")
+    assert False
 
 def convert_array_to_string(name, array, atomNames, array_of_lits = True):
 

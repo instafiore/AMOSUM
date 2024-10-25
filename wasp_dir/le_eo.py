@@ -62,7 +62,7 @@ def propagate_phase(G: Group, propagator: PropagatorWasp):
    
         # updating the reason
         propagator.reason_falses = R
-        print_derivation(propagator.atomNames, S, R, propagator.aggregate, propagator.I)
+    print_derivation(propagator.atomNames, S)
 
     return S
 
