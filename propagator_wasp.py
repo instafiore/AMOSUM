@@ -303,7 +303,11 @@ class PropagatorWasp:
         # PREPROCESSING
         for i in range(1,len(lits)):
             l = lits[i]
-            self.update_phase(l)
+            try:
+                self.update_phase(l)
+                self.inconsistent_at_level_0 = False
+            except Exception as e:
+                self.inconsistent_at_level_0 = True
 
         self.facts = lits[1:]
         self.param = param
@@ -319,6 +323,8 @@ class PropagatorWasp:
         if (self.ge and self.mps < self.lb) or (not self.ge and self.mps > self.ub) :
             debug(error_string)
             return [1]
+         
+        assert not self.inconsistent_at_level_0
         
         prop_from_facts = self.propagate_phase(None, self, self.atomNames)
         
@@ -416,7 +422,7 @@ class PropagatorWasp:
         amocondition = ( G.count_undef == 1 and not tg ) and self.prob_type == "AMO"
        
         # return (w_p != w_n or amocondition,  None)
-        return (True ,  None)
+        return (w_p != w_n or  self.prob_type == "AMO",  None)
 
     def compute_minimal_reason(self, reason: List[int]):
         '''
