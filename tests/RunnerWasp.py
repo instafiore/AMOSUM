@@ -65,13 +65,14 @@ class RunnerWasp:
     TIMEOUT = 20
     TIMEOUT_LIGHT = 10
 
+    
+
     def __init__(self, parameters: Dict[str,str]) -> None:
 
         self.param = parameters
 
-        debug = self.param.get("d","")
-        utility.DEBUG = debug if debug != "" else DEBUG
-
+        set_debug(self.param.get("d",""))
+        
         valid_enc_type = settings.MAP_ENC_ENCODING_FILES.keys()
         valid_prop_type = settings.MAP_PROPAGATOR.keys()
 
@@ -361,7 +362,7 @@ class RunnerWasp:
         ass_param = f" -ass {self.ass}" if self.ass != "" else ""
         write_stats_reason = f" -write_stats_reason" if "write_stats_reason" in self.param else ""
         minimization = self.param.get("min_r", Minimize.NO_MINIMIZATION.value)
-
+        debug = f" -d {self.param.get('d','')}" if self.param.get("d","") != "" else ""
 
 
         possible_values_minimize = [member.value for member in Minimize]
@@ -372,7 +373,7 @@ class RunnerWasp:
             propagator = settings.MAP_PROPAGATOR[self.prop_type]
             run += f"--interpreter=python \
             --script-directory={settings.PROPAGATOR_DIR_LOCATION_WASP} \
-            --plugins-file=\"{propagator} {id_param}{min_param}{ass_param}{write_stats_reason}\""
+            --plugins-file=\"{propagator} {id_param}{min_param}{ass_param}{write_stats_reason}{debug}\""
   
         if self.PRINT_RUN:
             print(f"\run:\n{run}")

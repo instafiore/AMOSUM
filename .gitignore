@@ -175,5 +175,6 @@ tests/results/**
 
 # log files
 *verbose*
+**/*log*
 
 

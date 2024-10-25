@@ -185,8 +185,11 @@ class PropagatorWasp:
 
     def getLiterals(self, *lits):
         param = process_sys_parameters(self.sys_parameters) if type(self.sys_parameters) == list else self.sys_parameters if type(self.sys_parameters) == dict else "ERROR"
+    
+        set_debug(param.get("d",""))
+       
         assert param != "ERROR"
-        debug(f"param {param}")
+        debug(f"param {param}", force_print=True)
         
         # initializing 
         self.minimization = param.get("min_r",Minimize.NO_MINIMIZATION.value)

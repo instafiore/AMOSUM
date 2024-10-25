@@ -8,7 +8,7 @@ import sys
 # import clingo 
 
 # Debug mode
-DEBUG = True
+DEBUG = False
 
 # focusing print for a particular group
 FOCUSED_GROUP = 2
@@ -21,6 +21,9 @@ REGEX_LIT = rf"{NOT}?(\w+(\(\w+({SEPARATOR}\w+)*\))?)"
 REGEX_ASSUMPTIONS = rf"^\[{REGEX_LIT}({SEPARATOR}{NOT}?{REGEX_LIT})*\]$"
 VALID_VALUES_ASS = f"[[{NOT}]<atom_name>[(param1,parm2,...)]:...] "
 
+def set_debug(debug):
+    global DEBUG
+    DEBUG = debug if debug != "" else DEBUG
 
 def print_err(*message: str, end ="\n"):
     print(message, end=end, file=sys.stderr)

@@ -12,7 +12,6 @@ atomNames = {}
 
 # input parameters
 sys_parameters = []
-
 propagator = PropagatorWasp(atomsNames=atomNames, sys_parameters=sys_parameters)
 
 def checkAnswerSet(*answer_set):
@@ -25,8 +24,8 @@ def getReasonsForCheckFailure():
 
 def getLiterals(*lits):
     global propagator
-    debug(f"atoms names: {atomNames}")
     get_literals = propagator.getLiterals(*lits)
+    debug(f"atoms names: {atomNames}")
     return get_literals
 
 def simplifyAtLevelZero():
