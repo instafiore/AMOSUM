@@ -29,13 +29,19 @@ def print_err(*message: str, end ="\n"):
     print(message, end=end, file=sys.stderr)
 
 # clingo.PropagateControl
-def print_propagate(propagator, changes: List[int], control, dl, force_print = False):
+def print_propagate(propagator, changes: List[int], control = None, dl = 0, force_print = False, wasp_b = False):
     if not force_print and not DEBUG:
         return 
-    changes_str  = propagator.compute_changes_str(changes=changes, thread_id=control.thread_id)
-    decision_slit = control.assignment.decision(dl)
-    decision_literal_name = get_name(atomNames = propagator.atomNames, lit = propagator.map_slit_plit_watched[decision_slit][0]) if decision_slit != 1 else "from facts"
-    debug(f"[{decision_literal_name}, {dl}] propagate {changes_str} thread_id: {control.thread_id}", force_print=force_print)
+    changes_str  = propagator.compute_changes_str(changes=changes, thread_id=control.thread_id) if not wasp_b else \
+        get_name(lit=changes[0], atomNames=propagator.atomNames)
+    decision_slit = control.assignment.decision(dl) if not wasp_b else propagator.last_decision_lit
+    plit: int = 0
+    if not wasp_b and decision_slit != 1:
+        plit = propagator.map_slit_plit_watched[decision_slit][0]
+    elif wasp_b:
+        plit = propagator.last_decision_lit 
+    decision_literal_name = get_name(atomNames = propagator.atomNames, lit = plit) if decision_slit != 1 else "from facts"
+    debug(f"[{decision_literal_name}, {dl}] propagate {changes_str} thread_id: {control.thread_id if not wasp_b else 0}", force_print=force_print)
 
 def print_clause(propagator, clause, force_print = False, conflict = False):
     if not force_print and not DEBUG:
@@ -44,9 +50,11 @@ def print_clause(propagator, clause, force_print = False, conflict = False):
     confict_str = "Conflict with " if conflict else ""
     debug(f"{confict_str}clause_names {clause_names} clause_slits {clause}", force_print=force_print)
 
-def print_undo(propagator, changes, thread_id, force_print = False):
+def print_undo(propagator, changes, thread_id, force_print = False, wasp_b = False):
     if not force_print and not DEBUG:
         return 
+    if wasp_b:
+        changes = changes[1::]
     changes_str = propagator.compute_changes_str(changes=changes, thread_id=thread_id)
     debug(f"undo {changes_str} thread_id: {thread_id}", file = sys.stderr, force_print=force_print)
 
@@ -62,6 +70,14 @@ def print_reason(atomNames, R, literal, force_print = False):
             return 
     R_str = convert_array_to_string(name=f"Reason({get_name(atomNames=atomNames, lit=literal)})", array=R, atomNames=atomNames)
     debug(R_str, file=sys.stderr, force_print=force_print)
+
+def print_reduction_reason(propagator, reason_c, reason, lit, force_print = False):
+    if not force_print and not DEBUG:
+        return 
+    propagator.redundant_lits_str = convert_array_to_string(name=f"from {len(reason_c)} to {len(reason)} removed from reason of {get_name(atomNames=propagator.atomNames, lit=lit)} lit {lit}", array=propagator.redundant_lits[lit], atomNames=propagator.atomNames)
+    debug(propagator.redundant_lits_str, force_print=force_print)
+    propagator.redundant_lits_str = convert_array_to_string(name=f"removed from reason of {get_name(atomNames=propagator.atomNames, lit=lit)} ", array=propagator.redundant_lits[lit], atomNames=propagator.atomNames)
+    debug(propagator.redundant_lits_str, force_print=force_print)
 
 def debug(*message: str, G: 'Group' = None , end ="\n", force_print = False, file = sys.stderr):
     if force_print or (DEBUG and ( G is None or G.id == FOCUSED_GROUP or not FOCUSING)):

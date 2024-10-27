@@ -348,6 +348,9 @@ class RunnerWasp:
         location_encoding = f"{self.location}/{encoding}.asp" if self.enc and not self.exp else location_encoding
         location_instance = f"{self.location_instance}/{instance}.asp" if not self.exp else instance
 
+        print(f"location_encoding {location_encoding}")
+        print(f"location_instance {location_instance}")
+
         timeout_str = f"timeout {self.timeout_m}m" if not self.exp else ""
 
         run = f"clingo \

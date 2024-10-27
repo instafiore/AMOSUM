@@ -51,9 +51,9 @@ def propagate_phase(G: Group, propagator: PropagatorWasp):
     if len(S) != 0:
         for g in propagator.groups:
             if propagator.true_group[g] is None:
-                # debug("g", g.id, "min_w", get_name(atomNames, min_w(g)))
                 mw_g = propagator.weight[min_w(g)]
-                for l in g.ord_l:
+                ord_l = g.ord_l_origin
+                for l in ord_l:
                     if propagator.weight[l] >= mw_g:
                         break
                     R.append(l)

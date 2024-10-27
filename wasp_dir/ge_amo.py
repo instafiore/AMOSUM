@@ -53,16 +53,23 @@ def propagate_phase(G: Group, propagator: PropagatorWasp, atomNames: dict):
             l = max_w(g)
             if propagator.mps - propagator.weight[l] < propagator.lb:
                 S.append(l)
-                propagator.reason_trues[l] = false_lits_g + g.falses_facts
-                
-    if len(S) != 0:
+                propagator.reason_trues[l] = false_lits_g + g.falses_facts # if propagator.dl != 0 else []
+
+
+    propagator.reason_falses = []      
+    if len(S) != 0 : # and propagator.dl != 0:
         for g in propagator.groups:
+            # ord_l = g.ord_l_origin if propagator.dl == 0 else g.ord_l  
+            ord_l = g.ord_l_origin 
+            # ord_l = g.ord_l
+            # TODO: TO SHOW that with ord_l = g.ord_l wasp has a strange behavior
+            # with run: ./run.py -problem st -i test_bug_next_phase -prop_type ge_amo -ass [~c:~d]
             if g.count_undef == 0 and propagator.true_group[g] is None:
-                R.extend(reversed(g.ord_l_origin))
+                R.extend(reversed(ord_l))
             elif propagator.true_group[g] is None:
                 mw_g = propagator.weight[max_w(g)]
-                for i in range(len(g.ord_l_origin) - 1, -1, -1):
-                    l = g.ord_l_origin[i]
+                for i in range(len(ord_l) - 1, -1, -1):
+                    l = ord_l[i]
                     if propagator.weight[l] <= mw_g:
                         break
                     R.append(l) 

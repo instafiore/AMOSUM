@@ -42,9 +42,10 @@ def propagate_phase(G: Group, propagator: PropagatorWasp):
     if len(S) != 0:
         for g in propagator.groups:
             if propagator.true_group[g] is None:
+                ord_l = g.ord_l_origin 
                 mw_g = propagator.weight[max_w(g)]
-                for i in range(len(g.ord_l) - 1, -1, -1):
-                    l = g.ord_l[i]
+                for i in range(len(ord_l) - 1, -1, -1):
+                    l = ord_l[i]
                     if propagator.weight[l] <= mw_g:
                         break
                     R.append(l)

@@ -35,8 +35,7 @@ def simplifyAtLevelZero():
 
 def onLiteralTrue(lit, dl):
     global propagator
-    name = get_name(lit=lit, atomNames=atomNames)
-    debug(f"propagate [{name}, {dl}]")
+    print_propagate(propagator=propagator, changes=[lit], dl=dl, wasp_b=True)
     S = propagator.onLiteralTrue(lit, dl)
     return S
 
@@ -46,6 +45,5 @@ def getReasonForLiteral(lit):
 
 def onLiteralsUndefined(*lits) -> None:
     global propagator
-    undefined_lits = [get_name(lit=l, atomNames = atomNames) for l in lits]
-    debug(f"undo {undefined_lits}")
+    print_undo(propagator, lits, 0, wasp_b=True)
     return propagator.onLiteralsUndefined(*lits)

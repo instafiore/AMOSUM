@@ -135,23 +135,21 @@ class PropagatorWasp:
         rl = self.redundant_lits[lit]
         removed = False
         reason_c = reason
+
+        # removing redundant lits (if any)
         if len(rl) > 0:
             removed = True
             reason = remove_elements(reason, rl)
         self.reason_trues[lit] = []
         
-        write = True if "write_stats_reason" in self.param else False
-
-        if removed and write:
+        # printing/updating reduction statistics
+        if removed and "write_stats_reason" in self.param:
             p = (1 - (len(reason) / len(reason_c))) * 100
             self.sum_p += p
             self.count_p += 1
-            # self.redundant_lits_str = convert_array_to_string(name=f"from {len(reason_c)} to {len(reason)} removed from reason of {get_name(self.atomNames=self.atomNames, lit=lit)} lit {lit}", array=self.redundant_lits[lit], self.atomNames=self.atomNames)
-            # print_err(self.redundant_lits_str)
-            # self.redundant_lits_str = convert_array_to_string(name=f"removed from reason of {get_name(self.atomNames=self.atomNames, lit=lit)} ", array=self.redundant_lits[lit], self.atomNames=self.atomNames)
-            # print_err(self.redundant_lits_str)
-        self.redundant_lits[lit] = []
+            print_reduction_reason(self, reason_c, reason, lit)
 
+        self.redundant_lits[lit] = []
         return reason
 
     def checkAnswerSet(self, *answer_set):
@@ -315,7 +313,8 @@ class PropagatorWasp:
         self.facts = lits[1:]
         self.param = param
 
-        
+        self.last_decision_lit = 1
+        self.dl = 0        
 
         return bind 
 
@@ -343,7 +342,8 @@ class PropagatorWasp:
 
     def onLiteralTrue(self, lit, dl):
 
-        self.last_decision_lit = lit
+        self.last_decision_lit = lit if dl != self.dl else self.last_decision_lit
+        self.dl = dl
 
         if self.I[lit]:
             # If lit is already true then no progation will take place
@@ -359,7 +359,7 @@ class PropagatorWasp:
             raise e
         
         if dl == 0:
-            # this literal can be symplified given that it derives from facts
+            # this literal can be simplified given that it derives from facts
             simplifyLiterals([lit], self.aggregate, self.group, max = self.ge, I = self.I)
         
 
