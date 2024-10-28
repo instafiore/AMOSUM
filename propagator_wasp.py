@@ -131,7 +131,6 @@ class PropagatorWasp:
     def getReasonForLiteral(self, lit):
     
         reason = self.reason_falses + self.reason_trues[lit]
-        print_reason(atomNames=self.atomNames, R=reason, literal=lit)
         rl = self.redundant_lits[lit]
         removed = False
         reason_c = reason
@@ -141,6 +140,8 @@ class PropagatorWasp:
             removed = True
             reason = remove_elements(reason, rl)
         self.reason_trues[lit] = []
+        
+        print_reason(atomNames=self.atomNames, R=reason, literal=lit)
         
         # printing/updating reduction statistics
         if removed and "write_stats_reason" in self.param:
@@ -371,6 +372,7 @@ class PropagatorWasp:
                 propagated_lits = self.propagate_phase(G, self, self.atomNames)
             except Exception as e:
                 print(e, file=sys.stderr)
+                raise e
         else:
             debug(f"Propagation phase of {name} not started:")
 
@@ -417,7 +419,7 @@ class PropagatorWasp:
         if not assert_mps:
             name = get_name(atomNames=self.atomNames, lit=l)
             undefined_literals_names = [get_name(atomNames=self.atomNames, lit=literal) for literal in G.ord_l if self.I[literal] is None]
-            error = f"{name} true led to mps {self.mps} to be incosistent with {self.bound} \
+            error = f"{name} true led the mps {self.mps} to be incosistent with {self.bound} \
                 G.count_undef:{G.count_undef} len(undefined_literals_names):{len(undefined_literals_names)} undefined_literals_names:{undefined_literals_names}"
             raise Exception(error)
 
