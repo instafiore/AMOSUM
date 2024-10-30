@@ -144,8 +144,10 @@ class PropagatorWasp:
         print_reason(atomNames=self.atomNames, R=reason, literal=lit)
         
         # printing/updating reduction statistics
-        if removed and "write_stats_reason" in self.param:
-            p = (1 - (len(reason) / len(reason_c))) * 100
+        if removed:
+            lc = len(reason_c)
+            p = (1 - (len(reason) / lc)) if lc > 0 else 1
+            p *= 100
             self.sum_p += p
             self.count_p += 1
             print_reduction_reason(self, reason_c, reason, lit)
@@ -341,10 +343,14 @@ class PropagatorWasp:
 
         return  create_assumptions_lits(assumptions=self.assumptions,atomNames=self.atomNames) + prop_from_facts
 
-    def onLiteralTrue(self, lit, dl):
-
+    def updated_dl(self, lit, dl):
         self.last_decision_lit = lit if dl != self.dl else self.last_decision_lit
         self.dl = dl
+
+    def onLiteralTrue(self, lit, dl):
+
+        self.updated_dl(lit, dl)  
+        self.current_literal = lit      
 
         if self.I[lit]:
             # If lit is already true then no progation will take place
@@ -427,34 +433,37 @@ class PropagatorWasp:
         amocondition = ( G.count_undef == 1 and not tg ) and self.prob_type == "AMO"
        
         # return (w_p != w_n or amocondition,  None)
-        return (w_p != w_n or  self.prob_type == "AMO",  None)
+        return (w_p != w_n or self.prob_type == "AMO",  None)
 
-    def compute_minimal_reason(self, reason: List[int]):
+    def compute_minimal_reason(self, reason: List[int], derived: List[int]):
         '''
         Invariants (in case of cmin strategy) reason is grouped by self.group id and in each self.group the literals are sort in descending order
         '''
 
         if self.minimization == Minimize.NO_MINIMIZATION.value:
             return
-
-        '''
-        IMPORTANT: It is not possible to eliminate the decision literal at the highest level, since it is for sure in the reason.
-        Otherwise can happen the, let !li be a decision literal of the last level and !li -> !lj. If there exists
-        a self.group G = {lj, lk, ... } where lj and all the others literals are false except for lk
-        maybe lk is derived, since lj is false. Can happen that lk can be derived even if li is true, but lj is false because of li.
-        So li is mandatory in the reason.
-        '''
         
-        for l in reason:
+        for l in derived:
             reason_l_to_minimize = []
             g = self.group[l]
+            derived_true = True
+            if g is None:
+                g = self.group[not_(l)]
+                derived_true = False
             assert not g is None
-            s = self.lb - (self.mps - self.weight[l]) - 1 
+            # mps without l if l is true, mps with l if l is false
+            # given that mps is the one is check for propagating
+            w_l = self.weight[l]
+            mps = self.mps - w_l if derived_true else self.mps - self.weight[m_w(g, max=self.ge)] + w_l
+            s = self.lb - mps - 1 
             for lr in reason:
+                # if glr is None it means that ~lr is inside the group glr and lr is true.
+                # Given that l is true the group of l, that is, g cannot be equal to glr.
                 glr = self.group[lr] 
-                # it means that the literal is true, since for sure has been flipped (it has not self.group otherwise)
-                # so cannot be the same self.group of l, since l is also true 
-                if not glr is None and g.id == glr.id or lr == -self.last_decision_lit:
+                # if the two literals l and lr have the same group, lr cannot be redundant for l
+                # equals(lr, self.last_decision_lit) this condition is to ensure that  
+                # at least one literal of the current decision level remains in the reason
+                if not glr is None and g.id == glr.id or equals(lr, self.current_literal):
                     continue
                 reason_l_to_minimize.append(lr)
 
@@ -554,3 +563,9 @@ class PropagatorWasp:
                     G.set_max(l) if self.ge else G.set_min(l)
                     if tg is None:
                         self.mps = self.mps - m_weight + w_l
+
+    def compute_changes_str(self, changes, thread_id):
+        changes_str = []
+        for plit in changes:
+            changes_str.append((get_name(atomNames=self.atomNames, lit = plit), plit))
+        return changes_str

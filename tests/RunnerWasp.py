@@ -379,7 +379,7 @@ class RunnerWasp:
             --plugins-file=\"{propagator} {id_param}{min_param}{ass_param}{write_stats_reason}{debug}\""
   
         if self.PRINT_RUN:
-            print(f"\run:\n{run}")
+            print(f"run:\t{run}")
             
         # running test
         run_process = subprocess.run(run, shell=True, capture_output=True)

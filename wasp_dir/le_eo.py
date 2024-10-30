@@ -52,7 +52,7 @@ def propagate_phase(G: Group, propagator: PropagatorWasp):
         for g in propagator.groups:
             if propagator.true_group[g] is None:
                 mw_g = propagator.weight[min_w(g)]
-                ord_l = g.ord_l_origin
+                ord_l = g.ord_l
                 for l in ord_l:
                     if propagator.weight[l] >= mw_g:
                         break

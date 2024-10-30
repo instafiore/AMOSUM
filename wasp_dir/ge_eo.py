@@ -42,7 +42,7 @@ def propagate_phase(G: Group, propagator: PropagatorWasp):
     if len(S) != 0:
         for g in propagator.groups:
             if propagator.true_group[g] is None:
-                ord_l = g.ord_l_origin 
+                ord_l = g.ord_l 
                 mw_g = propagator.weight[max_w(g)]
                 for i in range(len(ord_l) - 1, -1, -1):
                     l = ord_l[i]
@@ -54,7 +54,7 @@ def propagate_phase(G: Group, propagator: PropagatorWasp):
 
         # updating the reason
         propagator.reason_falses = R
-        propagator.compute_minimal_reason(reason=R)
+        propagator.compute_minimal_reason(reason=R, derived=S)
     print_derivation(propagator.atomNames, S)
 
      

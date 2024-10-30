@@ -33,7 +33,7 @@ def print_propagate(propagator, changes: List[int], control = None, dl = 0, forc
     if not force_print and not DEBUG:
         return 
     changes_str  = propagator.compute_changes_str(changes=changes, thread_id=control.thread_id) if not wasp_b else \
-        get_name(lit=changes[0], atomNames=propagator.atomNames)
+        f"[{get_name(lit=changes[0], atomNames=propagator.atomNames)}, {changes[0]}]"
     decision_slit = control.assignment.decision(dl) if not wasp_b else propagator.last_decision_lit
     plit: int = 0
     if not wasp_b and decision_slit != 1:
@@ -49,6 +49,9 @@ def print_clause(propagator, clause, force_print = False, conflict = False):
     clause_names = [get_name(atomNames=propagator.atomNames, lit=propagator.map_slit_plit_watched[literal][0]) for literal in clause]
     confict_str = "Conflict with " if conflict else ""
     debug(f"{confict_str}clause_names {clause_names} clause_slits {clause}", force_print=force_print)
+
+def equals(l1, l2):
+    return abs(l1) == abs(l2)
 
 def print_undo(propagator, changes, thread_id, force_print = False, wasp_b = False):
     if not force_print and not DEBUG:
@@ -230,7 +233,7 @@ class Group:
         #  ord_l[i] = l 
         #  is the i-th literal orderded by weight
         self.ord_l : List[int] = ord_l
-        #  it is a copy of ord_l and it is used to create reasons
+        #  it is a copy of ord_l, for now it is useless
         self.ord_l_origin : List[int] = ord_l.copy()
 
 
@@ -538,13 +541,18 @@ def increment_f(l: int, current_subset_maximal, weight: WeightFunction, group: G
         g = group[l]
         tr = True # it means that it has been flipped, so it is true in reason (is the true_group[g])
 
+    if len(g.ord_l) <= 1:
+        return 0
+    
     w = weight[l]
     if tr:  
-        w_mw_g = weight[g.ord_l[-1]]
+        # TODO: FIX
+        w_mw_g = 0
+        w_mw_g = weight[g.ord_l[-1]] 
         return w_mw_g - w
     else:
         # i = g.ord_i[l]
-        i = len(g.ord_i) - 1
+        i = len(g.ord_l) - 1
         mw_g = weight[max_w(g)]
         current_l = g.ord_l[i]
         increment = w - mw_g
@@ -569,6 +577,7 @@ def maximal_subset_sum_less_than_s_with_groups(literals: List[int], s: int, weig
     for l in literals:
         inc = increment_f(l, current_subset_maximal, weight, group)
         if current_sum + inc <= s:
+                # debug(f"{l} has been removed from reason because inc: {inc} is not enougth to arrive above {s} with current_sum {current_sum} ")
                 current_sum += inc
                 current_subset_maximal.append(l)
     

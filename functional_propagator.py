@@ -35,6 +35,7 @@ def simplifyAtLevelZero():
 
 def onLiteralTrue(lit, dl):
     global propagator
+    propagator.updated_dl(lit, dl)
     print_propagate(propagator=propagator, changes=[lit], dl=dl, wasp_b=True)
     S = propagator.onLiteralTrue(lit, dl)
     return S

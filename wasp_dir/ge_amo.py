@@ -59,11 +59,7 @@ def propagate_phase(G: Group, propagator: PropagatorWasp, atomNames: dict):
     propagator.reason_falses = []      
     if len(S) != 0  and propagator.dl != 0:
         for g in propagator.groups:
-            # ord_l = g.ord_l_origin if propagator.dl == 0 else g.ord_l  
-            # ord_l = g.ord_l_origin
             ord_l = g.ord_l
-            # TODO: TO SHOW that with ord_l = g.ord_l wasp has a strange behavior
-            # with run: ./run.py -problem st -i test_bug_next_phase -prop_type ge_amo -ass [~c:~d]
             if g.count_undef == 0 and propagator.true_group[g] is None:
                 R.extend(reversed(ord_l))
             elif propagator.true_group[g] is None:
@@ -77,7 +73,7 @@ def propagate_phase(G: Group, propagator: PropagatorWasp, atomNames: dict):
                 R.append(not_(propagator.true_group[g]))
     
         propagator.reason_falses = R
-        propagator.compute_minimal_reason(reason=R)
+        propagator.compute_minimal_reason(reason=R, derived=S)
 
     print_derivation(propagator.atomNames, S)
 
