@@ -46,10 +46,10 @@ class PropagatorWasp:
     # literals derived at level 0
     facts : List[int]
 
-    # reason for falses literals 
-    reason_falses : List[int] 
+    # reason for literals 
+    reason : List[int] 
 
-    # reason for true_literals
+    # reason for true_literals (no more usefull)
     reason_trues : PerfectHash
 
     # redundant literals in reason of a literal l
@@ -99,7 +99,7 @@ class PropagatorWasp:
     lb : int
 
     # max possible sum
-    mps : int 
+    _mps : int 
     # ----------------------------
 
     # <= (ge) constraint
@@ -108,14 +108,14 @@ class PropagatorWasp:
     ub : int
 
     # min possible sum
-    mps : int 
+    _mps : int 
     # ----------------------------
 
     def __init__(self, atomsNames: dict[str: int], sys_parameters: List[str], propagation_phase: Callable[[Group, 'PropagatorWasp'], List[int]] = None, ge: bool = True, prob_type: str = "AMO") -> None:
         self.atomNames = atomsNames
         self.sys_parameters = sys_parameters
         self.facts : List[int] = []
-        self.reason_falses : List[int] = []
+        self.reason : List[int] = []
         self.strategy = 'default'
         self.last_decision_lit = 0
         self.minimization = Minimize.NO_MINIMIZATION
@@ -127,19 +127,22 @@ class PropagatorWasp:
 
     def getReasonsForCheckFailure(self):
         return None
-
+    
+    def getReason(self):
+        return self.reason
+    
     def getReasonForLiteral(self, lit):
     
-        reason = self.reason_falses + self.reason_trues[lit]
-        rl = self.redundant_lits[lit]
+        reason = self.reason + self.reason_trues[lit]
+        rl = self.redundant_lits[lit] 
         removed = False
         reason_c = reason
+        self.reason_trues[lit] = []
 
         # removing redundant lits (if any)
         if len(rl) > 0:
             removed = True
             reason = remove_elements(reason, rl)
-        self.reason_trues[lit] = []
         
         print_reason(atomNames=self.atomNames, R=reason, literal=lit)
         
@@ -153,7 +156,7 @@ class PropagatorWasp:
             print_reduction_reason(self, reason_c, reason, lit)
 
         self.redundant_lits[lit] = []
-        return reason
+        return reason 
 
     def checkAnswerSet(self, *answer_set):
 
@@ -202,7 +205,7 @@ class PropagatorWasp:
         self.aggregate = AggregateFunction(self.N, False)
         self.reason_trues = PerfectHash(self.N,[])
         self.redundant_lits = PerfectHash(self.N,[])
-        self.mps = 0
+        self._mps = 0
         self.ID = param.get("id","0")
         # self.groups = set()
         self.groups = []
@@ -218,6 +221,7 @@ class PropagatorWasp:
         bound = None
 
         # selecting the interested literals
+
         for a in self.atomNames:
             if  a.startswith('group('):
                 terms = wasp.getTerms('group',a)
@@ -289,7 +293,7 @@ class PropagatorWasp:
             G = Group(ord_l,ord_i,group_id)
             
             # updatind the max possible sum
-            self.mps = self.mps + self.weight[m_w(G, max = self.ge)]
+            self._mps = self._mps + self.weight[m_w(G, max = self.ge)]
         
             # adding the self.group to the set of self.groups
             # self.groups.add(G)
@@ -325,7 +329,7 @@ class PropagatorWasp:
 
         # INCOHERENT
         error_string = "self.mps < self.lb !!!" if self.ge else "self.mps > self.ub !!!"
-        if (self.ge and self.mps < self.lb) or (not self.ge and self.mps > self.ub) :
+        if (self.ge and self._mps < self.lb) or (not self.ge and self._mps > self.ub) :
             debug(error_string)
             return [1]
          
@@ -374,16 +378,17 @@ class PropagatorWasp:
         name = get_name(lit=lit, atomNames=self.atomNames)
         if next_phase:
             try:
-                debug(f"Propagation phase of {name} started:")
+                debug(f"[{next_phase}] Propagation phase of {name} started:")
                 propagated_lits = self.propagate_phase(G, self, self.atomNames)
             except Exception as e:
                 print(e, file=sys.stderr)
                 raise e
         else:
-            debug(f"Propagation phase of {name} not started:")
+            debug(f"[{next_phase}] Propagation phase of {name} not started:")
 
 
         return propagated_lits
+
 
     def update_phase(self, l: int) -> tuple[bool, Group]:
     
@@ -404,36 +409,55 @@ class PropagatorWasp:
         elif self.aggregate[not_(l)]:
             G = self.group[not_(l)]
             G.decrease_und()
-
-            if not_(l) == m_w(G, max =self.ge):
-                new, prev = G.update(self.I, max=self.ge)
+            new, prev = G.update(self.I, max=self.ge, update=False, assuming_und = l)
+            if not_(l) == prev:
+                G.set_max_min(l=new, max=self.ge)
                 if self.true_group[G] is None :
                     w_n = self.weight[new]
                     w_p = self.weight[prev]
+            elif not_(l) != new:
+                # there is at least one more literal that can satify the lower bound
+                # so no propagation can take place
+                # debug(f"l {l} new {new}")
+                return (False, None)
+            else:
+                return (True, None)
         else:
+
             return (False, None)
 
-        self.mps = self.mps - w_p + w_n
+        self._mps = self._mps - w_p + w_n
 
         assert_mps : bool
         if self.ge:
-            assert_mps = self.mps >= self.lb 
+            assert_mps = self._mps >= self.lb 
         else:
-            assert_mps = self.mps <= self.ub
+            assert_mps = self._mps <= self.ub
 
 
         if not assert_mps:
             name = get_name(atomNames=self.atomNames, lit=l)
             undefined_literals_names = [get_name(atomNames=self.atomNames, lit=literal) for literal in G.ord_l if self.I[literal] is None]
-            error = f"{name} true led the mps {self.mps} to be incosistent with {self.bound} \
+            error = f"{name} true led the mps {self._mps} to be incosistent with {self.bound} \
                 G.count_undef:{G.count_undef} len(undefined_literals_names):{len(undefined_literals_names)} undefined_literals_names:{undefined_literals_names}"
             raise Exception(error)
 
 
-        amocondition = ( G.count_undef == 1 and not tg ) and self.prob_type == "AMO"
-       
-        # return (w_p != w_n or amocondition,  None)
         return (w_p != w_n or self.prob_type == "AMO",  None)
+        # return (w_p != w_n,  None)
+    
+    def mps(self, g: Group, l: int, assumed:bool, return_literals = False):
+        sml_g, ml_g =  g.update_max(self.I, update=False)
+        mw_g =  self.weight[ml_g]
+        if assumed:
+            assert self.true_group[g] is None
+            mps = self._mps - mw_g + self.weight[l]
+            return mps if not return_literals else (mps, l, ml_g)
+        else:
+            if ml_g != l:
+                return self._mps if not return_literals else (self._mps , sml_g, ml_g)
+            mps = self._mps - mw_g + self.weight[sml_g]
+            return mps if not return_literals else (mps, sml_g, ml_g)
 
     def compute_minimal_reason(self, reason: List[int], derived: List[int]):
         '''
@@ -444,34 +468,21 @@ class PropagatorWasp:
             return
         
         for l in derived:
-            reason_l_to_minimize = []
             g = self.group[l]
             derived_true = True
             if g is None:
                 g = self.group[not_(l)]
                 derived_true = False
             assert not g is None
-            # mps without l if l is true, mps with l if l is false
-            # given that mps is the one is check for propagating
-            w_l = self.weight[l]
-            mps = self.mps - w_l if derived_true else self.mps - self.weight[m_w(g, max=self.ge)] + w_l
+    
+            mps = self.mps(g, l, assumed = not derived_true)
             s = self.lb - mps - 1 
-            for lr in reason:
-                # if glr is None it means that ~lr is inside the group glr and lr is true.
-                # Given that l is true the group of l, that is, g cannot be equal to glr.
-                glr = self.group[lr] 
-                # if the two literals l and lr have the same group, lr cannot be redundant for l
-                # equals(lr, self.last_decision_lit) this condition is to ensure that  
-                # at least one literal of the current decision level remains in the reason
-                if not glr is None and g.id == glr.id or equals(lr, self.current_literal):
-                    continue
-                reason_l_to_minimize.append(lr)
-
+    
             if self.minimization == Minimize.MINIMAL.value:
-                self.redundant_lits[l] = maximal_subset_sum_less_than_s_with_groups(literals=reason_l_to_minimize, s = s, weight= self.weight, group=self.group)
+                self.redundant_lits[l] = maximal_subset_sum_less_than_s_with_groups(literals=reason + self.reason_trues[l], s = s, weight= self.weight, group=self.group)
             elif self.minimization == Minimize.CARDINALITY_MINIMAL.value:
-                increment = compute_increment_literals(literals=reason_l_to_minimize, group=self.group, weight=self.weight)
-                self.redundant_lits[l]  = maximum_subset_sum_less_than_s_with_groups(literals= reason_l_to_minimize, s = s, weight = increment, group=self.group, I=self.I)            
+                increment = compute_increment_literals(literals=reason + self.reason_trues[l], group=self.group, weight=self.weight)
+                self.redundant_lits[l]  = maximum_subset_sum_less_than_s_with_groups(literals= reason, s = s, weight = increment, group=self.group, I=self.I)            
             else:
                 assert False
 
@@ -538,7 +549,7 @@ class PropagatorWasp:
                 G.set_max(l) if self.ge else G.set_min(l)
                 if tg is None:
                     if self.prob_type == "AMO":
-                        self.mps += self.weight[l]
+                        self._mps += self.weight[l]
                     else:
                         assert False
                 continue
@@ -551,7 +562,7 @@ class PropagatorWasp:
 
                 # updating the self.mps
                 if (m_weight > self.weight[l] and self.ge) or (m_weight < self.weight[l] and not self.ge): 
-                    self.mps = self.mps - self.weight[l] + m_weight
+                    self._mps = self._mps - self.weight[l] + m_weight
 
                 # updating the max undefined if self.ge else min undefined
                 if (self.ge and pos_m < pos_l) or (not self.ge and pos_m > pos_l):
@@ -562,7 +573,7 @@ class PropagatorWasp:
                 if (self.ge and w_l >= m_weight and pos_l > pos_m) or (not self.ge and w_l <= m_weight and pos_l < pos_m ):
                     G.set_max(l) if self.ge else G.set_min(l)
                     if tg is None:
-                        self.mps = self.mps - m_weight + w_l
+                        self._mps = self._mps - m_weight + w_l
 
     def compute_changes_str(self, changes, thread_id):
         changes_str = []

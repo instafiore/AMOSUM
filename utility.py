@@ -51,6 +51,8 @@ def print_clause(propagator, clause, force_print = False, conflict = False):
     debug(f"{confict_str}clause_names {clause_names} clause_slits {clause}", force_print=force_print)
 
 def equals(l1, l2):
+    if l1 is None or l2 is None:
+        return l1 is None and l2 is None
     return abs(l1) == abs(l2)
 
 def print_undo(propagator, changes, thread_id, force_print = False, wasp_b = False):
@@ -270,13 +272,22 @@ class Group:
         self.falses_facts.remove(lit)
 
     def set_max(self, l: int):
-        self.max_und = self.ord_i[l]
+        self.max_und = self.ord_i[l] if not l is None else None
 
     def set_min(self, l: int):
-        self.min_und = self.ord_i[l]
+        self.min_und = self.ord_i[l] if not l is None else None
 
-    def update_max(self, I: SymmetricFunction, all = False):
+    def set_max_min(self, l: int, max: bool):
+        if max:
+            self.set_max(l)
+        else:
+            self.set_min(l)
 
+    def update_max(self, I: SymmetricFunction, all = False, update = True, assuming_und = None):
+        '''
+        
+        return: new max, prev max
+        '''
         prev_max = self.ord_l[self.max_und] if not self.max_und is None and self.max_und < len(self.ord_l) else None
         
         if all:
@@ -285,21 +296,22 @@ class Group:
             start = self.max_und - 1 if not self.max_und is None else -1
             # All are defined
             if start < 0:
-                self.max_und = None
+                self.max_und = None if update else self.max_und
                 return (None, prev_max)
             
         for i in range(start, -1, -1):
             l = self.ord_l[i]
-            if I[l] is None:
-                self.max_und = i
-                new_max = self.ord_l[self.max_und]
+            if I[l] is None or equals(l, assuming_und):
+                self.max_und = i if update else self.max_und
+                new_max = l
                 return (new_max, prev_max)
         
         # All are defined
-        self.max_und = None
+        self.max_und = None if update else self.max_und
         return (None, prev_max)
     
-    def update_min(self, I: SymmetricFunction, all = False):
+    def update_min(self, I: SymmetricFunction, all = False, update=True, assuming_und = None):
+        # TODO: refactor the code as done with update max
         prev_min = self.ord_l[self.min_und] if not self.min_und is None else None
         
         if all:
@@ -322,11 +334,11 @@ class Group:
         self.min_und = None
         return (None, prev_min)
 
-    def update(self, I: SymmetricFunction, max, all = False):
+    def update(self, I: SymmetricFunction, max, all = False, update = True, assuming_und = None):
         if max: 
-            return self.update_max(I,all=all)
+            return self.update_max(I,all=all, update=update, assuming_und = assuming_und)
         else:
-            return self.update_min(I,all=all)
+            return self.update_min(I,all=all, update=update, assuming_und = assuming_und)
 
 
     def print_group(self, atomNames):
@@ -384,14 +396,15 @@ def simplifyLiterals(lits, aggregate: 'AggregateFunction', group: 'GroupFunction
 
 # This function returns the max UNDEFINED literal
 def max_w(g: Group):
+
     max_und = g.max_und
+
     if(max_und is None):
         return None
     try:
-
         return g.ord_l[max_und]
     except Exception as e:
-        print(f"g.ord_l {g.ord_l} max_und {max_und}")
+        debug(f"g.ord_l {g.ord_l} max_und {max_und}", force_print=True)
         raise e
 
 # This function returns the min UNDEFINED literal
@@ -401,7 +414,7 @@ def min_w(g: Group):
         return None
     return g.ord_l[min_und]
 
-def m_w(g: Group, max : bool):
+def m_w(g: Group, max : bool, second = False):
     if max: 
         return max_w(g)
     else:

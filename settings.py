@@ -9,7 +9,7 @@ import subprocess
 WEIGHTS = "weights"
 
 PROPAGATOR_NAME_ge_eo = "ge_eo"
-PROPAGATOR_NAME_ge_amo = "ge_amo"
+PROPAGATOR_NAME_ge_amo = "ge_amo_2"
 PROPAGATOR_NAME_le_eo = "le_eo"
 
 ENCODING_WITH_GROUP_GE_EO = "encoding_with_group_ge_eo"

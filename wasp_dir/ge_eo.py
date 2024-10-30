@@ -33,7 +33,7 @@ def propagate_phase(G: Group, propagator: PropagatorWasp):
 
         for l in g.ord_l:
             if propagator.I[l] is None:
-                if propagator.mps - mw_g + propagator.weight[l] < propagator.lb:
+                if propagator._mps - mw_g + propagator.weight[l] < propagator.lb:
                     # infer l as false
                     S.append(not_(l))
                 else:
@@ -53,7 +53,7 @@ def propagate_phase(G: Group, propagator: PropagatorWasp):
                 R.append(not_(propagator.true_group[g]))
 
         # updating the reason
-        propagator.reason_falses = R
+        propagator.reason = R
         propagator.compute_minimal_reason(reason=R, derived=S)
     print_derivation(propagator.atomNames, S)
 
