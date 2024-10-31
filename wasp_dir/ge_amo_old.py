@@ -37,19 +37,24 @@ def propagate_phase(G: Group, propagator: PropagatorWasp, atomNames: dict):
         ml_g =  max_w(g)
         mw_g =  propagator.weight[ml_g]
 
-        for i in range(len(g.ord_l)-1,-1,-1):
-            l = g.ord_l[i]
+        count_infered_falses = 0 
+        false_lits_g = []
+        # infer falsity
+        for l in g.ord_l:
             if propagator.I[l] is None:
-                if propagator.mps(g, l, assumed=True) < propagator.lb:
-                    S.extend([not_(lit) for lit in g.ord_l[i::-1] if propagator.I[lit] is None])
-                    break
-                else:
-                    mps, sml_g, ml_g = propagator.mps(g, l, assumed=False, return_literals=True)
-                    if mps < propagator.lb:
-                        i = g.ord_i[sml_g] if not sml_g is None else 0
-                        propagator.reason_trues[l] = [lit for lit in g.ord_l[i::] if propagator.I[lit] == False]
-                        S.append(l)
-                        break
+                if propagator._mps - mw_g + propagator.weight[l] < propagator.lb:
+                    S.append(not_(l))
+                    count_infered_falses += 1
+            elif propagator.I[l] is False:
+                false_lits_g.append(l)
+        
+        if g.count_undef - count_infered_falses == 1 and propagator.true_group[g] is None:
+            # the last remained literal 
+            l = max_w(g)
+            if propagator._mps - propagator.weight[l] < propagator.lb:
+                S.append(l)
+                propagator.reason_trues[l] = false_lits_g + g.falses_facts  if propagator.dl != 0 else []
+
 
     propagator.reason = []      
     if len(S) != 0  and propagator.dl != 0:

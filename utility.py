@@ -559,12 +559,11 @@ def increment_f(l: int, current_subset_maximal, weight: WeightFunction, group: G
     
     w = weight[l]
     if tr:  
-        # TODO: FIX
+        # TODO: FIX -> fixed putting w if len(g.ord_l) = 0  
         w_mw_g = 0
-        w_mw_g = weight[g.ord_l[-1]] 
+        w_mw_g = weight[g.ord_l[-1]] if len(g.ord_l) > 0 else w
         return w_mw_g - w
     else:
-        # i = g.ord_i[l]
         i = len(g.ord_l) - 1
         mw_g = weight[max_w(g)]
         current_l = g.ord_l[i]

@@ -418,7 +418,6 @@ class PropagatorWasp:
             elif not_(l) != new:
                 # there is at least one more literal that can satify the lower bound
                 # so no propagation can take place
-                # debug(f"l {l} new {new}")
                 return (False, None)
             else:
                 return (True, None)
@@ -437,14 +436,12 @@ class PropagatorWasp:
 
         if not assert_mps:
             name = get_name(atomNames=self.atomNames, lit=l)
-            undefined_literals_names = [get_name(atomNames=self.atomNames, lit=literal) for literal in G.ord_l if self.I[literal] is None]
-            error = f"{name} true led the mps {self._mps} to be incosistent with {self.bound} \
-                G.count_undef:{G.count_undef} len(undefined_literals_names):{len(undefined_literals_names)} undefined_literals_names:{undefined_literals_names}"
+            error = f"{name} true led the mps {self._mps} to be incosistent with {self.bound}"
             raise Exception(error)
 
 
-        return (w_p != w_n or self.prob_type == "AMO",  None)
-        # return (w_p != w_n,  None)
+        # return (w_p != w_n or self.prob_type == "AMO",  None)
+        return (w_p != w_n,  None)
     
     def mps(self, g: Group, l: int, assumed:bool, return_literals = False):
         sml_g, ml_g =  g.update_max(self.I, update=False)
