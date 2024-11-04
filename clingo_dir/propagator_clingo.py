@@ -91,9 +91,8 @@ class PropagatorClingo(clingo.Propagator):
             slit   = self.map_plit_slit[plit]
             # first part of the clause is the reason
             clause = [self.map_plit_slit[plit_r] for plit_r in R_plit] 
-            clause.append(slit)
-            # print_clause(propagator=self, clause=clause)
             # the last literal is the implied literal (undefined)
+            clause.append(slit)
             if not control.add_clause(clause) or not control.propagate():
                 # propagation must return immediately, a conflict has been raised
                 print_clause(propagator=self, clause=clause, conflict=True)

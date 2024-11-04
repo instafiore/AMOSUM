@@ -31,7 +31,7 @@ def propagate_phase(G: Group, propagator: PropagatorWasp):
     # print_I(I=common.I, atomNames=atomNames, aggregate=aggregate)
 
     for g in propagator.groups:
-        if not G is None and ( g == G or not propagator.true_group[g] is None ):
+        if g == G or not propagator.true_group[g] is None:
             continue
 
         ml_g =  propagator.min_w(g)
@@ -40,10 +40,9 @@ def propagate_phase(G: Group, propagator: PropagatorWasp):
         for i in range(len(g.ord_l)-1,-1,-1):
             l = g.ord_l[i]
             if propagator.I[l] is None:
-                if propagator._mps - mw_g + propagator.weight[l] > propagator.ub:
+                if propagator.mps(g=g, l=l, assumed=True) > propagator.ub:
                     # infer l as false
                     S.append(not_(l))
-                    g.decrease_und()
                 else:
                     break
 

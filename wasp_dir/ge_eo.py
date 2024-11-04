@@ -33,7 +33,7 @@ def propagate_phase(G: Group, propagator: PropagatorWasp):
 
         for l in g.ord_l:
             if propagator.I[l] is None:
-                if propagator._mps - mw_g + propagator.weight[l] < propagator.lb:
+                if propagator.mps(g=g, l=l, assumed=True) < propagator.lb:
                     # infer l as false
                     S.append(not_(l))
                 else:

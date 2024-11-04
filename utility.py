@@ -285,7 +285,6 @@ class Group:
 
     def update_max(self, I: SymmetricFunction, all = False, update = True, assuming_und = None):
         '''
-        
         return: new max, prev max
         '''
         prev_max = self.ord_l[self.max_und] if not self.max_und is None and self.max_und < len(self.ord_l) else None
@@ -312,7 +311,7 @@ class Group:
     
     def update_min(self, I: SymmetricFunction, all = False, update=True, assuming_und = None):
         # TODO: refactor the code as done with update max
-        prev_min = self.ord_l[self.min_und] if not self.min_und is None else None
+        prev_min = self.ord_l[self.min_und] if not self.min_und is None and self.min_und < len(self.ord_l) else None
         
         if all:
             start = 0
@@ -320,18 +319,18 @@ class Group:
             start = self.min_und + 1 if not self.min_und is None else self.N
             # All are defined
             if start >= self.N:
-                self.min_und = None
+                self.min_und = None  if update else self.min_und
                 return (None, prev_min)
 
         for i in range(start, self.N, +1):
             l = self.ord_l[i]
-            if I[l] is None:
-                self.min_und = i
-                new_min = self.ord_l[self.min_und]
+            if I[l] is None or equals(l, assuming_und):
+                self.min_und = i if update else self.min_und
+                new_min = l
                 return (new_min, prev_min)
         
         # All are defined
-        self.min_und = None
+        self.min_und = None if update else self.min_und
         return (None, prev_min)
 
     def update(self, I: SymmetricFunction, max, all = False, update = True, assuming_und = None):
@@ -382,7 +381,7 @@ def simplifyLiterals(lits, aggregate: 'AggregateFunction', group: 'GroupFunction
         G.ord_l.remove(l)
         G.N = len(G.ord_l)
 
-        # updating max_und 
+        # updating max_und/min_und 
         G.update(I, max=max, all=True)
 
         # removing from aggregate
@@ -545,7 +544,7 @@ def is_true_in_reason(lit, group: GroupFunction):
     g = group[lit]
     return g is None
 
-def increment_f(l: int, current_subset_maximal, weight: WeightFunction, group: GroupFunction):
+def increment_f(l: int, current_subset_maximal, weight: WeightFunction, group: GroupFunction, head_reason, I: SymmetricFunction, max_b):
 
     g = group[l] 
     tr = False # true in reason
@@ -565,7 +564,14 @@ def increment_f(l: int, current_subset_maximal, weight: WeightFunction, group: G
         return w_mw_g - w
     else:
         i = len(g.ord_l) - 1
-        mw_g = weight[max_w(g)]
+        # maximum weight
+        mw_g: int 
+        head_group = group[head_reason]
+        if g == head_group:
+            sml_g, ml_g = g.update(I, max_b, update=False)
+            mw_g = weight[sml_g]
+        else:
+            mw_g = weight[max_w(g)]
         current_l = g.ord_l[i]
         increment = w - mw_g
         while mw_g < weight[current_l]:
@@ -581,13 +587,13 @@ def increment_f(l: int, current_subset_maximal, weight: WeightFunction, group: G
         return increment
 
 
-def maximal_subset_sum_less_than_s_with_groups(literals: List[int], s: int, weight: WeightFunction,  group: GroupFunction):
+def maximal_subset_sum_less_than_s_with_groups(literals: List[int], s: int, weight: WeightFunction,  group: GroupFunction, head_reason, I: SymmetricFunction, max):
 
     current_subset_maximal = []
     current_sum = 0
 
     for l in literals:
-        inc = increment_f(l, current_subset_maximal, weight, group)
+        inc = increment_f(l, current_subset_maximal, weight, group, head_reason, I, max)
         if current_sum + inc <= s:
                 # debug(f"{l} has been removed from reason because inc: {inc} is not enougth to arrive above {s} with current_sum {current_sum} ")
                 current_sum += inc
@@ -610,7 +616,7 @@ def compute_increment_literals(literals: List[int], group: GroupFunction, weight
         w_mw_g = weight[mw_g]
         
         w = weight[l]
-        assert not w  is None
+        assert not w is None
         i : int
         if tg:  
             w_mw_g = weight[g.ord_l[-1]]

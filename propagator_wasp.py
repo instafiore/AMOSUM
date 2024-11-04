@@ -207,8 +207,8 @@ class PropagatorWasp:
         self.redundant_lits = PerfectHash(self.N,[])
         self._mps = 0
         self.ID = param.get("id","0")
-        # self.groups = set()
-        self.groups = []
+        self.groups = set()
+        # self.groups = []
         self.assumptions = param.get("ass", False)
 
         #used to create the self.groups
@@ -296,9 +296,9 @@ class PropagatorWasp:
             self._mps = self._mps + self.weight[m_w(G, max = self.ge)]
         
             # adding the self.group to the set of self.groups
-            # self.groups.add(G)
-            assert G not in self.groups
-            self.groups.append(G)
+            self.groups.add(G)
+            # assert G not in self.groups
+            # self.groups.append(G)
 
 
             # defining the function self.group
@@ -378,13 +378,13 @@ class PropagatorWasp:
         name = get_name(lit=lit, atomNames=self.atomNames)
         if next_phase:
             try:
-                debug(f"[{next_phase}] Propagation phase of {name} started:")
+                debug(f"[{next_phase}] Propagation phase of {name} started [{self._mps}]:")
                 propagated_lits = self.propagate_phase(G, self, self.atomNames)
             except Exception as e:
                 print(e, file=sys.stderr)
                 raise e
         else:
-            debug(f"[{next_phase}] Propagation phase of {name} not started:")
+            debug(f"[{next_phase}] Propagation phase of {name} not started [{self._mps}]:")
 
 
         return propagated_lits
@@ -444,7 +444,7 @@ class PropagatorWasp:
         return (w_p != w_n,  None)
     
     def mps(self, g: Group, l: int, assumed:bool, return_literals = False):
-        sml_g, ml_g =  g.update_max(self.I, update=False)
+        sml_g, ml_g =  g.update(self.I, update=False, max=self.ge)
         mw_g =  self.weight[ml_g]
         if assumed:
             assert self.true_group[g] is None
@@ -476,7 +476,7 @@ class PropagatorWasp:
             s = self.lb - mps - 1 
     
             if self.minimization == Minimize.MINIMAL.value:
-                self.redundant_lits[l] = maximal_subset_sum_less_than_s_with_groups(literals=reason + self.reason_trues[l], s = s, weight= self.weight, group=self.group)
+                self.redundant_lits[l] = maximal_subset_sum_less_than_s_with_groups(literals=reason + self.reason_trues[l], s = s, weight= self.weight, group=self.group, head_reason=l, I=self.I, max=self.ge)
             elif self.minimization == Minimize.CARDINALITY_MINIMAL.value:
                 increment = compute_increment_literals(literals=reason + self.reason_trues[l], group=self.group, weight=self.weight)
                 self.redundant_lits[l]  = maximum_subset_sum_less_than_s_with_groups(literals= reason, s = s, weight = increment, group=self.group, I=self.I)            
