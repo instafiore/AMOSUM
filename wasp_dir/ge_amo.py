@@ -35,20 +35,26 @@ def propagate_phase(G: Group, propagator: PropagatorWasp, atomNames: dict):
             continue
 
         ml_g =  max_w(g)
+        if ml_g is None:
+            continue
+
         mw_g =  propagator.weight[ml_g]
 
-        for i in range(len(g.ord_l)-1,-1,-1):
-            l = g.ord_l[i]
-            if propagator.I[l] is None:
-                if propagator.mps(g, l, assumed=True) < propagator.lb:
-                    S.extend([not_(lit) for lit in g.ord_l[i::-1] if propagator.I[lit] is None])
-                    break
-                else:
-                    mps, sml_g, ml_g = propagator.mps(g, l, assumed=False, return_literals=True)
-                    if mps < propagator.lb:
-                        i = g.ord_i[sml_g] if not sml_g is None else 0
-                        propagator.reason_trues[l] = [lit for lit in g.ord_l[i::] if propagator.I[lit] == False]
-                        S.append(l)
+        mps, sml_g, ml_g = propagator.mps(g, ml_g, assumed=False, return_literals=True)
+        propagate_to_true = False
+        if mps < propagator.lb:
+            i = g.ord_i[sml_g] if not sml_g is None else 0
+            propagator.reason_trues[ml_g] = [lit for lit in g.ord_l[i::] if propagator.I[lit] == False]
+            S.append(ml_g)
+            propagate_to_true = True
+        
+        if not propagate_to_true:
+            start = g.max_und if not g.max_und is None else 0
+            for i in range(start-1,-1,-1):
+                l = g.ord_l[i]
+                if propagator.I[l] is None:
+                    if propagator.mps(g, l, assumed=True) < propagator.lb:
+                        S.extend([not_(lit) for lit in g.ord_l[i::-1] if propagator.I[lit] is None])
                         break
 
     propagator.reason = []      

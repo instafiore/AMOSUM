@@ -39,7 +39,7 @@ def propagate_phase(G: Group, propagator: PropagatorWasp):
                 else:
                     break
 
-    if len(S) != 0:
+    if len(S) != 0 and propagator.dl != 0:
         for g in propagator.groups:
             if propagator.true_group[g] is None:
                 ord_l = g.ord_l 

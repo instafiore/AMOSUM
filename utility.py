@@ -283,6 +283,12 @@ class Group:
         else:
             self.set_min(l)
 
+    def get_min_max(self, max):
+        if max:
+            return self.max_und
+        else:
+            return self.min_und
+
     def update_max(self, I: SymmetricFunction, all = False, update = True, assuming_und = None):
         '''
         return: new max, prev max

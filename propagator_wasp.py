@@ -41,7 +41,7 @@ class PropagatorWasp:
     true_group : TrueGroupFunction
 
     # a set of self.groups
-    groups : set[Group]
+    groups : List[Group]
 
     # literals derived at level 0
     facts : List[int]
@@ -207,8 +207,8 @@ class PropagatorWasp:
         self.redundant_lits = PerfectHash(self.N,[])
         self._mps = 0
         self.ID = param.get("id","0")
-        self.groups = set()
-        # self.groups = []
+        # self.groups = set()
+        self.groups = []
         self.assumptions = param.get("ass", False)
 
         #used to create the self.groups
@@ -242,7 +242,7 @@ class PropagatorWasp:
                 self.weight[lit] = int(terms[1])
 
                 # updating the self.group id
-                group_id = int(terms[2])
+                group_id = terms[2]
 
                 G = groups_raw.get(group_id,[])
                 G.append(lit)
@@ -296,9 +296,9 @@ class PropagatorWasp:
             self._mps = self._mps + self.weight[m_w(G, max = self.ge)]
         
             # adding the self.group to the set of self.groups
-            self.groups.add(G)
-            # assert G not in self.groups
-            # self.groups.append(G)
+            # self.groups.add(G)
+            assert G not in self.groups
+            self.groups.append(G)
 
 
             # defining the function self.group
@@ -444,13 +444,16 @@ class PropagatorWasp:
         return (w_p != w_n,  None)
     
     def mps(self, g: Group, l: int, assumed:bool, return_literals = False):
-        sml_g, ml_g =  g.update(self.I, update=False, max=self.ge)
-        mw_g =  self.weight[ml_g]
         if assumed:
+            m = g.get_min_max(max=self.ge)
+            ml_g = g.ord_l[m] if not m is None else None
+            mw_g = self.weight[ml_g]
             assert self.true_group[g] is None
             mps = self._mps - mw_g + self.weight[l]
             return mps if not return_literals else (mps, l, ml_g)
         else:
+            sml_g, ml_g =  g.update(self.I, update=False, max=self.ge)
+            mw_g =  self.weight[ml_g]
             if ml_g != l:
                 return self._mps if not return_literals else (self._mps , sml_g, ml_g)
             mps = self._mps - mw_g + self.weight[sml_g]
