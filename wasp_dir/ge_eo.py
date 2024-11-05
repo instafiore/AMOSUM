@@ -16,7 +16,7 @@ Invariants:
 functional_propagator.propagator.prob_type = "EO"
 functional_propagator.propagator.ge = True
 
-def propagate_phase(G: Group, propagator: PropagatorWasp):
+def propagate_phase(G: Group, propagator: PropagatorWasp, atomNames: dict):
 
     # set of derived literals
     S : List[int] = []
@@ -28,15 +28,12 @@ def propagate_phase(G: Group, propagator: PropagatorWasp):
         if g == G or not propagator.true_group[g] is None:
             continue
 
-        ml_g =  max_w(g)
-        mw_g =  propagator.weight[ml_g]
-
-        for l in g.ord_l:
+        start = g.max_und if not g.max_und is None else 0
+        for i in range(start-1,-1,-1):
+            l = g.ord_l[i]
             if propagator.I[l] is None:
-                if propagator.mps(g=g, l=l, assumed=True) < propagator.lb:
-                    # infer l as false
-                    S.append(not_(l))
-                else:
+                if propagator.mps(g, l, assumed=True) < propagator.lb:
+                    S.extend([not_(lit) for lit in g.ord_l[i::-1] if propagator.I[lit] is None])
                     break
 
     if len(S) != 0 and propagator.dl != 0:
