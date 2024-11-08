@@ -24,6 +24,7 @@ class PropagatorClingo(clingo.Propagator):
         self.propagation_phase = propagation_phase
         self.ge = ge
         self.prop_type = prop_type
+        self.solver = PropagatorWasp.CLINGO
 
     def init(self, init: clingo.PropagateInit) -> None:
 
@@ -39,7 +40,7 @@ class PropagatorClingo(clingo.Propagator):
         self.atomNames = { str_symbol : program_literal for str_symbol, program_literal, solver_literal in atoms_list_for_mapping}
 
         self.propagators = [propagator_wasp.PropagatorWasp(atomsNames=self.atomNames, sys_parameters=self.sys_parameters,
-                                      propagation_phase=self.propagation_phase, ge=self.ge, prob_type=self.prop_type) for i in range(nt)]
+                                      propagation_phase=self.propagation_phase, ge=self.ge, prob_type=self.prop_type, solver=PropagatorWasp.CLINGO) for i in range(nt)]
 
         # This is a map for mapping each solver literal (slit) to its program literal(s) (plit).
         # Can happend that some solver literal has more than one program literal

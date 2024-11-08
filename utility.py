@@ -245,11 +245,22 @@ class Group:
         self.ord_i : dict[int, int] = ord_i
 
         # It is the index of the maximum (weight) undefined literal in ord_l 
+        # if self.ge = True:
+        #   max_und represents the classical max undefined 
+        # else:
+        #   max_und represents the max undefined of the min k undefined
         self.max_und : int = self.N - 1
+        self.max_und_set : set[int]
 
-        # It is the index of the minimum (weight) undefined literal in ord_l 
+        # It is the index of the minimum (weight) undefined literal in ord_l
+        # if self.ge = True:
+        #   min_und represents the min undefined of the max k undefined
+        # else:
+        #   min_und represents the classical min undefined 
         self.min_und : int = 0 
-        
+        self.min_und_set : set[int]
+
+
         # all falses facts literals of the group
         self.falses_facts : List[int] = []
 
@@ -283,11 +294,14 @@ class Group:
         else:
             self.set_min(l)
 
-    def get_min_max(self, max):
+    def get_most_undefined(self, max):
         if max:
             return self.max_und
         else:
             return self.min_und
+        
+    # adding support for at most k constraint
+
 
     def update_max(self, I: SymmetricFunction, all = False, update = True, assuming_und = None):
         '''
@@ -316,7 +330,6 @@ class Group:
         return (None, prev_max)
     
     def update_min(self, I: SymmetricFunction, all = False, update=True, assuming_und = None):
-        # TODO: refactor the code as done with update max
         prev_min = self.ord_l[self.min_und] if not self.min_und is None and self.min_und < len(self.ord_l) else None
         
         if all:

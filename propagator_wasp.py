@@ -111,7 +111,11 @@ class PropagatorWasp:
     _mps : int 
     # ----------------------------
 
-    def __init__(self, atomsNames: dict[str: int], sys_parameters: List[str], propagation_phase: Callable[[Group, 'PropagatorWasp'], List[int]] = None, ge: bool = True, prob_type: str = "AMO") -> None:
+    # SUPPORTED SOLVERS
+    WASP = 1
+    CLINGO = 2
+
+    def __init__(self, atomsNames: dict[str: int], sys_parameters: List[str], propagation_phase: Callable[[Group, 'PropagatorWasp'],  List[int]] = None, ge: bool = True, prob_type: str = "AMO", solver = WASP) -> None:
         self.atomNames = atomsNames
         self.sys_parameters = sys_parameters
         self.facts : List[int] = []
@@ -124,6 +128,7 @@ class PropagatorWasp:
         self.ge = ge
         self.prob_type = prob_type
         self.propagate_phase = propagation_phase
+        self.solver = solver
 
     def getReasonsForCheckFailure(self):
         return None
@@ -219,6 +224,7 @@ class PropagatorWasp:
         negative_lit_regex = re.compile(r"^not\s+(?P<atom_name>[\w()]+)")
         bound_str = "lb" if self.ge else "ub" 
         bound = None
+         
 
         # selecting the interested literals
 
@@ -419,8 +425,10 @@ class PropagatorWasp:
                 # there is at least one more literal that can satify the lower bound
                 # so no propagation can take place
                 return (False, None)
-            else:
+            elif self.prob_type == "AMO":
                 return (True, None)
+            else:
+                return(False, None)
         else:
 
             return (False, None)
@@ -434,18 +442,16 @@ class PropagatorWasp:
             assert_mps = self._mps <= self.ub
 
 
-        if not assert_mps:
+        if self.solver != PropagatorWasp.WASP and self.prob_type != "EO" and not assert_mps:
             name = get_name(atomNames=self.atomNames, lit=l)
             error = f"{name} true led the mps {self._mps} to be incosistent with {self.bound}"
             raise Exception(error)
 
-
-        # return (w_p != w_n or self.prob_type == "AMO",  None)
         return (w_p != w_n,  None)
     
     def mps(self, g: Group, l: int, assumed:bool, return_literals = False):
         if assumed:
-            m = g.get_min_max(max=self.ge)
+            m = g.get_most_undefined(max=self.ge)
             ml_g = g.ord_l[m] if not m is None else None
             mw_g = self.weight[ml_g]
             assert self.true_group[g] is None
@@ -457,6 +463,27 @@ class PropagatorWasp:
             if ml_g != l:
                 return self._mps if not return_literals else (self._mps , sml_g, ml_g)
             mps = self._mps - mw_g + self.weight[sml_g]
+            return mps if not return_literals else (mps, sml_g, ml_g)
+        
+    def mps_k(self, g: Group, l: int, assumed:bool, return_literals = False):
+        if assumed:
+            if l in m_undef_set_g:
+                return self._mps if not return_literals else (self._mps , sml_g, m_undef_set_g)
+            # returning the least undefined
+            m = g.get_least_undefined(max=self.ge)
+            ml_g = g.ord_l[m] if not m is None else None
+            mw_g = self.weight[ml_g]
+            assert self.true_group[g] is None
+            mps = self._mps - mw_g + self.weight[l]
+            return mps if not return_literals else (mps, l, ml_g)
+        else:
+            # returning 
+            # 1) returning the possible new least undefined if the real one was false
+            # 2) returning the undefined set
+            sml_g, m_undef_set_g =  g.update(self.I, update=False, max=self.ge, return_m_undef_set_g = True)
+            if not l in m_undef_set_g:
+                return self._mps if not return_literals else (self._mps , sml_g, m_undef_set_g)
+            mps = self._mps - self.weight[l] + self.weight[sml_g]
             return mps if not return_literals else (mps, sml_g, ml_g)
 
     def compute_minimal_reason(self, reason: List[int], derived: List[int]):

@@ -137,7 +137,7 @@ class RunnerWasp:
         number_of_tests = self.param.get("nt",0)
     
         head = ""
-        if number_of_tests != -1:
+        if number_of_tests != 0:
             head = f"| head -n {number_of_tests}"
 
         instances = "instances"
@@ -317,7 +317,6 @@ class RunnerWasp:
         return regex_query
     
     def run(self):
-        
         if self.instances:
             for instance in self.instances:
                 self.run_classical_test(instance=instance)

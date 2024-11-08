@@ -12,7 +12,7 @@ atomNames = {}
 
 # input parameters
 sys_parameters = []
-propagator = PropagatorWasp(atomsNames=atomNames, sys_parameters=sys_parameters)
+propagator = PropagatorWasp(atomsNames=atomNames, sys_parameters=sys_parameters, solver=PropagatorWasp.WASP)
 
 def checkAnswerSet(*answer_set):
     global propagator
