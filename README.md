@@ -1,2 +1,2 @@
-# propagator_opt
+# AMOSUM
 A novel propagator for aggregates

@@ -36,6 +36,7 @@ def propagate_phase(G: Group, propagator: PropagatorWasp, atomNames: dict):
                     S.extend([not_(lit) for lit in g.ord_l[i::-1] if propagator.I[lit] is None])
                     break
 
+    propagator.reason = [] 
     if len(S) != 0 and propagator.dl != 0:
         for g in propagator.groups:
             if propagator.true_group[g] is None:

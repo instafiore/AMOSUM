@@ -442,10 +442,12 @@ class PropagatorWasp:
             assert_mps = self._mps <= self.ub
 
 
-        if self.solver != PropagatorWasp.WASP and self.prob_type != "EO" and not assert_mps:
+        if not assert_mps:
             name = get_name(atomNames=self.atomNames, lit=l)
             error = f"{name} true led the mps {self._mps} to be incosistent with {self.bound}"
-            raise Exception(error)
+            debug(error)
+            if self.solver != PropagatorWasp.WASP or self.prob_type != "EO":
+                raise Exception(error)
 
         return (w_p != w_n,  None)
     
