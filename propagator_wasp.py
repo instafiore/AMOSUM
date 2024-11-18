@@ -4,7 +4,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from ast import Tuple
 from typing import Callable, List
 from utility import *
-import wasp_dir.wasp as wasp
+import wasp.wasp as wasp
 import re
 import settings
 

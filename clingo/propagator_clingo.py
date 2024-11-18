@@ -3,15 +3,15 @@ import sys
 import os
 from typing import Sequence
 # adding the root path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import clingo
-from propagator_wasp import *
-import propagator_wasp
 from clingo.symbol import Number, Function
 from clingo.control import Control
 from clingo.symbol import Function
 from clingo.propagator import Propagator
 
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from propagator_wasp import *
+import propagator_wasp
 '''
     Invariants: 
 '''
