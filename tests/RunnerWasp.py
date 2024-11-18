@@ -49,8 +49,8 @@ class RunnerWasp:
     GRAPH_COLOURING_REGEX = r'^(graph_colouring|gc)$'
     SIMPLE_TEST_REGEX = r'^(simple_tests?|st)$'
     VALID_REGEX = [KNAPSACK_REGEX, GRAPH_COLOURING_REGEX, SIMPLE_TEST_REGEX]
-    REGEX_WEIGHT_ATOM_KN = r"object\((\d+),(\d+),(\d+)\)\."
-    REGEX_WEIGHT_ATOM_GC = r"colour_weight\((\w+),(\d+)\).\."
+    REGEX_WEIGHT_ATOM_KN = r"object\(\s*(\d+),\s*(\d+),\s*(\d+)\)\."
+    REGEX_WEIGHT_ATOM_GC = r"colour_weight\(\s*(\w+),\s*(\d+)\)\."
 
 
     # PROBLEMS
@@ -80,18 +80,26 @@ class RunnerWasp:
             raise Exception(f"No problem inserted. Feasible key:'problem'")
 
         self.problem = self.param["problem"]
+        self.exp = self.param.get("exp",False)
         
         if not any([not re.match(r, self.problem) is None for r in RunnerWasp.VALID_REGEX]) :
             raise Exception(f"Invalid problem inserted! Valid Regex: {str(RunnerWasp.VALID_REGEX)}")
         
+        self.enc_type = self.param.get("enc_type", None)
+        self.ge = not re.match("ge",self.enc_type) is None if not self.enc_type is None else True
+        
         if re.match(RunnerWasp.KNAPSACK_REGEX,self.problem):
             self.problem = RunnerWasp.KNAPSACK
             # object\((\d+),(\d+),(\d+)\)\.
-            self.weight_parm_id = 3
+            self.id_atom_amo = 1
+            self.weight_parm_id_key = 1
+            self.weight_parm_id_value = 3 if self.ge else 2
         elif re.match(RunnerWasp.GRAPH_COLOURING_REGEX,self.problem):
             # colour_weight\((\w+),(\d+)\).\.
             self.problem = RunnerWasp.GRAPH_COLOURING
-            self.weight_parm_id = 2
+            self.id_atom_amo = 2
+            self.weight_parm_id_key = 1
+            self.weight_parm_id_value = 2
         elif re.match(RunnerWasp.SIMPLE_TEST_REGEX,self.problem):
             self.problem = RunnerWasp.SIMPLE_TEST
         else:
@@ -115,7 +123,6 @@ class RunnerWasp:
 
         # utility.debug("assumptions:", self.ass)
        
-        self.enc_type = self.param.get("enc_type", None)
         self.prop_type = self.param.get("prop_type", None)
         self.id = self.param.get("id",0)
         
@@ -126,8 +133,8 @@ class RunnerWasp:
         self.ub = self.param["ub"] if "ub" in self.param else None
         self.seed = self.param.get("seed","")
 
-        lb_gc_constraints = self.problem == RunnerWasp.GRAPH_COLOURING and (not self.lb or not self.weights)and re.match("ge",self.enc_type)
-        up_gc_constraint = self.problem == RunnerWasp.GRAPH_COLOURING and (not self.ub or not self.weights) and re.match("le",self.enc_type)
+        lb_gc_constraints = self.problem == RunnerWasp.GRAPH_COLOURING and (not self.lb or not self.weights) and re.match("ge",self.enc_type) if not self.exp else False
+        up_gc_constraint = self.problem == RunnerWasp.GRAPH_COLOURING and (not self.ub or not self.weights) and re.match("le",self.enc_type) if not self.exp else False
         
         if lb_gc_constraints or up_gc_constraint:
             raise Exception(f"Constraint of the graph colouring didn't meet, possible problems:\n\tYou did not define a proper bound for the graph colouring problem! ge -> lb, le -> up.\n\tYou did not require to put the 'weights' into the code")
@@ -181,7 +188,6 @@ class RunnerWasp:
         
         self.compare =  self.param.get("compare", False)
 
-        self.exp = self.param.get("exp",False)
 
         self.enc = self.param.get("enc", False)
 
@@ -224,10 +230,7 @@ class RunnerWasp:
             regex_weights = RunnerWasp.REGEX_WEIGHT_ATOM_KN
             atom_re = r"in_knapsack\((\w+),(\w+?)\)"
         elif self.problem == RunnerWasp.GRAPH_COLOURING:
-            if self.exp:
-                # TODO: update this for expertiments with clingo 
-                assert False
-            weights_file = self.str_weights
+            weights_file = self.str_weights if not self.exp else instance
             regex_weights = RunnerWasp.REGEX_WEIGHT_ATOM_GC
             atom_re= r"col\((\w+),(\w+?)\)"
         
@@ -279,7 +282,7 @@ class RunnerWasp:
         mps = 0
         for atom in ans:
             match = re.match(atom_re, atom)
-            key = match.group(1)
+            key = match.group(self.id_atom_amo)
             mult = int(match.group(2)) if self.problem == RunnerWasp.KNAPSACK else 1
             # print(f"atom {atom} key: {key} mult: {mult} weight: {maps_weights[key]}")
             mps += mult * maps_weights[key]    
@@ -296,8 +299,8 @@ class RunnerWasp:
             for line in file:
                 match = pattern.match(line.strip())
                 if match:
-                    key = match.group(1)
-                    value = int(match.group(self.weight_parm_id))
+                    key = match.group(self.weight_parm_id_key)
+                    value = int(match.group(self.weight_parm_id_value))
                     maps[key] = value
 
         return maps
@@ -329,6 +332,8 @@ class RunnerWasp:
             encoding = self.enc if self.enc else encoding
             answersets, time = self.run_instance(self.specific_instance, encoding=encoding, group_type = not enc_aggr)
             maps_weights, atom_re = self.create_weights_atom_regexes(instance=self.specific_instance)
+        
+            # print(f"maps_weights: {maps_weights}")
             self.print_ans(answer_sets=answersets, time=time, atom_re=atom_re, maps_weight=maps_weights)
         else:
             assert False
