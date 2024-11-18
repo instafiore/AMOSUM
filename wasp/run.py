@@ -3,7 +3,7 @@ import sys
 import os
 import re
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from tests.RunnerWasp  import RunnerWasp
+from wasp.runner_wasp  import RunnerWasp
 from utility import *
 '''
 This is the entry file to run the tests on the AMO SUM propagator(s) WASP

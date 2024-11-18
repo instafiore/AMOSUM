@@ -3,16 +3,16 @@ import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from ast import Tuple
 from typing import Callable, List
-import wasp_dir.wasp as wasp
+import wasp.wasp as wasp
 import re
 import settings
-from propagator_wasp import *
+from amosum import *
 
 atomNames = {}
 
 # input parameters
 sys_parameters = []
-propagator = PropagatorWasp(atomsNames=atomNames, sys_parameters=sys_parameters, solver=PropagatorWasp.WASP)
+propagator = Propagator(atomsNames=atomNames, sys_parameters=sys_parameters, solver=Propagator.WASP)
 
 def checkAnswerSet(*answer_set):
     global propagator

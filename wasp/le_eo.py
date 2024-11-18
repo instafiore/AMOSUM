@@ -2,12 +2,12 @@
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-import wasp_dir
+import wasp
 from typing import *
 from utility import *
 import re
-from functional_propagator import *
-import functional_propagator
+from wasp.propagator_wasp import *
+import wasp.propagator_wasp as propagator_wasp
 
 '''
 Propagator for ' <= UB ' constraint with Exactly One constraint 
@@ -16,10 +16,10 @@ Invariants:
     In the aggregate set there are not two literals such that li = ~lj
 '''
 
-functional_propagator.propagator.prob_type = "EO"
-functional_propagator.propagator.ge = False
+propagator_wasp.propagator.prob_type = "EO"
+propagator_wasp.propagator.ge = False
 
-def propagate_phase(G: Group, propagator: PropagatorWasp):
+def propagate_phase(G: Group, propagator: Propagator):
     global N,ub, I, weight, aggregate, groups, mps, group, reason, true_group
 
     # set of derived literals

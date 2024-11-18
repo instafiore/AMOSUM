@@ -2,21 +2,21 @@
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-import wasp_dir
+import wasp
 from typing import *
 from utility import *
-from functional_propagator import *
-import functional_propagator
+from wasp.propagator_wasp import *
+import wasp.propagator_wasp as propagator_wasp
 
 '''
 Propagator for ' >= LB ' constraint with Exactly One constraint 
 Invariants:
     In the aggregate set there are not two literals such that li = ~lj
 '''
-functional_propagator.propagator.prob_type = "EO"
-functional_propagator.propagator.ge = True
+propagator_wasp.propagator.prob_type = "EO"
+propagator_wasp.propagator.ge = True
 
-def propagate_phase(G: Group, propagator: PropagatorWasp, atomNames: dict):
+def propagate_phase(G: Group, propagator: Propagator, atomNames: dict):
 
     # set of derived literals
     S : Set[int] = set()
