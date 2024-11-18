@@ -3,7 +3,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import wasp_dir
-from typing import List
+from typing import *
 from utility import *
 import re
 from functional_propagator import *
@@ -23,7 +23,7 @@ def propagate_phase(G: Group, propagator: PropagatorWasp):
     global N,ub, I, weight, aggregate, groups, mps, group, reason, true_group
 
     # set of derived literals
-    S : List[int] = []
+    S : Set[int] = set()
     
     # reason
     R : List[int] = []
@@ -40,9 +40,9 @@ def propagate_phase(G: Group, propagator: PropagatorWasp):
         for i in range(len(g.ord_l)-1,-1,-1):
             l = g.ord_l[i]
             if propagator.I[l] is None:
-                if propagator.mps(g=g, l=l, assumed=True) > propagator.ub:
+                if propagator.mps(l=l, assumed=True) > propagator.ub:
                     # infer l as false
-                    S.append(not_(l))
+                    S.add(not_(l))
                 else:
                     break
 

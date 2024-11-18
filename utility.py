@@ -377,37 +377,39 @@ def simplifyLiterals(lits, aggregate: 'AggregateFunction', group: 'GroupFunction
     G : Group = None
     
     for l in lits:
+        false_lit = False
         if aggregate[l]:
-            G = group[l]
-            G.add_false_lit(not_(l))
+            pass
         elif aggregate[not_(l)]:
-            G = group[not_(l)]
-            l = not_(l)
-            G.add_false_lit(l)
+            false_lit = True
         else:
             continue
 
-    
-        n = len(G.ord_l)
-        li = G.ord_i[l]
-        G.ord_i[l] = -1
-        # updating position of next literals (shifting)
-        for lit_i in range(li+1,n):
-            lit = G.ord_l[lit_i]
-            G.ord_i[lit] -= 1
+        groups_l = group[l] if not false_lit else group[not_(l)]
 
-        # removing literal
-        G.ord_l.remove(l)
-        G.N = len(G.ord_l)
+        for G in groups_l:
+            l = not_(l) if false_lit else l
+            G.add_false_lit(l)
+            n = len(G.ord_l)
+            li = G.ord_i[l]
+            G.ord_i[l] = -1
+            # updating position of next literals (shifting)
+            for lit_i in range(li+1,n):
+                lit = G.ord_l[lit_i]
+                G.ord_i[lit] -= 1
 
-        # updating max_und/min_und 
-        G.update(I, max=max, all=True)
+            # removing literal
+            G.ord_l.remove(l)
+            G.N = len(G.ord_l)
 
-        # removing from aggregate
-        aggregate[l] = False
-        aggregate[not_(l)] = False
+            # updating max_und/min_und 
+            G.update(I, max=max, all=True)
 
-        assert G.count_undef >= 0
+            # removing from aggregate
+            aggregate[l] = False
+            aggregate[not_(l)] = False
+
+            assert G.count_undef >= 0
 
   
             
@@ -472,7 +474,7 @@ class AggregateFunction(PerfectHash):
 
 class GroupFunction(PerfectHash):
     
-    def __getitem__(self, lit: int) -> Group:
+    def __getitem__(self, lit: int) -> List[Group]:
         return super().__getitem__(lit)
 
 class TrueGroupFunction(PerfectHash):
@@ -486,7 +488,9 @@ class TrueGroupFunction(PerfectHash):
         return super().__getitem__(autoincrement)
 
 # utility function for debugging
-def get_name(atomNames, lit):
+def get_name(atomNames, lit, force_print = False):
+    if not force_print and not DEBUG:
+        return ""
     prefix = ""
     if lit is None:
         return "None"
@@ -565,46 +569,48 @@ def is_true_in_reason(lit, group: GroupFunction):
 
 def increment_f(l: int, current_subset_maximal, weight: WeightFunction, group: GroupFunction, head_reason, I: SymmetricFunction, max_b):
 
-    g = group[l] 
+    groups_l = group[l] 
     tr = False # true in reason
-    if g is None:
+    if len(groups_l) == 0:
         l = not_(l)
-        g = group[l]
+        groups_l = group[l]
         tr = True # it means that it has been flipped, so it is true in reason (is the true_group[g])
 
-    if len(g.ord_l) <= 1:
-        return 0
-    
-    w = weight[l]
-    if tr:  
-        # TODO: FIX -> fixed putting w if len(g.ord_l) = 0  
-        w_mw_g = 0
-        w_mw_g = weight[g.ord_l[-1]] if len(g.ord_l) > 0 else w
-        return w_mw_g - w
-    else:
-        i = len(g.ord_l) - 1
-        # maximum weight
-        mw_g: int 
-        head_group = group[head_reason]
-        if g == head_group:
-            sml_g, ml_g = g.update(I, max_b, update=False)
-            mw_g = weight[sml_g]
+    inc = 0 
+    for g in groups_l:
+        if len(g.ord_l) <= 1:
+            return 0
+        
+        w = weight[l]
+        if tr:  
+            # TODO: FIX -> fixed putting w if len(g.ord_l) = 0  
+            w_mw_g = 0
+            w_mw_g = weight[g.ord_l[-1]] if len(g.ord_l) > 0 else w
+            return w_mw_g - w
         else:
-            mw_g = weight[max_w(g)]
-        current_l = g.ord_l[i]
-        increment = w - mw_g
-        while mw_g < weight[current_l]:
-            if current_l in current_subset_maximal:
-                increment = max(0,w - weight[current_l])
-                # if it 0 means that in the current minimal subset is already present some literal of the same group
-                #  but higher weight
-                break
-            i -= 1
-            if i <= 0:
-                break
+            i = len(g.ord_l) - 1
+            # maximum weight
+            mw_g: int 
+            head_group = group[head_reason]
+            if g in head_group:
+                sml_g, ml_g = g.update(I, max_b, update=False)
+                mw_g = weight[sml_g]
+            else:
+                mw_g = weight[max_w(g)]
             current_l = g.ord_l[i]
-        return increment
-
+            increment = w - mw_g
+            while mw_g < weight[current_l]:
+                if current_l in current_subset_maximal:
+                    increment = max(0,w - weight[current_l])
+                    # if it 0 means that in the current minimal subset is already present some literal of the same group
+                    #  but higher weight
+                    break
+                i -= 1
+                if i <= 0:
+                    break
+                current_l = g.ord_l[i]
+            inc += increment
+    return inc
 
 def maximal_subset_sum_less_than_s_with_groups(literals: List[int], s: int, weight: WeightFunction,  group: GroupFunction, head_reason, I: SymmetricFunction, max):
 

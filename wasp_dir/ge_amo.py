@@ -1,10 +1,11 @@
 #!/home/s.fiorentino/miniconda3/bin/python3
+
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import wasp
-from typing import List
+from typing import List, Set
 from functional_propagator import *
 import functional_propagator
 from utility import *
@@ -25,7 +26,7 @@ def propagate_phase(G: Group, propagator: PropagatorWasp, atomNames: dict):
     # try:
 
     # set of derived literals
-    S : List[int] = []
+    S : Set[int] = set()
     
     # reason
     R : List[int] = []
@@ -40,12 +41,12 @@ def propagate_phase(G: Group, propagator: PropagatorWasp, atomNames: dict):
 
         mw_g =  propagator.weight[ml_g]
 
-        mps, sml_g, ml_g = propagator.mps(g, ml_g, assumed=False, return_literals=True)
+        mps, sml_g, ml_g = propagator.mps(ml_g, assumed=False, return_literals=True)
         propagate_to_true = False
         if mps < propagator.lb:
             i = g.ord_i[sml_g] if not sml_g is None else 0
             propagator.reason_trues[ml_g] = [lit for lit in g.ord_l[i::] if propagator.I[lit] == False]
-            S.append(ml_g)
+            S.add(ml_g)
             propagate_to_true = True
         
         if not propagate_to_true:
@@ -53,8 +54,8 @@ def propagate_phase(G: Group, propagator: PropagatorWasp, atomNames: dict):
             for i in range(start-1,-1,-1):
                 l = g.ord_l[i]
                 if propagator.I[l] is None:
-                    if propagator.mps(g, l, assumed=True) < propagator.lb:
-                        S.extend([not_(lit) for lit in g.ord_l[i::-1] if propagator.I[lit] is None])
+                    if propagator.mps(l, assumed=True) < propagator.lb:
+                        S.union(set([not_(lit) for lit in g.ord_l[i::-1] if propagator.I[lit] is None]))
                         break
 
     propagator.reason = []      
