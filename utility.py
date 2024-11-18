@@ -28,6 +28,9 @@ def set_debug(debug):
 def print_err(*message: str, end ="\n"):
     print(message, end=end, file=sys.stderr)
 
+def is_primitive(obj):
+    return isinstance(obj, (int, float, str, bool, bytes))
+
 # clingo.PropagateControl
 def print_propagate(propagator, changes: List[int], control = None, dl = 0, force_print = False, wasp_b = False):
     if not force_print and not DEBUG:
@@ -368,6 +371,9 @@ class Group:
     def __str__(self) -> str:
         return str(self.id)
 
+    def __repr__(self):
+        return str(self)
+
 # removes useless literals
 def simplifyLiterals(lits, aggregate: 'AggregateFunction', group: 'GroupFunction', max, I: SymmetricFunction ):
     '''
@@ -391,6 +397,7 @@ def simplifyLiterals(lits, aggregate: 'AggregateFunction', group: 'GroupFunction
             l = not_(l) if false_lit else l
             G.add_false_lit(l)
             n = len(G.ord_l)
+            # debug(f"groups_l: {groups_l} ord_i: {G.ord_i}", force_print=True)
             li = G.ord_i[l]
             G.ord_i[l] = -1
             # updating position of next literals (shifting)
@@ -466,7 +473,7 @@ class PerfectHash:
         # it is a (N * 2) vector where:
         #   values[:N-1]    are the values for the positive literals
         #   values[N:]      are the values for the negative literals
-        self.values = [default] * (N * 2)
+        self.values = [default] * (N * 2) if is_primitive(default) or default is None else [default() for _ in range(N * 2)]
         self.N = N
 
 class AggregateFunction(PerfectHash):

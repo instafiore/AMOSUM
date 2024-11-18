@@ -4,7 +4,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from ast import Tuple
 from typing import Callable, List
 from utility import *
-import wasp.wasp as wasp
+import wasp._wasp as _wasp
 import re
 import settings
 
@@ -169,7 +169,7 @@ class Propagator:
         write = True if "write_stats_reason" in self.param else False
 
         if self.minimization == Minimize.NO_MINIMIZATION.value or not write:
-            return wasp.coherent()
+            return _wasp.coherent()
 
         file_to_write : str
 
@@ -190,7 +190,7 @@ class Propagator:
         self.sum_p = 0
         self.count_p = 0
 
-        return wasp.coherent()
+        return _wasp.coherent()
 
 
     def getLiterals(self, *lits):
@@ -207,10 +207,11 @@ class Propagator:
         self.N = lits[0] + 1
         self.I = SymmetricFunction(self.N)
         self.weight = WeightFunction(self.N)
-        self.group = GroupFunction(self.N, default = [])
+        self.group = GroupFunction(self.N, default = lambda : [])
         self.aggregate = AggregateFunction(self.N, False)
-        self.reason_trues = PerfectHash(self.N,[])
-        self.redundant_lits = PerfectHash(self.N,[])
+        self.reason_trues = PerfectHash(self.N, default = lambda : [])
+        # it was: self.redundant_lits = PerfectHash(self.N, default = []) maybe it was a problem
+        self.redundant_lits = PerfectHash(self.N, default = lambda : [])
         self._mps = 0
         self.ID = param.get("id","0")
         # self.groups = set()
@@ -231,7 +232,7 @@ class Propagator:
 
         for a in self.atomNames:
             if  a.startswith('group('):
-                terms = wasp.getTerms('group',a)
+                terms = _wasp.getTerms('group',a)
                 # Syntax: group( lit_name, weight, group_id, aggregate_id)
                 if len(terms) != 4 or terms[3] != self.ID:
                     continue
@@ -262,7 +263,7 @@ class Propagator:
                 bind.append(-lit)
             
             elif a.startswith(f"{bound_str}("):
-                terms = wasp.getTerms(f'{bound_str}',a)
+                terms = _wasp.getTerms(f'{bound_str}',a)
                 if (len(terms) != 2 or terms[1] != self.ID) and len(terms) != 1:
                     continue
                 if not bound is None:
@@ -311,6 +312,12 @@ class Propagator:
             # defining the function self.group
             for lit in lits_group:
                 self.group[lit].append(G)
+                # debug(f"groups of {lit}: {self.group[lit]}", force_print=True)
+
+        # for g in self.groups:
+        #     debug(f"Group: {g} {g.ord_l}", force_print=True) 
+        #     for l in g.ord_l:
+        #         debug(f"groups of {l}: {self.group[l]}", force_print=True)
         
         nGroup = Group.autoincrement 
         self.true_group = TrueGroupFunction(nGroup)

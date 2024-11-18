@@ -17,6 +17,7 @@ while [ $value -ge 0 ]; do
 done
 
 # Iterate over the list and call run.py with each integer as a parameter
+rm out err
 for number in "${numbers[@]}"; do
-    ../../../wasp_dir/run.py -cc -problem kn -enc_type ge_amo -prop_type ge_amo -nt 1 -l -id 1  -lb "$number"
+    nohup ../../../wasp/run.py -cc -problem kn -enc_type ge_amo -prop_type ge_amo -nt 1 -l -id 1  -lb "$number" >> out 2>> err
 done
