@@ -26,7 +26,7 @@ def propagate_phase(G: Group, propagator: Propagator, atomNames: dict):
     # try:
 
     # set of derived literals
-    S : Set[int] = set()
+    S : List[int] = []
     
     # reason
     R : List[int] = []
@@ -46,7 +46,7 @@ def propagate_phase(G: Group, propagator: Propagator, atomNames: dict):
         if mps < propagator.lb:
             i = g.ord_i[sml_g] if not sml_g is None else 0
             propagator.reason_trues[ml_g] = [lit for lit in g.ord_l[i::] if propagator.I[lit] == False]
-            S.add(ml_g)
+            S.append(ml_g)
             propagate_to_true = True
         
         if not propagate_to_true:
@@ -55,7 +55,7 @@ def propagate_phase(G: Group, propagator: Propagator, atomNames: dict):
                 l = g.ord_l[i]
                 if propagator.I[l] is None:
                     if propagator.mps(l, assumed=True) < propagator.lb:
-                        S.union(set([not_(lit) for lit in g.ord_l[i::-1] if propagator.I[lit] is None]))
+                        S.extend([not_(lit) for lit in g.ord_l[i::-1] if propagator.I[lit] is None])
                         break
 
     propagator.reason = []      

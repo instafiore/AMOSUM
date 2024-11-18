@@ -111,7 +111,7 @@ class PropagatorClingo(clingo.Propagator):
             plit_list = self.map_slit_plit_watched[slit]
             for plit in plit_list:
                 # propagated plits
-                S_plit = set()
+                S_plit = []
                 # propagating program literal
                 try:
                     S_plit = prop.onLiteralTrue(plit, dl)

@@ -23,7 +23,7 @@ def propagate_phase(G: Group, propagator: Propagator):
     global N,ub, I, weight, aggregate, groups, mps, group, reason, true_group
 
     # set of derived literals
-    S : Set[int] = set()
+    S : List[int] = []
     
     # reason
     R : List[int] = []
@@ -42,7 +42,7 @@ def propagate_phase(G: Group, propagator: Propagator):
             if propagator.I[l] is None:
                 if propagator.mps(l=l, assumed=True) > propagator.ub:
                     # infer l as false
-                    S.add(not_(l))
+                    S.append(not_(l))
                 else:
                     break
 

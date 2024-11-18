@@ -379,7 +379,7 @@ class Propagator:
             simplifyLiterals([lit], self.aggregate, self.group, max = self.ge, I = self.I)
         
 
-        propagated_lits = set()
+        propagated_lits = []
         name = get_name(lit=lit, atomNames=self.atomNames)
         if next_phase:
             try:

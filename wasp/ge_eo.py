@@ -19,7 +19,7 @@ propagator_wasp.propagator.ge = True
 def propagate_phase(G: Group, propagator: Propagator, atomNames: dict):
 
     # set of derived literals
-    S : Set[int] = set()
+    S : List[int] = []
     
     # reason
     R : List[int] = []
@@ -33,7 +33,7 @@ def propagate_phase(G: Group, propagator: Propagator, atomNames: dict):
             l = g.ord_l[i]
             if propagator.I[l] is None:
                 if propagator.mps(l, assumed=True) < propagator.lb:
-                    S.union(set([not_(lit) for lit in g.ord_l[i::-1] if propagator.I[lit] is None]))
+                    S.extend([not_(lit) for lit in g.ord_l[i::-1] if propagator.I[lit] is None])
                     break
 
     propagator.reason = [] 
