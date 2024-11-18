@@ -26,7 +26,7 @@ ENCODING_WITH_AGGR_LE_AMO = "encoding_with_aggregates_le_amo"
 
 
 ROOT = f"{os.path.dirname(os.path.abspath(__file__))}"
-PROPAGATOR_DIR_LOCATION_WASP = f"{os.path.dirname(os.path.abspath(__file__))}/wasp_dir"
+PROPAGATOR_DIR_LOCATION_WASP = f"{os.path.dirname(os.path.abspath(__file__))}/wasp"
 TESTS_LOCATION = f"{ROOT}/tests"
 BENCHMARKS_LOCATION = f"{TESTS_LOCATION}/benchmarks"
 TEMP_TESTS_LOCATION = f"{TESTS_LOCATION}/temp"
