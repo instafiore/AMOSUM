@@ -35,7 +35,7 @@ def propagate_phase(G: Group, propagator: Propagator):
             continue
 
         ml_g =  propagator.min_w(g)
-        mw_g =  propagator.weight[ml_g]
+        mw_g =  propagator.weight[(ml_g, g)]
 
         for i in range(len(g.ord_l)-1,-1,-1):
             l = g.ord_l[i]
@@ -50,10 +50,10 @@ def propagate_phase(G: Group, propagator: Propagator):
     if len(S) != 0 and propagator.dl != 0:
         for g in propagator.groups:
             if propagator.true_group[g] is None:
-                mw_g = propagator.weight[min_w(g)]
+                mw_g = propagator.weight[(min_w(g), g)]
                 ord_l = g.ord_l
                 for l in ord_l:
-                    if propagator.weight[l] >= mw_g:
+                    if propagator.weight[(l, g)] >= mw_g:
                         break
                     R.append(l)
             else:

@@ -42,7 +42,7 @@ def propagate_phase(G: Group, propagator: Propagator, atomNames: dict):
         for i in range(start-1,-1,-1):
             l = g.ord_l[i]
             if propagator.I[l] is None:
-                mps, sml_g, _ = propagator.mps(g, l, assumed=False, return_literals=True)
+                mps, sml_g, _ = propagator.mps(g, l, assumed=False, return_involved_lits=True)
                 if mps < propagator.lb:
                     i = g.ord_i[sml_g] if not sml_g is None else 0
                     propagator.reason_trues[l] = [lit for lit in g.ord_l[i::] if propagator.I[lit] == False]

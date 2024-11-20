@@ -1,8 +1,9 @@
+import json
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from ast import Tuple
-from typing import Callable, List
+from typing import Callable, List, Set
 from utility import *
 import wasp._wasp as _wasp
 import re
@@ -29,7 +30,11 @@ class Propagator:
 
     # a function from literals -> weights
     # assuming that the self.aggregate does not contain the to literal l and !l
-    weight : WeightFunction
+    # weight : WeightFunction
+
+    # a function from literals X groups -> weights
+    # assuming that the self.aggregate does not contain the to literal l and !l
+    weight : WeightFunctionDict
 
     # a function from literals -> {True, False}
     aggregate : AggregateFunction
@@ -202,11 +207,15 @@ class Propagator:
         debug(f"param {param}", force_print=True)
         
         # initializing 
+        self.L : Set[int] = set()
+        self.total_weight = dict()
+        self.total_weight_names = dict()
         self.minimization = param.get("min_r",Minimize.NO_MINIMIZATION.value)
         self.strategy = param.get("strategy",self.strategy)
         self.N = lits[0] + 1
         self.I = SymmetricFunction(self.N)
-        self.weight = WeightFunction(self.N)
+        self.weight = WeightFunctionDict()
+        # self.weight = WeightFunction(self.N)
         self.group = GroupFunction(self.N, default = lambda : [])
         self.aggregate = AggregateFunction(self.N, False)
         self.reason_trues = PerfectHash(self.N, default = lambda : [])
@@ -226,10 +235,9 @@ class Propagator:
         negative_lit_regex = re.compile(r"^not\s+(?P<atom_name>[\w()]+)")
         bound_str = "lb" if self.ge else "ub" 
         bound = None
-         
+
 
         # selecting the interested literals
-
         for a in self.atomNames:
             if  a.startswith('group('):
                 terms = _wasp.getTerms('group',a)
@@ -247,7 +255,13 @@ class Propagator:
                     lit =  self.atomNames[atom_name]
             
                 # updating the self.weight
-                self.weight[lit] = int(terms[1])
+                # self.weight[lit] = int(terms[1])
+                self.L.add(lit)
+                self.total_weight.setdefault(lit, 0)
+                self.total_weight[lit] += int(terms[1])
+                name = get_name(lit=lit, atomNames=self.atomNames)
+                self.total_weight_names.setdefault(name, 0)
+                self.total_weight_names[name] += int(terms[1])
 
                 # updating the self.group id
                 group_id = terms[2]
@@ -277,32 +291,17 @@ class Propagator:
         self.bound = bound
         assert not self.bound is None
 
+        debug(f"total_weight_names: {json.dumps(self.total_weight_names)}", force_print=True)
+
 
         # creating self.groups
         for group_id in groups_raw:
             
             lits_group = groups_raw[group_id]
 
-            # ordering by self.weight
-            lits_ord = [(lit, self.weight[lit]) for lit in lits_group]
-            lits_ord = sorted(lits_ord, key = lambda x: x[1])
-    
-            ord_l = [None] * len(lits_ord)
-
-            # it cannot become a PerfectHash since the space required would be O(self.N^2) (self.N number of literals)
-            ord_i : dict[int, int] = {}
-
-            for i in range(len(lits_ord)):
-                l = lits_ord[i][0]
-                ord_l[i] = l
-                ord_i[l] = i
-            
             # creating the self.group
-            G = Group(ord_l,ord_i,group_id)
-            
-            # updatind the max possible sum
-            self._mps = self._mps + self.weight[m_w(G, max = self.ge)]
-        
+            G = Group(group_id, atom_names=self.atomNames, lits=lits_group)
+              
             # adding the self.group to the set of self.groups
             # self.groups.add(G)
             assert G not in self.groups
@@ -314,10 +313,28 @@ class Propagator:
                 self.group[lit].append(G)
                 # debug(f"groups of {lit}: {self.group[lit]}", force_print=True)
 
-        # for g in self.groups:
-        #     debug(f"Group: {g} {g.ord_l}", force_print=True) 
-        #     for l in g.ord_l:
-        #         debug(f"groups of {l}: {self.group[l]}", force_print=True)
+        for l in self.L:
+            total_weight = self.total_weight[l]
+            groups_l = self.group[l]
+            ng = len(groups_l)
+            assert ng > 0
+            w = total_weight // ng
+            wl = total_weight % ng
+            for g in groups_l[:ng-1]:
+                self.weight[(l,g)] = w
+            key = (l,groups_l[-1])
+            value =  wl if wl != 0 else w
+            self.weight[key] =value
+
+        
+        for g in self.groups:
+            # updatind the max possible sum
+            g.order_lits(self.weight)
+            self._mps = self._mps + self.weight[(m_w(g, max = self.ge), g)]
+            debug(f"Group: {g}", force_print=True) 
+            for l in g.ord_l:
+                debug(f"Groups of {get_name(self.atomNames, lit=l, force_print=True)}: {[g.id for g in self.group[l]]}", force_print=True)
+
         
         nGroup = Group.autoincrement 
         self.true_group = TrueGroupFunction(nGroup)
@@ -342,7 +359,7 @@ class Propagator:
     def simplifyAtLevelZero(self, delete_lits = False):
 
         # INCOHERENT
-        error_string = "self.mps < self.lb !!!" if self.ge else "self.mps > self.ub !!!"
+        error_string = f"self.mps:{self._mps} < self.lb: {self.lb} !!!" if self.ge else "self.mps > self.ub !!!"
         if (self.ge and self._mps < self.lb) or (not self.ge and self._mps > self.ub) :
             debug(error_string)
             return [1]
@@ -377,7 +394,7 @@ class Propagator:
         assert not self.I[lit] == False
 
         try:
-            (next_phase, G) = self.update_phase(lit) 
+            (next_phase, G) = self.update_phase(lit, dl=dl) 
         except Exception as e:
             raise e
         
@@ -390,23 +407,23 @@ class Propagator:
         name = get_name(lit=lit, atomNames=self.atomNames)
         if next_phase:
             try:
-                debug(f"[{next_phase}] Propagation phase of {name} started [{self._mps}]:")
+                debug(f"[mps:{self._mps}] Propagation phase of {name} started:")
                 propagated_lits = self.propagate_phase(G, self, self.atomNames)
             except Exception as e:
                 print(e, file=sys.stderr)
                 raise e
         else:
-            debug(f"[{next_phase}] Propagation phase of {name} not started [{self._mps}]:")
+            debug(f"[mps:{self._mps}] Propagation phase of {name} not started:")
 
 
         return propagated_lits
 
 
-    def update_phase(self, l: int) -> tuple[bool, Group]:
+    def update_phase(self, l: int, dl: int = 0) -> tuple[bool, Group]:
     
         self.I[l] = True
         tg = False
-        G : Group
+        g : Group
 
         if self.aggregate[l]:
             tg = True 
@@ -422,70 +439,63 @@ class Propagator:
 
         # Propagation is required since the second most undefined has became defined
         amo_condition : bool = False
-        for G in groups_l:
+        for g in groups_l:
             w_p : int = 0
             w_n : int = 0
-            G.decrease_und()
+            g.decrease_und()
             if tg:
-                self.true_group[G] = l
-                w_p = self.weight[m_w(G, max = self.ge)]
-                w_n = self.weight[l]
+                if dl == 0:
+                    g.true_from_facts = True
+                self.true_group[g] = l
+                w_p = self.weight[(m_w(g, max = self.ge), g)]
+                w_n = self.weight[(l, g)]
             else:
-                new, prev = G.update(self.I, max=self.ge, update=False, assuming_und = l)
+                new, prev = g.update(self.I, max=self.ge, update=False, assuming_und = l)
                 if not_(l) == prev:
-                    G.set_max_min(l=new, max=self.ge)
-                    if self.true_group[G] is None :
-                        w_n = self.weight[new]
-                        w_p = self.weight[prev]
+                    g.set_max_min(l=new, max=self.ge)
+                    if self.true_group[g] is None :
+                        w_n = self.weight[(new, g)]
+                        w_p = self.weight[(prev, g)]
+                    amo_condition = True
                 elif not_(l) != new:
                     # there is at least one more literal that can satify the lower bound
                     # so no propagation can take place
                     pass
-                elif self.prob_type == "AMO":
+                elif self.prob_type == "AMO"  and self.true_group[g] is None:
                     amo_condition = True
                 else:
                     pass
             
             if w_p == w_n:
                 continue
-
+            
             self._mps = self._mps - w_p + w_n
-            assert_mps : bool
-            if self.ge:
-                assert_mps = self._mps >= self.lb 
-            else:
-                assert_mps = self._mps <= self.ub
-
-
-            if not assert_mps:
-                name = get_name(atomNames=self.atomNames, lit=l)
-                error = f"{name} true led the mps {self._mps} to be incosistent with {self.bound}"
-                debug(error)
-                if self.solver != Propagator.WASP or self.prob_type != "EO":
-                    raise Exception(error)
-
+            
         return (mps_prev != self._mps or amo_condition,  None)
     
-    def mps(self, l: int, assumed:bool, return_literals = False):
+    def mps(self, l: int, assumed:bool, return_involved_lits = False):
         groups_l = self.group[l]
         if len(groups_l) == 0:
             groups_l = self.group[not_(l)]
         delta_mps = 0
+        involved_lits = []
         for g in groups_l:
             if assumed:
+                if not self.true_group[g] is None:
+                    return self._mps if not return_involved_lits else (mps, involved_lits)
                 m = g.get_most_undefined(max=self.ge)
                 ml_g = g.ord_l[m] if not m is None else None
-                mw_g = self.weight[ml_g]
-                assert self.true_group[g] is None
-                delta_mps =  - mw_g + self.weight[l]
+                mw_g = self.weight[(ml_g, g)]
+                delta_mps +=  - mw_g + self.weight[(l, g)]
             else:
                 sml_g, ml_g =  g.update(self.I, update=False, max=self.ge)
-                mw_g =  self.weight[ml_g]
+                mw_g =  self.weight[(ml_g, g)]
                 if ml_g != l:
                     continue
-                delta_mps = - mw_g + self.weight[sml_g]
+                involved_lits.append((sml_g, ml_g, g))
+                delta_mps += - mw_g + self.weight[(sml_g, g)]
         mps = self._mps + delta_mps 
-        return mps if not return_literals else (mps, sml_g, ml_g)
+        return mps if not return_involved_lits else (mps, involved_lits)
         
     def mps_k(self, g: Group, l: int, assumed:bool, return_literals = False):
         if assumed:
@@ -494,9 +504,9 @@ class Propagator:
             # returning the least undefined
             m = g.get_least_undefined(max=self.ge)
             ml_g = g.ord_l[m] if not m is None else None
-            mw_g = self.weight[ml_g]
+            mw_g = self.weight[(ml_g, g)]
             assert self.true_group[g] is None
-            mps = self._mps - mw_g + self.weight[l]
+            mps = self._mps - mw_g + self.weight[(l, g)]
             return mps if not return_literals else (mps, l, ml_g)
         else:
             # returning 
@@ -505,7 +515,7 @@ class Propagator:
             sml_g, m_undef_set_g =  g.update(self.I, update=False, max=self.ge, return_m_undef_set_g = True)
             if not l in m_undef_set_g:
                 return self._mps if not return_literals else (self._mps , sml_g, m_undef_set_g)
-            mps = self._mps - self.weight[l] + self.weight[sml_g]
+            mps = self._mps - self.weight[(l, g)] + self.weight[(sml_g, g)]
             return mps if not return_literals else (mps, sml_g, ml_g)
 
     def compute_minimal_reason(self, reason: List[int], derived: List[int]):
@@ -531,6 +541,7 @@ class Propagator:
                 self.redundant_lits[l] = maximal_subset_sum_less_than_s_with_groups(literals=reason + self.reason_trues[l], s = s, weight= self.weight, group=self.group, head_reason=l, I=self.I, max=self.ge)
             elif self.minimization == Minimize.CARDINALITY_MINIMAL.value:
                 # TODO: Refactor, a lot of stuff remained outdate like group, it is still a function to a single gropu instead to a list of groups
+                # weight function is no more a function from literals to int but from literals X groups to int, update it !
                 increment = compute_increment_literals(literals=reason + self.reason_trues[l], group=self.group, weight=self.weight)
                 self.redundant_lits[l]  = maximum_subset_sum_less_than_s_with_groups(literals= reason, s = s, weight = increment, group=self.group, I=self.I)            
             else:
@@ -601,27 +612,27 @@ class Propagator:
                     G.set_max(l) if self.ge else G.set_min(l)
                     if tg is None:
                         if self.prob_type == "AMO":
-                            self._mps += self.weight[l]
+                            self._mps += self.weight[(l,G)]
                         else:
                             assert False
                     continue
                 
                 pos_m     =  G.ord_i[m_und]
                 pos_l     =  G.ord_i[l]
-                m_weight  =  self.weight[m_w(G, max = self.ge)]
+                m_weight  =  self.weight[(m_w(G, max = self.ge), G)]
                 
                 if tg == l:
 
                     # updating the self.mps
-                    if (m_weight > self.weight[l] and self.ge) or (m_weight < self.weight[l] and not self.ge): 
-                        self._mps = self._mps - self.weight[l] + m_weight
+                    if (m_weight > self.weight[(l,G)] and self.ge) or (m_weight < self.weight[(l,G)] and not self.ge): 
+                        self._mps = self._mps - self.weight[(l,G)] + m_weight
 
                     # updating the max undefined if self.ge else min undefined
                     if (self.ge and pos_m < pos_l) or (not self.ge and pos_m > pos_l):
                         G.set_max(l) if self.ge else G.set_min(l)
 
                 else:
-                    w_l = self.weight[l]
+                    w_l = self.weight[(l,G)]
                     if (self.ge and w_l >= m_weight and pos_l > pos_m) or (not self.ge and w_l <= m_weight and pos_l < pos_m ):
                         G.set_max(l) if self.ge else G.set_min(l)
                         if tg is None:

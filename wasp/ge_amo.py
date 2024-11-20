@@ -31,31 +31,44 @@ def propagate_phase(G: Group, propagator: Propagator, atomNames: dict):
     # reason
     R : List[int] = []
 
+    checked_lits = set()
+
     for g in propagator.groups:
         if g == G or not propagator.true_group[g] is None:
             continue
-
+        
         ml_g =  max_w(g)
         if ml_g is None:
             continue
 
-        mw_g =  propagator.weight[ml_g]
+        mw_g =  propagator.weight[(ml_g, g)]
 
-        mps, sml_g, ml_g = propagator.mps(ml_g, assumed=False, return_literals=True)
+        if ml_g in checked_lits:
+            continue
+        
+        checked_lits.add(ml_g)
+
+        mps, involved_lits = propagator.mps(ml_g, assumed=False, return_involved_lits=True)
         propagate_to_true = False
         if mps < propagator.lb:
-            i = g.ord_i[sml_g] if not sml_g is None else 0
-            propagator.reason_trues[ml_g] = [lit for lit in g.ord_l[i::] if propagator.I[lit] == False]
+            for sml_g, ml_g, g in involved_lits:
+                j = g.ord_i[ml_g] 
+                i = g.ord_i[sml_g] if not sml_g is None else 0
+                propagator.reason_trues[ml_g] = [lit for lit in g.ord_l[i:j] if propagator.I[lit] == False]
             S.append(ml_g)
             propagate_to_true = True
         
         if not propagate_to_true:
             start = g.max_und if not g.max_und is None else 0
-            for i in range(start-1,-1,-1):
+            for i in range(start,-1,-1):
                 l = g.ord_l[i]
+                if not_(l) in checked_lits:
+                    continue
                 if propagator.I[l] is None:
                     if propagator.mps(l, assumed=True) < propagator.lb:
-                        S.extend([not_(lit) for lit in g.ord_l[i::-1] if propagator.I[lit] is None])
+                        derived_to_false = [not_(lit) for lit in g.ord_l[i::-1] if propagator.I[lit] is None]
+                        checked_lits = checked_lits.union(set(derived_to_false))
+                        S.extend(derived_to_false)
                         break
 
     propagator.reason = []      
@@ -65,13 +78,13 @@ def propagate_phase(G: Group, propagator: Propagator, atomNames: dict):
             if g.count_undef == 0 and propagator.true_group[g] is None:
                 R.extend(reversed(ord_l))
             elif propagator.true_group[g] is None:
-                mw_g = propagator.weight[max_w(g)]
+                mw_g = propagator.weight[(max_w(g), g)]
                 for i in range(len(ord_l) - 1, -1, -1):
                     l = ord_l[i]
-                    if propagator.weight[l] <= mw_g:
+                    if propagator.weight[(l, g)] < mw_g:
                         break
-                    R.append(l) 
-            else:
+                    R.append(l) if not propagator.I[l] is None else None
+            elif not g.true_from_facts :
                 R.append(not_(propagator.true_group[g]))
     
         propagator.reason = R

@@ -3,7 +3,7 @@
 from enum import Enum
 import re
 import sys
-from typing import Any, List
+from typing import Any, List, Tuple
 import sys
 # import clingo 
 
@@ -190,14 +190,14 @@ class SymmetricFunction:
     
     def __init__(self, N) -> None:
         # interpretation
-        self.intepretation : List[Any] = [None] * N
+        self.data_structure : List[Any] = [None] * N
 
     def function_negative_lit(self, value):
         return not value
 
     def __getitem__(self, lit: int) -> Any:
         i = abs(lit) 
-        value = self.intepretation[i]
+        value = self.data_structure[i]
         if value is None:
             return None
         if lit < 0:
@@ -211,7 +211,7 @@ class SymmetricFunction:
                 value = self.function_negative_lit(value)
             else:
                 value = None
-        self.intepretation[i] = value
+        self.data_structure[i] = value
 
 class WeightFunction(SymmetricFunction):
     
@@ -222,30 +222,54 @@ class WeightFunction(SymmetricFunction):
 
     def function_negative_lit(self, value):
         return value    
+    
+class WeightFunctionDict:
+
+    def __init__(self):
+        self.dictionary = dict()
+
+
+    def __getitem__(self, key: Tuple[int, "Group"]):
+        # if not isinstance(key, Tuple[int, Group]) or len(key) != 2:
+        #     raise KeyError("Key must be a tuple of the form (lit, g)")
+        if key[0] is None:
+            return 0
+        return self.dictionary[key]
+
+    def __setitem__(self, key: Tuple[int, "Group"], value: int):
+        # if not isinstance(key, Tuple[int, Group]) or len(key) != 2:
+        #     raise KeyError("Key must be a tuple of the form (lit, g)")
+        self.dictionary[key] = value
+
+    def __iter__(self):
+        for item in self.dictionary:
+            yield item
 
 
 class Group:
     
     autoincrement = 0 
 
-    def __init__(self, ord_l, ord_i, id) -> None:
+    def __init__(self, id, atom_names, lits ) -> None:
         # number of literals
-        self.N = len(ord_l)
+        self.N = len(lits)
+        self.lits = lits
 
         # number of undefined literals
         self.count_undef = self.N
+        self.atom_names = atom_names 
 
         #  ord_l[i] = l 
         #  is the i-th literal orderded by weight
-        self.ord_l : List[int] = ord_l
+        self.ord_l : List[int] = []
         #  it is a copy of ord_l, for now it is useless
-        self.ord_l_origin : List[int] = ord_l.copy()
+        self.ord_l_origin : List[int] = lits.copy()
 
 
         # a function literals -> int that takes in input the literal l and gives as output the index of l in ord_lit:
         #   ord_i[l] = i 
         #   it is the inverse of ord_l function
-        self.ord_i : dict[int, int] = ord_i
+        self.ord_i : dict[int, int] = dict()
 
         # It is the index of the maximum (weight) undefined literal in ord_l 
         # if self.ge = True:
@@ -271,7 +295,24 @@ class Group:
         # id of the group
         self.id = id
         self.id_autoinc = Group.autoincrement 
+        # it means that there is at least (exactly) one literal true in the group derived from facts
+        self.true_from_facts = False
         Group.autoincrement += 1
+
+    def order_lits(self, weight: WeightFunctionDict):
+        # ordering by weight
+        lits_ord = [(lit, weight[(lit, self)]) for lit in self.lits]
+        lits_ord = sorted(lits_ord, key = lambda x: x[1])
+
+        self.ord_l = [None] * len(lits_ord)
+
+        # it cannot become a PerfectHash since the space required would be O(self.N^2) (self.N number of literals)
+        self.ord_i : dict[int, int] = {}
+
+        for i in range(len(lits_ord)):
+            l = lits_ord[i][0]
+            self.ord_l[i] = l
+            self.ord_i[l] = i
 
     def increase_und(self):
         self.count_undef += 1
@@ -361,18 +402,28 @@ class Group:
         else:
             return self.update_min(I,all=all, update=update, assuming_und = assuming_und)
 
-
-    def print_group(self, atomNames):
+    def compute_lits_str(self):
         lit_names = ""
         for l in self.ord_l:
-            lit_names += " " + get_name(atomNames,l) + " "
+            lit_names += " " + get_name(self.atom_names,l, force_print=True) + " "
+        return lit_names
+    
+    def print_group(self):
+        lit_names = self.compute_lits_str()
         debug(str(self), f"[{lit_names}]")
 
     def __str__(self) -> str:
-        return str(self.id)
+        lit_names = self.compute_lits_str()
+        return f"[id: {self.id}, lits: [{lit_names}]]"
 
     def __repr__(self):
         return str(self)
+    
+    def __eq__(self, other):
+        return isinstance(other, Group) and self.id == other.id
+
+    def __hash__(self):
+        return hash(self.id) 
 
 # removes useless literals
 def simplifyLiterals(lits, aggregate: 'AggregateFunction', group: 'GroupFunction', max, I: SymmetricFunction ):
@@ -383,9 +434,9 @@ def simplifyLiterals(lits, aggregate: 'AggregateFunction', group: 'GroupFunction
     G : Group = None
     
     for l in lits:
-        false_lit = False
+        false_lit : bool
         if aggregate[l]:
-            pass
+            false_lit = False
         elif aggregate[not_(l)]:
             false_lit = True
         else:
@@ -393,8 +444,8 @@ def simplifyLiterals(lits, aggregate: 'AggregateFunction', group: 'GroupFunction
 
         groups_l = group[l] if not false_lit else group[not_(l)]
 
+        l = not_(l) if false_lit else l
         for G in groups_l:
-            l = not_(l) if false_lit else l
             G.add_false_lit(l)
             n = len(G.ord_l)
             # debug(f"groups_l: {groups_l} ord_i: {G.ord_i}", force_print=True)
@@ -406,6 +457,7 @@ def simplifyLiterals(lits, aggregate: 'AggregateFunction', group: 'GroupFunction
                 G.ord_i[lit] -= 1
 
             # removing literal
+            debug(f"removing {l}")
             G.ord_l.remove(l)
             G.N = len(G.ord_l)
 
@@ -413,8 +465,8 @@ def simplifyLiterals(lits, aggregate: 'AggregateFunction', group: 'GroupFunction
             G.update(I, max=max, all=True)
 
             # removing from aggregate
-            aggregate[l] = False
-            aggregate[not_(l)] = False
+            # aggregate[l] = False
+            # aggregate[not_(l)] = False
 
             assert G.count_undef >= 0
 
@@ -588,11 +640,11 @@ def increment_f(l: int, current_subset_maximal, weight: WeightFunction, group: G
         if len(g.ord_l) <= 1:
             return 0
         
-        w = weight[l]
+        w = weight[(l,g)]
         if tr:  
             # TODO: FIX -> fixed putting w if len(g.ord_l) = 0  
             w_mw_g = 0
-            w_mw_g = weight[g.ord_l[-1]] if len(g.ord_l) > 0 else w
+            w_mw_g = weight[(g.ord_l[-1], g)] if len(g.ord_l) > 0 else w
             return w_mw_g - w
         else:
             i = len(g.ord_l) - 1
@@ -601,16 +653,16 @@ def increment_f(l: int, current_subset_maximal, weight: WeightFunction, group: G
             head_group = group[head_reason]
             if g in head_group:
                 sml_g, ml_g = g.update(I, max_b, update=False)
-                mw_g = weight[sml_g]
+                mw_g = weight[(sml_g, g)]
             else:
-                mw_g = weight[max_w(g)]
+                mw_g = weight[(max_w(g), g)]
             current_l = g.ord_l[i]
             increment = w - mw_g
-            while mw_g < weight[current_l]:
+            while mw_g < weight[(current_l, g)]:
                 if current_l in current_subset_maximal:
-                    increment = max(0,w - weight[current_l])
+                    increment = max(0,w - weight[(current_l, g)])
                     # if it 0 means that in the current minimal subset is already present some literal of the same group
-                    #  but higher weight
+                    # but higher weight
                     break
                 i -= 1
                 if i <= 0:

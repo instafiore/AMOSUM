@@ -41,10 +41,10 @@ def propagate_phase(G: Group, propagator: Propagator, atomNames: dict):
         for g in propagator.groups:
             if propagator.true_group[g] is None:
                 ord_l = g.ord_l 
-                mw_g = propagator.weight[max_w(g)]
+                mw_g = propagator.weight[(max_w(g), g)]
                 for i in range(len(ord_l) - 1, -1, -1):
                     l = ord_l[i]
-                    if propagator.weight[l] <= mw_g:
+                    if propagator.weight[(l, g)] <= mw_g:
                         break
                     R.append(l)
             else:

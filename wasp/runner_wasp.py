@@ -22,8 +22,8 @@ class RunnerWasp:
     # whether or not running a test for the correctness
     CHECKING_CORRECTNESS = False
     # whether to print or not that an answer set is not in another answerset
-    PRINT_ANS_AGGR_NOT_SUBSET_OF_ANS_GROUP = False
-    PRINT_ANS_GROUP_NOT_SUBSET_OF_ANS_AGGR = False
+    PRINT_ANS_AGGR_NOT_SUBSET_OF_ANS_GROUP = True
+    PRINT_ANS_GROUP_NOT_SUBSET_OF_ANS_AGGR = True
     # whether to print or not the answerset aggr with its mps in the checking correctness 
     PRINT_ANS_AGGR = False
     # whether to print or not the answerset group with its mps in the checking correctness 
@@ -38,9 +38,6 @@ class RunnerWasp:
     # whether printing the output of the solver
     PRINT_OUTPUT_SOLVER = False
 
-    # whether printing the output of the solver
-    PRINT_ANSWERSETS = False
-
     # whether printing the error output of the solver
     PRINT_ERROR_SOLVER = True
 
@@ -48,15 +45,19 @@ class RunnerWasp:
     KNAPSACK_REGEX = r'^(knapsack|kn|ks)$'
     GRAPH_COLOURING_REGEX = r'^(graph_colouring|gc)$'
     SIMPLE_TEST_REGEX = r'^(simple_tests?|st)$'
-    VALID_REGEX = [KNAPSACK_REGEX, GRAPH_COLOURING_REGEX, SIMPLE_TEST_REGEX]
-    REGEX_WEIGHT_ATOM_KN = r"object\((\d+),(\d+),(\d+)\)\."
-    REGEX_WEIGHT_ATOM_GC = r"colour_weight\((\w+),(\d+)\).\."
+    MLG_REGEX = r'^(mlg)$'
+    VALID_REGEX = [KNAPSACK_REGEX, GRAPH_COLOURING_REGEX, SIMPLE_TEST_REGEX, MLG_REGEX]
+    REGEX_WEIGHT_ATOM_KN = r"object\((\d+),\s*(\d+),\s*(\d+)\)"
+    REGEX_WEIGHT_ATOM_GC = r"colour_weight\((\w+),\s*(\d+)\)"
+    REGEX_WEIGHT_ATOM_MLG = r"[ab]\((\d+),\s*(\d+)(,\d+)?\)"
 
+    REGEX_MAPS_WEIGHTS = r"total_weight_names:\s({.+})"
 
     # PROBLEMS
     KNAPSACK = "knapsack"
     GRAPH_COLOURING = "graph_colouring"
     SIMPLE_TEST = "simple_tests"
+    MLG = "MLG"
 
     # silent mode
     SILENT = ""
@@ -81,21 +82,40 @@ class RunnerWasp:
 
         self.problem = self.param["problem"]
         
-        if not any([not re.match(r, self.problem) is None for r in RunnerWasp.VALID_REGEX]) :
+        if not any([not re.match(r, self.problem, re.IGNORECASE) is None for r in RunnerWasp.VALID_REGEX]) :
             raise Exception(f"Invalid problem inserted! Valid Regex: {str(RunnerWasp.VALID_REGEX)}")
         
-        if re.match(RunnerWasp.KNAPSACK_REGEX,self.problem):
+        if re.match(RunnerWasp.KNAPSACK_REGEX,self.problem, re.IGNORECASE):
             self.problem = RunnerWasp.KNAPSACK
             # object\((\d+),(\d+),(\d+)\)\.
-            self.weight_parm_id = 3
-        elif re.match(RunnerWasp.GRAPH_COLOURING_REGEX,self.problem):
+            self.key_weight_atom_amo = 1
+            self.weight_parm_id_key = 1
+            self.weight_parm_id_value = 3 if self.ge else 2
+            self.regex_weights = rf"{RunnerWasp.REGEX_WEIGHT_ATOM_KN}\."
+            self.atom_answerset_regex = r"in_knapsack\((\w+),(\w+?)\)"
+        elif re.match(RunnerWasp.GRAPH_COLOURING_REGEX,self.problem, re.IGNORECASE):
             # colour_weight\((\w+),(\d+)\).\.
             self.problem = RunnerWasp.GRAPH_COLOURING
-            self.weight_parm_id = 2
-        elif re.match(RunnerWasp.SIMPLE_TEST_REGEX,self.problem):
+            self.key_weight_atom_amo = 2
+            self.weight_parm_id_key = 1
+            self.weight_parm_id_value = 2
+            self.regex_weights = RunnerWasp.REGEX_WEIGHT_ATOM_GC
+            self.atom_answerset_regex= r"col\((\w+),(\w+?)\)"
+        elif re.match(RunnerWasp.SIMPLE_TEST_REGEX,self.problem, re.IGNORECASE):
             self.problem = RunnerWasp.SIMPLE_TEST
+            self.atom_answerset_regex= r"\w+[\(]?[\w,]*[\)]?"
+        elif re.match(RunnerWasp.MLG_REGEX,self.problem, re.IGNORECASE):
+            self.problem = RunnerWasp.MLG
+            #a(W,X)
+            self.key_weight_atom_amo = 0
+            self.weight_parm_id_key = 0
+            self.weight_parm_id_value = 1
+            self.regex_weights = RunnerWasp.REGEX_WEIGHT_ATOM_MLG
+            self.atom_answerset_regex= RunnerWasp.REGEX_WEIGHT_ATOM_MLG
         else:
             assert False
+
+        self.regex_weights = rf"{self.regex_weights}" if not self.regex_weights is None else None
 
         self.light = self.param["l"] if "l" in self.param else None
         self.num_models = self.param.get("n","")
@@ -179,8 +199,6 @@ class RunnerWasp:
         else:
             self.instances = False
         
-        self.compare =  self.param.get("compare", False)
-
         self.exp = self.param.get("exp",False)
 
         self.enc = self.param.get("enc", False)
@@ -215,112 +233,79 @@ class RunnerWasp:
         return len(answer_sets)
 
 
-    def create_weights_atom_regexes(self, instance):
-
-        weights_file = None 
-        atom_re = None
-        if self.problem == RunnerWasp.KNAPSACK:
-            weights_file = f"{self.location_instance}/{instance}.asp" if not self.exp else instance
-            regex_weights = RunnerWasp.REGEX_WEIGHT_ATOM_KN
-            atom_re = r"in_knapsack\((\w+),(\w+?)\)"
-        elif self.problem == RunnerWasp.GRAPH_COLOURING:
-            if self.exp:
-                # TODO: update this for expertiments with clingo 
-                assert False
-            weights_file = self.str_weights
-            regex_weights = RunnerWasp.REGEX_WEIGHT_ATOM_GC
-            atom_re= r"col\((\w+),(\w+?)\)"
-        
-
-
-        maps_weights = self.create_maps_weights(weights_file, regex_weights=regex_weights) \
-            if not atom_re is None and not weights_file is None else None
-        
-
-        return (maps_weights, atom_re)
-
     def check_correctness(self, answer_sets_aggr, answer_sets_group, instance, time_group, time_aggr):
    
-        maps_weights, atom_re = self.create_weights_atom_regexes(instance=instance)
+        # maps_weights = self.create_weights_atom_regexes(instance=instance)
+        
 
         correct = True
 
         if RunnerWasp.PRINT_ANS_GROUP:
             print("Answer_sets_group")
-            self.print_ans(answer_sets=answer_sets_group, maps_weight=maps_weights, atom_re=atom_re, time=time_aggr)
+            self.print_ans(answer_sets=answer_sets_group, time=time_aggr)
         if RunnerWasp.PRINT_ANS_AGGR:
             print("Answer_sets_aggr")
-            self.print_ans(answer_sets=answer_sets_aggr, maps_weight=maps_weights, atom_re=atom_re, time=time_group)
+            self.print_ans(answer_sets=answer_sets_aggr, time=time_group)
 
         for ans_1 in answer_sets_aggr:
             if not ans_1 in answer_sets_group:
                 if RunnerWasp.PRINT_ANS_AGGR_NOT_SUBSET_OF_ANS_GROUP:
-                    print(f"The answer set {ans_1} is not it answer_sets_group. MPS: {self.compute_mps(ans=ans_1, maps_weights=maps_weights, atom_re=atom_re)}")
+                    mps_str = f"MPS: {self.compute_mps(ans=ans_1)}" if not self.atom_answerset_regex is None else "" 
+                    print(f"The answer set {ans_1} is not inside answer_sets_group. {mps_str}")
                 correct = False
 
         for ans_2 in answer_sets_group:
             if not ans_2 in answer_sets_aggr:
                 if RunnerWasp.PRINT_ANS_GROUP_NOT_SUBSET_OF_ANS_AGGR:
-                    print(f"The answer set {ans_2} is not it answer_sets_aggr. MPS: {self.compute_mps(ans=ans_2, maps_weights=maps_weights, atom_re=atom_re)}")
+                    mps_str = f"MPS: {self.compute_mps(ans=ans_2)}" if not self.atom_answerset_regex is None else "" 
+                    print(f"The answer set {ans_2} is not inside answer_sets_aggr. {mps_str}")
                 correct = False
     
 
         return correct
 
-    def print_ans(self,answer_sets, time, atom_re, maps_weight):
+    def print_ans(self,answer_sets, time):
 
         print(f"Time: {time}, found {len(answer_sets)} models:")
         for i, model in enumerate(answer_sets):
-            mps_str = f" mps: {self.compute_mps(model, maps_weights=maps_weight, atom_re=atom_re)}"\
-                  if not maps_weight is None and not atom_re is None else ""
+            mps_str = f" mps: {self.compute_mps(model)}" if not self.atom_answerset_regex is None else ""
             print(f"Model {i+1}: {model} {mps_str}")
             
-    def compute_mps(self, ans, maps_weights, atom_re):
+    def compute_mps(self, ans):
         mps = 0
         for atom in ans:
-            match = re.match(atom_re, atom)
-            key = match.group(1)
+            match = re.match(self.atom_answerset_regex, atom)
+            key = match.group(self.key_weight_atom_amo)
             mult = int(match.group(2)) if self.problem == RunnerWasp.KNAPSACK else 1
             # print(f"atom {atom} key: {key} mult: {mult} weight: {maps_weights[key]}")
-            mps += mult * maps_weights[key]    
+            mps += self.maps_weights[key]    
 
         return mps    
         
 
-    def create_maps_weights(self, file_weights, regex_weights):
+    # def create_maps_weights(self, answerset):
 
-        pattern = re.compile(regex_weights)
-        maps = {}
+    #     pattern = re.compile(self.regex_weights)
+    #     maps = {}
 
-        with open(file_weights, 'r') as file:
-            for line in file:
-                match = pattern.match(line.strip())
-                if match:
-                    key = match.group(1)
-                    value = int(match.group(self.weight_parm_id))
-                    maps[key] = value
+    #     for atom in answerset:
+    #         match = pattern.match(atom.strip())
+    #         if match:
+    #             key = match.group(self.weight_parm_id_key)
+    #             value = int(match.group(self.weight_parm_id_value))
+    #             maps[key] = value
 
-        return maps
+    #     return maps
     
     def get_regex_query_atom_answerset(self):
         
-        regex_query : str
-        if self.problem == RunnerWasp.GRAPH_COLOURING:
-            regex_query = r"(?<=[\s,{])col\(\w+,\w+?\)" 
-        elif self.problem == RunnerWasp.KNAPSACK:
-            regex_query = r"(?<=[\s,{])in_knapsack\(\w+,\w+?\)" 
-        elif self.problem == RunnerWasp.SIMPLE_TEST:
-            regex_query = r"\w+[\(]?[\w,]*[\)]?" 
-        else:
-            assert False
-        
-        return regex_query
+        return rf"(?<=[\s,{{])({self.atom_answerset_regex})"
     
     def run(self):
         if self.instances:
             for instance in self.instances:
                 self.run_classical_test(instance=instance)
-        elif self.compare and self.specific_instance:
+        elif RunnerWasp.CHECKING_CORRECTNESS and self.specific_instance:
             self.run_classical_test(instance=self.specific_instance)
         elif self.specific_instance:
             enc_aggr = self.param.get("enc_aggr", False)
@@ -328,8 +313,7 @@ class RunnerWasp:
                 if self.enc_type else None
             encoding = self.enc if self.enc else encoding
             answersets, time = self.run_instance(self.specific_instance, encoding=encoding, group_type = not enc_aggr)
-            maps_weights, atom_re = self.create_weights_atom_regexes(instance=self.specific_instance)
-            self.print_ans(answer_sets=answersets, time=time, atom_re=atom_re, maps_weight=maps_weights)
+            self.print_ans(answer_sets=answersets, time=time)
         else:
             assert False
 
@@ -342,9 +326,12 @@ class RunnerWasp:
         # defining the upper bound(s)
         self.create_bound(instance=instance, ub=True)
         
+        # encoding
         location_encoding = f"{self.location}/{encoding}.asp" if encoding else ""
         location_encoding = encoding if self.enc else  location_encoding
         location_encoding = f"{self.location}/{encoding}.asp" if self.enc and not self.exp else location_encoding
+
+        # instance
         location_instance = f"{self.location_instance}/{instance}.asp" if not self.exp else instance
 
         print(f"location_encoding {location_encoding}")
@@ -413,7 +400,7 @@ class RunnerWasp:
         for line in lines_output:
             if not re.search(regex_answer_set, line) is None:
                 answer_set_str = re.search(regex_answer_set, line).group(1)
-                answer_set = set(re.findall(regex_query, answer_set_str))
+                answer_set = set([match[0] for match in re.findall(regex_query, answer_set_str)])
                 answer_sets.append(set(answer_set))
         
         for line in lines_error:
@@ -421,6 +408,10 @@ class RunnerWasp:
                 time = re.search(regex_real, line).group(1)
             elif not re.search(r"Killed: Bye!", line) is None:
                 time = "timeout"
+            elif not re.search(RunnerWasp.REGEX_MAPS_WEIGHTS, line) is None:
+                m = re.search(RunnerWasp.REGEX_MAPS_WEIGHTS, line)
+                self.maps_weights = json.loads(m.group(1))
+                print(f"self.maps_weights: {self.maps_weights}")
 
         # restoring the instance.asp file
         self.comment_bound(instance=instance, ub=False, restore=True)
@@ -477,9 +468,9 @@ class RunnerWasp:
         equal = "equal" if correct  else "not_equal" 
         final_string = f" ".join([f"{self.param} with instance: {instance}"] + output_strings)
         if not correct:
-            print(f"{final_string} [NOT CORRECT]")
+            print(f"[NOT CORRECT] {final_string}")
         elif not RunnerWasp.PRINT_JUST_ERRORS:
-            print(f"{final_string} [CORRECT]")
+            print(f"[CORRECT] {final_string} ")
 
         # printing the new line of the test
         lb_string = ""
@@ -489,7 +480,13 @@ class RunnerWasp:
         if self.lb:
             ub_string = "," + str(self.ub) 
 
-        if self.problem == RunnerWasp.KNAPSACK:
+        if self.problem == RunnerWasp.MLG:
+            groups = re.search(r"^\d+?-\w+?-\d+?-(?P<w>\d+)-(?P<g>\d+)-(?P<lb>\w+)", instance)
+            w = groups.group("w")
+            g = groups.group("g")
+            lb = groups.group("lb")
+            new_line = f"{number},{problem},{size},{time_aggr},{time_group},{na},{ng},{equal},{w},{g},{lb}"
+        elif self.problem == RunnerWasp.KNAPSACK:
             groups = re.search(r"^\d+?-\w+?-\d+?-(?P<b0>\d+)-(?P<b1>\d+)-(?P<type>\w+)", instance)
             b0 = groups.group("b0")
             b1 = groups.group("b1")
