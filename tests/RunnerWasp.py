@@ -91,13 +91,13 @@ class RunnerWasp:
         if re.match(RunnerWasp.KNAPSACK_REGEX,self.problem):
             self.problem = RunnerWasp.KNAPSACK
             # object\((\d+),(\d+),(\d+)\)\.
-            self.id_atom_amo = 1
+            self.key_weight_atom_amo = 1
             self.weight_parm_id_key = 1
             self.weight_parm_id_value = 3 if self.ge else 2
         elif re.match(RunnerWasp.GRAPH_COLOURING_REGEX,self.problem):
             # colour_weight\((\w+),(\d+)\).\.
             self.problem = RunnerWasp.GRAPH_COLOURING
-            self.id_atom_amo = 2
+            self.key_weight_atom_amo = 2
             self.weight_parm_id_key = 1
             self.weight_parm_id_value = 2
         elif re.match(RunnerWasp.SIMPLE_TEST_REGEX,self.problem):
@@ -282,7 +282,7 @@ class RunnerWasp:
         mps = 0
         for atom in ans:
             match = re.match(atom_re, atom)
-            key = match.group(self.id_atom_amo)
+            key = match.group(self.key_weight_atom_amo)
             mult = int(match.group(2)) if self.problem == RunnerWasp.KNAPSACK else 1
             # print(f"atom {atom} key: {key} mult: {mult} weight: {maps_weights[key]}")
             mps += mult * maps_weights[key]    
