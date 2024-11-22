@@ -411,7 +411,7 @@ class RunnerWasp:
             elif not re.search(RunnerWasp.REGEX_MAPS_WEIGHTS, line) is None:
                 m = re.search(RunnerWasp.REGEX_MAPS_WEIGHTS, line)
                 self.maps_weights = json.loads(m.group(1))
-                print(f"self.maps_weights: {self.maps_weights}")
+                # print(f"self.maps_weights: {self.maps_weights}")
 
         # restoring the instance.asp file
         self.comment_bound(instance=instance, ub=False, restore=True)

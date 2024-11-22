@@ -65,11 +65,15 @@ def propagate_phase(G: Group, propagator: Propagator, atomNames: dict):
                 if not_(l) in checked_lits:
                     continue
                 if propagator.I[l] is None:
-                    if propagator.mps(l, assumed=True) < propagator.lb:
-                        derived_to_false = [not_(lit) for lit in g.ord_l[i::-1] if propagator.I[lit] is None]
-                        checked_lits = checked_lits.union(set(derived_to_false))
-                        S.extend(derived_to_false)
-                        break
+                    mps_assumed_true_l = propagator.mps(l, assumed=True)
+                    if mps_assumed_true_l < propagator.lb:
+                        # derived_to_false = [not_(lit) for lit in g.ord_l[i::-1] if propagator.I[lit] is None]
+                        # checked_lits = checked_lits.union(set(derived_to_false))
+                        # NOTE: you cannot do this because a lower literal in weight 
+                        # can lead to a greater mps
+                        # S.extend(derived_to_false)
+                        # break
+                        S.append(not_(l))
 
     propagator.reason = []      
     if len(S) != 0  and propagator.dl != 0:
