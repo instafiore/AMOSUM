@@ -3,7 +3,7 @@ import sys
 import os
 # adding the root path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from clingo.runner_clingo import RunnerClingo
+from prop_clingo.runner_clingo import RunnerClingo
 from utility import *
 
 '''

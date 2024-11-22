@@ -1,9 +1,9 @@
-#!/usr/bin/python3
+#!/Users/instafiore/instafiore_env/bin/python
 import sys
 import os
 import re
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from wasp.runner_wasp  import RunnerWasp
+from prop_wasp.runner_wasp  import RunnerWasp
 from utility import *
 '''
 This is the entry file to run the tests on the AMO SUM propagator(s) WASP

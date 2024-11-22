@@ -3,10 +3,10 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-import wasp
+import prop_wasp
 from typing import List
-from wasp.propagator_wasp import *
-import wasp.propagator_wasp as propagator_wasp
+from prop_wasp.propagator_wasp import *
+import prop_wasp.propagator_wasp as propagator_wasp
 from utility import *
 
 '''

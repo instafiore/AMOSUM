@@ -3,7 +3,7 @@ import sys
 import os
 from typing import Sequence
 # adding the root path
-import clingo
+import prop_clingo
 from clingo.symbol import Number, Function
 from clingo.control import Control
 from clingo.symbol import Function
@@ -17,7 +17,7 @@ import amosum
     Invariants: 
 '''
 
-class PropagatorClingo(clingo.Propagator):
+class PropagatorClingo(prop_clingo.Propagator):
 
     def __init__(self, sys_parameters: dict[str: str], propagation_phase: Callable[[Group, amosum.Propagator], List[int]], ge: bool, prop_type: str) -> None:
         super().__init__()
@@ -27,7 +27,7 @@ class PropagatorClingo(clingo.Propagator):
         self.prop_type = prop_type
         self.solver = Propagator.CLINGO
 
-    def init(self, init: clingo.PropagateInit) -> None:
+    def init(self, init: prop_clingo.PropagateInit) -> None:
 
         atoms_list_for_mapping = [(str(a.symbol), a.literal, init.solver_literal(a.literal)) for a in init.symbolic_atoms]
         nt = init.number_of_threads
@@ -84,8 +84,8 @@ class PropagatorClingo(clingo.Propagator):
             init.add_clause([])
             return
 
-    def add_clauses_propagated_lits(self, control: clingo.PropagateControl | clingo.PropagateInit, S_plit, dl):
-        td = 0 if isinstance(control, clingo.PropagateInit) else control.thread_id
+    def add_clauses_propagated_lits(self, control: prop_clingo.PropagateControl | prop_clingo.PropagateInit, S_plit, dl):
+        td = 0 if isinstance(control, prop_clingo.PropagateInit) else control.thread_id
         prop = self.propagators[td]
         for plit in S_plit:
             R_plit = prop.getReasonForLiteral(plit)
@@ -102,7 +102,7 @@ class PropagatorClingo(clingo.Propagator):
         return False
     
 
-    def propagate(self, control: clingo.PropagateControl, changes: Sequence[int]) -> None:
+    def propagate(self, control: prop_clingo.PropagateControl, changes: Sequence[int]) -> None:
         dl = control.assignment.decision_level
         td = 0 if dl == 0 else control.thread_id
         prop = self.propagators[td]
@@ -123,7 +123,7 @@ class PropagatorClingo(clingo.Propagator):
                     # Conflict added hence propagation has to stop
                     return 
 
-    def undo(self, thread_id: int, assignment: clingo.Assignment, changes: Sequence[int]) -> None:
+    def undo(self, thread_id: int, assignment: prop_clingo.Assignment, changes: Sequence[int]) -> None:
         prop = self.propagators[thread_id]
         plit_list = []
         for slit in changes:
@@ -144,7 +144,7 @@ class PropagatorClingo(clingo.Propagator):
         return changes_str
     
     
-    def createClingoInterpretation(self, slit_list: List[int], assignment: clingo.Assignment):
+    def createClingoInterpretation(self, slit_list: List[int], assignment: prop_clingo.Assignment):
         I_clingo = SymmetricFunction(self.propagators[0].N)
         for slit in slit_list:
             plit = self.map_slit_plit_watched[slit]

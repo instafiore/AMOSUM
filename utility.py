@@ -548,8 +548,6 @@ class TrueGroupFunction(PerfectHash):
 
 # utility function for debugging
 def get_name(atomNames, lit, force_print = False):
-    if not force_print and not DEBUG:
-        return ""
     prefix = ""
     if lit is None:
         return "None"

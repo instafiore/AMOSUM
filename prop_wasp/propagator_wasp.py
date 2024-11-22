@@ -3,7 +3,7 @@ import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from ast import Tuple
 from typing import Callable, List
-import wasp._wasp as _wasp
+import prop_wasp._wasp as _wasp
 import re
 import settings
 from amosum import *
