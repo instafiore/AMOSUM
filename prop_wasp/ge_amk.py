@@ -3,10 +3,10 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-import wasp
+import prop_wasp
 from typing import List
-from functional_propagator import *
-import functional_propagator
+from prop_wasp.propagator_wasp import *
+import prop_wasp.propagator_wasp as propagator_wasp
 from utility import *
 
 '''
@@ -16,11 +16,11 @@ Invariants:
     In the aggregate set there are not two literals such that li = ~lj
 '''
 
-functional_propagator.propagator.prob_type = "AMO"
-functional_propagator.propagator.ge = True
+propagator_wasp.propagator.prob_type = "AMO"
+propagator_wasp.propagator.ge = True
 
 
-def propagate_phase(G: Group, propagator: PropagatorWasp, atomNames: dict):
+def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
     
     # try:
 

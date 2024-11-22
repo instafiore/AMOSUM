@@ -7,24 +7,23 @@ import clingo
 from clingo.symbol import Number, Function
 from clingo.control import Control
 from clingo.symbol import Function
-from clingo.propagator import Propagator
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from propagator_wasp import *
-import propagator_wasp
+from amosum import *
+import amosum
 '''
     Invariants: 
 '''
 
 class PropagatorClingo(clingo.Propagator):
 
-    def __init__(self, sys_parameters: dict[str: str], propagation_phase: Callable[[Group, PropagatorWasp], List[int]], ge: bool, prop_type: str) -> None:
+    def __init__(self, sys_parameters: dict[str: str], propagation_phase: Callable[[Group, AmoSumPropagator], List[int]], ge: bool, prop_type: str) -> None:
         super().__init__()
         self.sys_parameters = sys_parameters
         self.propagation_phase = propagation_phase
         self.ge = ge
         self.prop_type = prop_type
-        self.solver = PropagatorWasp.CLINGO
+        self.solver = AmoSumPropagator.CLINGO
 
     def init(self, init: clingo.PropagateInit) -> None:
 
@@ -39,8 +38,8 @@ class PropagatorClingo(clingo.Propagator):
 
         self.atomNames = { str_symbol : program_literal for str_symbol, program_literal, solver_literal in atoms_list_for_mapping}
 
-        self.propagators = [propagator_wasp.PropagatorWasp(atomsNames=self.atomNames, sys_parameters=self.sys_parameters,
-                                      propagation_phase=self.propagation_phase, ge=self.ge, prob_type=self.prop_type, solver=PropagatorWasp.CLINGO) for i in range(nt)]
+        self.propagators = [amosum.AmoSumPropagator(atomsNames=self.atomNames, sys_parameters=self.sys_parameters,
+                                      propagation_phase=self.propagation_phase, ge=self.ge, prob_type=self.prop_type, solver=AmoSumPropagator.CLINGO) for i in range(nt)]
 
         # This is a map for mapping each solver literal (slit) to its program literal(s) (plit).
         # Can happend that some solver literal has more than one program literal

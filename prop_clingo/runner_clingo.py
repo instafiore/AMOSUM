@@ -6,19 +6,19 @@ from typing import Dict, List
 import re
 import sys
 import os
-import clingo
-from propagator_wasp import *
+from amosum import *
 from clingo.symbol import Number
 from clingo.control import Control
 
 # adding root path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 import ast
-from tests.RunnerWasp import RunnerWasp
+from prop_wasp.runner_wasp import RunnerWasp
 from  utility import *
 import utility
 import settings
-from clingo.propagator_clingo import *
+from prop_clingo.propagator_clingo import *
 
 class RunnerClingo(RunnerWasp):
     '''
@@ -110,15 +110,15 @@ class RunnerClingo(RunnerWasp):
             case "ge_amo":
                 ge = True
                 prop_type = "AMO"
-                from wasp.ge_amo import propagate_phase
+                from prop_wasp.ge_amo import propagate_phase
             case "le_amo":
                 ge = False
                 prop_type = "AMO"
-                from wasp.le_eo import propagate_phase
+                from prop_wasp.le_eo import propagate_phase
             case "ge_eo":
                 ge = True
                 prop_type = "EO"
-                from wasp.ge_eo import propagate_phase
+                from prop_wasp.ge_eo import propagate_phase
             case _:
                 assert False
 

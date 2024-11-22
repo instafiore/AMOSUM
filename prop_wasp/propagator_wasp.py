@@ -5,13 +5,13 @@ from ast import Tuple
 from typing import Callable, List
 import re
 import settings
-from propagator_wasp import *
+from amosum import *
 
 atomNames = {}
 
 # input parameters
 sys_parameters = []
-propagator = PropagatorWasp(atomsNames=atomNames, sys_parameters=sys_parameters, solver=PropagatorWasp.WASP)
+propagator = AmoSumPropagator(atomsNames=atomNames, sys_parameters=sys_parameters, solver=AmoSumPropagator.WASP)
 
 def checkAnswerSet(*answer_set):
     global propagator

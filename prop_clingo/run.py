@@ -3,11 +3,11 @@ import sys
 import os
 # adding the root path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from tests.RunnerClingo import RunnerClingo
+from prop_clingo.runner_clingo import RunnerClingo
 from utility import *
 
 '''
-This is the entry file to run the tests on the AMO SUM propagator(s) CLINGO
+This is the entry file to run the AMO SUM propagator(s) CLINGO
 '''
 
 def main():

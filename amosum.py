@@ -4,13 +4,13 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from ast import Tuple
 from typing import Callable, List
 from utility import *
-import wasp._wasp as wasp
+import prop_wasp.wasp as wasp
 import re
 import settings
 
 
 
-class PropagatorWasp:
+class AmoSumPropagator:
 
     atomNames : dict[str: int]
 
@@ -87,7 +87,7 @@ class PropagatorWasp:
     ge : bool
 
     # propagate function to implement in propagator file
-    propagate_phase : Callable[[Group, 'PropagatorWasp', dict],List[int]]
+    propagate_phase : Callable[[Group, 'AmoSumPropagator', dict],List[int]]
 
     # propagate function to implement in propagator file
     onLiteralsUndefined: Callable[[Tuple], None]
@@ -115,7 +115,7 @@ class PropagatorWasp:
     WASP = 1
     CLINGO = 2
 
-    def __init__(self, atomsNames: dict[str: int], sys_parameters: List[str], propagation_phase: Callable[[Group, 'PropagatorWasp'],  List[int]] = None, ge: bool = True, prob_type: str = "AMO", solver = WASP) -> None:
+    def __init__(self, atomsNames: dict[str: int], sys_parameters: List[str], propagation_phase: Callable[[Group, 'AmoSumPropagator'],  List[int]] = None, ge: bool = True, prob_type: str = "AMO", solver = WASP) -> None:
         self.atomNames = atomsNames
         self.sys_parameters = sys_parameters
         self.facts : List[int] = []
@@ -446,7 +446,7 @@ class PropagatorWasp:
             name = get_name(atomNames=self.atomNames, lit=l)
             error = f"{name} true led the mps {self._mps} to be incosistent with {self.bound}"
             debug(error)
-            if self.solver != PropagatorWasp.WASP or self.prob_type != "EO":
+            if self.solver != AmoSumPropagator.WASP or self.prob_type != "EO":
                 raise Exception(error)
 
         return (w_p != w_n,  None)
