@@ -1,3 +1,4 @@
+import json
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -227,7 +228,7 @@ class AmoSumPropagator:
          
 
         # selecting the interested literals
-
+        self.weights_names = dict()
         for a in self.atomNames:
             if  a.startswith('group('):
                 terms = wasp.getTerms('group',a)
@@ -246,7 +247,7 @@ class AmoSumPropagator:
             
                 # updating the self.weight
                 self.weight[lit] = int(terms[1])
-
+                self.weights_names[atom_name] =  int(terms[1])
                 # updating the self.group id
                 group_id = terms[2]
 
@@ -313,6 +314,8 @@ class AmoSumPropagator:
         
         nGroup = Group.autoincrement 
         self.true_group = TrueGroupFunction(nGroup)
+
+        debug(f"total_weight_names: {json.dumps(self.weights_names)}", force_print=True)
 
         # PREPROCESSING
         for i in range(1,len(lits)):
