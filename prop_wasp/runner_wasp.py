@@ -50,6 +50,7 @@ class RunnerWasp:
     REGEX_WEIGHT_ATOM_KN = r"object\((\d+),\s*(\d+),\s*(\d+)\)"
     REGEX_WEIGHT_ATOM_GC = r"colour_weight\((\w+),\s*(\d+)\)"
     REGEX_WEIGHT_ATOM_MLG = r"[ab]\((\d+),\s*(\d+)(,\d+)?\)"
+    GENERIC_REGEX = r"\w+[\(]?[\w,]*[\)]?"
 
     REGEX_MAPS_WEIGHTS = r"total_weight_names:\s({.+})"
 
@@ -82,7 +83,9 @@ class RunnerWasp:
         if not "problem" in self.param and not self.exp:
             raise Exception(f"No problem inserted. Feasible key:'problem'")
 
-        self.problem = self.param.get("problem", None)
+        self.problem = self.param.get("problem", "NP")
+        self.maps_weights = None
+        # NP -> No Problem :) 
         
         if not self.exp and not any([not re.match(r, self.problem) is None for r in RunnerWasp.VALID_REGEX]) :
             raise Exception(f"Invalid problem inserted! Valid Regex: {str(RunnerWasp.VALID_REGEX)}")
@@ -96,7 +99,6 @@ class RunnerWasp:
             self.key_weight_atom_amo = 1
             self.weight_parm_id_key = 1
             self.weight_parm_id_value = 3 if self.ge else 2
-            self.regex_weights = rf"{RunnerWasp.REGEX_WEIGHT_ATOM_KN}\."
             self.atom_answerset_regex = r"in_knapsack\((\w+),(\w+?)\)"
         elif re.match(RunnerWasp.GRAPH_COLOURING_REGEX,self.problem, re.IGNORECASE):
             # colour_weight\((\w+),(\d+)\).\.
@@ -104,23 +106,21 @@ class RunnerWasp:
             self.key_weight_atom_amo = 2
             self.weight_parm_id_key = 1
             self.weight_parm_id_value = 2
-            self.regex_weights = RunnerWasp.REGEX_WEIGHT_ATOM_GC
             self.atom_answerset_regex= r"col\((\w+),(\w+?)\)"
         elif re.match(RunnerWasp.SIMPLE_TEST_REGEX,self.problem, re.IGNORECASE):
             self.problem = RunnerWasp.SIMPLE_TEST
-            self.atom_answerset_regex= r"\w+[\(]?[\w,]*[\)]?"
+            self.atom_answerset_regex= RunnerWasp.GENERIC_REGEX
         elif re.match(RunnerWasp.MLG_REGEX,self.problem, re.IGNORECASE):
             self.problem = RunnerWasp.MLG
             #a(W,X)
             self.key_weight_atom_amo = 0
             self.weight_parm_id_key = 0
             self.weight_parm_id_value = 1
-            self.regex_weights = RunnerWasp.REGEX_WEIGHT_ATOM_MLG
             self.atom_answerset_regex= RunnerWasp.REGEX_WEIGHT_ATOM_MLG
+        elif self.problem == "NP":
+           self.atom_answerset_regex= RunnerWasp.GENERIC_REGEX
         else:
             assert False
-
-        self.regex_weights = rf"{self.regex_weights}" if not self.regex_weights is None else None
 
         self.light = self.param["l"] if "l" in self.param else None
         self.num_models = self.param.get("n","")
@@ -253,14 +253,14 @@ class RunnerWasp:
         for ans_1 in answer_sets_aggr:
             if not ans_1 in answer_sets_group:
                 if RunnerWasp.PRINT_ANS_AGGR_NOT_SUBSET_OF_ANS_GROUP:
-                    mps_str = f"MPS: {self.compute_mps(ans=ans_1)}" if not self.atom_answerset_regex is None else "" 
+                    mps_str = f"MPS: {self.compute_mps(ans=ans_1)}" if not self.atom_answerset_regex is None and not self.maps_weights is None else "" 
                     print(f"The answer set {ans_1} is not inside answer_sets_group. {mps_str}")
                 correct = False
 
         for ans_2 in answer_sets_group:
             if not ans_2 in answer_sets_aggr:
                 if RunnerWasp.PRINT_ANS_GROUP_NOT_SUBSET_OF_ANS_AGGR:
-                    mps_str = f"MPS: {self.compute_mps(ans=ans_2)}" if not self.atom_answerset_regex is None else "" 
+                    mps_str = f"MPS: {self.compute_mps(ans=ans_2)}" if not self.atom_answerset_regex is None and not self.maps_weights is None else "" 
                     print(f"The answer set {ans_2} is not inside answer_sets_aggr. {mps_str}")
                 correct = False
     
@@ -271,7 +271,7 @@ class RunnerWasp:
 
         print(f"Time: {time}, found {len(answer_sets)} models:")
         for i, model in enumerate(answer_sets):
-            mps_str = f" mps: {self.compute_mps(model)}" if not self.atom_answerset_regex is None else ""
+            mps_str = f" mps: {self.compute_mps(model)}" if not self.atom_answerset_regex is None and not self.maps_weights is None else ""
             print(f"Model {i+1}: {model} {mps_str}")
             
     def compute_mps(self, ans):
@@ -286,20 +286,6 @@ class RunnerWasp:
         return mps    
         
 
-    # def create_maps_weights(self, answerset):
-
-    #     pattern = re.compile(self.regex_weights)
-    #     maps = {}
-
-    #     for atom in answerset:
-    #         match = pattern.match(atom.strip())
-    #         if match:
-    #             key = match.group(self.weight_parm_id_key)
-    #             value = int(match.group(self.weight_parm_id_value))
-    #             maps[key] = value
-
-    #     return maps
-    
     def get_regex_query_atom_answerset(self):
         
         return rf"(?<=[\s,{{])({self.atom_answerset_regex})"
