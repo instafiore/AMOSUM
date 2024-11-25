@@ -34,9 +34,6 @@ def propagate_phase(G: Group, propagator: AmoSumPropagator):
         if g == G or not propagator.true_group[g] is None:
             continue
 
-        ml_g =  propagator.min_w(g)
-        mw_g =  propagator.weight[ml_g]
-
         for i in range(len(g.ord_l)-1,-1,-1):
             l = g.ord_l[i]
             if propagator.I[l] is None:
@@ -53,9 +50,9 @@ def propagate_phase(G: Group, propagator: AmoSumPropagator):
                 mw_g = propagator.weight[min_w(g)]
                 ord_l = g.ord_l
                 for l in ord_l:
-                    if propagator.weight[l] >= mw_g:
+                    if propagator.weight[l] > mw_g:
                         break
-                    R.append(l)
+                    R.append(l) if not propagator.I[l] is None else None
             else:
                 R.append(not_(propagator.true_group[g]))
    

@@ -295,10 +295,7 @@ class Group:
             self.set_min(l)
 
     def get_most_undefined(self, max):
-        if max:
-            return self.max_und
-        else:
-            return self.min_und
+        return m_w(self, max=max)
         
     # adding support for at most k constraint
 

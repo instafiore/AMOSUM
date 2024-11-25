@@ -453,8 +453,7 @@ class AmoSumPropagator:
     
     def mps(self, g: Group, l: int, assumed:bool, return_literals = False):
         if assumed:
-            m = g.get_most_undefined(max=self.ge)
-            ml_g = g.ord_l[m] if not m is None else None
+            ml_g = g.get_most_undefined(max=self.ge)
             mw_g = self.weight[ml_g]
             assert self.true_group[g] is None
             mps = self._mps - mw_g + self.weight[l]

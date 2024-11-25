@@ -44,15 +44,16 @@ def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
                 mw_g = propagator.weight[max_w(g)]
                 for i in range(len(ord_l) - 1, -1, -1):
                     l = ord_l[i]
-                    if propagator.weight[l] <= mw_g:
+                    if propagator.weight[l] < mw_g:
                         break
-                    R.append(l)
+                    R.append(l) if not propagator.I[l] is None else None
             else:
                 R.append(not_(propagator.true_group[g]))
 
         # updating the reason
         propagator.reason = R
         propagator.compute_minimal_reason(reason=R, derived=S)
+        
     print_derivation(propagator.atomNames, S)
 
      
