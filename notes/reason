@@ -3,4 +3,22 @@
 3) First the way of propagation with EO was: starting from the lowest try to propagate. 
     Now it first tries to propagate the max undefined, if it is not propagate the 
     propagation for false literal can take place
+4) propagation of falses:
+    Before:
+    for l in g.ord_l:
+            if I[l] is None:
+                if mps - mw_g + weight[l] < lb:
+                    # infer l as false
+                    S.append(not_(l))
+                    g.decrease_und()
+                else:
+                    break
+    After:
+    start = g.max_und if not g.max_und is None else 0
+    for i in range(start-1,-1,-1):
+        l = g.ord_l[i]
+        if propagator.I[l] is None:
+            if propagator.mps(g, l, assumed=True) < propagator.lb:
+                S.extend([not_(lit) for lit in g.ord_l[i::-1] if propagator.I[lit] is None])
+                break
 
