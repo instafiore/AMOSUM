@@ -404,6 +404,7 @@ class AmoSumPropagator:
         tg = False
         G : Group
 
+        amo_condition = False
         if self.aggregate[l]:
             G = self.group[l]
             G.decrease_und()
@@ -421,6 +422,11 @@ class AmoSumPropagator:
                 if self.true_group[G] is None :
                     w_n = self.weight[new]
                     w_p = self.weight[prev]
+
+                # it has to be true because if the mps is not changed can happen that there is another literal with the same weight that is maximum 
+                # and this literal can be propagated to true
+                if self.prob_type == "AMO":
+                    amo_condition = True
             elif not_(l) != new:
                 # there is at least one more literal that can satify the lower bound
                 # so no propagation can take place
@@ -449,7 +455,7 @@ class AmoSumPropagator:
             if self.solver != AmoSumPropagator.WASP or self.prob_type != "EO":
                 raise Exception(error)
 
-        return (w_p != w_n,  None)
+        return (w_p != w_n or amo_condition,  None)
     
     def mps(self, g: Group, l: int, assumed:bool, return_literals = False):
         if assumed:
