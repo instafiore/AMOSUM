@@ -75,14 +75,14 @@ class RunnerWasp:
         
         valid_enc_type = settings.MAP_ENC_ENCODING_FILES.keys()
         valid_prop_type = settings.MAP_PROPAGATOR.keys()
+        self.exp = self.param.get("exp",False)
 
-        if not "problem" in self.param:
+        if not "problem" in self.param and not self.exp:
             raise Exception(f"No problem inserted. Feasible key:'problem'")
 
-        self.problem = self.param["problem"]
-        self.exp = self.param.get("exp",False)
+        self.problem = self.param.get("problem", None)
         
-        if not any([not re.match(r, self.problem) is None for r in RunnerWasp.VALID_REGEX]) :
+        if not self.exp and not any([not re.match(r, self.problem) is None for r in RunnerWasp.VALID_REGEX]) :
             raise Exception(f"Invalid problem inserted! Valid Regex: {str(RunnerWasp.VALID_REGEX)}")
         
         self.enc_type = self.param.get("enc_type", None)
@@ -103,7 +103,7 @@ class RunnerWasp:
         elif re.match(RunnerWasp.SIMPLE_TEST_REGEX,self.problem):
             self.problem = RunnerWasp.SIMPLE_TEST
         else:
-            assert False
+            assert False if not self.exp else None
 
         self.light = self.param["l"] if "l" in self.param else None
         self.num_models = self.param.get("n","")
