@@ -44,12 +44,14 @@ def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
         propagate_to_true = False
         if mps < propagator.lb:
             i = g.ord_i[sml_g] if not sml_g is None else 0
-            propagator.reason_trues[ml_g] = [lit for lit in g.ord_l[i::] if propagator.I[lit] == False]
+            j = g.ord_i[ml_g]
+            propagator.reason_trues[ml_g] = [lit for lit in g.ord_l[i::j] if propagator.I[lit] == False]
             S.append(ml_g)
             propagate_to_true = True
         
         if not propagate_to_true:
             start = g.max_und if not g.max_und is None else 0
+            # TODO: this for can stop at g.ord_i[mw_g] - 1
             for i in range(start-1,-1,-1):
                 l = g.ord_l[i]
                 if propagator.I[l] is None:

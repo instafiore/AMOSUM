@@ -1,0 +1,6 @@
+1) Now reason for true literal l is no more composed by all false literals of l but just the false ones greater than the second max undefined
+2) The non-shared part of the reason is calculated: [lit for lit in g.ord_l[i::j] if propagator.I[lit] == False], before update it was up to i::
+3) First the way of propagation with EO was: starting from the lowest try to propagate. 
+    Now it first tries to propagate the max undefined, if it is not propagate the 
+    propagation for false literal can take place
+
