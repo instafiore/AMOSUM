@@ -22,8 +22,8 @@ class RunnerWasp:
     # whether or not running a test for the correctness
     CHECKING_CORRECTNESS = False
     # whether to print or not that an answer set is not in another answerset
-    PRINT_ANS_AGGR_NOT_SUBSET_OF_ANS_GROUP = False
-    PRINT_ANS_GROUP_NOT_SUBSET_OF_ANS_AGGR = False
+    PRINT_ANS_AGGR_NOT_SUBSET_OF_ANS_GROUP = True
+    PRINT_ANS_GROUP_NOT_SUBSET_OF_ANS_AGGR = True
     # whether to print or not the answerset aggr with its mps in the checking correctness 
     PRINT_ANS_AGGR = False
     # whether to print or not the answerset group with its mps in the checking correctness 
@@ -58,7 +58,6 @@ class RunnerWasp:
     GRAPH_COLOURING = "graph_colouring"
     SIMPLE_TEST = "simple_tests"
     MLG = "MLG"
-    NURSE = "nurse_scheduling"
 
     # silent mode
     SILENT = ""
@@ -77,18 +76,14 @@ class RunnerWasp:
         
         valid_enc_type = settings.MAP_ENC_ENCODING_FILES.keys()
         valid_prop_type = settings.MAP_PROPAGATOR.keys()
-        self.exp = self.param.get("exp",False)
 
-        if not "problem" in self.param and not self.exp:
+        if not "problem" in self.param:
             raise Exception(f"No problem inserted. Feasible key:'problem'")
 
-        self.problem = self.param.get("problem", None)
+        self.problem = self.param["problem"]
         
-        if not self.exp and not any([not re.match(r, self.problem) is None for r in RunnerWasp.VALID_REGEX]) :
+        if not any([not re.match(r, self.problem, re.IGNORECASE) is None for r in RunnerWasp.VALID_REGEX]) :
             raise Exception(f"Invalid problem inserted! Valid Regex: {str(RunnerWasp.VALID_REGEX)}")
-        
-        self.enc_type = self.param.get("enc_type", None)
-        self.ge = not re.match("ge",self.enc_type) is None if not self.enc_type is None else True
         
         if re.match(RunnerWasp.KNAPSACK_REGEX,self.problem, re.IGNORECASE):
             self.problem = RunnerWasp.KNAPSACK
@@ -140,6 +135,7 @@ class RunnerWasp:
 
         # utility.debug("assumptions:", self.ass)
        
+        self.enc_type = self.param.get("enc_type", None)
         self.prop_type = self.param.get("prop_type", None)
         self.id = self.param.get("id",0)
         
@@ -150,8 +146,8 @@ class RunnerWasp:
         self.ub = self.param["ub"] if "ub" in self.param else None
         self.seed = self.param.get("seed","")
 
-        lb_gc_constraints = self.problem == RunnerWasp.GRAPH_COLOURING and (not self.lb or not self.weights) and re.match("ge",self.enc_type) if not self.exp else False
-        up_gc_constraint = self.problem == RunnerWasp.GRAPH_COLOURING and (not self.ub or not self.weights) and re.match("le",self.enc_type) if not self.exp else False
+        lb_gc_constraints = self.problem == RunnerWasp.GRAPH_COLOURING and (not self.lb or not self.weights)and re.match("ge",self.enc_type)
+        up_gc_constraint = self.problem == RunnerWasp.GRAPH_COLOURING and (not self.ub or not self.weights) and re.match("le",self.enc_type)
         
         if lb_gc_constraints or up_gc_constraint:
             raise Exception(f"Constraint of the graph colouring didn't meet, possible problems:\n\tYou did not define a proper bound for the graph colouring problem! ge -> lb, le -> up.\n\tYou did not require to put the 'weights' into the code")
@@ -203,6 +199,7 @@ class RunnerWasp:
         else:
             self.instances = False
         
+        self.exp = self.param.get("exp",False)
 
         self.enc = self.param.get("enc", False)
 
