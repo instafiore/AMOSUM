@@ -139,7 +139,7 @@ def create_assumptions_lits(assumptions, atomNames):
     return res
 
 def ground_program(*paths):
-    ground_program_run = f"clingo {" ".join([path for path in paths if not path is None])} --output=smodels "
+    ground_program_run = f"clingo {' '.join([path for path in paths if not path is None])} --output=smodels "
     grounded_program = subprocess.run(ground_program_run, shell=True, capture_output=True).stdout.decode()
     return grounded_program
 
