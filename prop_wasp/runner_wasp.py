@@ -75,6 +75,7 @@ class RunnerWasp:
     def __init__(self, parameters: Dict[str,str]) -> None:
 
         self.param = parameters
+        self.maps_weights = None
 
         set_debug(self.param.get("d",""))
         
@@ -328,15 +329,9 @@ class RunnerWasp:
 
         timeout_str = f"timeout {self.timeout_m}m" if not self.exp else ""
 
-        ground_program_run = f"clingo \
-            {location_instance} \
-            {self.str_weights} \
-            {location_encoding} \
-            {self.str_lb} \
-            {self.str_ub} \
-            --output=smodels "
+        grounded_program = ground_program(location_encoding, location_instance, self.str_weights, self.str_lb, self.str_ub)
         
-        run = f"{ground_program_run} | {timeout_str} time -p {RunnerWasp.SOLVER} {RunnerWasp.SILENT} {self.n0} "
+        run = f"echo \"{grounded_program}\" | {timeout_str} time -p {RunnerWasp.SOLVER} {RunnerWasp.SILENT} {self.n0} "
         
         id_param = f"-id {self.id}"
         ass_param = f" -ass {self.ass}" if self.ass != "" else ""
@@ -359,9 +354,9 @@ class RunnerWasp:
         if self.PRINT_RUN:
             print(f"run:\t{run}")
 
+        
         # preprocessing
-        ground_program = subprocess.run(ground_program_run, shell=True, capture_output=True).stdout.decode()
-        preprocess_map =  preprocess_ground_program(ground_program)
+        preprocess_map =  preprocess_ground_program(grounded_program)
 
         # running test
         self.maps_weights = None

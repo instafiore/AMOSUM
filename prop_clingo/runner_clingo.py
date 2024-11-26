@@ -21,22 +21,6 @@ import settings
 from prop_clingo.propagator_clingo import *
 from preprocess import *
 
-class GroundProgramObserver:
-    def __init__(self):
-        self.rules = []
-
-    def rule(self, choice, head, body):
-        """
-        Capture grounded rules.
-        """
-        head_str = ', '.join(map(str, head))
-        body_str = ', '.join(map(str, body))
-        rule_str = f"{{{head_str}}} :- {body_str}." if body else f"{{{head_str}}}."
-        self.rules.append(rule_str)
-
-    def get_grounded_program(self):
-        return '\n'.join(self.rules)
-
 class RunnerClingo(RunnerWasp):
     '''
     This class is meant to run experiments on the AMO sum propagator(s) Clingo
@@ -70,8 +54,6 @@ class RunnerClingo(RunnerWasp):
         arguments.append(models) if models != "" else ""
         arguments.append(seed) if seed != "" else ""
         self.ctl = Control(arguments=arguments)
-        observer = GroundProgramObserver()
-        self.ctl.register_observer(observer)
         
         # Load the instance file
         self.ctl.load(location_instance)
@@ -82,12 +64,17 @@ class RunnerClingo(RunnerWasp):
         
         # Ground the base part of the program
         self.ctl.ground([("base", [])])  # Ensure you ground with the correct subprogram
-        grounded_program = observer.get_grounded_program()
+        grounded_program = ground_program(location_encoding, location_instance, self.str_weights, self.str_lb, self.str_ub)
+        # print(f"grounded_program: {grounded_program}")
+        
         preprocess_map = preprocess_ground_program(grounded_program)
+
+        # return [], 0
 
         if group_type: 
             # initializing parameters 
-            self.registerPropagator(self.param.get("prop_type"))
+            for amosum_id in preprocess_map["amosum_ids"]:
+                self.registerPropagator(self.param.get("prop_type"), id=amosum_id)
 
 
         # Collect all models
@@ -126,7 +113,7 @@ class RunnerClingo(RunnerWasp):
         
         return models, wall_time
     
-    def registerPropagator(self, prop_type):
+    def registerPropagator(self, prop_type: str, id: str):
         match prop_type:
             case "ge_amo":
                 ge = True
@@ -144,7 +131,9 @@ class RunnerClingo(RunnerWasp):
                 assert False
 
         # Initialize and register the custom propagator
-        propagator_clingo = PropagatorClingo(self.param, propagation_phase=propagate_phase, ge=ge, prop_type=prop_type)
+        param = self.param.copy()
+        param["id"] = id
+        propagator_clingo = PropagatorClingo(param, propagation_phase=propagate_phase, ge=ge, prop_type=prop_type)
         self.ctl.register_propagator(propagator_clingo)
 
 

@@ -5,7 +5,7 @@ from prop_wasp.wasp import *
 def preprocess_ground_program(file: str) -> dict:
     starts_atoms = False
     ignore_all = False
-    ids = set()
+    amosum_ids = set()
 
     result_map = dict()
     for line in file.splitlines():
@@ -24,10 +24,10 @@ def preprocess_ground_program(file: str) -> dict:
                 assert len(l) == 2
                 if l[1].startswith("group"):
                     terms = getTerms("group", l[1])
-                    ids.add(terms[-1])
+                    amosum_ids.add(terms[-1])
                     # print(l[1])
                                 
             # print(line.strip())
 
-    result_map["ids"] = ids
+    result_map["amosum_ids"] = amosum_ids
     return result_map
