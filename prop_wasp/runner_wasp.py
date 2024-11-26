@@ -329,9 +329,10 @@ class RunnerWasp:
 
         timeout_str = f"timeout {self.timeout_m}m" if not self.exp else ""
 
-        grounded_program = ground_program(location_encoding, location_instance, self.str_weights, self.str_lb, self.str_ub)
+        grounded_program, run_command_ground = ground_program(location_encoding, location_instance, self.str_weights, self.str_lb, self.str_ub, return_command=True)
         
-        run = f"echo \"{grounded_program}\" | {timeout_str} time -p {RunnerWasp.SOLVER} {RunnerWasp.SILENT} {self.n0} "
+        run_wasp = f"{timeout_str} time -p {RunnerWasp.SOLVER} {RunnerWasp.SILENT} {self.n0}"
+        run = f"echo \"{grounded_program}\" | {run_wasp}"
         
         id_param = f"-id {self.id}"
         ass_param = f" -ass {self.ass}" if self.ass != "" else ""
@@ -352,7 +353,7 @@ class RunnerWasp:
             --plugins-file=\"{propagator} {id_param}{min_param}{ass_param}{write_stats_reason}{debug}\""
   
         if self.PRINT_RUN:
-            print(f"run:\t{run}")
+            print(f"run:\t{run_command_ground} | {run_wasp}")
 
         
         # preprocessing
