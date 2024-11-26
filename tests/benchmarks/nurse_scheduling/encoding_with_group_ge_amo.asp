@@ -18,7 +18,12 @@ workshift(6,"6-holiday",0).
 
 % Each nurse works from 1687 to 1692 hours per year.
 :- nurse(N), maxHoursPerYear(MAX), #sum{H,D : assign(N,T,D), workshift(T,_,H)} > MAX.
-:- nurse(N), minHoursPerYear(MIN), #sum{H,D : assign(N,T,D), workshift(T,_,H)} < MIN.
+
+% :- nurse(N), minHoursPerYear(MIN), #sum{H,D : assign(N,T,D), workshift(T,_,H)} < MIN.
+lb(MIN, (0, nurse(N), minHoursPerYear(MIN))) :- nurse(N), assign(N,T,D), workshift(T,_,H), minHoursPerYear(MIN).
+group(assign(N,T,D), H, (D,N), (0, nurse(N), minHoursPerYear(MIN))) :-  nurse(N), assign(N,T,D), workshift(T,_,H), minHoursPerYear(MIN).
+id_aux(nurse(N), minHoursPerYear(MIN)) :- nurse(N), minHoursPerYear(MIN).
+group(id_aux(nurse(N), minHoursPerYear(MIN)), MIN, (nurse(N), minHoursPerYear(MIN)), (0, nurse(N), minHoursPerYear(MIN))) :- id_aux(nurse(N), minHoursPerYear(MIN)).
 
 % Each nurse cannot work twice in 24 hours.
 :- nurse(N), assign(N, T1, D), assign(N, T2, D+1), T2 < T1, T2 <= 3, T1 <= 3.
@@ -58,4 +63,4 @@ workshift(6,"6-holiday",0).
 :- nurse(N), #count{D : assign(N,3,D)} > MAXNIGHTS, maxNights(MAXNIGHTS).
 :- nurse(N), #count{D : assign(N,3,D)} < MINNIGHTS, minNights(MINNIGHTS).
 
-#show assign/3.
+% #show assign/3.

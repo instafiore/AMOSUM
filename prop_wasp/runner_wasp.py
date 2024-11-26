@@ -47,7 +47,8 @@ class RunnerWasp:
     GRAPH_COLOURING_REGEX = r'^(graph_colouring|gc)$'
     SIMPLE_TEST_REGEX = r'^(simple_tests?|st)$'
     MLG_REGEX = r'^(mlg)$'
-    VALID_REGEX = [KNAPSACK_REGEX, GRAPH_COLOURING_REGEX, SIMPLE_TEST_REGEX, MLG_REGEX]
+    NURSE_SCHEDULING_REGEX = r'^(nurse|nr)$'
+    VALID_REGEX = [KNAPSACK_REGEX, GRAPH_COLOURING_REGEX, SIMPLE_TEST_REGEX, MLG_REGEX, NURSE_SCHEDULING_REGEX]
     REGEX_WEIGHT_ATOM_KN = r"object\((\d+),\s*(\d+),\s*(\d+)\)"
     REGEX_WEIGHT_ATOM_GC = r"colour_weight\((\w+),\s*(\d+)\)"
     REGEX_WEIGHT_ATOM_MLG = r"[ab]\((\d+),\s*(\d+)(,\d+)?\)"
@@ -98,15 +99,11 @@ class RunnerWasp:
             self.problem = RunnerWasp.KNAPSACK
             # object\((\d+),(\d+),(\d+)\)\.
             self.key_weight_atom_amo = 0
-            self.weight_parm_id_key = 1
-            self.weight_parm_id_value = 3 if self.ge else 2
             self.atom_answerset_regex = r"in_knapsack\((\w+),(\w+?)\)"
         elif re.match(RunnerWasp.GRAPH_COLOURING_REGEX,self.problem, re.IGNORECASE):
             # colour_weight\((\w+),(\d+)\).\.
             self.problem = RunnerWasp.GRAPH_COLOURING
             self.key_weight_atom_amo = 0
-            self.weight_parm_id_key = 1
-            self.weight_parm_id_value = 2
             self.atom_answerset_regex= r"col\((\w+),(\w+?)\)"
         elif re.match(RunnerWasp.SIMPLE_TEST_REGEX,self.problem, re.IGNORECASE):
             self.problem = RunnerWasp.SIMPLE_TEST
@@ -115,9 +112,11 @@ class RunnerWasp:
             self.problem = RunnerWasp.MLG
             #a(W,X)
             self.key_weight_atom_amo = 0
-            self.weight_parm_id_key = 0
-            self.weight_parm_id_value = 1
             self.atom_answerset_regex= RunnerWasp.REGEX_WEIGHT_ATOM_MLG
+        elif re.match(RunnerWasp.NURSE_SCHEDULING_REGEX,self.problem, re.IGNORECASE):
+            self.problem = RunnerWasp.NURSE
+            self.key_weight_atom_amo = 0
+            self.atom_answerset_regex= r"assign\((\w+),(\w+?),(\w+?)\)"
         elif self.problem == "NP":
            self.atom_answerset_regex= RunnerWasp.GENERIC_REGEX_ANSWERS_SET_ATOM
         else:
@@ -281,7 +280,6 @@ class RunnerWasp:
         for atom in ans:
             match = re.match(self.atom_answerset_regex, atom)
             key = match.group(self.key_weight_atom_amo)
-            mult = int(match.group(2)) if self.problem == RunnerWasp.KNAPSACK else 1
             # print(f"atom {atom} key: {key} mult: {mult} self.atom_answerset_regex: {self.atom_answerset_regex} self.key_weight_atom_amo:{self.key_weight_atom_amo}")
             mps += self.maps_weights[key] 
 
