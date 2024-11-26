@@ -19,6 +19,23 @@ from  utility import *
 import utility
 import settings
 from prop_clingo.propagator_clingo import *
+from preprocess import *
+
+class GroundProgramObserver:
+    def __init__(self):
+        self.rules = []
+
+    def rule(self, choice, head, body):
+        """
+        Capture grounded rules.
+        """
+        head_str = ', '.join(map(str, head))
+        body_str = ', '.join(map(str, body))
+        rule_str = f"{{{head_str}}} :- {body_str}." if body else f"{{{head_str}}}."
+        self.rules.append(rule_str)
+
+    def get_grounded_program(self):
+        return '\n'.join(self.rules)
 
 class RunnerClingo(RunnerWasp):
     '''
@@ -53,6 +70,8 @@ class RunnerClingo(RunnerWasp):
         arguments.append(models) if models != "" else ""
         arguments.append(seed) if seed != "" else ""
         self.ctl = Control(arguments=arguments)
+        observer = GroundProgramObserver()
+        self.ctl.register_observer(observer)
         
         # Load the instance file
         self.ctl.load(location_instance)
@@ -63,6 +82,8 @@ class RunnerClingo(RunnerWasp):
         
         # Ground the base part of the program
         self.ctl.ground([("base", [])])  # Ensure you ground with the correct subprogram
+        grounded_program = observer.get_grounded_program()
+        preprocess_map = preprocess_ground_program(grounded_program)
 
         if group_type: 
             # initializing parameters 

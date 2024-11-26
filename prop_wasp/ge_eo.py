@@ -28,13 +28,18 @@ def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
     for g in propagator.groups:
         if g == G or not propagator.true_group[g] is None:
             continue
-
-        start = g.max_und if not g.max_und is None else 0
-        for i in range(start-1,-1,-1):
-            l = g.ord_l[i]
+        # start = g.max_und if not g.max_und is None else 0
+        # for i in range(start-1,-1,-1):
+        #     l = g.ord_l[i]
+        #     if propagator.I[l] is None:
+        #         if propagator.mps(g, l, assumed=True) < propagator.lb:
+        #             S.extend([not_(lit) for lit in g.ord_l[i::-1] if propagator.I[lit] is None])
+        #             break
+        for l in g.ord_l:
             if propagator.I[l] is None:
                 if propagator.mps(g, l, assumed=True) < propagator.lb:
-                    S.extend([not_(lit) for lit in g.ord_l[i::-1] if propagator.I[lit] is None])
+                    S.append(not_(l))
+                else:
                     break
 
     propagator.reason = [] 

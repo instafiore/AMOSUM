@@ -457,8 +457,9 @@ class AmoSumPropagator:
             debug(error)
             if self.solver != AmoSumPropagator.WASP or self.prob_type != "EO":
                 raise Exception(error)
-
-        return (w_p != w_n or amo_condition,  None)
+            
+        G = G if self.prob_type == "EO" else None
+        return (w_p != w_n or amo_condition,  G)
     
     def mps(self, g: Group, l: int, assumed:bool, return_literals = False):
         if assumed:
