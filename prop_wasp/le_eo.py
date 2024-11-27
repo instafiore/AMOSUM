@@ -9,6 +9,7 @@ from utility import *
 import re
 from prop_wasp.propagator_wasp import *
 import prop_wasp.propagator_wasp as propagator_wasp
+import inspect
 
 '''
 Propagator for ' <= UB ' constraint with Exactly One constraint 
@@ -20,7 +21,7 @@ Invariants:
 propagator_wasp.propagator.prob_type = "EO"
 propagator_wasp.propagator.ge = False
 
-def propagate_phase(G: Group, propagator: AmoSumPropagator):
+def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
     global N,ub, I, weight, aggregate, groups, mps, group, reason, true_group
 
     # set of derived literals
@@ -29,8 +30,6 @@ def propagate_phase(G: Group, propagator: AmoSumPropagator):
     # reason
     R : List[int] = []
     
-    # print_I(I=common.I, atomNames=atomNames, aggregate=aggregate)
-
     for g in propagator.groups:
         if g == G or not propagator.true_group[g] is None:
             continue

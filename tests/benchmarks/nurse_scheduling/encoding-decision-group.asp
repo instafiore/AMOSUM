@@ -4,9 +4,9 @@ days(365).
 day(1..365).
 
 % workshift(id, name, hours).
-workshift(1,"1-morning",7).
-workshift(2,"2-afternoon",7).
-workshift(3,"3-night",10).
+workshift(1,"1-morning",2).
+workshift(2,"2-afternoon",2).
+workshift(3,"3-night",3).
 workshift(4,"4-restafternights",0).
 workshift(5,"5-rest",0). %called weekend in the document.
 workshift(6,"6-holiday",0).
@@ -18,12 +18,15 @@ workshift(6,"6-holiday",0).
 
 % Each nurse works from 1687 to 1692 hours per year.
 :- nurse(N), maxHoursPerYear(MAX), #sum{H,D : assign(N,T,D), workshift(T,_,H)} > MAX.
+%ub(MAX, (0, nurse(N), maxHoursPerYear(MAX))) :- nurse(N), assign(N,T,D), workshift(T,_,H), minHoursPerYear(MAX).
+%group(assign(N,T,D), H, (D,N), (0, nurse(N), maxHoursPerYear(MAX)), le_eo) :-  nurse(N), assign(N,T,D), workshift(T,_,H), minHoursPerYear(MAX).
 
-% :- nurse(N), minHoursPerYear(MIN), #sum{H,D : assign(N,T,D), workshift(T,_,H)} < MIN.
-lb(MIN, (0, nurse(N), minHoursPerYear(MIN))) :- nurse(N), assign(N,T,D), workshift(T,_,H), minHoursPerYear(MIN).
-group(assign(N,T,D), H, (D,N), (0, nurse(N), minHoursPerYear(MIN))) :-  nurse(N), assign(N,T,D), workshift(T,_,H), minHoursPerYear(MIN).
-id_aux(nurse(N), minHoursPerYear(MIN)) :- nurse(N), minHoursPerYear(MIN).
-group(id_aux(nurse(N), minHoursPerYear(MIN)), MIN, (nurse(N), minHoursPerYear(MIN)), (0, nurse(N), minHoursPerYear(MIN))) :- id_aux(nurse(N), minHoursPerYear(MIN)).
+
+:- nurse(N), minHoursPerYear(MIN), #sum{H,D : assign(N,T,D), workshift(T,_,H)} < MIN .%,N != 1.
+%lb(MIN, (0, nurse(1), minHoursPerYear(MIN))) :- nurse(1), assign(1,T,D), workshift(T,_,H), minHoursPerYear(MIN).
+%group(assign(1,T,D), H, (D,1), (0, nurse(1), minHoursPerYear(MIN)), ge_amo) :-  nurse(1), assign(1,T,D), workshift(T,_,H), minHoursPerYear(MIN).
+%id_aux(nurse(N), minHoursPerYear(MIN)) :- nurse(N), minHoursPerYear(MIN).
+%group(id_aux(nurse(N), minHoursPerYear(MIN)), MIN, (nurse(N), minHoursPerYear(MIN)), (0, nurse(N), minHoursPerYear(MIN)), ge_amo) :- id_aux(nurse(N), minHoursPerYear(MIN)).
 
 % Each nurse cannot work twice in 24 hours.
 :- nurse(N), assign(N, T1, D), assign(N, T2, D+1), T2 < T1, T2 <= 3, T1 <= 3.

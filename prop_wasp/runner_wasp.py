@@ -94,6 +94,7 @@ class RunnerWasp:
             raise Exception(f"Invalid problem inserted! Valid Regex: {str(RunnerWasp.VALID_REGEX)}")
         
         self.enc_type = self.param.get("enc_type", None)
+        self.propagators = []
         self.ge = not re.match("ge",self.enc_type) is None if not self.enc_type is None else True
         
         if re.match(RunnerWasp.KNAPSACK_REGEX,self.problem, re.IGNORECASE):
@@ -192,8 +193,8 @@ class RunnerWasp:
         if (self.enc_type is None and self.specific_instance is None) or (self.enc_type and not self.enc_type in valid_enc_type):
             raise Exception(f"No valid encoding type key defined, feasible key:'enc_type', feasible values are: {str(valid_enc_type)}")
         
-        if (self.enc_type is None and self.specific_instance is None) or (self.enc_type and not self.enc_type in valid_enc_type):
-            raise Exception(f"No valid problem type key defined, feasible key:'prob_type', feasible values are: {str(valid_prop_type)}")
+        if (self.prop_type is None and self.specific_instance is None) or (self.prop_type and not self.prop_type in valid_enc_type):
+            raise Exception(f"No valid prop type key defined, feasible key:'prob_type', feasible values are: {str(valid_prop_type)}")
 
 
         if self.specific_instance and self.problem == RunnerWasp.SIMPLE_TEST:
@@ -302,13 +303,13 @@ class RunnerWasp:
             encoding = settings.MAP_ENC_ENCODING_FILES[self.enc_type][0 if enc_aggr else 1] \
                 if self.enc_type else None
             encoding = self.enc if self.enc else encoding
-            answersets, time = self.run_instance(self.specific_instance, encoding=encoding, group_type = not enc_aggr)
+            answersets, time = self.run_instance(self.specific_instance, encoding=encoding)
             self.print_ans(answer_sets=answersets, time=time)
         else:
             assert False
 
 
-    def run_instance(self, instance, encoding = None, group_type = True):
+    def run_instance(self, instance, encoding = None):
 
         # defining the lower bound(s)
         self.create_bound(instance=instance, ub=False)
@@ -346,18 +347,22 @@ class RunnerWasp:
             raise Exception(f"The inserted value {minimization} is not valid, possible values are {possible_values_minimize}")
         min_param = f" -min_r {minimization}"
 
-        if group_type and self.prop_type:
-            propagator = settings.MAP_PROPAGATOR[self.prop_type]
-            run += f"--interpreter=python \
-            --script-directory={settings.PROPAGATOR_DIR_LOCATION_WASP} \
-            --plugins-file=\"{propagator} {id_param}{min_param}{ass_param}{write_stats_reason}{debug}\""
-  
-        if self.PRINT_RUN:
-            print(f"run:\t{run_command_ground} | {run_wasp}")
-
-        
         # preprocessing
         preprocess_map =  preprocess_ground_program(grounded_program)
+        for amosum in preprocess_map["amosum_set"]:
+            self.registerPropagator(amosum.prop_type, amosum.id, min_param, ass_param, write_stats_reason, debug)
+
+        prop_run = ""
+        if len(preprocess_map["amosum_set"]) > 0:
+            prop = (settings.MAP_PROPAGATOR[self.prop_type], self.id, min_param, ass_param, write_stats_reason, debug) if self.prop_type else None
+            self.propagators.append(*prop) if prop else None
+            prop_run = f" --interpreter=python \
+            --script-directory={settings.PROPAGATOR_DIR_LOCATION_WASP} \
+            --plugins-file={"~".join(self.propagators)}"
+            run += prop_run
+  
+        if self.PRINT_RUN:
+            print(f"run:\t{run_command_ground} | {run_wasp}{prop_run}")
 
         # running test
         self.maps_weights = None
@@ -414,6 +419,11 @@ class RunnerWasp:
         self.comment_bound(instance=instance, ub=True, restore=True)
 
         return answer_sets, time
+
+    def registerPropagator(self, prop_type: str, id: str, *args):
+        arg_str = "".join(args)
+        prop = f"\"{prop_type} -id {id}{arg_str}\""
+        self.propagators.append(prop)
     
     def run_classical_test(self, instance: str):
             
@@ -437,7 +447,7 @@ class RunnerWasp:
         for i in range(len(encodings)):
             encoding = encodings[i]
             group = (i + 1)%2 == 0
-            (answer_sets, time) = self.run_instance(instance, encoding, group )
+            (answer_sets, time) = self.run_instance(instance, encoding)
             # print(f"encoding {encoding} answer_sets {answer_sets}")
             if group:
                 answer_sets_group = answer_sets

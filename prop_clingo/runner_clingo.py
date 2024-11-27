@@ -29,7 +29,7 @@ class RunnerClingo(RunnerWasp):
     def __init__(self, parameters: Dict[str, str]) -> None:
         super().__init__(parameters)
     
-    def run_instance(self, instance, encoding=None, group_type=True):
+    def run_instance(self, instance, encoding=None):
         
         # defining the lower bound(s)
         self.create_bound(instance=instance, ub=False)
@@ -68,13 +68,10 @@ class RunnerClingo(RunnerWasp):
         # print(f"grounded_program: {grounded_program}")
         
         preprocess_map = preprocess_ground_program(grounded_program)
+        print(f"preprocess_map: {preprocess_map}")
 
-        # return [], 0
-
-        if group_type: 
-            # initializing parameters 
-            for amosum_id in preprocess_map["amosum_ids"]:
-                self.registerPropagator(self.param.get("prop_type"), id=amosum_id)
+        for amosum in preprocess_map["amosum_set"]:
+            self.registerPropagator(prop_type=amosum.prop_type, id=amosum.id)
 
 
         # Collect all models
@@ -119,7 +116,7 @@ class RunnerClingo(RunnerWasp):
                 ge = True
                 prop_type = "AMO"
                 from prop_wasp.ge_amo import propagate_phase
-            case "le_amo":
+            case "le_eo":
                 ge = False
                 prop_type = "AMO"
                 from prop_wasp.le_eo import propagate_phase

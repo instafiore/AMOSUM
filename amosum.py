@@ -233,7 +233,7 @@ class AmoSumPropagator:
             if  a.startswith('group('):
                 terms = wasp.getTerms('group',a)
                 # Syntax: group( lit_name, weight, group_id, aggregate_id)
-                if len(terms) != 4 or terms[3] != self.ID:
+                if (len(terms) != 4 and len(terms) != 5)or terms[3] != self.ID:
                     continue
                 
                 lit_str = terms[0]
@@ -315,7 +315,7 @@ class AmoSumPropagator:
         nGroup = Group.autoincrement 
         self.true_group = TrueGroupFunction(nGroup)
 
-        debug(f"total_weight_names: {json.dumps(self.weights_names)}", force_print=True)
+        # debug(f"total_weight_names: {json.dumps(self.weights_names)}", force_print=True)
 
         # PREPROCESSING
         for i in range(1,len(lits)):
