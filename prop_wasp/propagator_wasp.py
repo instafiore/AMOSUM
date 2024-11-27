@@ -24,7 +24,6 @@ def getReasonsForCheckFailure():
 def getLiterals(*lits):
     global propagator
     get_literals = propagator.getLiterals(*lits)
-    debug(f"atoms names: {atomNames}")
     return get_literals
 
 def simplifyAtLevelZero():

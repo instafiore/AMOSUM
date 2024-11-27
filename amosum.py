@@ -195,6 +195,7 @@ class AmoSumPropagator:
 
 
     def getLiterals(self, *lits):
+        debug(f"self.sys_parameters: {self.sys_parameters}", force_print=True)
         param = process_sys_parameters(self.sys_parameters) if type(self.sys_parameters) == list else self.sys_parameters if type(self.sys_parameters) == dict else "ERROR"
     
         set_debug(param.get("d",""))

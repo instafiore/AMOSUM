@@ -6,7 +6,7 @@ day(1..365).
 % workshift(id, name, hours).
 workshift(1,"1-morning",2).
 workshift(2,"2-afternoon",2).
-workshift(3,"3-night",3).
+workshift(3,"3-night",4).
 workshift(4,"4-restafternights",0).
 workshift(5,"5-rest",0). %called weekend in the document.
 workshift(6,"6-holiday",0).
@@ -22,9 +22,9 @@ workshift(6,"6-holiday",0).
 %group(assign(N,T,D), H, (D,N), (0, nurse(N), maxHoursPerYear(MAX)), le_eo) :-  nurse(N), assign(N,T,D), workshift(T,_,H), minHoursPerYear(MAX).
 
 
-:- nurse(N), minHoursPerYear(MIN), #sum{H,D : assign(N,T,D), workshift(T,_,H)} < MIN .%,N != 1.
-%lb(MIN, (0, nurse(1), minHoursPerYear(MIN))) :- nurse(1), assign(1,T,D), workshift(T,_,H), minHoursPerYear(MIN).
-%group(assign(1,T,D), H, (D,1), (0, nurse(1), minHoursPerYear(MIN)), ge_amo) :-  nurse(1), assign(1,T,D), workshift(T,_,H), minHoursPerYear(MIN).
+:- nurse(N), minHoursPerYear(MIN), #sum{H,D : assign(N,T,D), workshift(T,_,H)} < MIN.
+lb(MIN, (0, nurse(1), minHoursPerYear(MIN))) :- nurse(1), assign(1,T,D), workshift(T,_,H), minHoursPerYear(MIN).
+group(assign(1,T,D), H, (D,1), (0, nurse(1), minHoursPerYear(MIN)), ge_amo) :-  nurse(1), assign(1,T,D), workshift(T,_,H), minHoursPerYear(MIN).
 %id_aux(nurse(N), minHoursPerYear(MIN)) :- nurse(N), minHoursPerYear(MIN).
 %group(id_aux(nurse(N), minHoursPerYear(MIN)), MIN, (nurse(N), minHoursPerYear(MIN)), (0, nurse(N), minHoursPerYear(MIN)), ge_amo) :- id_aux(nurse(N), minHoursPerYear(MIN)).
 

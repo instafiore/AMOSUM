@@ -332,8 +332,7 @@ class RunnerWasp:
 
         grounded_program, run_command_ground = ground_program(location_encoding, location_instance, self.str_weights, self.str_lb, self.str_ub, return_command=True)
         
-        run_wasp = f"{timeout_str} time -p {RunnerWasp.SOLVER} {RunnerWasp.SILENT} {self.n0}"
-        run = f"echo \"{grounded_program}\" | {run_wasp}"
+        run = f"{timeout_str} time -p {RunnerWasp.SOLVER} {RunnerWasp.SILENT} {self.n0}"
         
         id_param = f"-id {self.id}"
         ass_param = f" -ass {self.ass}" if self.ass != "" else ""
@@ -362,14 +361,15 @@ class RunnerWasp:
             run += prop_run
   
         if self.PRINT_RUN:
-            print(f"run:\t{run_command_ground} | {run_wasp}{prop_run}")
+            print(run)
+            print(f"run:\t{run_command_ground} | {run}{prop_run}")
 
         # running test
         self.maps_weights = None
-        run_process = subprocess.run(run, shell=True, capture_output=True)
+        run_process = subprocess.run(run, input=grounded_program ,shell=True, capture_output=True, text=True)
 
-        output = run_process.stdout.decode()
-        error = run_process.stderr.decode()
+        output = run_process.stdout
+        error = run_process.stderr
         output_error = output + error
 
         lines_output = output.splitlines() 
@@ -421,8 +421,16 @@ class RunnerWasp:
         return answer_sets, time
 
     def registerPropagator(self, prop_type: str, id: str):
+        
+        string_param_list = []
+        for key in self.param:
+            if self.param[key] == True:
+                string_param = f"-{key}"
+            else:
+                string_param = f"-{key} {self.param[key]}"
+            string_param_list.append(string_param)
 
-        params_str = " ".join(f"-{key} {self.param[key]}" for key in self.param)
+        params_str = " ".join(string_param_list)
         prop = f"\"{prop_type} -id {id} {params_str}\""
         self.propagators.append(prop)
     
