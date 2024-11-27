@@ -295,9 +295,9 @@ class RunnerWasp:
     def run(self):
         if self.instances:
             for instance in self.instances:
-                self.run_classical_test(instance=instance)
+                self.run_comparation(instance=instance)
         elif RunnerWasp.CHECKING_CORRECTNESS and self.specific_instance:
-            self.run_classical_test(instance=self.specific_instance)
+            self.run_comparation(instance=self.specific_instance)
         elif self.specific_instance:
             enc_aggr = self.param.get("enc_aggr", False)
             encoding = settings.MAP_ENC_ENCODING_FILES[self.enc_type][0 if enc_aggr else 1] \
@@ -350,7 +350,7 @@ class RunnerWasp:
         # preprocessing
         preprocess_map =  preprocess_ground_program(grounded_program)
         for amosum in preprocess_map["amosum_set"]:
-            self.registerPropagator(amosum.prop_type, amosum.id, min_param, ass_param, write_stats_reason, debug)
+            self.registerPropagator(amosum.prop_type, amosum.id)
 
         prop_run = ""
         if len(preprocess_map["amosum_set"]) > 0:
@@ -420,12 +420,13 @@ class RunnerWasp:
 
         return answer_sets, time
 
-    def registerPropagator(self, prop_type: str, id: str, *args):
-        arg_str = "".join(args)
-        prop = f"\"{prop_type} -id {id}{arg_str}\""
+    def registerPropagator(self, prop_type: str, id: str):
+
+        params_str = " ".join(f"-{key} {self.param[key]}" for key in self.param)
+        prop = f"\"{prop_type} -id {id} {params_str}\""
         self.propagators.append(prop)
     
-    def run_classical_test(self, instance: str):
+    def run_comparation(self, instance: str):
             
         # regex for file 
         regex_instance_file : str = r"^(?P<number>\d+)-(?P<problem>\w+)-(?P<size>\d+).*"
