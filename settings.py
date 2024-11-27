@@ -43,3 +43,8 @@ MAP_ENC_ENCODING_FILES = {
 MAP_PROPAGATOR = {"ge_amo": PROPAGATOR_NAME_ge_amo, "ge_eo": PROPAGATOR_NAME_ge_eo, "le_eo": PROPAGATOR_NAME_le_eo}
 
 FILE_REGEX = r"^\/?[\w.-]+((/[\w.-]*)*[\w+.-])?$"
+
+PREDICATE_GROUP = "group"
+PREDICATE_LB = "lb"
+PREDICATE_UB = "ub"
+

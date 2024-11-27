@@ -8,6 +8,7 @@ from utility import *
 import prop_wasp.wasp as wasp
 import re
 import settings
+from settings import *
 
 
 
@@ -223,16 +224,16 @@ class AmoSumPropagator:
         self.lb = None
         bind = []
         negative_lit_regex = re.compile(r"^not\s+(?P<atom_name>[\w()]+)")
-        bound_str = "lb" if self.ge else "ub" 
+        bound_str = PREDICATE_LB if self.ge else PREDICATE_UB 
         bound = None
          
 
         # selecting the interested literals
         self.weights_names = dict()
         for a in self.atomNames:
-            if  a.startswith('group('):
-                terms = wasp.getTerms('group',a)
-                # Syntax: group( lit_name, weight, group_id, aggregate_id)
+            if  a.startswith(f'{PREDICATE_GROUP}('):
+                terms = wasp.getTerms(PREDICATE_GROUP,a)
+                # Syntax: PREDICATE_GROUP( lit_name, weight, group_id, aggregate_id)
                 if (len(terms) != 4 and len(terms) != 5)or terms[3] != self.ID:
                     continue
                 
