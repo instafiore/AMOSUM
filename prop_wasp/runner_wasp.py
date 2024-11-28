@@ -361,7 +361,6 @@ class RunnerWasp:
             run += prop_run
   
         if self.PRINT_RUN:
-            print(run)
             print(f"run:\t{run_command_ground} | {run}{prop_run}")
 
         # running test

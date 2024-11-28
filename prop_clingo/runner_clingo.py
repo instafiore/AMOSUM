@@ -53,6 +53,8 @@ class RunnerClingo(RunnerWasp):
         seed = f"--seed={self.seed}" if self.seed != "" else ""
         arguments.append(models) if models != "" else ""
         arguments.append(seed) if seed != "" else ""
+        # arguments.append("--configuration=trendy")
+        arguments.append("--stats=2")
         self.ctl = Control(arguments=arguments)
         
         # Load the instance file
