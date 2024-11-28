@@ -6,6 +6,7 @@ import subprocess
 import sys
 from typing import Any, List
 import sys
+from settings import *
 # import clingo 
 
 # Debug mode
@@ -145,19 +146,23 @@ def ground_program(*paths, return_command = False):
 
 def process_sys_parameters(sys_parameters):
 
-    param = {}
-    regex = r"^-(.+)" 
-    
     # debug(sys_parameters)
+
+    params = []
+    regex = r"^-(.+)" 
     i = 1
+    prop_type = sys_parameters[i]
+    param = {}
+    i += 1
 
     while i < len(sys_parameters):
-        
+
         # creating the key
-        key = sys_parameters[i] 
+        key = sys_parameters[i]
+
         res_regex = re.match(regex, key)
         if res_regex is None:
-            raise Exception("Every key has to start with a dash! Ex: -problem knapsack")
+            raise Exception("Every key has to start with a dash! Ex: -id id")
         key = res_regex.group(1)
 
         if i + 1 >= len(sys_parameters) :
@@ -166,6 +171,8 @@ def process_sys_parameters(sys_parameters):
         
         value = sys_parameters[i+1] 
         res_regex = re.match(regex, value)
+    
+
         if res_regex is None:
             i += 2
             param[key] = value
@@ -174,7 +181,14 @@ def process_sys_parameters(sys_parameters):
             i += 1
             param[key] = True
 
-    return param
+        if i >= len(sys_parameters) or sys_parameters[i] in PROPAGATORS_NAMES:
+            params.append((prop_type, param))
+            if i < len(sys_parameters):
+                prop_type  = sys_parameters[i] 
+                param = {}
+                i += 1
+
+    return params
 
 def convert_assparam_to_assarray(assumptions):
  
@@ -551,6 +565,24 @@ def get_increment_name(increment: dict, atomNames: dict):
     for i in increment:
         increment_name[f"{get_name(atomNames=atomNames,lit=i)}"] = increment[i]
     return increment_name
+
+def get_propagator_variables(prop_type):
+    match prop_type:
+        case "ge_amo":
+            ge = True
+            prop_type = "AMO"
+            from prop_wasp.ge_amo import propagate_phase
+        case "le_eo":
+            ge = False
+            prop_type = "AMO"
+            from prop_wasp.le_eo import propagate_phase
+        case "ge_eo":
+            ge = True
+            prop_type = "EO"
+            from prop_wasp.ge_eo import propagate_phase
+        case _:
+            assert False
+    return ge, propagate_phase
 
 # MINIMIZING REASON 
 #################################################################################################################################################

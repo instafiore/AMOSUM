@@ -113,21 +113,7 @@ class RunnerClingo(RunnerWasp):
         return models, wall_time
     
     def registerPropagator(self, prop_type: str, id: str):
-        match prop_type:
-            case "ge_amo":
-                ge = True
-                prop_type = "AMO"
-                from prop_wasp.ge_amo import propagate_phase
-            case "le_eo":
-                ge = False
-                prop_type = "AMO"
-                from prop_wasp.le_eo import propagate_phase
-            case "ge_eo":
-                ge = True
-                prop_type = "EO"
-                from prop_wasp.ge_eo import propagate_phase
-            case _:
-                assert False
+        ge, propagate_phase = get_propagator_variables(prop_type=prop_type)
 
         # Initialize and register the custom propagator
         param = self.param.copy()

@@ -6,4 +6,4 @@ value_max(20).
 % group(in_knapsack(X,V), -V*WEIGHT, X,0) :- in_knapsack(X,V), object(X,WEIGHT,_).
 
 % :- #sum{V*VALUE,X: in_knapsack(X,V), object(X,_,VALUE)} < MIN_VALUE, lb(MIN_VALUE,1).
-group(in_knapsack(X,V), V*VALUE, X,1) :- in_knapsack(X,V), object(X,_,VALUE).
+group(in_knapsack(X,V), V*VALUE, X,1, ge_amo) :- in_knapsack(X,V), object(X,_,VALUE).

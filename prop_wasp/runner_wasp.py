@@ -357,7 +357,7 @@ class RunnerWasp:
             self.propagators.append(*prop) if prop else None
             prop_run = f" --interpreter=python \
             --script-directory={settings.PROPAGATOR_DIR_LOCATION_WASP} \
-            --plugins-file={'~'.join(self.propagators)}"
+            --plugins-file=\"{settings.PROPAGATOR_MODULE} {' '.join(self.propagators)}\""
             run += prop_run
   
         if self.PRINT_RUN:
@@ -430,7 +430,7 @@ class RunnerWasp:
             string_param_list.append(string_param)
 
         params_str = " ".join(string_param_list)
-        prop = f"\"{prop_type} -id {id} {params_str}\""
+        prop = f"{prop_type} -id {id} {params_str}"
         self.propagators.append(prop)
     
     def run_comparation(self, instance: str):

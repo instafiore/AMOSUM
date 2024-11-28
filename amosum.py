@@ -12,12 +12,13 @@ from settings import *
 
 
 
+
 class AmoSumPropagator:
 
     atomNames : dict[str: int]
 
     # input parameters
-    sys_parameters : List[str]
+    param : dict[str]
 
     # self.aggregate id
     ID : int
@@ -42,7 +43,7 @@ class AmoSumPropagator:
     # a function from self.groups -> literals U {None}
     true_group : TrueGroupFunction
 
-    # a set of self.groups
+    # a list of Group
     groups : List[Group]
 
     # literals derived at level 0
@@ -60,9 +61,6 @@ class AmoSumPropagator:
 
     # self.assumptions as a list of atom names
     assumptions : List[str]
-
-    # parameters from standard input
-    param : dict
 
     # global array of ordered lit per self.weight (ascending order)
     global_ord_lit : List[int]
@@ -119,7 +117,7 @@ class AmoSumPropagator:
 
     def __init__(self, atomsNames: dict[str: int], sys_parameters: List[str], propagation_phase: Callable[[Group, 'AmoSumPropagator'],  List[int]] = None, ge: bool = True, prob_type: str = "AMO", solver = WASP) -> None:
         self.atomNames = atomsNames
-        self.sys_parameters = sys_parameters
+        self.param = sys_parameters
         self.facts : List[int] = []
         self.reason : List[int] = []
         self.strategy = 'default'
@@ -131,6 +129,7 @@ class AmoSumPropagator:
         self.prob_type = prob_type
         self.propagate_phase = propagation_phase
         self.solver = solver
+        
 
     def getReasonsForCheckFailure(self):
         return None
@@ -195,12 +194,10 @@ class AmoSumPropagator:
 
 
     def getLiterals(self, *lits):
-        debug(f"self.sys_parameters: {self.sys_parameters}", force_print=True)
-        param = process_sys_parameters(self.sys_parameters) if type(self.sys_parameters) == list else self.sys_parameters if type(self.sys_parameters) == dict else "ERROR"
+        param = self.param
 
         set_debug(param.get("d",""))
-       
-        assert param != "ERROR"
+
         debug(f"param {param}", force_print=True)
         
         # initializing 
@@ -210,14 +207,15 @@ class AmoSumPropagator:
         self.I = SymmetricFunction(self.N)
         self.weight = WeightFunction(self.N)
         self.group = GroupFunction(self.N)
+        self.propagated = SymmetricFunction(self.N)
         self.aggregate = AggregateFunction(self.N, False)
         self.reason_trues = PerfectHash(self.N,[])
         self.redundant_lits = PerfectHash(self.N,[])
         self._mps = 0
         self.ID = param.get("id","0")
-        # self.groups = set()
         self.groups = []
         self.assumptions = param.get("ass", False)
+        self.current_sum = 0 
 
         #used to create the self.groups
         groups_raw : dict[int, List[int]] = {}
@@ -304,8 +302,7 @@ class AmoSumPropagator:
             # updatind the max possible sum
             self._mps = self._mps + self.weight[m_w(G, max = self.ge)]
         
-            # adding the self.group to the set of self.groups
-            # self.groups.add(G)
+            # adding the self.group to the list of self.groups
             assert G not in self.groups
             self.groups.append(G)
 
@@ -329,7 +326,6 @@ class AmoSumPropagator:
                 self.inconsistent_at_level_0 = True
 
         self.facts = lits[1:]
-        self.param = param
 
         self.last_decision_lit = 1
         self.dl = 0        
@@ -362,7 +358,13 @@ class AmoSumPropagator:
         self.last_decision_lit = lit if dl != self.dl else self.last_decision_lit
         self.dl = dl
 
+    def is_in_aggregate(self, l):
+        return self.aggregate[l] or self.aggregate[not_(l)]
+
     def onLiteralTrue(self, lit, dl):
+
+        if not self.is_in_aggregate(lit):
+            return []
 
         self.updated_dl(lit, dl)  
         self.current_literal = lit      
@@ -386,16 +388,17 @@ class AmoSumPropagator:
         
 
         propagated_lits = []
-        name = get_name(lit=lit, atomNames=self.atomNames)
+        # name = get_name(lit=lit, atomNames=self.atomNames)
         if next_phase:
             try:
-                debug(f"[{next_phase}] Propagation phase of {name} started [{self._mps}]:")
+                # debug(f"[{next_phase}] Propagation phase of {name} started [{self._mps}]:")
                 propagated_lits = self.propagate_phase(G, self, self.atomNames)
             except Exception as e:
                 print(e, file=sys.stderr)
                 raise e
         else:
-            debug(f"[{next_phase}] Propagation phase of {name} not started [{self._mps}]:")
+            # debug(f"[{next_phase}] Propagation phase of {name} not started [{self._mps}]:")
+            pass
 
 
         return propagated_lits
@@ -417,6 +420,7 @@ class AmoSumPropagator:
             w_p = self.weight[m_w(G, max = self.ge)]
             w_n = self.weight[l]
             tg = True
+            self.current_sum += w_n
             
         elif self.aggregate[not_(l)]:
             G = self.group[not_(l)]
@@ -461,7 +465,10 @@ class AmoSumPropagator:
                 raise Exception(error)
             
         G = G if self.prob_type == "EO" else None
-        return (w_p != w_n or amo_condition,  G)
+        current_sum_condition = not self.ge or self.current_sum < self.bound
+        # print(self.current_sum
+        next_phase = current_sum_condition and (w_p != w_n or amo_condition)
+        return (next_phase,  G)
     
     def mps(self, g: Group, l: int, assumed:bool, return_literals = False):
         if assumed:
@@ -530,6 +537,10 @@ class AmoSumPropagator:
         
         for i in range(1 if wasp else 0,len(lits)):
             l = lits[i]
+            if not self.is_in_aggregate(l):
+                continue
+
+            self.propagated[l] = False
             
             # This has been added to handle early stop in propagation phase (clingo propagation)
             if self.I[l] is None:
@@ -547,8 +558,6 @@ class AmoSumPropagator:
                 G = self.group[not_(l)]
                 l = not_(l)
 
-            if G is None:
-                print(f"literal sinner of G none is: {get_name(atomNames=self.atomNames, lit=l)} plit {l}")
             assert not G is None
 
             # increasing the number of undefined literals for G
@@ -557,8 +566,10 @@ class AmoSumPropagator:
             tg = self.true_group[G]
 
             # the true literal of G becomes undefined
+            w_l = self.weight[l]
             if tg == l:
                 self.true_group[G] = None
+                self.current_sum -= w_l
 
             m_und = m_w(G, max = self.ge)
 
@@ -589,7 +600,7 @@ class AmoSumPropagator:
                 G.set_max(l) if self.ge else G.set_min(l)
                 if tg is None:
                     if self.prob_type == "AMO":
-                        self._mps += self.weight[l]
+                        self._mps += w_l
                     else:
                         assert False
                 continue
@@ -597,19 +608,20 @@ class AmoSumPropagator:
             pos_m     =  G.ord_i[m_und]
             pos_l     =  G.ord_i[l]
             m_weight  =  self.weight[m_w(G, max = self.ge)]
-            
+           
+
             if tg == l:
 
                 # updating the self.mps
-                if (m_weight > self.weight[l] and self.ge) or (m_weight < self.weight[l] and not self.ge): 
-                    self._mps = self._mps - self.weight[l] + m_weight
+                if (m_weight > w_l and self.ge) or (m_weight < w_l and not self.ge): 
+                    self._mps = self._mps - w_l + m_weight
 
                 # updating the max undefined if self.ge else min undefined
                 if (self.ge and pos_m < pos_l) or (not self.ge and pos_m > pos_l):
                     G.set_max(l) if self.ge else G.set_min(l)
 
             else:
-                w_l = self.weight[l]
+                
                 if (self.ge and w_l >= m_weight and pos_l > pos_m) or (not self.ge and w_l <= m_weight and pos_l < pos_m ):
                     G.set_max(l) if self.ge else G.set_min(l)
                     if tg is None:
@@ -620,3 +632,7 @@ class AmoSumPropagator:
         for plit in changes:
             changes_str.append((get_name(atomNames=self.atomNames, lit = plit), plit))
         return changes_str
+
+    def create_propagator(atomsNames, sys_parameters, propagation_phase, ge, prop_type, solver=WASP) -> "AmoSumPropagator":
+        propagator = AmoSumPropagator(atomsNames=atomsNames, sys_parameters=sys_parameters, propagation_phase=propagation_phase, ge=ge, prob_type=prop_type, solver=solver)
+        return propagator

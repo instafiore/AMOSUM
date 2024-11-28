@@ -16,10 +16,6 @@ Invariants:
     In the aggregate set there are not two literals such that li = ~lj
 '''
 
-propagator_wasp.propagator.prob_type = "AMO"
-propagator_wasp.propagator.ge = True
-
-
 def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
     
     # try:
@@ -47,6 +43,7 @@ def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
             j = g.ord_i[ml_g]
             propagator.reason_trues[ml_g] = [lit for lit in g.ord_l[i:j] if propagator.I[lit] == False]
             S.append(ml_g)
+            propagator.propagated[ml_g] = True
             propagate_to_true = True
         
         if not propagate_to_true:
@@ -54,6 +51,7 @@ def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
                 if propagator.I[l] is None:
                     if propagator.mps(g, l, assumed=True) < propagator.lb:
                         S.append(not_(l))
+                        propagator.propagated[not_(l)] = True
                     else:
                         break
 
@@ -79,5 +77,3 @@ def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
     print_derivation(propagator.atomNames, S)
 
     return S
-
-propagator.propagate_phase = propagate_phase

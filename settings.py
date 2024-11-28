@@ -11,6 +11,8 @@ WEIGHTS = "weights"
 PROPAGATOR_NAME_ge_eo = "ge_eo"
 PROPAGATOR_NAME_ge_amo = "ge_amo"
 PROPAGATOR_NAME_le_eo = "le_eo"
+PROPAGATOR_MODULE = "propagator_wasp"
+PROPAGATORS_NAMES = [PROPAGATOR_NAME_ge_eo, PROPAGATOR_NAME_ge_amo, PROPAGATOR_NAME_le_eo]
 
 ENCODING_WITH_GROUP_GE_EO = "encoding_with_group_ge_eo"
 ENCODING_WITH_AGGR_GE_EO = "encoding_with_aggregates_ge_eo"

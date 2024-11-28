@@ -40,6 +40,7 @@ def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
                 if propagator.mps(g=g, l=l, assumed=True) > propagator.ub:
                     # infer l as false
                     S.append(not_(l))
+                    propagator.propagated[not_(l)] = True
                 else:
                     break
 
