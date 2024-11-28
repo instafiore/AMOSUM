@@ -357,7 +357,7 @@ class RunnerWasp:
             self.propagators.append(*prop) if prop else None
             prop_run = f" --interpreter=python \
             --script-directory={settings.PROPAGATOR_DIR_LOCATION_WASP} \
-            --plugins-file={"~".join(self.propagators)}"
+            --plugins-file={'~'.join(self.propagators)}"
             run += prop_run
   
         if self.PRINT_RUN:
