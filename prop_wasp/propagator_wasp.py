@@ -32,8 +32,8 @@ def getLiterals(*lits):
     # debug(f"params: {params}", force_print=True)
     global_literals = []
     for prop_type, param in params:
-        ge, propagate_phase, prop_type = get_propagator_variables(prop_type=prop_type)
-        propagator = AmoSumPropagator.create_propagator(atomsNames=atomNames, sys_parameters=param, propagation_phase=propagate_phase, ge=ge, prop_type=prop_type)
+        ge, propagate_phase, choice_cons = get_propagator_variables(prop_type=prop_type)
+        propagator = AmoSumPropagator.create_propagator(atomsNames=atomNames, sys_parameters=param, propagation_phase=propagate_phase, ge=ge, choice_cons=choice_cons)
         get_literals = propagator.getLiterals(*lits)
         global_literals.extend(get_literals)
         propagators.append(propagator)

@@ -81,7 +81,7 @@ class AmoSumPropagator:
     count_p : int
 
     # defining the problem type, possible values: AMO, EO
-    prob_type : str
+    choice_cons : str
 
     # defining whether the propagator is for the constraint >=  (ge) or <= (le) 
     ge : bool
@@ -115,7 +115,7 @@ class AmoSumPropagator:
     WASP = 1
     CLINGO = 2
 
-    def __init__(self, atomsNames: dict[str: int], sys_parameters: List[str], propagation_phase: Callable[[Group, 'AmoSumPropagator'],  List[int]] = None, ge: bool = True, prob_type: str = "AMO", solver = WASP) -> None:
+    def __init__(self, atomsNames: dict[str: int], sys_parameters: List[str], propagation_phase: Callable[[Group, 'AmoSumPropagator'],  List[int]] = None, ge: bool = True, choice_cons: str = "AMO", solver = WASP) -> None:
         self.atomNames = atomsNames
         self.param = sys_parameters
         self.facts : List[int] = []
@@ -126,7 +126,7 @@ class AmoSumPropagator:
         self.sum_p = 0
         self.count_p = 0
         self.ge = ge
-        self.prob_type = prob_type
+        self.choice_cons = choice_cons
         self.propagate_phase = propagation_phase
         self.solver = solver
         
@@ -375,7 +375,6 @@ class AmoSumPropagator:
 
         assert not self.I[lit] == False
 
-        
 
         try:
             (next_phase, G) = self.update_phase(lit) 
@@ -429,13 +428,13 @@ class AmoSumPropagator:
 
                 # it has to be true because if the mps is not changed can happen that there is another literal with the same weight that is maximum 
                 # and this literal can be propagated to true
-                if self.prob_type == "AMO":
+                if self.choice_cons == "AMO":
                     amo_condition = True
             elif not_(l) != new:
                 # there is at least one more literal that can satify the lower bound
                 # so no propagation can take place
                 return (False, None)
-            elif self.prob_type == "AMO":
+            elif self.choice_cons == "AMO":
                 return (True, None)
             else:
                 return(False, None)
@@ -455,10 +454,10 @@ class AmoSumPropagator:
             name = get_name(atomNames=self.atomNames, lit=l)
             error = f"{name} true led the mps {self._mps} to be incosistent with {self.bound}"
             debug(error)
-            if self.solver != AmoSumPropagator.WASP or self.prob_type != "EO":
+            if self.solver != AmoSumPropagator.WASP or self.choice_cons != "EO":
                 raise Exception(error)
             
-        G = G if self.prob_type == "EO" else None
+        G = G if self.choice_cons == "EO" else None
         current_sum_condition = not self.ge or self.current_sum < self.bound
         next_phase = current_sum_condition and (w_p != w_n or amo_condition) 
         return (next_phase,  G)
@@ -593,7 +592,7 @@ class AmoSumPropagator:
             if m_und is None:
                 G.set_max(l) if self.ge else G.set_min(l)
                 if tg is None:
-                    if self.prob_type == "AMO":
+                    if self.choice_cons == "AMO":
                         self._mps += w_l
                     else:
                         assert False
@@ -627,6 +626,6 @@ class AmoSumPropagator:
             changes_str.append((get_name(atomNames=self.atomNames, lit = plit), plit))
         return changes_str
 
-    def create_propagator(atomsNames, sys_parameters, propagation_phase, ge, prop_type, solver=WASP) -> "AmoSumPropagator":
-        propagator = AmoSumPropagator(atomsNames=atomsNames, sys_parameters=sys_parameters, propagation_phase=propagation_phase, ge=ge, prob_type=prop_type, solver=solver)
+    def create_propagator(atomsNames, sys_parameters, propagation_phase, ge, choice_cons, solver=WASP) -> "AmoSumPropagator":
+        propagator = AmoSumPropagator(atomsNames=atomsNames, sys_parameters=sys_parameters, propagation_phase=propagation_phase, ge=ge, choice_cons=choice_cons, solver=solver)
         return propagator

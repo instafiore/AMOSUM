@@ -574,19 +574,19 @@ def get_propagator_variables(prop_type):
     match prop_type:
         case "ge_amo":
             ge = True
-            prop_type = "AMO"
+            choice_cons = "AMO"
             from prop_wasp.ge_amo import propagate_phase
         case "le_eo":
             ge = False
-            prop_type = "AMO"
+            choice_cons = "AMO"
             from prop_wasp.le_eo import propagate_phase
         case "ge_eo":
             ge = True
-            prop_type = "EO"
+            choice_cons = "EO"
             from prop_wasp.ge_eo import propagate_phase
         case _:
             assert False
-    return ge, propagate_phase, prop_type
+    return ge, propagate_phase, choice_cons
 
 # MINIMIZING REASON 
 #################################################################################################################################################
