@@ -388,19 +388,14 @@ class AmoSumPropagator:
         
 
         propagated_lits = []
-        # name = get_name(lit=lit, atomNames=self.atomNames)
+        print_starting_propagation(self, lit, next_phase)
         if next_phase:
             try:
-                # debug(f"[{next_phase}] Propagation phase of {name} started [{self._mps}]:")
                 propagated_lits = self.propagate_phase(G, self, self.atomNames)
             except Exception as e:
                 print(e, file=sys.stderr)
                 raise e
-        else:
-            # debug(f"[{next_phase}] Propagation phase of {name} not started [{self._mps}]:")
-            pass
-
-
+ 
         return propagated_lits
 
 
@@ -445,7 +440,6 @@ class AmoSumPropagator:
             else:
                 return(False, None)
         else:
-
             return (False, None)
 
         self._mps = self._mps - w_p + w_n
@@ -466,8 +460,7 @@ class AmoSumPropagator:
             
         G = G if self.prob_type == "EO" else None
         current_sum_condition = not self.ge or self.current_sum < self.bound
-        # print(self.current_sum
-        next_phase = current_sum_condition and (w_p != w_n or amo_condition)
+        next_phase = current_sum_condition and (w_p != w_n or amo_condition) 
         return (next_phase,  G)
     
     def mps(self, g: Group, l: int, assumed:bool, return_literals = False):
@@ -567,6 +560,7 @@ class AmoSumPropagator:
 
             # the true literal of G becomes undefined
             w_l = self.weight[l]
+
             if tg == l:
                 self.true_group[G] = None
                 self.current_sum -= w_l

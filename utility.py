@@ -65,7 +65,11 @@ def print_undo(propagator, changes, thread_id, force_print = False, wasp_b = Fal
     changes_str = propagator.compute_changes_str(changes=changes, thread_id=thread_id)
     debug(f"undo {changes_str} thread_id: {thread_id}", file = sys.stderr, force_print=force_print)
 
-
+def print_starting_propagation(propagator, lit, next_phase, force_print = False):
+    if not force_print and not DEBUG:
+        return 
+    name = get_name(lit=lit, atomNames=propagator.atomNames) 
+    debug(f"[{next_phase}] Propagation phase of {name} {'not' if not next_phase else ''} started [{propagator._mps}]:")
 def print_derivation(atomNames, S, force_print = False):
     if not force_print and not DEBUG:
             return 
@@ -582,7 +586,7 @@ def get_propagator_variables(prop_type):
             from prop_wasp.ge_eo import propagate_phase
         case _:
             assert False
-    return ge, propagate_phase
+    return ge, propagate_phase, prop_type
 
 # MINIMIZING REASON 
 #################################################################################################################################################
