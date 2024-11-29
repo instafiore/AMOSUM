@@ -29,7 +29,7 @@ def getReasonsForCheckFailure():
 def getLiterals(*lits):
     global propagators
     params = process_sys_parameters(sys_parameters)
-    debug(f"params: {params}", force_print=True)
+    # debug(f"params: {params}", force_print=True)
     global_literals = []
     for prop_type, param in params:
         ge, propagate_phase = get_propagator_variables(prop_type=prop_type)

@@ -182,7 +182,6 @@ def process_sys_parameters(sys_parameters):
                 param[key] = True
 
         if i >= len(sys_parameters) or sys_parameters[i] in PROPAGATORS_NAMES:
-            print("AAA")
             params.append((prop_type, param))
             if i < len(sys_parameters):
                 prop_type  = sys_parameters[i] 

@@ -369,7 +369,6 @@ class RunnerWasp:
 
         output = run_process.stdout
         error = run_process.stderr
-        # print(f"error: {error} run: {run}")
         output_error = output + error
 
         lines_output = output.splitlines() 
@@ -378,13 +377,11 @@ class RunnerWasp:
         output = output.strip()
         
         if RunnerWasp.PRINT_OUTPUT_SOLVER and output != "" :
-            print(self.param)
             print(f"{output}")
 
         avoiding_time_information_regex = r"(real \d+\.\d+|user \d+\.\d+|sys \d+\.\d+)"
         error = re.sub(avoiding_time_information_regex, "", error, count=0, flags=0).strip()
         if RunnerWasp.PRINT_ERROR_SOLVER and error != "":
-            print(self.param, file=sys.stderr)
             print(error, file=sys.stderr)
 
         regex_real = r"^real\s(\d+\.\d+)"
