@@ -76,6 +76,6 @@ def getReasonForLiteral(lit):
 
 def onLiteralsUndefined(*lits) -> None:
     global propagators
-    print_undo(propagator, lits, 0, wasp_b=True)
+    print_undo(propagators[0], lits, 0, wasp_b=True)
     for propagator in propagators:
         propagator.onLiteralsUndefined(*lits)
