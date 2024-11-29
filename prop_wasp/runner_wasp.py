@@ -62,7 +62,7 @@ class RunnerWasp:
     SIMPLE_TEST = "simple_tests"
     MLG = "MLG"
     NURSE = "nurse_scheduling"
-
+    NPD = "No Problem Defined"
     # silent mode
     SILENT = ""
     # SILENT = "--silent=2"
@@ -86,9 +86,8 @@ class RunnerWasp:
         if not "problem" in self.param and not self.exp:
             raise Exception(f"No problem inserted. Feasible key:'problem'")
 
-        self.problem = self.param.get("problem", "NP")
+        self.problem = self.param.get("problem", RunnerWasp.NPD)
       
-        # NP -> No Problem :) 
         
         if not self.exp and not any([not re.match(r, self.problem) is None for r in RunnerWasp.VALID_REGEX]) :
             raise Exception(f"Invalid problem inserted! Valid Regex: {str(RunnerWasp.VALID_REGEX)}")
@@ -119,7 +118,7 @@ class RunnerWasp:
             self.problem = RunnerWasp.NURSE
             self.key_weight_atom_amo = 0
             self.atom_answerset_regex= r"assign\((\w+),(\w+?),(\w+?)\)"
-        elif self.problem == "NP":
+        elif self.problem == RunnerWasp.NPD:
            self.atom_answerset_regex= RunnerWasp.GENERIC_REGEX_ANSWERS_SET_ATOM
         else:
             assert False
@@ -397,8 +396,8 @@ class RunnerWasp:
             if not re.search(regex_answer_set, line) is None:
                 answer_set_str = re.search(regex_answer_set, line).group(1)
                 # print(f"find all: {re.findall(regex_query, answer_set_str)}")
-                answer_set = set([match[0] for match in re.findall(regex_query, answer_set_str)])
-                # print(f"line:{line} regex_query: {regex_query} answer_set:{answer_set}")
+                answer_set = set([match[0] for match in re.findall(regex_query, answer_set_str)]) if self.problem != RunnerWasp.NPD else answer_set_str.split(", ")
+                print(f"line:{line} regex_query: {regex_query} answer_set:{answer_set}")
                 answer_sets.append(set(answer_set))
         
         for line in lines_error:

@@ -18,8 +18,7 @@ Invariants:
     In the aggregate set there are not two literals such that li = ~lj
 '''
 
-propagator_wasp.propagator.prob_type = "EO"
-propagator_wasp.propagator.ge = False
+
 
 def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
     global N,ub, I, weight, aggregate, groups, mps, group, reason, true_group
@@ -63,4 +62,3 @@ def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
 
     return S
 
-propagator.propagate_phase = propagate_phase

@@ -1,4 +1,4 @@
-#!/home/s.fiorentino/.local/bin/python
+#!/Users/instafiore/instafiore_env/bin/python
 import sys
 import os
 # adding the root path
