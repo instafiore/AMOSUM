@@ -52,7 +52,7 @@ class RunnerWasp:
     REGEX_WEIGHT_ATOM_KN = r"object\((\d+),\s*(\d+),\s*(\d+)\)"
     REGEX_WEIGHT_ATOM_GC = r"colour_weight\((\w+),\s*(\d+)\)"
     REGEX_WEIGHT_ATOM_MLG = r"[ab]\((\d+),\s*(\d+)(,\d+)?\)"
-    GENERIC_REGEX_ANSWERS_SET_ATOM = r"\w+[\(]?[\w,]*[\)]?"
+    GENERIC_REGEX_ANSWERS_SET_ATOM = r"[\w_]+[\(]?[\w_,]*[\)]?"
 
     REGEX_MAPS_WEIGHTS = r"total_weight_names:\s({.+})"
 
@@ -361,7 +361,7 @@ class RunnerWasp:
             run += prop_run
   
         if self.PRINT_RUN:
-            print(f"run:\t{run_command_ground} | {run}{prop_run}")
+            print(f"run:\t{run_command_ground} | {run}")
 
         # running test
         self.maps_weights = None
@@ -369,6 +369,7 @@ class RunnerWasp:
 
         output = run_process.stdout
         error = run_process.stderr
+        # print(f"error: {error} run: {run}")
         output_error = output + error
 
         lines_output = output.splitlines() 

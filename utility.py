@@ -167,21 +167,22 @@ def process_sys_parameters(sys_parameters):
 
         if i + 1 >= len(sys_parameters) :
             param[key] = True
-            break
+            i +=1
+        else:    
+            value = sys_parameters[i+1] 
+            res_regex = re.match(regex, value)
         
-        value = sys_parameters[i+1] 
-        res_regex = re.match(regex, value)
-    
 
-        if res_regex is None:
-            i += 2
-            param[key] = value
-            
-        else:
-            i += 1
-            param[key] = True
+            if res_regex is None:
+                i += 2
+                param[key] = value
+                
+            else:
+                i += 1
+                param[key] = True
 
         if i >= len(sys_parameters) or sys_parameters[i] in PROPAGATORS_NAMES:
+            print("AAA")
             params.append((prop_type, param))
             if i < len(sys_parameters):
                 prop_type  = sys_parameters[i] 
