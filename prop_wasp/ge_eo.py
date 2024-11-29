@@ -14,8 +14,6 @@ Propagator for ' >= LB ' constraint with Exactly One constraint
 Invariants:
     In the aggregate set there are not two literals such that li = ~lj
 '''
-propagator_wasp.propagator.prob_type = "EO"
-propagator_wasp.propagator.ge = True
 
 def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
 
@@ -59,7 +57,5 @@ def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
 
      
     return S
-
-propagator.propagate_phase = propagate_phase
 
 
