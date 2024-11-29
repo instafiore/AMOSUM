@@ -75,7 +75,7 @@ class RunnerWasp:
     def __init__(self, parameters: Dict[str,str]) -> None:
 
         self.param = parameters
-        self.maps_weights = None
+        self.maps_weights: dict = None
 
         set_debug(self.param.get("d",""))
         
@@ -120,6 +120,7 @@ class RunnerWasp:
             self.atom_answerset_regex= r"assign\((\w+),(\w+?),(\w+?)\)"
         elif self.problem == RunnerWasp.NPD:
            self.atom_answerset_regex= RunnerWasp.GENERIC_REGEX_ANSWERS_SET_ATOM
+           self.key_weight_atom_amo = 0
         else:
             assert False
 
@@ -282,7 +283,7 @@ class RunnerWasp:
             match = re.match(self.atom_answerset_regex, atom)
             key = match.group(self.key_weight_atom_amo)
             # print(f"atom {atom} key: {key} mult: {mult} self.atom_answerset_regex: {self.atom_answerset_regex} self.key_weight_atom_amo:{self.key_weight_atom_amo}")
-            mps += self.maps_weights[key] 
+            mps += self.maps_weights.get(key, 0)
 
         return mps    
         
@@ -397,7 +398,7 @@ class RunnerWasp:
                 answer_set_str = re.search(regex_answer_set, line).group(1)
                 # print(f"find all: {re.findall(regex_query, answer_set_str)}")
                 answer_set = set([match[0] for match in re.findall(regex_query, answer_set_str)]) if self.problem != RunnerWasp.NPD else answer_set_str.split(", ")
-                print(f"line:{line} regex_query: {regex_query} answer_set:{answer_set}")
+                # print(f"line:{line} regex_query: {regex_query} answer_set:{answer_set}")
                 answer_sets.append(set(answer_set))
         
         for line in lines_error:
