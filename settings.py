@@ -33,8 +33,11 @@ TESTS_LOCATION = f"{ROOT}/tests"
 BENCHMARKS_LOCATION = f"{TESTS_LOCATION}/benchmarks"
 TEMP_TESTS_LOCATION = f"{TESTS_LOCATION}/temp"
 RESULTS_TESTS_LOCATION = f"{TESTS_LOCATION}/results"
-STATISTICS_REASON_FILE_MINIMAL = f"{TESTS_LOCATION}/statistics_reason/output_statistics_reason_minimal"
-STATISTICS_REASON_FILE_MINIMUM = f"{TESTS_LOCATION}/statistics_reason/output_statistics_reason_minimum"
+STATISTICS_FOLDER = f"{TESTS_LOCATION}/statistics"
+STATISTICS_REASON = f"{STATISTICS_FOLDER}/statistics_reason/"
+STATISTICS_RUN = f"{STATISTICS_FOLDER}/statistics_run/"
+STATISTICS_REASON_FILE_MINIMAL = f"{STATISTICS_REASON}/output_statistics_reason_minimal"
+STATISTICS_REASON_FILE_MINIMUM = f"{STATISTICS_REASON}/output_statistics_reason_minimum"
 
 
 MAP_ENC_ENCODING_FILES = {

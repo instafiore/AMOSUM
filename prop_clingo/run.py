@@ -1,4 +1,4 @@
-#!/Users/instafiore/instafiore_env/bin/python
+#!/usr/bin/python3
 import sys
 import os
 # adding the root path

@@ -30,7 +30,8 @@ class PropagatorClingo(clingo.Propagator):
         atoms_list_for_mapping = [(str(a.symbol), a.literal, init.solver_literal(a.literal)) for a in init.symbolic_atoms]
         nt = init.number_of_threads
         # debug(f"number of threads {nt}", force_print = True)
-        debug(f"atoms_list_for_mapping {atoms_list_for_mapping}", force_print = False)
+        # debug(f"atoms_list_for_mapping {atoms_list_fosr_mapping}", force_print = False)
+        debug("TRY", force_print=True)
         max_plit = 0
         for str_symbol, program_literal, solver_literal in atoms_list_for_mapping:
             if max_plit < program_literal:
