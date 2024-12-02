@@ -39,7 +39,7 @@ class RunnerClingo(RunnerWasp):
         now = datetime.now()
 
         # Format it as a string
-        date_string = now.strftime("%Y-%m-%d")
+        date_string = now.strftime("%Y-%m-%d-%H")
         
         # defining the lower bound(s)
         self.create_bound(instance=instance, ub=False)
