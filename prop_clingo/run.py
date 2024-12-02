@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/home/s.fiorentino/miniconda3/bin/python
 import sys
 import os
 # adding the root path
