@@ -93,6 +93,7 @@ def print_reduction_reason(propagator, reason_c, reason, lit, force_print = Fals
 def debug(*message: str, G: 'Group' = None , end ="\n", force_print = False, file = sys.stderr):
     if force_print or (DEBUG and ( G is None or G.id == FOCUSED_GROUP or not FOCUSING)):
         print(message, end=end, file=file)
+        sys.stderr.flush()
 
 def init_run(argv):
     param = {}

@@ -20,6 +20,8 @@ import utility
 import settings
 from prop_clingo.propagator_clingo import *
 from preprocess import *
+from datetime import datetime
+
 
 def log(code, message):
     # Collect log messages
@@ -34,6 +36,13 @@ class RunnerClingo(RunnerWasp):
         super().__init__(parameters)
     
     def run_instance(self, instance, encoding=None):
+        
+
+        # Get the current date and time
+        now = datetime.now()
+
+        # Format it as a string
+        date_string = now.strftime("%Y-%m-%d")
         
         # defining the lower bound(s)
         self.create_bound(instance=instance, ub=False)
@@ -105,8 +114,11 @@ class RunnerClingo(RunnerWasp):
         res = handle.wait(self.timeout_m * 60 if not self.exp else None)
         end_time = time.time()  # End time
 
-        # stats = self.ctl.statistics
-        # print("Statistics:", stats)
+        regex_name_file = r"(.*\/)?(?P<name>.+)\.asp"
+        encoding_name = re.match(regex_name_file, location_encoding).group("name")
+        instance_name = re.match(regex_name_file, location_instance).group("name")
+        filename = f"{STATISTICS_RUN}/{date_string}-{encoding_name}-{instance_name}"
+        self.print_stats_to_file(filename=filename)
         
         wall_time = end_time - start_time
         wall_time = round(wall_time, 2) if res else "timeout"
@@ -127,4 +139,10 @@ class RunnerClingo(RunnerWasp):
         self.ctl.register_propagator(propagator_clingo)
 
 
-    
+    def print_stats_to_file(self, filename):
+        control = self.ctl
+        stats = control.statistics  # Access statistics object
+        with open(filename, "w") as file:
+            # Pretty-print the stats as JSON to make it readable
+            json.dump(stats, file, indent=4)
+            print(f"Statistics written to {filename}")
