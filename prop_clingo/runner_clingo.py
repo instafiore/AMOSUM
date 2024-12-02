@@ -21,6 +21,10 @@ import settings
 from prop_clingo.propagator_clingo import *
 from preprocess import *
 
+def log(code, message):
+    # Collect log messages
+    print("WOW")
+
 class RunnerClingo(RunnerWasp):
     '''
     This class is meant to run experiments on the AMO sum propagator(s) Clingo
@@ -55,7 +59,8 @@ class RunnerClingo(RunnerWasp):
         arguments.append(seed) if seed != "" else ""
         # arguments.append("--configuration=trendy")
         arguments.append("--stats=2")
-        self.ctl = Control(arguments=arguments)
+    
+        self.ctl = Control(arguments=arguments, logger=log, message_limit=50)
         
         # Load the instance file
         self.ctl.load(location_instance)

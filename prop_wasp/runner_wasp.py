@@ -54,7 +54,7 @@ class RunnerWasp:
     REGEX_WEIGHT_ATOM_MLG = r"[ab]\((\d+),\s*(\d+)(,\d+)?\)"
     GENERIC_REGEX_ANSWERS_SET_ATOM = r"[\w_]+[\(]?[\w_,]*[\)]?"
 
-    REGEX_MAPS_WEIGHTS = r"total_weight_names:\s({.+})"
+    REGEX_ID_MAPS_WEIGHTS = r"id:\s(?P<id>.+) total_weight_names:\s(?P<map_weights>{.+})"
 
     # PROBLEMS
     KNAPSACK = "knapsack"
@@ -67,7 +67,7 @@ class RunnerWasp:
     SILENT = ""
     # SILENT = "--silent=2"
 
-    TIMEOUT = 20
+    TIMEOUT = 2 * 60
     TIMEOUT_LIGHT = 10
 
     
@@ -75,7 +75,7 @@ class RunnerWasp:
     def __init__(self, parameters: Dict[str,str]) -> None:
 
         self.param = parameters
-        self.maps_weights: dict = None
+        self.maps_weights_list = [] 
 
         set_debug(self.param.get("d",""))
         
@@ -231,18 +231,11 @@ class RunnerWasp:
                 self.instances.append(instance)
 
     def get_number_answersets(self, answer_sets):
-        # for a in answer_sets:
-        #     if len(a) == 0:
-        #         return 0
-        #     break
         return len(answer_sets)
 
 
     def check_correctness(self, answer_sets_aggr, answer_sets_group, instance, time_group, time_aggr):
    
-        # maps_weights = self.create_weights_atom_regexes(instance=instance)
-        
-
         correct = True
 
         if RunnerWasp.PRINT_ANS_GROUP_CORRECTNESS:
@@ -255,14 +248,14 @@ class RunnerWasp:
         for ans_1 in answer_sets_aggr:
             if not ans_1 in answer_sets_group:
                 if RunnerWasp.PRINT_ANS_AGGR_NOT_SUBSET_OF_ANS_GROUP:
-                    mps_str = f"MPS: {self.compute_mps(ans=ans_1)}" if not self.atom_answerset_regex is None and not self.maps_weights is None else "" 
+                    mps_str = self.compute_mps(ans=ans_1) 
                     print(f"The answer set {ans_1} is not inside answer_sets_group. {mps_str}")
                 correct = False
 
         for ans_2 in answer_sets_group:
             if not ans_2 in answer_sets_aggr:
                 if RunnerWasp.PRINT_ANS_GROUP_NOT_SUBSET_OF_ANS_AGGR:
-                    mps_str = f"MPS: {self.compute_mps(ans=ans_2)}" if not self.atom_answerset_regex is None and not self.maps_weights is None else "" 
+                    mps_str = self.compute_mps(ans=ans_2)
                     print(f"The answer set {ans_2} is not inside answer_sets_aggr. {mps_str}")
                 correct = False
     
@@ -273,19 +266,21 @@ class RunnerWasp:
 
         print(f"Time: {time}, found {len(answer_sets)} models:")
         for i, model in enumerate(answer_sets):
-            mps_str = f" mps: {self.compute_mps(model)}" if not self.atom_answerset_regex is None and not self.maps_weights is None else ""
+            mps_str = self.compute_mps(model)
             print(f"Model {i+1}: {model} {mps_str}")
             
     def compute_mps(self, ans):
-        # print(f"self.maps_weights: {self.maps_weights}")
-        mps = 0
-        for atom in ans:
-            match = re.match(self.atom_answerset_regex, atom)
-            key = match.group(self.key_weight_atom_amo)
-            # print(f"atom {atom} key: {key} mult: {mult} self.atom_answerset_regex: {self.atom_answerset_regex} self.key_weight_atom_amo:{self.key_weight_atom_amo}")
-            mps += self.maps_weights.get(key, 0)
 
-        return mps    
+        mps_str = ""
+        for id, maps_weights in self.maps_weights_list:
+            mps = 0
+            for atom in ans:
+                match = re.match(self.atom_answerset_regex, atom)
+                key = match.group(self.key_weight_atom_amo)
+                mps += maps_weights.get(key, 0)
+            mps_str += f"[mps_{id}]: {mps}"
+
+        return mps_str    
         
 
     def get_regex_query_atom_answerset(self):
@@ -364,7 +359,7 @@ class RunnerWasp:
             print(f"run:\t{run_command_ground} | {run}")
 
         # running test
-        self.maps_weights = None
+        self.maps_weights_list = []
         run_process = subprocess.run(run, input=grounded_program ,shell=True, capture_output=True, text=True)
 
         output = run_process.stdout
@@ -406,10 +401,10 @@ class RunnerWasp:
                 time = re.search(regex_real, line).group(1)
             elif not re.search(r"Killed: Bye!", line) is None:
                 time = "timeout"
-            elif not re.search(RunnerWasp.REGEX_MAPS_WEIGHTS, line) is None:
-                m = re.search(RunnerWasp.REGEX_MAPS_WEIGHTS, line)
-                self.maps_weights = json.loads(m.group(1))
-                # print(f"self.maps_weights: {self.maps_weights}")
+
+            self.update_maps_weights_list(line)
+
+       
 
         # restoring the instance.asp file
         self.comment_bound(instance=instance, ub=False, restore=True)
@@ -510,6 +505,13 @@ class RunnerWasp:
         if self.param.get("write_res",False):
             subprocess.run(f"echo '{new_line}' >> {settings.RESULTS_TESTS_LOCATION}/{self.problem}.{self.timestamp}.res ", shell=True, capture_output=True)
 
+    def update_maps_weights_list(self, line):
+        if re.search(RunnerWasp.REGEX_ID_MAPS_WEIGHTS, line) is None:
+            return
+        m = re.search(RunnerWasp.REGEX_ID_MAPS_WEIGHTS, line)
+        id = m.group("id")
+        maps_weights = json.loads(m.group("map_weights"))
+        self.maps_weights_list.append((id, maps_weights))
 
     def comment_bound(self, instance, ub = False, restore=False):
         b_str = "ub" if ub else "lb" 

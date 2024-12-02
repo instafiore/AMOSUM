@@ -314,8 +314,7 @@ class AmoSumPropagator:
         nGroup = Group.autoincrement 
         self.true_group = TrueGroupFunction(nGroup)
 
-        if "tw" in self.param:
-            debug(f"total_weight_names: {json.dumps(self.weights_names)}", force_print=True)
+        # debug(f"id: {self.ID} total_weight_names: {json.dumps(self.weights_names)}", force_print=True) 
 
         # PREPROCESSING
         for i in range(1,len(lits)):

@@ -22,13 +22,18 @@ workshift(6,"6-holiday",0).
 % group(assign(N,T,D), H, (D,N), (0, nurse(N), maxHoursPerYear(MAX)), le_eo) :-  nurse(N), assign(N,T,D), workshift(T,_,H), maxHoursPerYear(MAX).
 
 
-:- nurse(N), minHoursPerYear(MIN), #sum{H,D : assign(N,T,D), workshift(T,_,H)} < MIN, N > 2.
+:- nurse(N), minHoursPerYear(MIN), #sum{H,D : assign(N,T,D), workshift(T,_,H)} < MIN, N > 1.
+% lb(MIN, (0, nurse(N), minHoursPerYear(MIN))) :- nurse(N), assign(N,T,D), workshift(T,_,H), minHoursPerYear(MIN).
+% group(assign(N,T,D), H, (D,N), (0, nurse(N), minHoursPerYear(MIN)), ge_eo) :-  nurse(N), assign(N,T,D), workshift(T,_,H), minHoursPerYear(MIN).
 
 lb(MIN, (0, nurse(1), minHoursPerYear(MIN))) :- nurse(1), assign(1,T,D), workshift(T,_,H), minHoursPerYear(MIN).
-group(assign(1,T,D), H, (D,1), (0, nurse(1), minHoursPerYear(MIN)), ge_amo) :-  nurse(1), assign(1,T,D), workshift(T,_,H), minHoursPerYear(MIN).
+group(assign(1,T,D), H, (D,1), (0, nurse(1), minHoursPerYear(MIN)), ge_eo) :-  nurse(1), assign(1,T,D), workshift(T,_,H), minHoursPerYear(MIN).
 
-lb(MIN, (0, nurse(2), minHoursPerYear(MIN))) :- nurse(2), assign(2,T,D), workshift(T,_,H), minHoursPerYear(MIN).
-group(assign(2,T,D), H, (D,2), (0, nurse(2), minHoursPerYear(MIN)), ge_amo) :-  nurse(2), assign(2,T,D), workshift(T,_,H), minHoursPerYear(MIN).
+% lb(MIN, (0, nurse(2), minHoursPerYear(MIN))) :- nurse(2), assign(2,T,D), workshift(T,_,H), minHoursPerYear(MIN).
+% group(assign(2,T,D), H, (D,2), (0, nurse(2), minHoursPerYear(MIN)), ge_eo) :-  nurse(2), assign(2,T,D), workshift(T,_,H), minHoursPerYear(MIN).
+
+% lb(MIN, (0, nurse(3), minHoursPerYear(MIN))) :- nurse(3), assign(3,T,D), workshift(T,_,H), minHoursPerYear(MIN).
+% group(assign(3,T,D), H, (D,3), (0, nurse(3), minHoursPerYear(MIN)), ge_eo) :-  nurse(3), assign(3,T,D), workshift(T,_,H), minHoursPerYear(MIN).
 
 %id_aux(nurse(N), minHoursPerYear(MIN)) :- nurse(N), minHoursPerYear(MIN).
 %group(id_aux(nurse(N), minHoursPerYear(MIN)), MIN, (nurse(N), minHoursPerYear(MIN)), (0, nurse(N), minHoursPerYear(MIN)), ge_amo) :- id_aux(nurse(N), minHoursPerYear(MIN)).
