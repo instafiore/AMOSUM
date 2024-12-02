@@ -23,9 +23,6 @@ from preprocess import *
 from datetime import datetime
 
 
-def log(code, message):
-    # Collect log messages
-    print("WOW")
 
 class RunnerClingo(RunnerWasp):
     '''
@@ -66,10 +63,10 @@ class RunnerClingo(RunnerWasp):
         seed = f"--seed={self.seed}" if self.seed != "" else ""
         arguments.append(models) if models != "" else ""
         arguments.append(seed) if seed != "" else ""
-        # arguments.append("--configuration=trendy")
         arguments.append("--stats=2")
+        arguments.append("--configuration=tweety")
     
-        self.ctl = Control(arguments=arguments, logger=log, message_limit=50)
+        self.ctl = Control(arguments=arguments)
         
         # Load the instance file
         self.ctl.load(location_instance)
