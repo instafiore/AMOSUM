@@ -21,7 +21,6 @@ workshift(6,"6-holiday",0).
 % ub(MAX, (0, nurse(N), maxHoursPerYear(MAX))) :- nurse(N), assign(N,T,D), workshift(T,_,H), maxHoursPerYear(MAX).
 % group(assign(N,T,D), H, (D,N), (0, nurse(N), maxHoursPerYear(MAX)), le_eo) :-  nurse(N), assign(N,T,D), workshift(T,_,H), maxHoursPerYear(MAX).
 
-
 % :- nurse(N), minHoursPerYear(MIN), #sum{H,D : assign(N,T,D), workshift(T,_,H)} < MIN, N > 1.
 lb(MIN, (0, nurse(N), minHoursPerYear(MIN))) :- nurse(N), assign(N,T,D), workshift(T,_,H), minHoursPerYear(MIN).
 group(assign(N,T,D), H, (D,N), (0, nurse(N), minHoursPerYear(MIN)), ge_amo) :-  nurse(N), assign(N,T,D), workshift(T,_,H), minHoursPerYear(MIN), H > 0.

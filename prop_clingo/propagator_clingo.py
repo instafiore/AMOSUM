@@ -105,7 +105,7 @@ class PropagatorClingo(clingo.Propagator):
         dl = control.assignment.decision_level
         td = 0 if dl == 0 else control.thread_id
         prop = self.propagators[td]
-        print_propagate(self, changes=changes, control=control, dl=dl)
+        # print_propagate(self, changes=changes, control=control, dl=dl)
         for slit in changes:
             plit_list = self.map_slit_plit_watched[slit]
             for plit in plit_list:

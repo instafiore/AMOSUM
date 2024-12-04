@@ -17,14 +17,14 @@ Invariants:
 '''
 
 def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
-    
-    # try:
+
+    if propagator.mps_violated:
+        propagator.reason = create_reason_falses_ge(propagator=propagator)
+        return [not_(propagator.current_literal)]
+
 
     # set of derived literals
     S : List[int] = []
-    
-    # reason
-    R : List[int] = []
 
     for g in propagator.groups:
         if g == G or not propagator.true_group[g] is None:
@@ -57,22 +57,8 @@ def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
 
     propagator.reason = []      
     if len(S) != 0  and propagator.dl != 0:
-        for g in propagator.groups:
-            ord_l = g.ord_l
-            if g.count_undef == 0 and propagator.true_group[g] is None:
-                R.extend(reversed(ord_l))
-            elif propagator.true_group[g] is None:
-                mw_g = propagator.weight[max_w(g)]
-                for i in range(len(ord_l) - 1, -1, -1):
-                    l = ord_l[i]
-                    if propagator.weight[l] < mw_g:
-                        break
-                    R.append(l) if not propagator.I[l] is None else None
-            else:
-                R.append(not_(propagator.true_group[g]))
-    
-        propagator.reason = R
-        propagator.compute_minimal_reason(reason=R, derived=S)
+        propagator.reason = create_reason_falses_ge(propagator=propagator)
+        propagator.compute_minimal_reason(reason=propagator.reason, derived=S)
 
     print_derivation(propagator.atomNames, S)
 

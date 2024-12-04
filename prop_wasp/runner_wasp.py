@@ -402,7 +402,7 @@ class RunnerWasp:
             elif not re.search(r"Killed: Bye!", line) is None:
                 time = "timeout"
 
-            self.update_maps_weights_list(line)
+            self.update_maps_weights_list(input = line)
 
        
 
@@ -505,10 +505,10 @@ class RunnerWasp:
         if self.param.get("write_res",False):
             subprocess.run(f"echo '{new_line}' >> {settings.RESULTS_TESTS_LOCATION}/{self.problem}.{self.timestamp}.res ", shell=True, capture_output=True)
 
-    def update_maps_weights_list(self, line):
-        if re.search(RunnerWasp.REGEX_ID_MAPS_WEIGHTS, line) is None:
+    def update_maps_weights_list(self, input):
+        if re.search(RunnerWasp.REGEX_ID_MAPS_WEIGHTS, input) is None:
             return
-        m = re.search(RunnerWasp.REGEX_ID_MAPS_WEIGHTS, line)
+        m = re.search(RunnerWasp.REGEX_ID_MAPS_WEIGHTS, input)
         id = m.group("id")
         maps_weights = json.loads(m.group("map_weights"))
         self.maps_weights_list.append((id, maps_weights))

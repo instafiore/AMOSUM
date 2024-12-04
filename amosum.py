@@ -111,6 +111,9 @@ class AmoSumPropagator:
     _mps : int 
     # ----------------------------
 
+    # treshold for lazy propagation activation
+    LAZY_PERC : float = 0.95
+
     # SUPPORTED SOLVERS
     WASP = 1
     CLINGO = 2
@@ -216,6 +219,7 @@ class AmoSumPropagator:
         self.groups = []
         self.assumptions = param.get("ass", False)
         self.current_sum = 0 
+        self.lazy_prop = param.get("lazy_prop",False)
 
         #used to create the self.groups
         groups_raw : dict[int, List[int]] = {}
@@ -314,7 +318,7 @@ class AmoSumPropagator:
         nGroup = Group.autoincrement 
         self.true_group = TrueGroupFunction(nGroup)
 
-        # debug(f"id: {self.ID} total_weight_names: {json.dumps(self.weights_names)}", force_print=True) 
+        debug(f"id: {self.ID} total_weight_names: {json.dumps(self.weights_names)}", force_print=True) if self.solver == AmoSumPropagator.WASP else None
 
         # PREPROCESSING
         for i in range(1,len(lits)):
@@ -342,12 +346,11 @@ class AmoSumPropagator:
          
         assert not self.inconsistent_at_level_0
         
-        prop_from_facts = self.propagate_phase(None, self, self.atomNames)
+        self.update_lazy_propagation()
+        prop_from_facts = self.propagate_phase(None, self, self.atomNames) if self.lazy_condition else []
         
         if delete_lits:
             simplifyLiterals(self.facts, self.aggregate, self.group, max = self.ge, I = self.I)
-
-        
 
         if self.assumptions:
             self.assumptions = convert_assparam_to_assarray(self.assumptions)
@@ -360,6 +363,19 @@ class AmoSumPropagator:
 
     def is_in_aggregate(self, l):
         return self.aggregate[l] or self.aggregate[not_(l)]
+
+    def update_lazy_propagation(self):
+        p : float
+        if self.ge:
+            self.mps_violated = self._mps < self.lb 
+            p = self.bound / self._mps
+        else:
+            self.mps_violated = self._mps > self.ub
+            p =  self._mps / self.bound
+
+        self.lazy_condition = p >= AmoSumPropagator.LAZY_PERC
+        if self.mps_violated:
+            self.lazy_condition = True
 
     def onLiteralTrue(self, lit, dl):
 
@@ -387,7 +403,7 @@ class AmoSumPropagator:
         
 
         propagated_lits = []
-        print_starting_propagation(self, lit, next_phase)
+        # print_starting_propagation(self, lit, next_phase)
         if next_phase:
             try:
                 propagated_lits = self.propagate_phase(G, self, self.atomNames)
@@ -405,6 +421,8 @@ class AmoSumPropagator:
         self.I[l] = True
         tg = False
         G : Group
+        self.mps_violated : bool = False
+        
 
         amo_condition = False
         if self.aggregate[l]:
@@ -435,31 +453,19 @@ class AmoSumPropagator:
                 # so no propagation can take place
                 return (False, None)
             elif self.choice_cons == "AMO":
-                return (True, None)
+                amo_condition = True
             else:
                 return(False, None)
         else:
             return (False, None)
 
         self._mps = self._mps - w_p + w_n
+        self.update_lazy_propagation()
 
-        assert_mps : bool
-        if self.ge:
-            assert_mps = self._mps >= self.lb 
-        else:
-            assert_mps = self._mps <= self.ub
-
-
-        if not assert_mps:
-            name = get_name(atomNames=self.atomNames, lit=l)
-            error = f"{name} true led the mps {self._mps} to be incosistent with {self.bound}"
-            debug(error)
-            if self.solver != AmoSumPropagator.WASP or self.choice_cons != "EO":
-                raise Exception(error)
-            
         G = G if self.choice_cons == "EO" else None
         current_sum_condition = not self.ge or self.current_sum < self.bound
-        next_phase = current_sum_condition and (w_p != w_n or amo_condition) 
+        next_phase = current_sum_condition and (w_p != w_n or amo_condition) and self.lazy_condition 
+                
         return (next_phase,  G)
     
     def mps(self, g: Group, l: int, assumed:bool, return_literals = False):

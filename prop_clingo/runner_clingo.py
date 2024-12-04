@@ -74,11 +74,11 @@ class RunnerClingo(RunnerWasp):
         self.ctl.load(self.str_weights) if self.str_weights != "" else ""
         self.ctl.load(self.str_lb) if self.str_lb != "" else ""
         self.ctl.load(self.str_ub) if self.str_ub != "" else ""
+        self.propagators: List[PropagatorClingo] = []
         
         # Ground the base part of the program
         self.ctl.ground([("base", [])])  # Ensure you ground with the correct subprogram
         grounded_program = ground_program(location_encoding, location_instance, self.str_weights, self.str_lb, self.str_ub)
-        # print(f"grounded_program: {grounded_program}")
         
         preprocess_map = preprocess_ground_program(grounded_program)
         print(f"preprocess_map: {preprocess_map}")
@@ -111,6 +111,10 @@ class RunnerClingo(RunnerWasp):
         res = handle.wait(self.timeout_m * 60 if not self.exp else None)
         end_time = time.time()  # End time
 
+        for propagator in self.propagators:
+            amosum_propagator = propagator.propagators[0]
+            self.update_maps_weights_list(input = amosum_propagator)
+
         regex_name_file = r"(.*\/)?(?P<name>.+)\.asp"
         encoding_name = re.match(regex_name_file, location_encoding).group("name")
         instance_name = re.match(regex_name_file, location_instance).group("name")
@@ -126,6 +130,12 @@ class RunnerClingo(RunnerWasp):
         
         return models, wall_time
     
+    def update_maps_weights_list(self, input: AmoSumPropagator):
+
+        id = input.ID
+        maps_weights = input.weights_names
+        self.maps_weights_list.append((id, maps_weights))
+    
     def registerPropagator(self, prop_type: str, id: str):
         ge, propagate_phase, prop_type = get_propagator_variables(prop_type=prop_type)
 
@@ -134,6 +144,7 @@ class RunnerClingo(RunnerWasp):
         param["id"] = id
         propagator_clingo = PropagatorClingo(param, propagation_phase=propagate_phase, ge=ge, prop_type=prop_type)
         self.ctl.register_propagator(propagator_clingo)
+        self.propagators.append(propagator_clingo)
 
 
     def print_stats_to_file(self, filename):
