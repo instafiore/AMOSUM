@@ -558,7 +558,7 @@ class RunnerWasp:
         now = datetime.now()
         date_string = now.strftime("%Y-%m-%d-%H")
         non_ground_encoding_without_amosum = run_rewriter(input=file)
-        print(f"non_ground_encoding_without_amosum: {non_ground_encoding_without_amosum}")
+        # print(f"non_ground_encoding_without_amosum: {non_ground_encoding_without_amosum}")
         # hidden_file_without_amosum= f"/tmp/.file_without_amosum_{date_string}"
         hidden_file_without_amosum = "file_without_amosum"
         write_file(hidden_file_without_amosum, non_ground_encoding_without_amosum)

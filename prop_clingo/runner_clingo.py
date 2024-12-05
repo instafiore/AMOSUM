@@ -77,7 +77,7 @@ class RunnerClingo(RunnerWasp):
         # Rewrinting without #amosum construct
 
         hidden_location_encoding= self.rewrite_file_without_amosum(location_encoding)
-        print(f"grounded file:\n {cat(hidden_location_encoding)}")
+        # print(f"grounded file:\n {cat(hidden_location_encoding)}")
         grounded_program = ground_program(hidden_location_encoding, location_instance, self.str_weights, self.str_lb, self.str_ub)
         # print(f"grounded_program: {grounded_program}")
 
