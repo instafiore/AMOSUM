@@ -49,7 +49,7 @@ MAP_PROPAGATOR = {"ge_amo": PROPAGATOR_NAME_ge_amo, "ge_eo": PROPAGATOR_NAME_ge_
 
 FILE_REGEX = r"^\/?[\w.-]+((/[\w.-]*)*[\w+.-])?$"
 
-PREDICATE_GROUP = "group"
-PREDICATE_LB = "lb"
-PREDICATE_UB = "ub"
-
+PREDICATE_GROUP = "__group__"
+PREDICATE_LB = "__lb__"
+PREDICATE_UB = "__ub__"
+PREDICATE_AUX = "__aux__"

@@ -145,6 +145,21 @@ def create_assumptions_lits(assumptions, atomNames):
 
     return res
 
+def cat(path):
+    return subprocess.run(f"cat {path}", shell=True, capture_output=True).stdout.decode()
+
+def delete_file(path):
+    subprocess.run(f"rm {path}", shell=True, capture_output=True).stdout.decode()
+
+def read_file(path):
+    with open(path, "r") as file:
+        input = file.read()
+    return input
+
+def write_file(path, string):
+    with open(path, "w") as file:
+        file.write(string)
+
 def ground_program(*paths, return_command = False):
     ground_program_run = f"clingo {' '.join([path for path in paths if not path is None])} --output=smodels "
     grounded_program = subprocess.run(ground_program_run, shell=True, capture_output=True).stdout.decode()
