@@ -320,8 +320,8 @@ class RunnerWasp:
         # instance
         location_instance = f"{self.location_instance}/{instance}.asp" if not self.exp else instance
 
-        print(f"location_encoding {location_encoding}")
-        print(f"location_instance {location_instance}")
+        print(f"encoding: {location_encoding}")
+        print(f"instance: {location_instance}")
 
         timeout_str = f"timeout {self.timeout_m}m" if not self.exp else ""
 

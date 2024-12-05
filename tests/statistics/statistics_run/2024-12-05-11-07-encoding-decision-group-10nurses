@@ -96,7 +96,7 @@
                 "lits_learnt": 72159667.0,
                 "lemmas_binary": 82.0,
                 "lemmas_ternary": 0.0,
-                "cpu_time": 1205.4170829999998,
+                "cpu_time": 66.134947,
                 "integrated_imps": 0.0,
                 "integrated_jumps": 0.0,
                 "guiding_paths_lits": 1.0,
@@ -140,7 +140,7 @@
                     "lits_learnt": 72159667.0,
                     "lemmas_binary": 82.0,
                     "lemmas_ternary": 0.0,
-                    "cpu_time": 1205.4170829999998,
+                    "cpu_time": 66.134947,
                     "integrated_imps": 0.0,
                     "integrated_jumps": 0.0,
                     "guiding_paths_lits": 1.0,
@@ -175,11 +175,11 @@
         "concurrency": 1.0,
         "winner": 0.0,
         "times": {
-            "total": 1241.9518899917603,
-            "cpu": 1212.68369,
-            "solve": 1233.826679944992,
+            "total": 77.50725197792053,
+            "cpu": 72.973226,
+            "solve": 69.67753982543945,
             "unsat": 0.0,
-            "sat": 1233.7281081676483
+            "sat": 69.58704900741577
         },
         "models": {
             "enumerated": 1.0,
@@ -188,11 +188,11 @@
     },
     "accu": {
         "times": {
-            "total": 1241.9518899917603,
-            "cpu": 1212.68369,
-            "solve": 1233.826679944992,
+            "total": 77.50725197792053,
+            "cpu": 72.973226,
+            "solve": 69.67753982543945,
             "unsat": 0.0,
-            "sat": 1233.7281081676483
+            "sat": 69.58704900741577
         },
         "models": {
             "enumerated": 1.0,
@@ -219,7 +219,7 @@
                     "lits_learnt": 72159667.0,
                     "lemmas_binary": 82.0,
                     "lemmas_ternary": 0.0,
-                    "cpu_time": 1205.4170829999998,
+                    "cpu_time": 66.134947,
                     "integrated_imps": 0.0,
                     "integrated_jumps": 0.0,
                     "guiding_paths_lits": 1.0,
@@ -263,7 +263,7 @@
                         "lits_learnt": 72159667.0,
                         "lemmas_binary": 82.0,
                         "lemmas_ternary": 0.0,
-                        "cpu_time": 1205.4170829999998,
+                        "cpu_time": 66.134947,
                         "integrated_imps": 0.0,
                         "integrated_jumps": 0.0,
                         "guiding_paths_lits": 1.0,

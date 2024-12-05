@@ -112,7 +112,7 @@ class AmoSumPropagator:
     # ----------------------------
 
     # treshold for lazy propagation activation
-    LAZY_PERC : float = 1.0
+    LAZY_PERC : float = 0.9
 
     # SUPPORTED SOLVERS
     WASP = 1
@@ -201,7 +201,7 @@ class AmoSumPropagator:
 
         set_debug(param.get("d",""))
 
-        debug(f"param {param}", force_print=True)
+        debug(f"Starting propagator with param {param}", force_print=True)
         
         # initializing 
         self.minimization = param.get("min_r",Minimize.NO_MINIMIZATION.value)

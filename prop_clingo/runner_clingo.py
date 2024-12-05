@@ -54,8 +54,8 @@ class RunnerClingo(RunnerWasp):
         location_encoding = f"{self.location}/{encoding}.asp" if self.enc and not self.exp else location_encoding
         location_instance = f"{self.location_instance}/{instance}.asp" if not self.exp else instance
 
-        print(f"location_encoding {location_encoding}")
-        print(f"location_instance {location_instance}")
+        print(f"encoding: {location_encoding}")
+        print(f"instance: {location_instance}")
 
         # Initialize the Clingo control object
         arguments = []
@@ -77,11 +77,11 @@ class RunnerClingo(RunnerWasp):
         self.propagators: List[PropagatorClingo] = []
         
         # Ground the base part of the program
-        self.ctl.ground([("base", [])])  # Ensure you ground with the correct subprogram
+        self.ctl.ground([("base", [])])  
         grounded_program = ground_program(location_encoding, location_instance, self.str_weights, self.str_lb, self.str_ub)
         
         preprocess_map = preprocess_ground_program(grounded_program)
-        print(f"preprocess_map: {preprocess_map}")
+        # print(f"preprocess_map: {preprocess_map}")
 
         for amosum in preprocess_map["amosum_set"]:
             self.registerPropagator(prop_type=amosum.prop_type, id=amosum.id)
@@ -148,6 +148,8 @@ class RunnerClingo(RunnerWasp):
 
 
     def print_stats_to_file(self, filename):
+        if not self.param.get("stats", False):
+            return
         control = self.ctl
         stats = control.statistics  # Access statistics object
         with open(filename, "w") as file:
