@@ -112,7 +112,7 @@ class AmoSumPropagator:
     # ----------------------------
 
     # treshold for lazy propagation activation
-    LAZY_PERC : float = 0.95
+    LAZY_PERC : float = 1.0
 
     # SUPPORTED SOLVERS
     WASP = 1

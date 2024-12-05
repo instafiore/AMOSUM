@@ -74,7 +74,7 @@ class PropagatorClingo(clingo.Propagator):
         self.map_slit_plit = map_slit_plit
         self.map_slit_plit_watched = map_slit_plit_watched
 
-        debug("Propagation ad level 0 started")
+        # debug("Propagation ad level 0 started")
         for i in range(nt):
             S_plit = self.propagators[i].simplifyAtLevelZero(delete_lits=True)
 
@@ -86,18 +86,22 @@ class PropagatorClingo(clingo.Propagator):
     def add_clauses_propagated_lits(self, control: clingo.PropagateControl | clingo.PropagateInit, S_plit, dl):
         td = 0 if isinstance(control, clingo.PropagateInit) else control.thread_id
         prop = self.propagators[td]
+
         for plit in S_plit:
-            R_plit = prop.getReasonForLiteral(plit)
-            
-            slit   = self.map_plit_slit[plit]
-            # first part of the clause is the reason
-            clause = [self.map_plit_slit[plit_r] for plit_r in R_plit] 
-            # the last literal is the implied literal (undefined)
-            clause.append(slit)
-            if not control.add_clause(clause) or not control.propagate():
-                # propagation must return immediately, a conflict has been raised
-                print_clause(propagator=self, clause=clause, conflict=True)
-                return True
+            try:
+                R_plit = prop.getReasonForLiteral(plit)
+                slit   = self.map_plit_slit[plit]
+                # first part of the clause is the reason
+                clause = [self.map_plit_slit[plit_r] for plit_r in R_plit] 
+                # the last literal is the implied literal (undefined)
+                clause.append(slit)
+                if not control.add_clause(clause) or not control.propagate():
+                    # propagation must return immediately, a conflict has been raised
+                    print_clause(propagator=self, clause=clause, conflict=True)
+                    return True
+            except Exception as e:
+                debug(e, force_print=True)
+                raise e
         return False
     
 
@@ -128,7 +132,7 @@ class PropagatorClingo(clingo.Propagator):
         for slit in changes:
             for plit in self.map_slit_plit_watched[slit]:
                 plit_list.append(plit)
-        print_undo(self, changes=changes, thread_id=thread_id)
+        # print_undo(self, changes=changes, thread_id=thread_id)
         try:
             prop.onLiteralsUndefined(*plit_list, wasp=False)
         except Exception as e:

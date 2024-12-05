@@ -69,7 +69,8 @@ def print_starting_propagation(propagator, lit, next_phase, force_print = False)
     if not force_print and not DEBUG:
         return 
     name = get_name(lit=lit, atomNames=propagator.atomNames) 
-    debug(f"[{next_phase}] Propagation phase of {name} {'not' if not next_phase else ''} started [{propagator._mps}]:")
+    debug(f"[{next_phase}] Propagation phase of {name} {'not' if not next_phase else ''} started [{propagator._mps}]:", force_print=force_print)
+
 def print_derivation(atomNames, S, force_print = False):
     if not force_print and not DEBUG:
             return 
@@ -404,8 +405,8 @@ def simplifyLiterals(lits, aggregate: 'AggregateFunction', group: 'GroupFunction
             G.add_false_lit(not_(l))
         elif aggregate[not_(l)]:
             G = group[not_(l)]
-            l = not_(l)
             G.add_false_lit(l)
+            l = not_(l)
         else:
             continue
 
@@ -624,6 +625,7 @@ def create_reason_falses_le(propagator):
                 R.append(l) if not propagator.I[l] is None else None
         else:
             R.append(not_(propagator.true_group[g]))
+    return R
 
 # MINIMIZING REASON 
 #################################################################################################################################################

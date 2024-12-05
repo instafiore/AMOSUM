@@ -17,6 +17,10 @@ Invariants:
 
 def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
 
+    if propagator.mps_violated:
+        propagator.reason = create_reason_falses_ge(propagator=propagator)
+        return [not_(propagator.current_literal)]
+
     # set of derived literals
     S : List[int] = []
     

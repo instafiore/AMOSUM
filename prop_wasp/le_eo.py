@@ -18,15 +18,15 @@ Invariants:
     In the aggregate set there are not two literals such that li = ~lj
 '''
 
-
-
 def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
-    global N,ub, I, weight, aggregate, groups, mps, group, reason, true_group
+
+    if propagator.mps_violated:
+        propagator.reason = create_reason_falses_le(propagator=propagator)
+        return [not_(propagator.current_literal)]
 
     # set of derived literals
     S : List[int] = []
 
-    
     for g in propagator.groups:
         if g == G or not propagator.true_group[g] is None:
             continue
@@ -46,6 +46,5 @@ def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
         # updating the reason
         propagator.reason = create_reason_falses_le(propagator=propagator)
     print_derivation(propagator.atomNames, S)
-
     return S
 
