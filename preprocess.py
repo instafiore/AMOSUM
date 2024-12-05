@@ -1,5 +1,6 @@
 import sys
 from prop_wasp.wasp import *
+from settings import *
 
 class amosum_aggregate:
     id : str # id aggregate
@@ -28,7 +29,6 @@ def preprocess_ground_program(file: str) -> dict:
     amosum_set = set()
     for line in file.splitlines():
         if ignore_all:
-            # print(line.strip())
             continue
         l = line.split()    
         if len(l) == 1 and l[0] == "0":
@@ -40,14 +40,12 @@ def preprocess_ground_program(file: str) -> dict:
         else:
             if starts_atoms:
                 assert len(l) == 2
-                if l[1].startswith("group"):
-                    terms = getTerms("group", l[1])
-                    prop_type = terms[-1]
-                    id = terms[-2]
+                if l[1].startswith(PREDICATE_AUX):
+                    terms = getTerms(PREDICATE_AUX, l[1])
+                    id = terms[0]
+                    prop_type = terms[1]
                     amosum_set.add(amosum_aggregate(id=id, prop_type=prop_type))
-                    # print(l[1])
-                                
-            # print(line.strip())
+
 
     result_map["amosum_set"] = amosum_set
     return result_map

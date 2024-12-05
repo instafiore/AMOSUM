@@ -233,7 +233,7 @@ class AmoSumPropagator:
             if  a.startswith(f'{PREDICATE_GROUP}('):
                 terms = wasp.getTerms(PREDICATE_GROUP,a)
                 # Syntax: PREDICATE_GROUP( lit_name, weight, group_id, aggregate_id)
-                if (len(terms) != 4 and len(terms) != 5)or terms[3] != self.ID:
+                if len(terms) != 5 or terms[4] != self.ID:
                     continue
                 
                 lit_str = terms[0]
@@ -245,11 +245,14 @@ class AmoSumPropagator:
                 else:
                     lit =  self.atomNames[atom_name]
             
+                sign = 1 if re.search(r"\+",terms[1]) else -1
+                lit *= sign
                 # updating the self.weight
-                self.weight[lit] = int(terms[1])
-                self.weights_names[atom_name] =  int(terms[1])
+                weight = int(terms[2])
+                self.weight[lit] = weight
+                self.weights_names[atom_name] =  weight
                 # updating the self.group id
-                group_id = terms[2]
+                group_id = terms[3]
 
                 G = groups_raw.get(group_id,[])
                 G.append(lit)
@@ -263,7 +266,7 @@ class AmoSumPropagator:
             
             elif a.startswith(f"{bound_str}("):
                 terms = wasp.getTerms(f'{bound_str}',a)
-                if (len(terms) != 2 or terms[1] != self.ID) and len(terms) != 1:
+                if (len(terms) != 2 or terms[1] != self.ID):
                     continue
                 if not bound is None:
                     assert False     

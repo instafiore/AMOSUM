@@ -1,3 +1,4 @@
+from io import StringIO
 import json
 import math
 import subprocess
@@ -6,6 +7,7 @@ from typing import Dict, List
 import re
 import sys
 import os
+import AmoSumParser
 from amosum import *
 from clingo.symbol import Number
 from clingo.control import Control
@@ -21,8 +23,6 @@ import settings
 from prop_clingo.propagator_clingo import *
 from preprocess import *
 from datetime import datetime
-
-
 
 class RunnerClingo(RunnerWasp):
     '''
@@ -64,25 +64,29 @@ class RunnerClingo(RunnerWasp):
         arguments.append(models) if models != "" else ""
         arguments.append(seed) if seed != "" else ""
         arguments.append("--stats=2")
-        arguments.append("--configuration=tweety")
+        # arguments.append("--configuration=tweety")
     
         self.ctl = Control(arguments=arguments)
         
         # Load the instance file
         self.ctl.load(location_instance)
-        self.ctl.load(location_encoding) if encoding else ""
         self.ctl.load(self.str_weights) if self.str_weights != "" else ""
         self.ctl.load(self.str_lb) if self.str_lb != "" else ""
         self.ctl.load(self.str_ub) if self.str_ub != "" else ""
-        
-        # Ground the base part of the program
-        self.ctl.ground([("base", [])])  # Ensure you ground with the correct subprogram
-        grounded_program = ground_program(location_encoding, location_instance, self.str_weights, self.str_lb, self.str_ub)
-        # print(f"grounded_program: {grounded_program}")
-        
-        preprocess_map = preprocess_ground_program(grounded_program)
-        print(f"preprocess_map: {preprocess_map}")
 
+        # Rewrinting without #amosum construct
+
+        hidden_location_encoding= self.rewrite_file_without_amosum(location_encoding)
+        print(f"grounded file:\n {cat(hidden_location_encoding)}")
+        grounded_program = ground_program(hidden_location_encoding, location_instance, self.str_weights, self.str_lb, self.str_ub)
+        # print(f"grounded_program: {grounded_program}")
+
+        preprocess_map = preprocess_ground_program(grounded_program)
+        self.ctl.load(hidden_location_encoding) if encoding else ""
+        self.ctl.ground([("base", [])])  # Ensure you ground with the correct subprogram
+        # print(f"preprocess_map: {preprocess_map}")
+
+        
         for amosum in preprocess_map["amosum_set"]:
             self.registerPropagator(prop_type=amosum.prop_type, id=amosum.id)
 

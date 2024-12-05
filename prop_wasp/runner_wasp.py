@@ -8,8 +8,10 @@ import ast
 from  utility import *
 import utility
 from preprocess import *
+from AmoSumParser.__main__ import run as run_rewriter
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import settings
+from datetime import datetime
 
 class RunnerWasp:
     '''
@@ -325,7 +327,8 @@ class RunnerWasp:
 
         timeout_str = f"timeout {self.timeout_m}m" if not self.exp else ""
 
-        grounded_program, run_command_ground = ground_program(location_encoding, location_instance, self.str_weights, self.str_lb, self.str_ub, return_command=True)
+        hidden_location_encoding= self.rewrite_file_without_amosum(location_encoding)
+        grounded_program, run_command_ground = ground_program(hidden_location_encoding, location_instance, self.str_weights, self.str_lb, self.str_ub, return_command=True)
         
         run = f"{timeout_str} time -p {RunnerWasp.SOLVER} {RunnerWasp.SILENT} {self.n0}"
         
@@ -551,4 +554,12 @@ class RunnerWasp:
             self.comment_bound(instance=instance, ub=ub, restore=False)
        
 
-    
+    def rewrite_file_without_amosum(self, file):
+        now = datetime.now()
+        date_string = now.strftime("%Y-%m-%d-%H")
+        non_ground_encoding_without_amosum = run_rewriter(input=file)
+        print(f"non_ground_encoding_without_amosum: {non_ground_encoding_without_amosum}")
+        # hidden_file_without_amosum= f"/tmp/.file_without_amosum_{date_string}"
+        hidden_file_without_amosum = "file_without_amosum"
+        write_file(hidden_file_without_amosum, non_ground_encoding_without_amosum)
+        return hidden_file_without_amosum
