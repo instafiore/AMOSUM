@@ -1,7 +1,7 @@
 %%%%% input %%%%%
 
 days(365).
-day(1..365).
+day(1,365).
 
 % workshift(id, name, hours).
 workshift(1,"1-morning",7).
@@ -23,14 +23,7 @@ workshift(6,"6-holiday",0).
 
 
 % :- nurse(N), minHoursPerYear(MIN), #sum{H,D : assign(N,T,D), workshift(T,_,H)} < MIN, N > 1.
-lb(MIN, (0, nurse(N), minHoursPerYear(MIN))) :- nurse(N), assign(N,T,D), workshift(T,_,H), minHoursPerYear(MIN).
-group(assign(N,T,D), H, (D,N), (0, nurse(N), minHoursPerYear(MIN)), ge_amo) :-  nurse(N), assign(N,T,D), workshift(T,_,H), minHoursPerYear(MIN), H > 0.
-
-{__group__(assign(N, T, D), +, H, ((D, N)), (0, nurse(N), minHoursPerYear(MIN), H>0))}:-assign(N, T, D), workshift(T, _, H), nurse(N), minHoursPerYear(MIN), H>0.
-__lb__(MIN, (0, nurse(N), minHoursPerYear(MIN), H>0)):-nurse(N), minHoursPerYear(MIN), H>0.
-__aux__((0, nurse(N), minHoursPerYear(MIN), H>0)):-nurse(N), minHoursPerYear(MIN), H>0.
-__group__(__aux__((0, nurse(N), minHoursPerYear(MIN), H>0)), -, MIN, (nurse(N), minHoursPerYear(MIN), H>0), (0, nurse(N), minHoursPerYear(MIN), H>0)):-nurse(N), minHoursPerYear(MIN), H>0.
-__amosum__((0, nurse(N), minHoursPerYear(MIN), H>0), ge_amo):-nurse(N), minHoursPerYear(MIN), H>0.
+#amosum{ H : assign(N,T,D), workshift(T,_,H)[(D,N)] } >= MIN : nurse(N), minHoursPerYear(MIN), H > 0.
 
 % lb(MIN, (0, nurse(1), minHoursPerYear(MIN))) :- nurse(1), assign(1,T,D), workshift(T,_,H), minHoursPerYear(MIN).
 % group(assign(1,T,D), H, (D,1), (0, nurse(1), minHoursPerYear(MIN)), ge_eo) :-  nurse(1), assign(1,T,D), workshift(T,_,H), minHoursPerYear(MIN).
