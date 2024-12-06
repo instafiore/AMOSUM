@@ -219,7 +219,7 @@ class AmoSumPropagator:
         self.groups = []
         self.assumptions = param.get("ass", False)
         self.current_sum = 0 
-        self.lazy_prop_actived = param.get("lazy_prop",False)
+        self.lazy_prop_actived = param.get("lazy",False)
         self.lazy_condition = not self.lazy_prop_actived
         self.groups_literals = []
 
