@@ -123,7 +123,7 @@ class RunnerClingo(RunnerWasp):
             self.update_maps_weights_list(input = amosum_propagator)
 
         regex_name_file = r"(.*\/)?(?P<name>.+)\.asp"
-        encoding_name = re.match(regex_name_file, location_encoding).group("name")
+        encoding_name = re.match(regex_name_file, location_encoding).group("name")  if encoding else ""
         instance_name = re.match(regex_name_file, location_instance).group("name")
         filename = f"{STATISTICS_RUN}/{date_string}-{encoding_name}-{instance_name}"
         self.print_stats_to_file(filename=filename)

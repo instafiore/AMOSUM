@@ -1,4 +1,4 @@
-#!/Users/instafiore/instafiore_env/bin/python
+#!/home/s.fiorentino/miniconda3/bin/python
 import sys
 import os
 # adding the root path
