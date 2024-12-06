@@ -216,6 +216,7 @@ class AmoSumPropagator:
         self.groups = []
         self.assumptions = param.get("ass", False)
         self.current_sum = 0 
+        self.groups_literals = []
 
         #used to create the self.groups
         groups_raw : dict[int, List[int]] = {}
@@ -231,6 +232,9 @@ class AmoSumPropagator:
         self.weights_names = dict()
         for a in self.atomNames:
             if  a.startswith(f'{PREDICATE_GROUP}('):
+                group_literal = self.atomNames[a]
+                # setting every group_literal to false
+                self.groups_literals.append(not_(group_literal))
                 terms = wasp.getTerms(PREDICATE_GROUP,a)
                 # Syntax: PREDICATE_GROUP( lit_name, weight, group_id, aggregate_id)
                 if len(terms) != 5 or terms[4] != self.ID:
