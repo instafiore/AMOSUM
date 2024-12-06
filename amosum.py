@@ -219,7 +219,8 @@ class AmoSumPropagator:
         self.groups = []
         self.assumptions = param.get("ass", False)
         self.current_sum = 0 
-        self.lazy_prop = param.get("lazy_prop",False)
+        self.lazy_prop_actived = param.get("lazy_prop",False)
+        self.lazy_condition = not self.lazy_prop_actived
         self.groups_literals = []
 
 
@@ -373,6 +374,11 @@ class AmoSumPropagator:
         return self.aggregate[l] or self.aggregate[not_(l)]
 
     def update_lazy_propagation(self):
+        
+        if not self.lazy_prop_actived:
+            self.lazy_condition = True
+            return
+
         p : float
         if self.ge:
             self.mps_violated = self._mps < self.lb 
