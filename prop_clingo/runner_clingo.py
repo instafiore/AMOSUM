@@ -69,7 +69,7 @@ class RunnerClingo(RunnerWasp):
         self.ctl = Control(arguments=arguments)
         self.propagators: List[PropagatorClingo] = []
         # Load the instance file
-        self.ctl.load(location_instance)
+        
         self.ctl.load(self.str_weights) if self.str_weights != "" else ""
         self.ctl.load(self.str_lb) if self.str_lb != "" else ""
         self.ctl.load(self.str_ub) if self.str_ub != "" else ""
@@ -77,12 +77,14 @@ class RunnerClingo(RunnerWasp):
         # Rewrinting without #amosum construct
 
         hidden_location_encoding= self.rewrite_file_without_amosum(location_encoding)
+        hidden_location_instance= self.rewrite_file_without_amosum(location_instance)
         # print(f"grounded file:\n {cat(hidden_location_encoding)}")
-        grounded_program = ground_program(hidden_location_encoding, location_instance, self.str_weights, self.str_lb, self.str_ub)
+        grounded_program = ground_program(hidden_location_encoding, hidden_location_instance, self.str_weights, self.str_lb, self.str_ub)
         # print(f"grounded_program: {grounded_program}")
 
         preprocess_map = preprocess_ground_program(grounded_program)
         self.ctl.load(hidden_location_encoding) if encoding else ""
+        self.ctl.load(hidden_location_instance)
         self.ctl.ground([("base", [])])  # Ensure you ground with the correct subprogram
         # print(f"preprocess_map: {preprocess_map}")
 

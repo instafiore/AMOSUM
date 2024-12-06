@@ -328,7 +328,9 @@ class RunnerWasp:
         timeout_str = f"timeout {self.timeout_m}m" if not self.exp else ""
 
         hidden_location_encoding= self.rewrite_file_without_amosum(location_encoding)
-        grounded_program, run_command_ground = ground_program(hidden_location_encoding, location_instance, self.str_weights, self.str_lb, self.str_ub, return_command=True)
+        hidden_location_instance= self.rewrite_file_without_amosum(location_instance)
+        
+        grounded_program, run_command_ground = ground_program(hidden_location_encoding, hidden_location_instance, self.str_weights, self.str_lb, self.str_ub, return_command=True)
         
         run = f"{timeout_str} time -p {RunnerWasp.SOLVER} {RunnerWasp.SILENT} {self.n0}"
         
@@ -556,10 +558,11 @@ class RunnerWasp:
 
     def rewrite_file_without_amosum(self, file):
         now = datetime.now()
-        date_string = now.strftime("%Y-%m-%d-%H")
-        non_ground_encoding_without_amosum = run_rewriter(input=file)
-        # print(f"non_ground_encoding_without_amosum: {non_ground_encoding_without_amosum}")
-        # hidden_file_without_amosum= f"/tmp/.file_without_amosum_{date_string}"
-        hidden_file_without_amosum = "file_without_amosum"
-        write_file(hidden_file_without_amosum, non_ground_encoding_without_amosum)
+        date_string = now.strftime("%Y-%m-%d-%H-%M-%S-%f")
+        file_name = re.search(FILE_REGEX, file).group("file_name")
+        non_ground_file_without_amosum = run_rewriter(input=file)
+        # print(f"non_ground_encoding_without_amosum: {non_ground_file_without_amosum}")
+        hidden_file_without_amosum= f"/tmp/.{file_name}_without_amosum_{date_string}"
+        # hidden_file_without_amosum = f"{file}_without_amosum"
+        write_file(hidden_file_without_amosum, non_ground_file_without_amosum)
         return hidden_file_without_amosum
