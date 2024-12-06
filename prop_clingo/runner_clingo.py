@@ -111,8 +111,11 @@ class RunnerClingo(RunnerWasp):
             
         # Solve and get all models
         start_time = time.time()  
-        handle : clingo.SolveHandle = self.ctl.solve(on_model=on_model, async_ = True)
-        res = handle.wait(self.timeout_m * 60 if not self.exp else None)
+        try:
+            handle : clingo.SolveHandle = self.ctl.solve(on_model=on_model, async_ = True)
+            res = handle.wait(self.timeout_m * 60 if not self.exp else None)
+        except Exception as e:
+            print(e)
         end_time = time.time()  # End time
 
         for propagator in self.propagators:

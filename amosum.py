@@ -186,7 +186,7 @@ class AmoSumPropagator:
         try:
             with open(file_to_write, 'a') as file:
                 if self.count_p != 0:
-                    file.write(f"{self.sum_p},{self.count_p}\self.N")
+                    file.write(f"{self.sum_p},{self.count_p}")
         except IOError as e:
             print(f"An error occurred: {e}")
 
