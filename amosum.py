@@ -223,10 +223,6 @@ class AmoSumPropagator:
         self.lazy_condition = not self.lazy_prop_actived
         self.groups_literals = []
 
-        if self.lazy_prop_actived:
-            debug("Lazy mode activated", force_print=True)
-
-
         #used to create the self.groups
         groups_raw : dict[int, List[int]] = {}
 
