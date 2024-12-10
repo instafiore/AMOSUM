@@ -10,9 +10,6 @@ import re
 import settings
 from settings import *
 
-
-
-
 class AmoSumPropagator:
 
     atomNames : dict[str: int]
@@ -112,7 +109,7 @@ class AmoSumPropagator:
     # ----------------------------
 
     # treshold for lazy propagation activation
-    LAZY_PERC : float = 0.9
+    LAZY_PERC : float = 0.95
 
     # SUPPORTED SOLVERS
     WASP = 1
@@ -201,7 +198,7 @@ class AmoSumPropagator:
 
         set_debug(param.get("d",""))
 
-        debug(f"Starting propagator with param {param}", force_print=True)
+        
         
         # initializing 
         self.minimization = param.get("min_r",Minimize.NO_MINIMIZATION.value)
@@ -222,6 +219,9 @@ class AmoSumPropagator:
         self.lazy_prop_actived = param.get("lazy",False)
         self.lazy_condition = not self.lazy_prop_actived
         self.groups_literals = []
+
+        lazy_perc_str = f" lazy threshold {AmoSumPropagator.LAZY_PERC}" if self.lazy_prop_actived else ""
+        debug(f"Starting propagator with param {param}{lazy_perc_str}", force_print=True)
 
         #used to create the self.groups
         groups_raw : dict[int, List[int]] = {}
