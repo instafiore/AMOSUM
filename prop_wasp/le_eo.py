@@ -45,6 +45,6 @@ def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
     if len(S) != 0 and propagator.dl != 0:
         # updating the reason
         propagator.reason = create_reason_falses_le(propagator=propagator)
-    print_derivation(propagator.atomNames, S)
+    # print_derivation(propagator.atomNames, S)
     return S
 

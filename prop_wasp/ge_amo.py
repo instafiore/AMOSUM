@@ -34,8 +34,6 @@ def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
         if ml_g is None:
             continue
 
-        mw_g =  propagator.weight[ml_g]
-
         mps, sml_g, ml_g = propagator.mps(g, ml_g, assumed=False, return_literals=True)
         propagate_to_true = False
         if mps < propagator.lb:
@@ -60,6 +58,6 @@ def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
         propagator.reason = create_reason_falses_ge(propagator=propagator)
         propagator.compute_minimal_reason(reason=propagator.reason, derived=S)
 
-    print_derivation(propagator.atomNames, S)
+    # print_derivation(propagator.atomNames, S)
 
     return S

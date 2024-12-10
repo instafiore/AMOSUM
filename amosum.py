@@ -387,7 +387,7 @@ class AmoSumPropagator:
             self.lazy_condition = True
 
         if not self.lazy_prop_actived:
-            self.lazy_condition = True
+            self.lazy_condition = True #forcing to not be lazy
 
 
     def onLiteralTrue(self, lit, dl):
