@@ -374,10 +374,6 @@ class AmoSumPropagator:
 
     def update_lazy_propagation(self):
         
-        if not self.lazy_prop_actived:
-            self.lazy_condition = True
-            return
-
         p : float
         if self.ge:
             self.mps_violated = self._mps < self.lb 
@@ -389,6 +385,10 @@ class AmoSumPropagator:
         self.lazy_condition = p >= AmoSumPropagator.LAZY_PERC
         if self.mps_violated:
             self.lazy_condition = True
+
+        if not self.lazy_prop_actived:
+            self.lazy_condition = True
+
 
     def onLiteralTrue(self, lit, dl):
 
