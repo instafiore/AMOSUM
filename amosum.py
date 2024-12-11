@@ -363,7 +363,7 @@ class AmoSumPropagator:
         if self.assumptions:
             self.assumptions = convert_assparam_to_assarray(self.assumptions)
 
-        return  create_assumptions_lits(assumptions=self.assumptions,atomNames=self.atomNames) + prop_from_facts
+        return  create_assumptions_lits(assumptions=self.assumptions,atomNames=self.atomNames) + prop_from_facts + self.groups_literals
 
     def updated_dl(self, lit, dl):
         self.last_decision_lit = lit if dl != self.dl else self.last_decision_lit
