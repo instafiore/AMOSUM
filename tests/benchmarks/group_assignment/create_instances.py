@@ -72,7 +72,7 @@ class InstanceFactory:
         return mps
     
     def _create_bound(self, mps):
-        mu = mps * 0.4
+        mu = mps * 0.5
         sigma = mu * 0.1  
         return  np.random.normal(mu, sigma)   
         
@@ -154,7 +154,8 @@ def main(argv):
     people_configurations = (30, 40, 50, 60)
     benchmarkCreator = BenchmarkCreator(project_configurations, people_configurations)
     
-    benchmarkCreator.print_instance(SatInstanceFactory(num_projects=5, num_people=30), "test_sat")
+    benchmarkCreator.create_benchmark()
+    # benchmarkCreator.print_instance(PossiblyUnsatInstanceFactory(num_projects=5, num_people=30), "test_sat")
 
 if __name__ == "__main__":
     main(sys.argv)
