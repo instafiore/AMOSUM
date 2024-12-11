@@ -50,7 +50,8 @@ class RunnerWasp:
     SIMPLE_TEST_REGEX = r'^(simple_tests?|st)$'
     MLG_REGEX = r'^(mlg)$'
     NURSE_SCHEDULING_REGEX = r'^(nurse|nr)$'
-    VALID_REGEX = [KNAPSACK_REGEX, GRAPH_COLOURING_REGEX, SIMPLE_TEST_REGEX, MLG_REGEX, NURSE_SCHEDULING_REGEX]
+    GROUP_ASSIGNMENT_REGEX = r'^(group|ga|group-assignment)$'
+    VALID_REGEX = [KNAPSACK_REGEX, GRAPH_COLOURING_REGEX, SIMPLE_TEST_REGEX, MLG_REGEX, NURSE_SCHEDULING_REGEX, GROUP_ASSIGNMENT_REGEX]
     REGEX_WEIGHT_ATOM_KN = r"object\((\d+),\s*(\d+),\s*(\d+)\)"
     REGEX_WEIGHT_ATOM_GC = r"colour_weight\((\w+),\s*(\d+)\)"
     REGEX_WEIGHT_ATOM_MLG = r"[ab]\((\d+),\s*(\d+)(,\d+)?\)"
@@ -64,6 +65,7 @@ class RunnerWasp:
     SIMPLE_TEST = "simple_tests"
     MLG = "MLG"
     NURSE = "nurse_scheduling"
+    GROUP_ASSIGNMENT = "group_assignment"
     NPD = "No Problem Defined"
     # silent mode
     SILENT = ""
@@ -120,6 +122,10 @@ class RunnerWasp:
             self.problem = RunnerWasp.NURSE
             self.key_weight_atom_amo = 0
             self.atom_answerset_regex= r"assign\((\w+),(\w+?),(\w+?)\)"
+        elif re.match(RunnerWasp.GROUP_ASSIGNMENT_REGEX,self.problem, re.IGNORECASE):
+            self.problem = RunnerWasp.GROUP_ASSIGNMENT
+            self.key_weight_atom_amo = 0
+            self.atom_answerset_regex= r"join_project\((\w+),(\w+?),(\w+?),(\w+?)\)"
         elif self.problem == RunnerWasp.NPD:
            self.atom_answerset_regex= RunnerWasp.GENERIC_REGEX_ANSWERS_SET_ATOM
            self.key_weight_atom_amo = 0
@@ -190,7 +196,7 @@ class RunnerWasp:
         else:
             self.location_instance = f"{settings.BENCHMARKS_LOCATION}/{self.problem}/instances"
 
-        self.specific_instance = self.param["i"]  if "i" in self.param else None
+        self.specific_instance = self.param.get("i", None)
 
         if (self.enc_type is None and self.specific_instance is None) or (self.enc_type and not self.enc_type in valid_enc_type):
             raise Exception(f"No valid encoding type key defined, feasible key:'enc_type', feasible values are: {str(valid_enc_type)}")
@@ -205,7 +211,7 @@ class RunnerWasp:
         if self.specific_instance is None:
             self.create_instances(instances=instances, head=head)
         else:
-            self.instances = False
+            self.instances = [self.specific_instance]
         
 
         self.enc = self.param.get("enc", False)
@@ -290,20 +296,17 @@ class RunnerWasp:
         return rf"(?<=[\s,{{])(({self.atom_answerset_regex}))"
     
     def run(self):
-        if self.instances:
+        if RunnerWasp.CHECKING_CORRECTNESS:
             for instance in self.instances:
                 self.run_comparation(instance=instance)
-        elif RunnerWasp.CHECKING_CORRECTNESS and self.specific_instance:
-            self.run_comparation(instance=self.specific_instance)
-        elif self.specific_instance:
-            enc_aggr = self.param.get("enc_aggr", False)
-            encoding = settings.MAP_ENC_ENCODING_FILES[self.enc_type][0 if enc_aggr else 1] \
-                if self.enc_type else None
-            encoding = self.enc if self.enc else encoding
-            answersets, time = self.run_instance(self.specific_instance, encoding=encoding)
-            self.print_ans(answer_sets=answersets, time=time)
         else:
-            assert False
+            for instance in self.instances:
+                enc_aggr = self.param.get("enc_aggr", False)
+                encoding = settings.MAP_ENC_ENCODING_FILES[self.enc_type][0 if enc_aggr else 1] \
+                    if self.enc_type else None
+                encoding = self.enc if self.enc else encoding
+                answersets, time = self.run_instance(instance, encoding=encoding)
+                self.print_ans(answer_sets=answersets, time=time)
 
 
     def run_instance(self, instance, encoding = None):
@@ -560,9 +563,10 @@ class RunnerWasp:
         now = datetime.now()
         date_string = now.strftime("%Y-%m-%d-%H-%M-%S-%f")
         file_name = re.search(FILE_REGEX, file).group("file_name")
+        file_name = re.search(f"(.*)\.asp", file_name).group(1)
         non_ground_file_without_amosum = run_rewriter(input=file)
         # print(f"non_ground_encoding_without_amosum: {non_ground_file_without_amosum}")
-        hidden_file_without_amosum= f"/tmp/.{file_name}_without_amosum_{date_string}"
-        # hidden_file_without_amosum = f"{file}_without_amosum"
+        hidden_file_without_amosum = f".{file_name}_without_amosum_{date_string}.asp"
+        hidden_file_without_amosum_tmp_location= f"/tmp/{hidden_file_without_amosum}"
         write_file(hidden_file_without_amosum, non_ground_file_without_amosum)
         return hidden_file_without_amosum

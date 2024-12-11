@@ -109,7 +109,7 @@ class AmoSumPropagator:
     # ----------------------------
 
     # treshold for lazy propagation activation
-    LAZY_PERC : float = 0.95
+    LAZY_PERC : float = 0.8
 
     # SUPPORTED SOLVERS
     WASP = 1
@@ -347,7 +347,7 @@ class AmoSumPropagator:
     def simplifyAtLevelZero(self, delete_lits = False):
 
         # INCOHERENT
-        error_string = "self.mps < self.lb !!!" if self.ge else "self.mps > self.ub !!!"
+        error_string = f"{self._mps} < {self.lb} !!!" if self.ge else f"{self._mps} > {self.ub} !!!"
         if (self.ge and self._mps < self.lb) or (not self.ge and self._mps > self.ub) :
             debug(error_string)
             return [1]
