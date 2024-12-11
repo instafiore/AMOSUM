@@ -40,6 +40,7 @@ class InstanceFactory:
         # print(f"[__create_roles] self.map_person_role: {self.map_person_role}")
 
     def __create_projects_duration(self):
+        self.map_project_duration = dict()
         for pro in range(1, self.num_projects+1):
             value = random.randint(1, 100)
             if value <= 25:
@@ -48,6 +49,7 @@ class InstanceFactory:
                 duration = 6
             else:
                 duration = 12
+            self.map_project_duration[pro] = duration
             max_start = InstanceFactory.months - duration + 1
             sm = random.randint(1, max_start)
             self.instance.append(f"project_month({pro}, {sm}, {sm+duration-1}).")
@@ -56,86 +58,103 @@ class InstanceFactory:
         self.instance = []
         self.__create_projects_duration()
         self.__create_roles()
-        mps = self.__create_mps()
-        self.__create_project_bounds(mps=mps)
+        self.__create_project_bounds()
         return self.instance
     
-    def __create_mps(self):
+    def __create_mps(self, pro):
         mps = 0
         for per in range(1, self.num_people+1):
             role = self.map_person_role[per]
             salary = self.map_roles[role][0]
-            mps += salary *  InstanceFactory.max_hours_working_per_month
+            for _ in range(self.map_project_duration[pro]):
+                mps += salary *  InstanceFactory.max_hours_working_per_month
         
         return mps
     
-    def _create_bounds(self, mps):
-        mu = mps * 0.5
+    def _create_bound(self, mps):
+        mu = mps * 0.4
         sigma = mu * 0.1  
-        return  np.random.normal(mu, sigma, self.num_projects)   
+        return  np.random.normal(mu, sigma)   
         
 
-    def __create_project_bounds(self, mps):
-        lower_bounds = self._create_bounds(mps)
-        for i, lb in enumerate(lower_bounds):
-            lb = round(lb)
+    def __create_project_bounds(self):
+        for pro in self.map_project_duration:
+            mps = self.__create_mps(pro=pro)
+            lb = round(self._create_bound(mps))
             ub = lb + round(lb*0.2)
-            self.instance.append(f"project({i+1}, {lb}, {ub}).")
+            self.instance.append(f"project({pro}, {lb}, {ub}).")
+
+    def __repr__(self):
+        return "middle"
+    
+    def __str__(self):
+        return self.__repr__()
 
 class SatInstanceFactory(InstanceFactory):      
-    def _create_bounds(self, mps):
-        mu = mps * 0.2
+    def _create_bound(self, mps):
+        mu = mps * 0.1
         sigma = mu * 0.1  
-        return np.random.normal(mu, sigma, self.num_projects)  
-
-class PossiblyUnsatInstanceFactory(InstanceFactory):
-    def _create_bounds(self, mps):
-        mu = mps
-        sigma = mu * 0.1  
-        return np.random.normal(mu, sigma, self.num_projects)  
-
-
-
-def main(argv):
+        return np.random.normal(mu, sigma)  
     
-    # instanceFactory = InstanceFactory(num_projects=10, num_people=30)
-    # instanceFactory = SatInstanceFactory(num_projects=10, num_people=30)
-    # instanceFactory = PossiblyUnsatInstanceFactory(num_projects=10, num_people=30)
+    def __repr__(self):
+        return "sat"
+    
+class PossiblyUnsatInstanceFactory(InstanceFactory):
+    def _create_bound(self, mps):
+        mu = mps * 0.9
+        sigma = mu * 0.1  
+        return np.random.normal(mu, sigma)  
+    
+    def __repr__(self):
+        return "punsat"
+    
 
-    # Possible configurations
-	# 	- projects 5-10-15
-	# 	- people 30-40-50-60
+class BenchmarkCreator():
 
-    project_configurations = (5, 10, 15)
-    people_configurations = (30, 40, 50, 60)
-    # project_configurations = [5]
-    # people_configurations = [30]
     instances_type_distribution = {
         "sat": (SatInstanceFactory, 3),
         "possibly_unsat": (PossiblyUnsatInstanceFactory, 3),
         "middle": (InstanceFactory, 4),
     }
 
-    instances = []
-    id = 0
-    for nproj in project_configurations:
-        for nper in people_configurations:
-            common_lines = []
-            common_lines.append(f"person(1..{nper}).")
-            for instance_type in instances_type_distribution:
-                Factory, n = instances_type_distribution[instance_type]
-                factory = Factory(num_projects=nproj, num_people=nper)
-                for _ in range(n):
-                    instance = factory.create_instance()
-                    instances.extend(instance)
-                    file_name = f"{id:>03}-group-assignment-{nper}-{nproj}-{instance_type}.asp"
-                    with open(f"instances/{file_name}", "w") as file:
-                        file.write("\n".join(instance))
-                        file.write("\n")
-                        file.write("\n".join(common_lines))
-                        
-                    id += 1
+    def __init__(self, project_configurations, people_configurations):
+        self.people_configurations = people_configurations
+        self.project_configurations = project_configurations
+        self.instances = []
 
+    def print_instance(self, factory: InstanceFactory, id):
+        common_lines = []
+        common_lines.append(f"person(1..{factory.num_people}).")
+        instance = factory.create_instance()
+        self.instances.extend(instance)
+        file_name = f"{id:>03}-group-assignment-{factory.num_people}-{factory.num_projects}-{factory}.asp"
+        with open(f"instances/{file_name}", "w") as file:
+            file.write("\n".join(instance))
+            file.write("\n")
+            file.write("\n".join(common_lines))
+
+    def create_benchmark(self):
+        self.instances = []
+        id = 0
+        for nproj in self.project_configurations:
+            for nper in self.people_configurations:
+                for instance_type in BenchmarkCreator.instances_type_distribution:
+                    Factory, n = BenchmarkCreator.instances_type_distribution[instance_type]
+                    factory = Factory(num_projects=nproj, num_people=nper)
+                    for _ in range(n):
+                        self.print_instance(factory, id)
+                        id += 1
+
+def main(argv):
+    
+    # Possible configurations
+	# 	- projects 5-10-15
+	# 	- people 30-40-50-60
+    project_configurations = (5, 10, 15)
+    people_configurations = (30, 40, 50, 60)
+    benchmarkCreator = BenchmarkCreator(project_configurations, people_configurations)
+    
+    benchmarkCreator.print_instance(SatInstanceFactory(num_projects=5, num_people=30), "test_sat")
 
 if __name__ == "__main__":
     main(sys.argv)
