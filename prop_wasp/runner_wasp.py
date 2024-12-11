@@ -569,4 +569,4 @@ class RunnerWasp:
         hidden_file_without_amosum = f".{file_name}_without_amosum_{date_string}.asp"
         hidden_file_without_amosum_tmp_location= f"/tmp/{hidden_file_without_amosum}"
         write_file(hidden_file_without_amosum_tmp_location, non_ground_file_without_amosum)
-        return hidden_file_without_amosum
+        return hidden_file_without_amosum_tmp_location
