@@ -344,6 +344,9 @@ class AmoSumPropagator:
         self.last_decision_lit = 1
         self.dl = 0        
 
+        # for lit in bind:
+        #     debug(f"binded with: {get_name(atomNames=self.atomNames, lit=lit)}", force_print=True)
+
         return bind 
 
     def simplifyAtLevelZero(self, delete_lits = False):

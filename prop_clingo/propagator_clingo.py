@@ -34,6 +34,7 @@ class PropagatorClingo(clingo.Propagator):
 
         max_plit = 0
         for str_symbol, program_literal, solver_literal in atoms_list_for_mapping:
+            # debug(str_symbol, program_literal, solver_literal, force_print=True)
             if max_plit < program_literal:
                 max_plit = program_literal
 
@@ -69,6 +70,7 @@ class PropagatorClingo(clingo.Propagator):
             slit = map_plit_slit[plit]
             map_slit_plit_watched.setdefault(slit,[])
             map_slit_plit_watched[slit].append(plit)
+            # debug(f"watching: {slit} {get_name(self.atomNames,plit)}", force_print=True)
             init.add_watch(literal=slit)
             
             
