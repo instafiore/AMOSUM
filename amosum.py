@@ -9,6 +9,7 @@ import prop_wasp.wasp as wasp
 import re
 import settings
 from settings import *
+import time
 
 class AmoSumPropagator:
 
@@ -109,7 +110,7 @@ class AmoSumPropagator:
     # ----------------------------
 
     # treshold for lazy propagation activation
-    LAZY_PERC : float = 0.85
+    LAZY_PERC : float = 0.98
 
     # SUPPORTED SOLVERS
     WASP = 1
@@ -129,6 +130,7 @@ class AmoSumPropagator:
         self.choice_cons = choice_cons
         self.propagate_phase = propagation_phase
         self.solver = solver
+        self.count = 0
         
 
     def getReasonsForCheckFailure(self):
@@ -391,7 +393,8 @@ class AmoSumPropagator:
 
 
     def onLiteralTrue(self, lit, dl):
-
+        
+        # start = time.time()
         if not self.is_in_aggregate(lit):
             return []
 
@@ -423,7 +426,9 @@ class AmoSumPropagator:
             except Exception as e:
                 print(e, file=sys.stderr)
                 raise e
- 
+        end = time.time()
+        # duration = end - start 
+        # debug(f"duration: {duration} ", force_print=True)
         return propagated_lits
 
 
@@ -435,6 +440,7 @@ class AmoSumPropagator:
         tg = False
         G : Group
         self.mps_violated : bool = False
+        self.count += 1
         
 
         amo_condition = False
@@ -474,6 +480,7 @@ class AmoSumPropagator:
 
         self._mps = self._mps - w_p + w_n
         self.update_lazy_propagation()
+        debug(f"mps: {self._mps} iteration: {self.count}", force_print=self.lazy_condition and self.count % 10000 == 0)
 
         G = G if self.choice_cons == "EO" else None
         current_sum_condition = not self.ge or self.current_sum < self.bound

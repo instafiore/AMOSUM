@@ -63,7 +63,7 @@ class RunnerClingo(RunnerWasp):
         seed = f"--seed={self.seed}" if self.seed != "" else ""
         arguments.append(models) if models != "" else ""
         arguments.append(seed) if seed != "" else ""
-        arguments.append("--stats=2")
+        arguments.append("--stats=2") if self.param.get("stats", False) else None
         # arguments.append("--configuration=tweety")
     
         self.ctl = Control(arguments=arguments)

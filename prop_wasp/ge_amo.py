@@ -8,6 +8,7 @@ from typing import List
 from prop_wasp.propagator_wasp import *
 import prop_wasp.propagator_wasp as propagator_wasp
 from utility import *
+import time
 
 '''
 Propagator for ' >= LB  ' constraint and At Most One constraint
@@ -25,6 +26,7 @@ def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
 
     # set of derived literals
     S : List[int] = []
+
 
     for g in propagator.groups:
         if g == G or not propagator.true_group[g] is None:

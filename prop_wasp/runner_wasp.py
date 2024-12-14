@@ -39,7 +39,7 @@ class RunnerWasp:
     PRINT_RUN = True
 
     # whether printing the output of the solver
-    PRINT_OUTPUT_SOLVER = False
+    PRINT_OUTPUT_SOLVER = True
 
     # whether printing the error output of the solver
     PRINT_ERROR_SOLVER = True
@@ -71,7 +71,7 @@ class RunnerWasp:
     SILENT = ""
     # SILENT = "--silent=2"
 
-    TIMEOUT = 2 * 60
+    TIMEOUT = 20
     TIMEOUT_LIGHT = 10
 
     
@@ -360,7 +360,8 @@ class RunnerWasp:
             self.propagators.append(*prop) if prop else None
             prop_run = f" --interpreter=python \
             --script-directory={settings.PROPAGATOR_DIR_LOCATION_WASP} \
-            --plugins-file=\"{settings.PROPAGATOR_MODULE} {' '.join(self.propagators)}\""
+            --plugins-file=\"{settings.PROPAGATOR_MODULE} {' '.join(self.propagators)}\" \
+            --stats=2"
             run += prop_run
   
         if self.PRINT_RUN:

@@ -38,12 +38,14 @@ def print_propagate(propagator, changes: List[int], control = None, dl = 0, forc
         f"[{get_name(lit=changes[0], atomNames=propagator.atomNames)}, {changes[0]}]"
     decision_slit = control.assignment.decision(dl) if not wasp_b else propagator.last_decision_lit
     plit: int = 0
-    if not wasp_b and decision_slit != 1:
-        plit = propagator.map_slit_plit_watched[decision_slit][0]
-    elif wasp_b:
-        plit = propagator.last_decision_lit 
-    decision_literal_name = get_name(atomNames = propagator.atomNames, lit = plit) if decision_slit != 1 else "from facts"
-    debug(f"[{decision_literal_name}, {dl}] propagate {changes_str} thread_id: {control.thread_id if not wasp_b else 0}", force_print=force_print)
+    # debug(f"decision_slit: {control.assignment.decision(dl)}", force_print=True)
+    # if not wasp_b and decision_slit != 1:
+    #     plit = propagator.map_slit_plit_watched[decision_slit][0]
+    # elif wasp_b:
+    #     plit = propagator.last_decision_lit 
+    # decision_literal_name = get_name(atomNames = propagator.atomNames, lit = plit) if decision_slit != 1 else "from facts"
+    # debug(f"[{decision_literal_name}, {dl}] propagate {changes_str} thread_id: {control.thread_id if not wasp_b else 0}", force_print=force_print)
+    debug(f"[{dl}] propagate {changes_str} thread_id: {control.thread_id if not wasp_b else 0}", force_print=force_print)
 
 def print_clause(propagator, clause, force_print = False, conflict = False):
     if not force_print and not DEBUG:
