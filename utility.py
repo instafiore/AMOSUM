@@ -409,7 +409,7 @@ class Group:
 # removes useless literals
 def simplifyLiterals(lits, aggregate: 'AggregateFunction', group: 'GroupFunction', max, I: SymmetricFunction ):
     '''
-    Invariants: all literals inside lits have to be already assigned to a truth value
+    Invariants: all literals inside lits must be already assigned to a truth value
     '''
     
     G : Group = None

@@ -429,7 +429,7 @@ class AmoSumPropagator:
             except Exception as e:
                 print(e, file=sys.stderr)
                 raise e
-        end = time.time()
+        # end = time.time()
         # duration = end - start 
         # debug(f"duration: {duration} ", force_print=True)
         return propagated_lits
