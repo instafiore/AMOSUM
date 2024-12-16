@@ -360,8 +360,7 @@ class RunnerWasp:
             self.propagators.append(*prop) if prop else None
             prop_run = f" --interpreter=python \
             --script-directory={settings.PROPAGATOR_DIR_LOCATION_WASP} \
-            --plugins-file=\"{settings.PROPAGATOR_MODULE} {' '.join(self.propagators)}\" \
-            --stats=2"
+            --plugins-file=\"{settings.PROPAGATOR_MODULE} {' '.join(self.propagators)}\" "
             run += prop_run
   
         if self.PRINT_RUN:
@@ -564,7 +563,7 @@ class RunnerWasp:
         now = datetime.now()
         date_string = now.strftime("%Y-%m-%d-%H-%M-%S-%f")
         file_name = re.search(FILE_REGEX, file).group("file_name")
-        file_name = re.search(f"(.*)\.asp", file_name).group(1)
+        file_name = re.search(r"(.*)\.asp", file_name).group(1)
         non_ground_file_without_amosum = run_rewriter(input=file)
         # print(f"non_ground_encoding_without_amosum: {non_ground_file_without_amosum}")
         hidden_file_without_amosum = f".{file_name}_without_amosum_{date_string}.asp"

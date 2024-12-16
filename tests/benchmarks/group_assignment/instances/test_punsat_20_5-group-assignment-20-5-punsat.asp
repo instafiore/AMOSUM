@@ -25,7 +25,7 @@ role(19, researcher).
 role(20, researcher).
 project(1, 291720, 350064).
 project(2, 1489718, 1787662).
-% project(3, 369669, 443603).
+project(3, 369669, 443603).
 % project(4, 1374276, 1649131).
 % project(5, 370263, 444316).
 person(1..20).

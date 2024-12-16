@@ -82,11 +82,13 @@ class PropagatorClingo(clingo.Propagator):
         # debug("Propagation ad level 0 started")
         for i in range(nt):
             S_plit = self.propagators[i].simplifyAtLevelZero(delete_lits=True)
-
+            
+        # print_derivation(atomNames=self.atomNames, S=S_plit)
         if S_plit == [1] or self.add_clauses_propagated_lits(control=init, S_plit=S_plit, dl = 0):
             # adding empty clause
-            init.add_clause([])
             return
+        
+        
 
     def add_clauses_propagated_lits(self, control: clingo.PropagateControl | clingo.PropagateInit, S_plit, dl):
         td = 0 if isinstance(control, clingo.PropagateInit) else control.thread_id
@@ -95,11 +97,13 @@ class PropagatorClingo(clingo.Propagator):
         for plit in S_plit:
             try:
                 R_plit = prop.getReasonForLiteral(plit)
+
                 slit   = self.map_plit_slit[plit]
                 # first part of the clause is the reason
                 clause = [self.map_plit_slit[plit_r] for plit_r in R_plit] 
                 # the last literal is the implied literal (undefined)
                 clause.append(slit)
+               
                 if not control.add_clause(clause) or not control.propagate():
                     # propagation must return immediately, a conflict has been raised
                     print_clause(propagator=self, clause=clause, conflict=True)

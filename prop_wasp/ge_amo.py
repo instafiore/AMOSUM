@@ -60,6 +60,6 @@ def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
         propagator.reason = create_reason_falses_ge(propagator=propagator)
         propagator.compute_minimal_reason(reason=propagator.reason, derived=S)
 
-    # print_derivation(propagator.atomNames, S)
+    print_derivation(propagator.atomNames, S)
 
     return S

@@ -47,8 +47,8 @@ def print_propagate(propagator, changes: List[int], control = None, dl = 0, forc
    
 def print_clause(propagator, clause, force_print = False, conflict = False):
     if not force_print and not DEBUG:
-        return 
-    clause_names = [get_name(atomNames=propagator.atomNames, lit=propagator.map_slit_plit_watched[literal][0]) for literal in clause]
+        return
+    clause_names = [get_name(atomNames=propagator.atomNames, lit=propagator.map_slit_plit[literal][0]) for literal in clause]
     confict_str = "Conflict with " if conflict else ""
     debug(f"{confict_str}clause_names {clause_names} clause_slits {clause}", force_print=force_print)
 
@@ -96,7 +96,7 @@ def debug(*message: str, G: 'Group' = None , end ="\n", force_print = False, fil
         print(message, end=end, file=file)
         sys.stderr.flush()
 
-def init_run(argv):
+def init_param(argv):
     param = {}
     regex = r"^-(.+)" 
     
@@ -180,7 +180,7 @@ def process_sys_parameters(sys_parameters):
 
         # creating the key
         key = sys_parameters[i]
-
+        print(f"key: {key}")
         res_regex = re.match(regex, key)
         if res_regex is None:
             raise Exception("Every key has to start with a dash! Ex: -id id")
@@ -192,18 +192,21 @@ def process_sys_parameters(sys_parameters):
         else:    
             value = sys_parameters[i+1] 
             res_regex = re.match(regex, value)
-        
+            
 
-            if res_regex is None:
+            if res_regex is None and value not in PROPAGATORS_NAMES:
                 i += 2
                 param[key] = value
+                print(f"value: {value}")
                 
             else:
                 i += 1
                 param[key] = True
-
+                print(f"value: {True}")
+        
         if i >= len(sys_parameters) or sys_parameters[i] in PROPAGATORS_NAMES:
             params.append((prop_type, param))
+            print(f"appending: {(prop_type, param)}")
             if i < len(sys_parameters):
                 prop_type  = sys_parameters[i] 
                 param = {}

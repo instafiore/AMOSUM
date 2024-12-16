@@ -20,13 +20,13 @@ from prop_wasp.runner_wasp import RunnerWasp
 from  utility import *
 import utility
 import settings
-from prop_clingo.propagator_clingo import *
+from prop_clingo.propagator_clingo_py.propagator_clingo import *
 from preprocess import *
 from datetime import datetime
 
-class RunnerClingo(RunnerWasp):
+class RunnerClingoPython(RunnerWasp):
     '''
-    This class is meant to run experiments on the AMO sum propagator(s) Clingo
+    This class is meant to run experiments on the AMO sum propagator(s) Clingo using Python API
     '''
 
     def __init__(self, parameters: Dict[str, str]) -> None:
@@ -113,10 +113,12 @@ class RunnerClingo(RunnerWasp):
             
         # Solve and get all models
         start_time = time.time()  
+        res = "timeout"
         try:
             handle : clingo.SolveHandle = self.ctl.solve(on_model=on_model, async_ = True)
             res = handle.wait(self.timeout_m * 60 if not self.exp else None)
         except Exception as e:
+            res = "error"
             print(e)
         end_time = time.time()  # End time
 
@@ -130,8 +132,8 @@ class RunnerClingo(RunnerWasp):
         filename = f"{STATISTICS_RUN}/{date_string}-{encoding_name}-{instance_name}"
         self.print_stats_to_file(filename=filename)
         
-        wall_time = end_time - start_time
-        wall_time = round(wall_time, 2) if res else "timeout"
+        wall_time = end_time - start_time 
+        wall_time = round(wall_time, 2) if res != "timeout" and res != "error" else res 
 
         # restoring the instance.asp file
         self.comment_bound(instance=instance, ub=False, restore=True)

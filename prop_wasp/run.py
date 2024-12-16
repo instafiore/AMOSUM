@@ -11,7 +11,7 @@ This is the entry file to run the AMO SUM propagator(s) WASP
 
 def main():
     
-    param = init_run(sys.argv)
+    param = init_param(sys.argv)
     runner = RunnerWasp(parameters=param)
     runner.run()
 

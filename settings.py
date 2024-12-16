@@ -29,6 +29,9 @@ ENCODING_WITH_AGGR_LE_AMO = "encoding_with_aggregates_le_amo"
 
 ROOT = f"{os.path.dirname(os.path.abspath(__file__))}"
 PROPAGATOR_DIR_LOCATION_WASP = f"{os.path.dirname(os.path.abspath(__file__))}/prop_wasp"
+PROPAGATOR_DIR_LOCATION_CLINGO_C = f"{os.path.dirname(os.path.abspath(__file__))}/prop_clingo/propagator_clingo_c"
+PROPAGATOR_DIR_LOCATION_CLINGO_C_BUILD = f"{PROPAGATOR_DIR_LOCATION_CLINGO_C}/build"
+PROPAGATOR_DIR_LOCATION_CLINGO_C_BIN = f"{PROPAGATOR_DIR_LOCATION_CLINGO_C}/bin"
 TESTS_LOCATION = f"{ROOT}/tests"
 BENCHMARKS_LOCATION = f"{TESTS_LOCATION}/benchmarks"
 TEMP_TESTS_LOCATION = f"{TESTS_LOCATION}/temp"
@@ -44,6 +47,8 @@ MAP_ENC_ENCODING_FILES = {
     "ge_amo": (ENCODING_WITH_AGGR_GE_AMO ,ENCODING_WITH_GROUP_GE_AMO),
     "ge_eo":  (ENCODING_WITH_AGGR_GE_EO, ENCODING_WITH_GROUP_GE_EO) ,
     "le_eo":  (ENCODING_WITH_AGGR_LE_EO, ENCODING_WITH_GROUP_LE_EO) }
+
+
 
 MAP_PROPAGATOR = {"ge_amo": PROPAGATOR_NAME_ge_amo, "ge_eo": PROPAGATOR_NAME_ge_eo, "le_eo": PROPAGATOR_NAME_le_eo}
 
