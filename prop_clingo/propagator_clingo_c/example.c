@@ -95,6 +95,7 @@ bool init(clingo_propagate_init_t *init, propagator_t *data) {
       clingo_symbol_t sym;
  
       // stop iteration if the end is reached
+      
       if (!clingo_symbolic_atoms_iterator_is_equal_to(atoms, atoms_it, atoms_ie, &equal)) { return false; }
       if (equal) { break; }
  

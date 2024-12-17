@@ -96,6 +96,7 @@ def debug(*message: str, G: 'Group' = None , end ="\n", force_print = False, fil
         print(message, end=end, file=file)
         sys.stderr.flush()
 
+
 def init_param(argv):
     param = {}
     regex = r"^-(.+)" 

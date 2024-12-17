@@ -68,6 +68,9 @@
         "iostream": "cpp",
         "settings.h": "c",
         "span": "cpp",
-        "stack": "cpp"
+        "stack": "cpp",
+        "clingo.h": "c",
+        "semaphore": "cpp",
+        "chrono": "cpp"
     }
 }

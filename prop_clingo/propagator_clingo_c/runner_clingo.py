@@ -46,9 +46,6 @@ class RunnerClingoC(RunnerWasp):
         location_encoding = f"{self.location}/{encoding}.asp" if self.enc and not self.exp else location_encoding
         location_instance = f"{self.location_instance}/{instance}.asp" if not self.exp else instance
 
-        print(f"encoding: {location_encoding}")
-        print(f"instance: {location_instance}")
-
         timeout_str = f"timeout {self.timeout_m}m" if not self.exp else ""
 
         hidden_location_encoding= self.rewrite_file_without_amosum(location_encoding)
@@ -70,13 +67,16 @@ class RunnerClingoC(RunnerWasp):
             run += prop_run
 
         if self.PRINT_RUN:
-            print(f"run:\t{run_command_ground} | {run}")
+            print(f"run:\t {run}")
 
         # running test
         self.maps_weights_list = []
         # compile propagator
-        compile_run = f"make -C {PROPAGATOR_DIR_LOCATION_CLINGO_C}"
-        print(compile_run)
+        compile_with_debug = "DEBUG=-DDEBUG" if self.param.get("d",False) else ""
+        clean_run = f"make -C {PROPAGATOR_DIR_LOCATION_CLINGO_C} clean"
+        compile_run = f"make -C {PROPAGATOR_DIR_LOCATION_CLINGO_C} {compile_with_debug}"
+        # print(compile_run)
+        subprocess.run(clean_run, shell=True, capture_output=True)
         subprocess.run(compile_run, shell=True)
         run_process = subprocess.run(run, shell=True, capture_output=True, text=True)
 
@@ -97,4 +97,29 @@ class RunnerClingoC(RunnerWasp):
         if RunnerWasp.PRINT_ERROR_SOLVER and error != "":
             print(error, file=sys.stderr)
 
-        return [], 0
+        regex_real = r"^real\s(\d+\.\d+)"
+        # regex for the answer set of a given problem
+        regex_answer_set = r"^Answer set \{(.+)\}"
+        
+        # regex for the interested atoms of a given problem
+        regex_query = self.get_regex_query_atom_answerset()
+
+        answer_sets = []
+
+        for line in lines_output:
+            if not re.search(regex_answer_set, line) is None:
+                answer_set_str = re.search(regex_answer_set, line).group(1)
+                # print(f"find all: {re.findall(regex_query, answer_set_str)}")
+                answer_set = set([match[0] for match in re.findall(regex_query, answer_set_str)]) if self.problem != RunnerWasp.NPD else answer_set_str.split(", ")
+                # print(f"line:{line} regex_query: {regex_query} answer_set:{answer_set}")
+                answer_sets.append(set(answer_set))
+        
+        for line in lines_error:
+            if not re.search(regex_real, line) is None:
+                time = re.search(regex_real, line).group(1)
+            elif not re.search(r"Killed: Bye!", line) is None:
+                time = "timeout"
+
+            self.update_maps_weights_list(input = line)
+
+        return answer_sets, 0
