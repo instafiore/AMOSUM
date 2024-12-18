@@ -39,7 +39,7 @@ class PropagatorClingo(clingo.Propagator):
                 max_plit = program_literal
 
         self.atomNames = { str_symbol : program_literal for str_symbol, program_literal, solver_literal in atoms_list_for_mapping}
-
+        # arrived here with cpp
         self.propagators = [amosum.AmoSumPropagator(atomsNames=self.atomNames, sys_parameters=self.sys_parameters,
                                       propagation_phase=self.propagation_phase, ge=self.ge, choice_cons=self.prop_type, solver=AmoSumPropagator.CLINGO) for i in range(nt)]
 

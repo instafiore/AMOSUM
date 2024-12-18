@@ -12,9 +12,7 @@
 #include "propagator_clingo.h"
 
 
-std::unordered_map<std::string, clingo_literal_t> atomNames ;
-
-void register_propagator(clingo_control_t *ctl, clingo_propagator_t prop, AmoSumPropagator& propagator);
+void register_propagator(clingo_control_t *ctl, clingo_propagator_t prop, PropagatorClingo& propagator);
 
 bool init(clingo_propagate_init_t *init, PropagatorClingo *propagator){
     return propagator->init(init);
