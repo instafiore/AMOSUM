@@ -16,7 +16,7 @@ from clingo.control import Control
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import ast
-from prop_wasp.runner_wasp import RunnerWasp
+from prop_wasp.propagator_wasp_py.runner_wasp import RunnerWasp
 from  utility import *
 import utility
 import settings

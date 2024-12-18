@@ -71,6 +71,8 @@
         "stack": "cpp",
         "clingo.h": "c",
         "semaphore": "cpp",
-        "chrono": "cpp"
+        "chrono": "cpp",
+        "system_error": "cpp",
+        "fstream": "cpp"
     }
 }

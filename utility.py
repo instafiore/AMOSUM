@@ -596,15 +596,15 @@ def get_propagator_variables(prop_type):
         case "ge_amo":
             ge = True
             choice_cons = "AMO"
-            from prop_wasp.ge_amo import propagate_phase
+            from prop_wasp.propagator_wasp_py.ge_amo import propagate_phase
         case "le_eo":
             ge = False
             choice_cons = "AMO"
-            from prop_wasp.le_eo import propagate_phase
+            from prop_wasp.propagator_wasp_py.le_eo import propagate_phase
         case "ge_eo":
             ge = True
             choice_cons = "EO"
-            from prop_wasp.ge_eo import propagate_phase
+            from prop_wasp.propagator_wasp_py.ge_eo import propagate_phase
         case _:
             assert False
     return ge, propagate_phase, choice_cons

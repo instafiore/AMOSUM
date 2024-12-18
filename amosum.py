@@ -5,7 +5,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from ast import Tuple
 from typing import Callable, List
 from utility import *
-import prop_wasp.wasp as wasp
+import prop_wasp.propagator_wasp_py.wasp as wasp
 import re
 import settings
 from settings import *

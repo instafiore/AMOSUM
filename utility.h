@@ -16,6 +16,7 @@ void debug_print(const Args&... args) {
     std::cerr << oss.str() << std::endl;
 }
 
+
 #ifdef DEBUG
     #define debugf(...) \
         debug_print(__VA_ARGS__); \
@@ -35,7 +36,8 @@ using ParameterMap = std::unordered_map<std::string, std::string>;
 std::unordered_map<std::string, std::string> init_param(int argc, char const *argv[]);
 void print_unordered_map(std::unordered_map<std::string, std::string> map);
 std::vector<std::pair<std::string, ParameterMap>> process_sys_parameters(const std::vector<std::string>& sys_parameters);
-std::string unordered_map_to_string(std::unordered_map<std::string, std::string> map);
+template <typename Key, typename Value>
+std::string unordered_map_to_string(std::unordered_map<Key, Value> map);
 std::vector<std::string> split(const std::string& str, char delimiter);
 template <typename T>
 std::string vector_to_string(const std::vector<T>& vec);
@@ -45,3 +47,13 @@ void handle_error(bool success);
 bool print_model(clingo_model_t const *model);
 bool get_arg(clingo_symbol_t sym, int offset, int *num);
 bool solve(clingo_control_t *ctl, clingo_solve_result_bitset_t *result);
+
+
+class Group
+{
+private:
+    /* data */
+public:
+    Group();
+    ~Group();
+};

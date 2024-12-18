@@ -76,7 +76,7 @@ class RunnerClingoC(RunnerWasp):
         clean_run = f"make -C {PROPAGATOR_DIR_LOCATION_CLINGO_C} clean"
         compile_run = f"make -C {PROPAGATOR_DIR_LOCATION_CLINGO_C} {compile_with_debug}"
         # print(compile_run)
-        subprocess.run(clean_run, shell=True, capture_output=True)
+        subprocess.run(clean_run, shell=True)
         subprocess.run(compile_run, shell=True)
         run_process = subprocess.run(run, shell=True, capture_output=True, text=True)
 

@@ -14,7 +14,7 @@ using ParameterMap = std::unordered_map<std::string, std::string>;
 
 
 // Explicit template instantiations for compilation
-template std::string vector_to_string<std::string>(const std::vector<std::string>& v);
+template std::string vector_to_string(const std::vector<std::string>& v);
 
 template <typename T>
 std::string vector_to_string(const std::vector<T>& vec){
@@ -53,7 +53,8 @@ ParameterMap init_param(int argc, char const *argv[]) {
     return args;
 }
 
-std::string unordered_map_to_string(std::unordered_map<std::string, std::string> map){
+template <typename Key, typename Value>
+std::string unordered_map_to_string(std::unordered_map<Key, Value> map){
 
     std::ostringstream oss;
     oss<< "{" ;
@@ -63,6 +64,10 @@ std::string unordered_map_to_string(std::unordered_map<std::string, std::string>
     oss << "}" ;
     return oss.str() ;
 }
+template std::string unordered_map_to_string(std::unordered_map<std::string, std::string> map);
+template std::string unordered_map_to_string(std::unordered_map<std::string, clingo_literal_t> map);
+
+
 
 void print_unordered_map(std::unordered_map<std::string, std::string> map){
     std::cout << unordered_map_to_string(map) << "\n" ; 
@@ -167,13 +172,31 @@ std::string cat(const std::string &filename) {
     return oss.str() ;
 }
 
+const std::string clingo_error_code_to_string(clingo_error_t code) {
+    switch (code) {
+        case clingo_error_bad_alloc:
+            return "memory could not be allocated";
+        case clingo_error_unknown:
+            return "errors unrelated to clingo";
+        case clingo_error_success:
+            return "successful API calls";
+        case clingo_error_runtime:
+            return "errors only detectable at runtime like invalid input";
+        case clingo_error_logic:
+            return "wrong usage of the clingo API";
+        default:
+            return "unknown_error code: ";
+    }
+}
 
 void handle_error(bool success) {
     char const *error_message;
     if (!success) {
         if (!(error_message = clingo_error_message())) { error_message = "generic error, not recognized from clingo"; }
-        fprintf(stderr, "Error: %s\n", error_message);
-        exit(EXIT_FAILURE);
+        clingo_error_t code = clingo_error_code();
+        std::string code_str = clingo_error_code_to_string(code);
+        fprintf(stderr, "Clingo error: %s with code: %s\n", error_message, code_str.c_str());
+        exit(code);
     }
 }
 
@@ -220,7 +243,7 @@ bool print_model(clingo_model_t const *model) {
     // retrieve the symbol's string
     if (!clingo_symbol_to_string(*it, str, n)) { goto error; }
  
-    it+1 != ie ? printf("%s, ", str) : printf(" %s", str);
+    it+1 != ie ? printf("%s with size %d, ", str, n) : printf(" %s", str);
 
   }
  
@@ -258,3 +281,7 @@ bool solve(clingo_control_t *ctl, clingo_solve_result_bitset_t *result) {
  
   return clingo_solve_handle_close(handle) && ret;
 }
+
+// Group instantiation
+Group::Group(){}
+Group::~Group(){}

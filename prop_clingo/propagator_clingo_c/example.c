@@ -240,7 +240,7 @@ bool print_model(clingo_model_t const *model) {
     // retrieve the symbol's string
     if (!clingo_symbol_to_string(*it, str, n)) { goto error; }
  
-    printf(" %s", str);
+    printf(" %s", str, n);
   }
  
   printf("\n");

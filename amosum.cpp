@@ -1,9 +1,8 @@
 #include "amosum.h"
+#include <iostream>
 
-AmoSumPropagator::AmoSumPropagator(/* args */)
-{
-}
 
 AmoSumPropagator::~AmoSumPropagator()
 {
 }
+

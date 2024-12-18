@@ -1,6 +1,6 @@
 CC = g++
 DEBUG=0
-CFLAGS = -Wall -Wextra --std=c++17 $(DEBUG)
+CFLAGS = -Wall -Wextra -std=c++17 $(DEBUG)
 LDFLAGS =  -lclingo
 BUILD_DIR = build
 BIN_DIR = bin
