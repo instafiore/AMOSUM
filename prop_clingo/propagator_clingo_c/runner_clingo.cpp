@@ -72,7 +72,7 @@ int main(int argc, char const *argv[])
 
 
     std::vector<std::pair<std::string, ParameterMap>> prop_type_params = process_sys_parameters(sys_parameters) ;
-    // dummy propagator
+
     std::vector<PropagatorClingo*> propagators ;
     for(auto& [prop_type, param]: prop_type_params){
         register_propagator(ctl, prop, prop_type, param, propagators);
@@ -113,7 +113,7 @@ void register_propagator(clingo_control_t *ctl, clingo_propagator_t prop,
     const std::vector<clingo_literal_t>* (*propagation_phase)(const Group &G, AmoSumPropagator &propagator) = std::get<1>(result);
     std::string choice_cons = std::get<2>(result);
 
-    PropagatorClingo* propagator_clingo = new PropagatorClingo(param, propagation_phase, ge, prop_type);
+    PropagatorClingo* propagator_clingo = new PropagatorClingo(param, propagation_phase, ge, choice_cons);
 
     handle_error(clingo_control_register_propagator(ctl, &prop, propagator_clingo, false));
     propagators.push_back(propagator_clingo);

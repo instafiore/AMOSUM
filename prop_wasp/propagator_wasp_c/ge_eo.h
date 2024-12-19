@@ -14,13 +14,14 @@
 
 const std::vector<clingo_literal_t>* propagation_phase_ge_eo(const Group &G, AmoSumPropagator &propagator){
 
-    std::vector<clingo_literal_t>* S = new std::vector<clingo_literal_t>();
+    std::vector<clingo_literal_t>* S ;
+    // S = new std::vector<clingo_literal_t>();
 
-    if (propagator.mps_violated) {
-        propagator.reason=create_reason_falses_ge(propagator);
-        S->emplace_back(not_(propagator.mps_violated));
-        return S;
-    }
+    // if (propagator.mps_violated) {
+    //     propagator.reason=create_reason_falses_ge(propagator);
+    //     S->emplace_back(not_(propagator.mps_violated));
+    //     return S;
+    // }
     
     // // Iterate over groups and apply logic
     // for (auto& g : propagator.groups) {

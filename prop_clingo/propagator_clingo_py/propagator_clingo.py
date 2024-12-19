@@ -17,12 +17,12 @@ import amosum
 import time 
 class PropagatorClingo(clingo.Propagator):
 
-    def __init__(self, sys_parameters: dict[str: str], propagation_phase: Callable[[Group, AmoSumPropagator], List[int]], ge: bool, prop_type: str) -> None:
+    def __init__(self, sys_parameters: dict[str: str], propagation_phase: Callable[[Group, AmoSumPropagator], List[int]], ge: bool, choice_cons: str) -> None:
         super().__init__()
         self.sys_parameters = sys_parameters
         self.propagation_phase = propagation_phase
         self.ge = ge
-        self.prop_type = prop_type
+        self.choice_cons = choice_cons
         self.solver = AmoSumPropagator.CLINGO
 
     def init(self, init: clingo.PropagateInit) -> None:
@@ -41,7 +41,7 @@ class PropagatorClingo(clingo.Propagator):
         self.atomNames = { str_symbol : program_literal for str_symbol, program_literal, solver_literal in atoms_list_for_mapping}
         # arrived here with cpp
         self.propagators = [amosum.AmoSumPropagator(atomsNames=self.atomNames, sys_parameters=self.sys_parameters,
-                                      propagation_phase=self.propagation_phase, ge=self.ge, choice_cons=self.prop_type, solver=AmoSumPropagator.CLINGO) for i in range(nt)]
+                                      propagation_phase=self.propagation_phase, ge=self.ge, choice_cons=self.choice_cons, solver=AmoSumPropagator.CLINGO) for i in range(nt)]
 
         # This is a map for mapping each solver literal (slit) to its program literal(s) (plit).
         # Can happend that some solver literal has more than one program literal
@@ -62,6 +62,7 @@ class PropagatorClingo(clingo.Propagator):
             map_slit_plit[slit].append(plit)
             map_slit_plit[-slit].append(-plit)
 
+        # arrived here 
         lits = [max_plit] + map_slit_plit.get(1,[])
         for i in range(nt):
             to_watch_plit = self.propagators[i].getLiterals(*lits)

@@ -13,7 +13,7 @@ public:
     static constexpr const char* WASP = "wasp";
     AmoSumPropagator(){}
     AmoSumPropagator(std::unordered_map<std::string, int> atomsNames,
-                    std::vector<std::string> sys_parameters, 
+                    std::unordered_map<std::string, std::string> params,
                     const std::vector<clingo_literal_t>* (*propagation_phase)(const Group&, AmoSumPropagator&) = NULL,
                     bool ge = true,
                     std::string choice_cons = "AMO",

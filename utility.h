@@ -160,5 +160,8 @@ std::vector<clingo_literal_t>* create_reason_falses(const AmoSumPropagator& prop
 std::vector<clingo_literal_t>* create_reason_falses_ge(const AmoSumPropagator& propagator);
 std::vector<clingo_literal_t>* create_reason_falses_le(const AmoSumPropagator& propagator);
 std::tuple<bool, const std::vector<clingo_literal_t>* (*)(const Group &G, AmoSumPropagator &propagator), std::string>  get_propagator_variables(std::string prop_type);
+// Function to get the name
+std::string get_name(const std::unordered_map<std::string, clingo_literal_t>& atomNames, clingo_literal_t lit);
+
 #include "utility.tpp"  // Include the template implementation file
 

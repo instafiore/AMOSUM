@@ -48,3 +48,15 @@ std::string unordered_map_to_string(std::unordered_map<Key, Value> map){
     oss << "}" ;
     return oss.str() ;
 }
+
+template <typename K, typename V>
+void update_map_value_vector(std::unordered_map<K, std::vector<V>>& umap, K key, V value) {
+    // Ensure the key exists and has an empty vector if not present
+    if (umap.find(key) == umap.end()) {
+        umap[key] = std::vector<V>();
+    }
+
+    // Append the values
+    umap[key].push_back(value);
+
+}

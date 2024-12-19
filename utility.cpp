@@ -17,6 +17,29 @@
 
 using ParameterMap = std::unordered_map<std::string, std::string>;
 
+// Function to get the name
+std::string get_name(const std::unordered_map<std::string, clingo_literal_t>& atomNames, clingo_literal_t lit) {
+    std::string prefix = "";
+
+    if (lit == 0) { // Assuming 0 represents None in this context
+        return "None";
+    }
+
+    if (lit < 0) {
+        prefix = "not ";
+    }
+
+    for (const auto& [name, atom] : atomNames) {
+        if (atom == std::abs(lit)) {
+            return prefix + name;
+        }
+    }
+
+    debug(lit, " is not present in atomNames");
+    assert(false);
+    return ""; 
+}
+
 ParameterMap init_param(int argc, char const *argv[]) {
 
     ParameterMap args;
@@ -297,3 +320,5 @@ std::vector<clingo_literal_t>* create_reason_falses_le(const AmoSumPropagator &p
     std::vector<clingo_literal_t>* R;
     return R;
 }
+
+

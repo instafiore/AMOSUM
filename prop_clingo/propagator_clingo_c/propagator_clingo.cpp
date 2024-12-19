@@ -13,10 +13,10 @@
 
 bool PropagatorClingo::init(clingo_propagate_init_t *init){
 
-    debug("starting propagator with params: ", unordered_map_to_string(this->sys_parameters))
+    debug("starting propagator with params: ", unordered_map_to_string(this->param))
     
-    size_t threads = clingo_propagate_init_number_of_threads(init);
-    debug("[init] number of threads ", threads)
+    size_t nt = clingo_propagate_init_number_of_threads(init);
+    debug("[init] number of threads ", nt)
 
     clingo_literal_t max_plit = 0;
     clingo_symbolic_atoms_t const *symbolic_atoms;
@@ -51,7 +51,7 @@ bool PropagatorClingo::init(clingo_propagate_init_t *init){
 
         if (plit > max_plit) { max_plit = plit; }
 
-        debug("[init] symbol: ", symbol_str, " plit: ", plit, " slit: ", slit)
+        // debug("[init] symbol: ", symbol_str, " plit: ", plit, " slit: ", slit)
         atoms_list_for_mapping.emplace_back(symbol_str, plit, slit);
 
       
@@ -60,14 +60,24 @@ bool PropagatorClingo::init(clingo_propagate_init_t *init){
 
     debug("max plit: ", max_plit);
 
-    for(const auto& tuple: atoms_list_for_mapping){
-        this->atomNames.emplace(std::get<0>(tuple), std::get<1>(tuple));
+    for(const auto& [str_symbol, plit, slit]: atoms_list_for_mapping){
+        this->atomNames.emplace(str_symbol, plit);
+        map_plit_slit[plit] = slit ; 
+        map_plit_slit[not_(plit)] = not_(slit) ; 
+        update_map_value_vector<clingo_literal_t, clingo_literal_t>(map_slit_plit, slit, plit);
+        update_map_value_vector<clingo_literal_t, clingo_literal_t>(map_slit_plit, not_(slit), not_(plit));
     }
 
     debug("atomNames: ", unordered_map_to_string(atomNames));
 
+    AmoSumPropagator* propagator = new AmoSumPropagator(atomNames, param, propagation_phase, ge, choice_cons, solver = AmoSumPropagator::CLINGO);
+    for (size_t i = 0; i < nt; i++) this->propagators.push_back(propagator);
+
     return true ;
 }
+
+
+
 
  
 

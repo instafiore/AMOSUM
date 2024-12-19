@@ -90,7 +90,7 @@ class RunnerClingoPython(RunnerWasp):
 
         
         for amosum in preprocess_map["amosum_set"]:
-            self.registerPropagator(prop_type=amosum.prop_type, id=amosum.id)
+            self.registerPropagator(choice_cons=amosum.prop_type, id=amosum.id)
 
 
         # Collect all models
@@ -148,12 +148,12 @@ class RunnerClingoPython(RunnerWasp):
         self.maps_weights_list.append((id, maps_weights))
     
     def registerPropagator(self, prop_type: str, id: str):
-        ge, propagate_phase, prop_type = get_propagator_variables(prop_type=prop_type)
+        ge, propagate_phase, choice_cons = get_propagator_variables(prop_type=prop_type)
 
         # Initialize and register the custom propagator
         param = self.param.copy()
         param["id"] = id
-        propagator_clingo = PropagatorClingo(param, propagation_phase=propagate_phase, ge=ge, prop_type=prop_type)
+        propagator_clingo = PropagatorClingo(param, propagation_phase=propagate_phase, ge=ge, choice_cons=choice_cons)
         self.ctl.register_propagator(propagator_clingo)
         self.propagators.append(propagator_clingo)
 
