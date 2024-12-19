@@ -14,7 +14,7 @@ from amosum import *
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import ast
-from prop_wasp.runner_wasp import RunnerWasp
+from prop_wasp.propagator_wasp_py.runner_wasp import RunnerWasp
 from  utility import *
 import utility
 import settings
@@ -26,7 +26,7 @@ class RunnerClingoC(RunnerWasp):
     This class is meant to run experiments on the AMO sum propagator(s) Clingo using C API
     '''
 
-    SOLVER = "propagator_clingo"
+    SOLVER_EXE = "runner_clingo"
     
 
     def __init__(self, parameters: Dict[str, str]) -> None:
@@ -53,7 +53,7 @@ class RunnerClingoC(RunnerWasp):
         
         grounded_program, run_command_ground = ground_program(hidden_location_encoding, hidden_location_instance, return_command=True)
         
-        run = f"{timeout_str} time -p {settings.PROPAGATOR_DIR_LOCATION_CLINGO_C_BIN}/./{RunnerClingoC.SOLVER} {self.n0}\
+        run = f"{timeout_str} time -p {settings.PROPAGATOR_DIR_LOCATION_CLINGO_C_BIN}/./{RunnerClingoC.SOLVER_EXE} {self.n0}\
             -enc={hidden_location_encoding}\
             -i={hidden_location_instance}"
 

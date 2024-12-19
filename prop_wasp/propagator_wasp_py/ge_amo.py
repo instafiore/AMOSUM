@@ -5,8 +5,8 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import prop_wasp
 from typing import List
-from prop_wasp.propagator_wasp import *
-import prop_wasp.propagator_wasp as propagator_wasp
+from prop_wasp.propagator_wasp_py.propagator_wasp import *
+import prop_wasp.propagator_wasp_py.propagator_wasp as propagator_wasp
 from utility import *
 import time
 

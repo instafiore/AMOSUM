@@ -12,6 +12,9 @@
 #include "propagator_clingo.h"
 
 bool PropagatorClingo::init(clingo_propagate_init_t *init){
+
+    debug("starting propagator with params: ", unordered_map_to_string(this->sys_parameters))
+    
     size_t threads = clingo_propagate_init_number_of_threads(init);
     debug("[init] number of threads ", threads)
 

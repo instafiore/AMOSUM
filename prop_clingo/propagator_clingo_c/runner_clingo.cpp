@@ -12,7 +12,7 @@
 #include "propagator_clingo.h"
 
 
-void register_propagator(clingo_control_t *ctl, clingo_propagator_t prop, PropagatorClingo& propagator);
+void register_propagator(clingo_control_t *ctl, clingo_propagator_t prop, std::string prop_type, ParameterMap param, std::vector<PropagatorClingo*> &propagators);
 
 bool init(clingo_propagate_init_t *init, PropagatorClingo *propagator){
     return propagator->init(init);
@@ -73,11 +73,9 @@ int main(int argc, char const *argv[])
 
     std::vector<std::pair<std::string, ParameterMap>> prop_type_params = process_sys_parameters(sys_parameters) ;
     // dummy propagator
-    PropagatorClingo dummy_propagator ;
+    std::vector<PropagatorClingo*> propagators ;
     for(auto& [prop_type, param]: prop_type_params){
-        // std::string param_str = unordered_map_to_string(param);
-        // printf("%s with param: %s\n", prop_type.c_str(), param_str.c_str());
-        register_propagator(ctl, prop, prop_type, param["id"]);
+        register_propagator(ctl, prop, prop_type, param, propagators);
     }
     
     // Loading the program to the control
@@ -92,6 +90,10 @@ int main(int argc, char const *argv[])
     handle_error(solve(ctl, &solve_ret));
     
 
+    // FREE
+    for(auto& propagator: propagators){
+        delete propagator;
+    }
     if (ctl) { clingo_control_free(ctl); }
     
     return ret;
@@ -99,17 +101,20 @@ int main(int argc, char const *argv[])
     
 }
 
-void register_propagator(clingo_control_t *ctl, clingo_propagator_t prop, std::string prop_type, std::string id){
-    // TODO: to implement this:
+void register_propagator(clingo_control_t *ctl, clingo_propagator_t prop, 
+    std::string prop_type, ParameterMap param,
+    std::vector<PropagatorClingo*> &propagators){
 
-    // ge, propagate_phase, prop_type = get_propagator_variables(prop_type=prop_type)
+    std::tuple<bool, 
+    const std::vector<clingo_literal_t>* (*)(const Group &G, 
+    AmoSumPropagator &propagator), std::string> result = get_propagator_variables(prop_type=prop_type);
 
-    // # Initialize and register the custom propagator
-    // param = self.param.copy()
-    // param["id"] = id
-    // propagator_clingo = PropagatorClingo(param, propagation_phase=propagate_phase, ge=ge, prop_type=prop_type)
-    // self.ctl.register_propagator(propagator_clingo)
-    // self.propagators.append(propagator_clingo)
-  
-    //   handle_error(clingo_control_register_propagator(ctl, &prop, &propagator, false));
+    bool ge = std::get<0>(result);
+    const std::vector<clingo_literal_t>* (*propagation_phase)(const Group &G, AmoSumPropagator &propagator) = std::get<1>(result);
+    std::string choice_cons = std::get<2>(result);
+
+    PropagatorClingo* propagator_clingo = new PropagatorClingo(param, propagation_phase, ge, prop_type);
+
+    handle_error(clingo_control_register_propagator(ctl, &prop, propagator_clingo, false));
+    propagators.push_back(propagator_clingo);
 }

@@ -50,7 +50,7 @@ class AmoSumPropagator:
     # reason for literals 
     reason : List[int] 
 
-    # reason for true_literals (no more usefull)
+    # reason for true_literals
     reason_trues : PerfectHash
 
     # redundant literals in reason of a literal l

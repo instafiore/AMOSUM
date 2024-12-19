@@ -9,27 +9,13 @@
 #include <sstream>
 #include <clingo.h>
 #include <fstream>
+#include <cassert>
+#include "amosum.h"
+#include "prop_wasp/propagator_wasp_c/ge_amo.h" 
+#include "prop_wasp/propagator_wasp_c/ge_eo.h" 
+#include "prop_wasp/propagator_wasp_c/le_eo.h" 
 
 using ParameterMap = std::unordered_map<std::string, std::string>;
-
-
-// Explicit template instantiations for compilation
-template std::string vector_to_string(const std::vector<std::string>& v);
-
-template <typename T>
-std::string vector_to_string(const std::vector<T>& vec){
-    std::ostringstream oss;
-    oss<<"[";
-    for (size_t i = 0; i < vec.size()-1; i++)
-    {
-        oss<<"'"<<vec[i]<<"'"<<"," ;
-    }
-    if (vec.size() > 0) oss<<"'"<<vec[vec.size()-1]<<"'";
-
-    oss<<"]";
-    return oss.str();
-}
-
 
 ParameterMap init_param(int argc, char const *argv[]) {
 
@@ -53,26 +39,10 @@ ParameterMap init_param(int argc, char const *argv[]) {
     return args;
 }
 
-template <typename Key, typename Value>
-std::string unordered_map_to_string(std::unordered_map<Key, Value> map){
-
-    std::ostringstream oss;
-    oss<< "{" ;
-    for (const auto& [key, value] : map) {
-        oss <<"'"<< key << "':'" << value<<"', " ;
-    }
-    oss << "}" ;
-    return oss.str() ;
-}
-template std::string unordered_map_to_string(std::unordered_map<std::string, std::string> map);
-template std::string unordered_map_to_string(std::unordered_map<std::string, clingo_literal_t> map);
-
-
 
 void print_unordered_map(std::unordered_map<std::string, std::string> map){
     std::cout << unordered_map_to_string(map) << "\n" ; 
 }
-
 
 
 std::vector<std::pair<std::string, ParameterMap>> process_sys_parameters(const std::vector<std::string>& sys_parameters) {
@@ -282,6 +252,48 @@ bool solve(clingo_control_t *ctl, clingo_solve_result_bitset_t *result) {
   return clingo_solve_handle_close(handle) && ret;
 }
 
-// Group instantiation
-Group::Group(){}
-Group::~Group(){}
+std::tuple<bool, const std::vector<clingo_literal_t>* (*)(const Group &G, AmoSumPropagator &propagator), std::string>  get_propagator_variables(std::string prop_type){
+    
+    bool ge;
+    std::string choice_cons;
+    const std::vector<clingo_literal_t>* (*propagation_phase)(const Group &G, AmoSumPropagator &propagator);
+
+    if (prop_type == "ge_amo") {
+        ge = true;
+        choice_cons = "AMO";
+        propagation_phase = propagation_phase_ge_amo ;
+    } else if (prop_type == "le_eo") {
+        ge = false;
+        choice_cons = "AMO";
+        propagation_phase = propagation_phase_ge_eo ;
+    } else if (prop_type == "ge_eo") {
+        ge = true;
+        choice_cons = "EO";
+        propagation_phase = propagation_phase_le_eo ;
+    } else {
+        assert(false && "Unexpected prop_type!");
+    }
+
+    // Print for debugging purposes
+    std::cout << "ge: " << ge << ", choice_cons: " << choice_cons << std::endl;
+    
+    return std::make_tuple(ge, propagation_phase, choice_cons);
+}
+
+std::vector<clingo_literal_t>* create_reason_falses(const AmoSumPropagator &propagator, bool ge) {
+    if (ge) {
+        return create_reason_falses_ge(propagator);
+    } else {
+        return create_reason_falses_le(propagator);
+    }
+}
+
+std::vector<clingo_literal_t>* create_reason_falses_ge(const AmoSumPropagator &propagator) {
+    std::vector<clingo_literal_t>* R;
+    return R;
+}
+
+std::vector<clingo_literal_t>* create_reason_falses_le(const AmoSumPropagator &propagator) {
+    std::vector<clingo_literal_t>* R;
+    return R;
+}

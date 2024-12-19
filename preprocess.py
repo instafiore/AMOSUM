@@ -1,5 +1,5 @@
 import sys
-from prop_wasp.wasp import *
+from prop_wasp.propagator_wasp_py.wasp import *
 from settings import *
 
 class amosum_aggregate:

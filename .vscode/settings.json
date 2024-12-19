@@ -73,6 +73,7 @@
         "semaphore": "cpp",
         "chrono": "cpp",
         "system_error": "cpp",
-        "fstream": "cpp"
+        "fstream": "cpp",
+        "*.tpp": "cpp"
     }
 }
