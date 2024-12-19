@@ -27,6 +27,8 @@ public:
     PerfectHash<std::vector<clingo_literal_t>*>* reason_trues;  // reason for true_literals
     std::vector<Group> groups; // # a list of Group
     TrueGroupFunction* true_group;  //  a function from self.groups -> literals U {0}; if true_group[G] = 0 then there is not true literal in G
+
+    std::vector<clingo_literal_t> getLiterals(const std::vector<clingo_literal_t>& lits){return std::vector<clingo_literal_t>();}
 };
 
 

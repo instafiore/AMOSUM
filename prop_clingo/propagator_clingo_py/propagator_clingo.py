@@ -62,11 +62,11 @@ class PropagatorClingo(clingo.Propagator):
             map_slit_plit[slit].append(plit)
             map_slit_plit[-slit].append(-plit)
 
-        # arrived here 
         lits = [max_plit] + map_slit_plit.get(1,[])
         for i in range(nt):
             to_watch_plit = self.propagators[i].getLiterals(*lits)
 
+        # arrived here 
         for plit in to_watch_plit:
             slit = map_plit_slit[plit]
             map_slit_plit_watched.setdefault(slit,[])

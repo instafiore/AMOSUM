@@ -60,3 +60,21 @@ void update_map_value_vector(std::unordered_map<K, std::vector<V>>& umap, K key,
     umap[key].push_back(value);
 
 }
+
+template <typename K, typename V>
+std::vector<V> get_map_value_vector(std::unordered_map<K, std::vector<V>>& umap, K key) {
+   
+    if (umap.find(key) == umap.end()) {
+        return std::vector<V>();
+    }
+
+    return umap[key];
+
+}
+
+template< typename T>
+void extend_vector(std::vector<T>& to_extend, const std::vector<T>& input){
+    for(T e: input){
+        to_extend.push_back(e);
+    }
+}

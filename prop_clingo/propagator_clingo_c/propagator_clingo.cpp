@@ -73,6 +73,16 @@ bool PropagatorClingo::init(clingo_propagate_init_t *init){
     AmoSumPropagator* propagator = new AmoSumPropagator(atomNames, param, propagation_phase, ge, choice_cons, solver = AmoSumPropagator::CLINGO);
     for (size_t i = 0; i < nt; i++) this->propagators.push_back(propagator);
 
+    std::vector<clingo_literal_t> lits = {max_plit};
+
+    std::vector<clingo_literal_t> facts = get_map_value_vector<clingo_literal_t, clingo_literal_t>(map_slit_plit, 1);
+    extend_vector(lits, facts);
+
+    std::vector<clingo_literal_t> to_watch_plit;
+    for (size_t i = 0; i < nt; i++) to_watch_plit = this->propagators[i]->getLiterals(lits) ;
+
+
+    //TODO: clingo_propagate_init_add_watch(init, lit)
     return true ;
 }
 
