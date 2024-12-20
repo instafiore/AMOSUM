@@ -14,6 +14,7 @@
 #include "prop_wasp/propagator_wasp_c/ge_amo.h" 
 #include "prop_wasp/propagator_wasp_c/ge_eo.h" 
 #include "prop_wasp/propagator_wasp_c/le_eo.h" 
+#include "prop_clingo/propagator_clingo_c/propagator_clingo.h"
 
 using ParameterMap = std::unordered_map<std::string, std::string>;
 
@@ -236,7 +237,7 @@ bool print_model(clingo_model_t const *model) {
     // retrieve the symbol's string
     if (!clingo_symbol_to_string(*it, str, n)) { goto error; }
  
-    it+1 != ie ? printf("%s with size %d, ", str, n) : printf(" %s", str);
+    it+1 != ie ? printf("%s, ", str, n) : printf(" %s", str);
 
   }
  
@@ -320,5 +321,48 @@ std::vector<clingo_literal_t>* create_reason_falses_le(const AmoSumPropagator &p
     std::vector<clingo_literal_t>* R;
     return R;
 }
+
+void raise_exception(std::string message){
+    throw std::runtime_error(message);
+}
+
+void raise_wasp_not_implemented_exception(){
+    raise_exception("wasp not yet implemented");
+}
+
+
+void print_propagate(PropagatorClingo* prop, const clingo_literal_t *changes, size_t size, clingo_propagate_control_t *control, int dl, bool force_print = false, bool wasp_b = false){
+    bool debug_b = false ;
+    #ifdef DEBUG
+        debug_b = true ;
+    #endif
+    if (not force_print and not debug_b) return ;
+    
+    int td ;
+    wasp_b ? td = 0 : td = clingo_propagate_control_thread_id(control) ; 
+    std::string changes_str ;
+    
+    if (wasp_b)  raise_wasp_not_implemented_exception() ;
+    else  changes_str = prop->compute_changes_str(changes, size, td) ;
+
+    const clingo_assignment_t *assignment = clingo_propagate_control_assignment(control);
+    clingo_literal_t decision_slit ;
+    handle_error(clingo_assignment_decision(assignment, dl, &decision_slit));
+
+    clingo_literal_t plit = 0 ;
+
+    if (not wasp_b and decision_slit != 1){
+        plit = prop->map_slit_plit[decision_slit][0];
+    }else if (wasp_b)
+    {
+        raise_wasp_not_implemented_exception();
+    }
+    
+    std::string decision_literal_name ; 
+    decision_slit != 1 ? decision_literal_name = get_name(prop->atomNames, plit) : decision_literal_name = "from facts" ;
+
+    debugf("[", decision_literal_name,", ",dl,"] propagate ", changes_str," td: ", td);
+}
+
 
 

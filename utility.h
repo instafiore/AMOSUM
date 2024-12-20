@@ -6,6 +6,7 @@
 #include <clingo.h>
 #include <sstream>
 
+class PropagatorClingo ;
 // Macro to handle the debug functionality
 
 // Helper variadic template function
@@ -14,6 +15,13 @@ void debug_print(const Args&... args) {
     std::ostringstream oss;
     (oss << ... << args); 
     std::cerr << oss.str() << std::endl;
+}
+
+template<typename... Args>
+void print(const Args&... args) {
+    std::ostringstream oss;
+    (oss << ... << args); 
+    std::cout << oss.str() << std::endl;
 }
 
 
@@ -162,6 +170,7 @@ std::vector<clingo_literal_t>* create_reason_falses_le(const AmoSumPropagator& p
 std::tuple<bool, const std::vector<clingo_literal_t>* (*)(const Group &G, AmoSumPropagator &propagator), std::string>  get_propagator_variables(std::string prop_type);
 // Function to get the name
 std::string get_name(const std::unordered_map<std::string, clingo_literal_t>& atomNames, clingo_literal_t lit);
+void print_propagate(PropagatorClingo* prop, const clingo_literal_t *changes, size_t size, clingo_propagate_control_t *control, int dl, bool force_print, bool wasp_b);
 
 #include "utility.tpp"  // Include the template implementation file
 

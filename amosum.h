@@ -3,11 +3,12 @@
 #include <clingo.h>
 #include "utility.h"
 #include <vector>
+#include <memory>
 
 class AmoSumPropagator
 {
 private:
-    /* data */
+    size_t N ;
 public:
     static constexpr const char* CLINGO = "clingo";
     static constexpr const char* WASP = "wasp";
@@ -28,7 +29,22 @@ public:
     std::vector<Group> groups; // # a list of Group
     TrueGroupFunction* true_group;  //  a function from self.groups -> literals U {0}; if true_group[G] = 0 then there is not true literal in G
 
-    std::vector<clingo_literal_t> getLiterals(const std::vector<clingo_literal_t>& lits){return std::vector<clingo_literal_t>();}
+    std::vector<clingo_literal_t> getLiterals(const std::vector<clingo_literal_t>& lits){
+        N = lits[0] + 1;
+        
+        // TODO: remove
+        std::vector<clingo_literal_t> to_watch;
+        extend_vector(to_watch, lits, 1);
+        // 
+        
+        return to_watch;
+    }
+
+    std::vector<clingo_literal_t> simplifyAtLevelZero(bool delete_lits=false){ return std::vector<clingo_literal_t>(); };
+    std::unique_ptr<std::vector<clingo_literal_t>> getReasonForLiteral(clingo_literal_t lit){ return std::make_unique<std::vector<clingo_literal_t>>(); }
+    std::vector<clingo_literal_t>* onLiteralTrue(clingo_literal_t plit, int dl){ return new std::vector<clingo_literal_t>();}
+    void onLiteralsUndefined(const std::vector<clingo_literal_t> &plit_list, bool wasp){}
+
 };
 
 

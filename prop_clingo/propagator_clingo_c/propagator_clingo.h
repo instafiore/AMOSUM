@@ -9,19 +9,20 @@
 #include <iostream>
 #include <vector>
 #include <limits>
+#include <memory>
 
 class PropagatorClingo{
 
 private:
-    std::unordered_map<std::string, clingo_literal_t> atomNames;
-
 public:
+    std::unordered_map<std::string, clingo_literal_t> atomNames;
+    static const clingo_literal_t BOTTOM = 1 ;
     std::unordered_map<std::string, std::string> param;
     const std::vector<clingo_literal_t>* (*propagation_phase)(const Group&, AmoSumPropagator&);
     bool ge;
     std::string choice_cons;
     std::string solver;
-    std::vector<AmoSumPropagator*> propagators ; 
+    
 
     // This is a map for mapping each solver literal (slit) to its program literal(s) (plit).
     // Can happend that some solver literal has more than one program literal
@@ -46,9 +47,16 @@ public:
             solver(AmoSumPropagator::CLINGO) {}
 
     bool init(clingo_propagate_init_t *init);
-    bool propagate(clingo_propagate_control_t *control, const clingo_literal_t *changes, size_t size, AmoSumPropagator *propagator){return true;}
-    void undo(clingo_propagate_control_t *control, const clingo_literal_t *changes, size_t size, AmoSumPropagator *propagator){}
+    bool propagate(clingo_propagate_control_t *control, const clingo_literal_t *changes, size_t size);
+    void undo(clingo_propagate_control_t *control, const clingo_literal_t *changes, size_t size);
 
+    bool add_clauses_propagated_lits(void *control, const std::vector<clingo_literal_t>& S_plit, int dl, bool init);
+    std::string compute_changes_str(const clingo_literal_t *changes, size_t size, int td);
+
+    // Dynamic memory
+    std::vector<AmoSumPropagator*> propagators ; 
+    std::unique_ptr<std::vector<clingo_literal_t>> R_plit ;
+    std::unique_ptr<std::vector<clingo_literal_t>> S_plit ;
     ~PropagatorClingo(){
         for(auto& prop: propagators){
             delete prop;

@@ -50,6 +50,9 @@ class RunnerClingoC(RunnerWasp):
 
         hidden_location_encoding= self.rewrite_file_without_amosum(location_encoding)
         hidden_location_instance= self.rewrite_file_without_amosum(location_instance)
+
+        print(f"encoding: {location_encoding}")
+        print(f"instance: {location_instance}")
         
         grounded_program, run_command_ground = ground_program(hidden_location_encoding, hidden_location_instance, return_command=True)
         

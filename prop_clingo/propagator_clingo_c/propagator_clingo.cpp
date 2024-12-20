@@ -81,9 +81,112 @@ bool PropagatorClingo::init(clingo_propagate_init_t *init){
     std::vector<clingo_literal_t> to_watch_plit;
     for (size_t i = 0; i < nt; i++) to_watch_plit = this->propagators[i]->getLiterals(lits) ;
 
+    debug("to watch: ", vector_to_string(to_watch_plit))
 
-    //TODO: clingo_propagate_init_add_watch(init, lit)
+    for(clingo_literal_t plit: to_watch_plit){
+        clingo_literal_t slit = map_plit_slit[plit];
+        update_map_value_vector(map_slit_plit_watched, slit, plit);
+        handle_error(clingo_propagate_init_add_watch(init, slit));
+    }
+
+    std::vector<clingo_literal_t> S_plit ;
+    for (size_t i = 0; i < nt; i++) S_plit = propagators[i]->simplifyAtLevelZero(true);
+    
+    if (S_plit.size() == 1 and S_plit[0] == BOTTOM) return true; // inconsistent
+
+    add_clauses_propagated_lits(init, S_plit, 0, true);
+
     return true ;
+}
+
+bool PropagatorClingo::add_clauses_propagated_lits(void *control, const std::vector<clingo_literal_t>& S_plit, int dl, bool init=false){
+    int td ;
+    init ? td = 0 : td = clingo_propagate_control_thread_id((clingo_propagate_control*) control); 
+
+    AmoSumPropagator* prop = propagators[td];
+
+    for(clingo_literal_t plit: S_plit){
+        R_plit = prop->getReasonForLiteral(plit);
+        size_t clause_size = R_plit->size() + 1 ;
+        clingo_literal_t* clause = new clingo_literal_t[clause_size] ;
+        clingo_literal_t slit = map_plit_slit[plit];
+        clause[0] = plit ; 
+        for (size_t i = 1; i < clause_size; i++) clause[i] = (*R_plit)[i];
+
+        bool result_add_clause;
+        init ? clingo_propagate_init_add_clause((clingo_propagate_init*) control, clause, clause_size, &result_add_clause) :
+        clingo_propagate_control_add_clause((clingo_propagate_control*) control, clause, clause_size, clingo_clause_type_learnt, &result_add_clause) ;
+
+        bool result_propagate;
+        init ? clingo_propagate_init_propagate((clingo_propagate_init*) control, &result_propagate) :
+        clingo_propagate_control_propagate((clingo_propagate_control*) control, &result_propagate) ;
+        
+        if (not result_add_clause or not result_propagate){
+            // propagation must return immediately, a conflict has been raised 
+            return true;
+        }
+    }
+
+    return false ;
+}   
+
+bool PropagatorClingo::propagate(clingo_propagate_control_t *control, const clingo_literal_t *changes, size_t size){
+
+    const clingo_assignment_t *assignment = clingo_propagate_control_assignment(control);
+    int dl = clingo_assignment_decision_level(assignment);
+    int td; 
+    dl == 0 ? td = 0 : td = clingo_propagate_control_thread_id(control) ; 
+    AmoSumPropagator* prop = propagators[td];
+
+    print_propagate(this, changes, size, control, dl, true, false);
+
+    for (size_t i = 0; i < size; i++)
+    {
+        clingo_literal_t slit = changes[i];
+        std::vector<clingo_literal_t> plit_list = map_slit_plit_watched[slit];
+        for(clingo_literal_t plit: plit_list){
+            S_plit.reset(prop->onLiteralTrue(plit, dl));
+            if (add_clauses_propagated_lits(control, *S_plit, dl, false)){
+                // Conflict added hence propagation has to stop
+                return true;
+            } 
+        }
+    }
+    
+    return true;
+}
+
+std::string PropagatorClingo::compute_changes_str(const clingo_literal_t *changes, size_t size, int td){
+    std::vector<std::string> changes_name_vec ; 
+    for (size_t i = 0; i < size; i++)
+    {
+        clingo_literal_t slit = changes[i] ;
+        for(clingo_literal_t plit: map_slit_plit_watched[slit]){
+            std::string name = get_name(atomNames, plit);
+            std::string res = "[" + name + ", " + std::to_string(plit) + ", " +  std::to_string(slit) + "]";
+            changes_name_vec.push_back(res);
+        }
+    }
+
+    return vector_to_string(changes_name_vec);
+}
+
+
+void PropagatorClingo::undo(clingo_propagate_control_t *control, const clingo_literal_t *changes, size_t size){
+    const clingo_assignment_t *assignment = clingo_propagate_control_assignment(control);
+    int dl = clingo_assignment_decision_level(assignment);
+    int td; 
+    dl == 0 ? td = 0 : td = clingo_propagate_control_thread_id(control) ; 
+    AmoSumPropagator* prop = propagators[td];
+
+    std::vector<clingo_literal_t> plit_list;
+
+    for (size_t i = 0; i < size; i++)
+    {
+        clingo_literal_t slit = changes[i];
+        extend_vector(plit_list, map_slit_plit_watched[slit]);
+    }
+    prop->onLiteralsUndefined(plit_list, false);
 }
 
 

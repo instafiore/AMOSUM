@@ -13,18 +13,9 @@
 
 
 void register_propagator(clingo_control_t *ctl, clingo_propagator_t prop, std::string prop_type, ParameterMap param, std::vector<PropagatorClingo*> &propagators);
-
-bool init(clingo_propagate_init_t *init, PropagatorClingo *propagator){
-    return propagator->init(init);
-}
-
-bool propagate(clingo_propagate_control_t *control, const clingo_literal_t *changes, size_t size, AmoSumPropagator *propagator){
-    return true;
-}
-
-void undo(clingo_propagate_control_t *control, const clingo_literal_t *changes, size_t size, AmoSumPropagator *propagator){
-
-}
+bool init(clingo_propagate_init_t *init, PropagatorClingo *propagator){return propagator->init(init);}
+bool propagate(clingo_propagate_control_t *control, const clingo_literal_t *changes, size_t size, PropagatorClingo *propagator){ return propagator->propagate(control, changes, size);}
+void undo(clingo_propagate_control_t *control, const clingo_literal_t *changes, size_t size, PropagatorClingo *propagator){propagator->undo(control, changes, size);}
 
 int main(int argc, char const *argv[])
 {
@@ -39,8 +30,8 @@ int main(int argc, char const *argv[])
     params.find("i") != params.end() ? instance_path = params.find("i")->second : NULL ;
 
     // printf("encoding: %s\n", encoding_path.c_str());
-    debugf("encoding: ", encoding_path.c_str());
-    debugf("instance: ", instance_path.c_str());
+    // print("encoding: ", encoding_path.c_str());
+    // print("instance: ", instance_path.c_str());
 
     std::string encoding = cat(encoding_path);
     std::string instance = cat(instance_path);

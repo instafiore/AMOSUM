@@ -74,6 +74,8 @@
         "chrono": "cpp",
         "system_error": "cpp",
         "fstream": "cpp",
-        "*.tpp": "cpp"
+        "*.tpp": "cpp",
+        "forward_list": "cpp",
+        "__locale": "cpp"
     }
 }

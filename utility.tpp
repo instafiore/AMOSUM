@@ -26,12 +26,13 @@ void PerfectHash<V>::set(const int& key, const V& value) {
 template <typename T>
 std::string vector_to_string(const std::vector<T>& vec){
     std::ostringstream oss;
+    int n = vec.size() ;
     oss<<"[";
-    for (size_t i = 0; i < vec.size()-1; i++)
+    for (int i = 0; i < n-1; i++)
     {
         oss<<"'"<<vec[i]<<"'"<<"," ;
     }
-    if (vec.size() > 0) oss<<"'"<<vec[vec.size()-1]<<"'";
+    if (n > 0) oss<<"'"<<vec[n-1]<<"'";
 
     oss<<"]";
     return oss.str();
@@ -73,8 +74,8 @@ std::vector<V> get_map_value_vector(std::unordered_map<K, std::vector<V>>& umap,
 }
 
 template< typename T>
-void extend_vector(std::vector<T>& to_extend, const std::vector<T>& input){
-    for(T e: input){
-        to_extend.push_back(e);
-    }
+void extend_vector(std::vector<T>& to_extend, const std::vector<T>& input, size_t i = 0, int j = -1){
+    if (j==-1) j=input.size();
+
+    for (; i < j; i++)    to_extend.push_back(input[i]);
 }
