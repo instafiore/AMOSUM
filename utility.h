@@ -57,7 +57,7 @@ bool print_model(clingo_model_t const *model);
 bool get_arg(clingo_symbol_t sym, int offset, int *num);
 bool solve(clingo_control_t *ctl, clingo_solve_result_bitset_t *result);
 
-class AmoSumPropagator;
+struct AmoSumPropagator;
 
 class Group {
 public:
@@ -130,8 +130,7 @@ template <typename V>
 class PerfectHash {
 public:
     // Constructor that initializes the hash table
-    PerfectHash(int N, V default_value = V());
-    PerfectHash(int N);
+    PerfectHash(int N, V default_value = V()): N(N), values(N,default_value){}
 
     // Getter for index access
     V& operator[](int key);
@@ -147,7 +146,7 @@ private:
 
 class TrueGroupFunction : private PerfectHash<clingo_literal_t> {
 public:
-    TrueGroupFunction(int N, int default_value = -1) : PerfectHash(N, default_value) {}
+    TrueGroupFunction(int N, int default_value = SETTINGS::NONE) : PerfectHash(N, default_value) {}
 
     // Overriding the setter to use group ID as the key
     void set(const Group& key, const clingo_literal_t &value) {
@@ -171,6 +170,13 @@ std::tuple<bool, const std::vector<clingo_literal_t>* (*)(const Group &G, AmoSum
 // Function to get the name
 std::string get_name(const std::unordered_map<std::string, clingo_literal_t>& atomNames, clingo_literal_t lit);
 void print_propagate(PropagatorClingo* prop, const clingo_literal_t *changes, size_t size, clingo_propagate_control_t *control, int dl, bool force_print, bool wasp_b);
+
+
+struct Minimize {
+    static constexpr const char* NO_MINIMIZATION = "default" ;
+    static constexpr const char* MINIMAL = "min" ;
+    static constexpr const char* CARDINALITY_MINIMAL = "cmin" ;
+};
 
 #include "utility.tpp"  // Include the template implementation file
 

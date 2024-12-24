@@ -1,13 +1,5 @@
 #include "utility.h"
-
-
-template <typename V>
-PerfectHash<V>::PerfectHash(int N) : N(N) {
-    // it is a (N * 2) vector where:
-    // values[:N-1]    are the values for the positive literals
-    // values[N:]      are the values for the negative literals
-    values.resize(N * 2, NULL);
-}
+#include "settings.h"
 
 template <typename V>
 V& PerfectHash<V>::operator[](int lit) {
@@ -73,9 +65,85 @@ std::vector<V> get_map_value_vector(std::unordered_map<K, std::vector<V>>& umap,
 
 }
 
+template <typename K, typename V>
+V get_map(std::unordered_map<K, V>& umap, K key, V default_value) {   
+    if (umap.find(key) == umap.end()) return default_value;
+    return umap[key];
+}
+
 template< typename T>
 void extend_vector(std::vector<T>& to_extend, const std::vector<T>& input, size_t i = 0, int j = -1){
     if (j==-1) j=input.size();
 
     for (; i < j; i++)    to_extend.push_back(input[i]);
 }
+
+
+template <typename T>
+class SymmetricFunction {
+private:
+    std::vector<T> data_structure;
+
+protected:
+    T NONE  ;     
+
+public:
+
+    // Constructor
+    explicit SymmetricFunction(size_t N, T NONE = SETTINGS::NONE) : 
+        data_structure(N,NONE), NONE(NONE) {}
+
+    virtual T function_negative_lit(T value) const  = 0;
+
+    // Getter (accessor)
+    virtual T operator[](int lit) const {
+        int i = std::abs(lit);
+        auto value = data_structure[i];
+        if (lit < 0) value = function_negative_lit(value);
+        return value;
+    }
+
+    // Setter (mutator)
+    void set(int lit, T value) {
+        int i = std::abs(lit);
+        if (lit < 0) value = function_negative_lit(value);
+        data_structure[i] = value;
+    }
+};
+
+class WeightFunction: public SymmetricFunction<int>{
+
+
+
+    int function_negative_lit(int value) const override { 
+        return value ;
+    }
+
+    int operator[](int lit) const override{
+        if (lit == NONE) return 0 ;
+        return this->SymmetricFunction::operator[](lit) ;
+    }
+
+public:
+    WeightFunction(int N) : SymmetricFunction(N) {}
+};
+
+class InterpretationFunction: public SymmetricFunction<int>{
+
+
+    int function_negative_lit(int value) const override { 
+        if (value == NONE)  return value ;
+        return 1 - value ;
+    }
+public:
+    InterpretationFunction(int N) : SymmetricFunction(N) {}
+};
+
+class AggregateFunction: public PerfectHash<bool>{
+public:
+    AggregateFunction(size_t N): PerfectHash(N, false){}
+};
+class GroupFunction: public PerfectHash<Group*>{
+public:
+    GroupFunction(size_t N): PerfectHash(N, nullptr){}
+};

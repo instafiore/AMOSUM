@@ -78,7 +78,7 @@ class AmoSumPropagator:
     # count of reducted reasons
     count_p : int
 
-    # defining the problem type, possible values: AMO, EO
+    # defining the constraint type, possible values: AMO, EO
     choice_cons : str
 
     # defining whether the propagator is for the constraint >=  (ge) or <= (le) 
@@ -86,9 +86,6 @@ class AmoSumPropagator:
 
     # propagate function to implement in propagator file
     propagate_phase : Callable[[Group, 'AmoSumPropagator', dict],List[int]]
-
-    # propagate function to implement in propagator file
-    onLiteralsUndefined: Callable[[Tuple], None]
 
 
     # >= (ge) constraint

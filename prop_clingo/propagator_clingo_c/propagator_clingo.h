@@ -55,8 +55,8 @@ public:
 
     // Dynamic memory
     std::vector<AmoSumPropagator*> propagators ; 
-    std::unique_ptr<std::vector<clingo_literal_t>> R_plit ;
-    std::unique_ptr<std::vector<clingo_literal_t>> S_plit ;
+    // std::unique_ptr<std::vector<clingo_literal_t>> R_plit ;
+    // std::unique_ptr<std::vector<clingo_literal_t>> S_plit ;
     ~PropagatorClingo(){
         for(auto& prop: propagators){
             delete prop;

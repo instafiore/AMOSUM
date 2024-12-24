@@ -100,7 +100,7 @@ std::vector<std::pair<std::string, ParameterMap>> process_sys_parameters(const s
             i++;
         } else {
             std::string value = sys_parameters[i + 1];
-            if (!std::regex_match(value, match, regex) && std::find(PROPAGATORS_NAMES.begin(), PROPAGATORS_NAMES.end(), value) == PROPAGATORS_NAMES.end()) {
+            if (!std::regex_match(value, match, regex) && std::find(SETTINGS::PROPAGATORS_NAMES.begin(), SETTINGS::PROPAGATORS_NAMES.end(), value) == SETTINGS::PROPAGATORS_NAMES.end()) {
                 param[key] = value;
                 i += 2;
             } else {
@@ -110,7 +110,7 @@ std::vector<std::pair<std::string, ParameterMap>> process_sys_parameters(const s
         }
 
         if (i >= sys_parameters.size() || 
-            std::find(PROPAGATORS_NAMES.begin(), PROPAGATORS_NAMES.end(), sys_parameters[i]) != PROPAGATORS_NAMES.end()) {
+            std::find(SETTINGS::PROPAGATORS_NAMES.begin(), SETTINGS::PROPAGATORS_NAMES.end(), sys_parameters[i]) != SETTINGS::PROPAGATORS_NAMES.end()) {
             params.emplace_back(prop_type, param);
             if (i < sys_parameters.size()) {
                 prop_type = sys_parameters[i];

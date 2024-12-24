@@ -106,7 +106,7 @@ bool PropagatorClingo::add_clauses_propagated_lits(void *control, const std::vec
     AmoSumPropagator* prop = propagators[td];
 
     for(clingo_literal_t plit: S_plit){
-        R_plit = prop->getReasonForLiteral(plit);
+        const std::vector<clingo_literal_t>* R_plit = prop->getReasonForLiteral(plit);
         size_t clause_size = R_plit->size() + 1 ;
         clingo_literal_t* clause = new clingo_literal_t[clause_size] ;
         clingo_literal_t slit = map_plit_slit[plit];
@@ -117,16 +117,19 @@ bool PropagatorClingo::add_clauses_propagated_lits(void *control, const std::vec
         init ? clingo_propagate_init_add_clause((clingo_propagate_init*) control, clause, clause_size, &result_add_clause) :
         clingo_propagate_control_add_clause((clingo_propagate_control*) control, clause, clause_size, clingo_clause_type_learnt, &result_add_clause) ;
 
+        delete R_plit ;
+
+        // propagation must return immediately, there is a conflict
+        if (not result_add_clause) return true ;
+
         bool result_propagate;
         init ? clingo_propagate_init_propagate((clingo_propagate_init*) control, &result_propagate) :
         clingo_propagate_control_propagate((clingo_propagate_control*) control, &result_propagate) ;
         
-        if (not result_add_clause or not result_propagate){
-            // propagation must return immediately, a conflict has been raised 
-            return true;
-        }
+        // propagation must return immediately, a conflict has been raised 
+        if (not result_propagate) return true;
+        
     }
-
     return false ;
 }   
 
@@ -145,11 +148,13 @@ bool PropagatorClingo::propagate(clingo_propagate_control_t *control, const clin
         clingo_literal_t slit = changes[i];
         std::vector<clingo_literal_t> plit_list = map_slit_plit_watched[slit];
         for(clingo_literal_t plit: plit_list){
-            S_plit.reset(prop->onLiteralTrue(plit, dl));
+            const std::vector<clingo_literal_t>* S_plit = prop->onLiteralTrue(plit, dl);
             if (add_clauses_propagated_lits(control, *S_plit, dl, false)){
                 // Conflict added hence propagation has to stop
+                delete S_plit ;
                 return true;
             } 
+            delete S_plit ;
         }
     }
     
