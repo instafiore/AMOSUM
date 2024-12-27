@@ -34,7 +34,7 @@ std::vector<clingo_literal_t> AmoSumPropagator::getLiterals(const std::vector<cl
         std::vector<clingo_literal_t> bind;
         std::regex negative_lit_regex("^not\\s+([\\w()]+)");
         std::string bound_str = this->ge ? SETTINGS::PREDICATE_LB : SETTINGS::PREDICATE_UB;
-        auto bound = SETTINGS::NONE;
+       
 
         std::unordered_map<std::string,std::string> weights_names ; 
 
@@ -131,7 +131,7 @@ std::vector<clingo_literal_t> AmoSumPropagator::getLiterals(const std::vector<cl
         for (size_t i = 1; i < lits.size(); ++i) { // Start from index 1
             int l = lits[i];
             try {
-                // update_phase(l); 
+                update_phase(l); 
                 inconsistent_at_level_0 = false;
             } catch (const std::exception& e) {
                 inconsistent_at_level_0 = true;
@@ -148,4 +148,57 @@ std::vector<clingo_literal_t> AmoSumPropagator::getLiterals(const std::vector<cl
         dl = 0;
 
         return bind;
+}
+
+std::pair<bool, Group*> AmoSumPropagator::update_phase(clingo_literal_t l, int dl = 0) {
+
+        int w_p = 0;
+        int w_n = 0;
+        I->set(l, true);
+        bool tg = false;
+        Group* G = nullptr;
+        mps_violated = false;
+
+        bool amo_condition = false;
+        if (aggregate->get(l)) {
+            G = group->get(l);
+            G->decrease_und();
+            true_group->set(G,true);
+            w_p = weight->get(m_w(G, ge));
+            w_n = weight->get(l);
+            tg = true;
+            current_sum += w_n;
+        } else if (aggregate->get(not_(l))) {
+        //     G = group[not_(l)];
+        //     G->decrease_und();
+        //     auto [new_lit, prev] = G->update(I, ge, false, l);
+        //     if (not_(l) == prev) {
+        //         G->set_max_min(new_lit, ge);
+        //         if (true_group[G] == 0) { // Assuming nullptr for None
+        //             w_n = weight[new_lit];
+        //             w_p = weight[prev];
+        //         }
+
+        //         if (choice_cons == "AMO") {
+        //             amo_condition = true;
+        //         }
+        //     } else if (not_(l) != new_lit) {
+        //         return {false, nullptr};
+        //     } else if (choice_cons == "AMO") {
+        //         amo_condition = true;
+        //     } else {
+        //         return {false, nullptr};
+        //     }
+        } else {
+            return {false, nullptr};
+        }
+
+        _mps = _mps - w_p + w_n;
+        update_lazy_propagation();
+    
+        G = (choice_cons == "EO") ? G : nullptr;
+        bool current_sum_condition = !ge || current_sum < bound;
+        bool next_phase = current_sum_condition && (w_p != w_n || amo_condition) && lazy_condition;
+
+        return {next_phase, G};
 }

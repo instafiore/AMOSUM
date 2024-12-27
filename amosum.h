@@ -84,12 +84,14 @@ struct AmoSumPropagator
     // whether is inconsistent or not at level 0
     bool inconsistent_at_level_0 ;
 
+  
     std::vector<clingo_literal_t> groups_literals ;
 
 
     int lb;      // lower bound
     int _mps;    // max/min possible sum
     int ub;      // upper bound
+    int bound = SETTINGS::NONE ; // either lb or ub depending on ge
 
     std::string solver; 
     static constexpr const char* CLINGO = "clingo";
@@ -119,6 +121,9 @@ struct AmoSumPropagator
     std::vector<clingo_literal_t>* onLiteralTrue(clingo_literal_t plit, int dl){ return new std::vector<clingo_literal_t>();}
     void onLiteralsUndefined(const std::vector<clingo_literal_t> &plit_list, bool wasp){}
 
+
+    std::pair<bool, Group*> update_phase(clingo_literal_t l, int dl);
+    void update_lazy_propagation(){}
 };
 
 
