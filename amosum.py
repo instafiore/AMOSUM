@@ -289,7 +289,6 @@ class AmoSumPropagator:
         self.bound = bound
         assert not self.bound is None
 
-        # arrived here
         # creating self.groups
         for group_id in groups_raw:
             

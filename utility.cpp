@@ -17,6 +17,7 @@
 #include "prop_clingo/propagator_clingo_c/propagator_clingo.h"
 
 using ParameterMap = std::unordered_map<std::string, std::string>;
+int Group::autoincrement = 0;
 
 // Function to get the name
 std::string get_name(const std::unordered_map<clingo_symbol_t, clingo_literal_t>& atomNames, clingo_literal_t lit) {
@@ -384,5 +385,30 @@ void print_propagate(PropagatorClingo* prop, const clingo_literal_t *changes, si
     debugf("[", decision_literal_name,", ",dl,"] propagate ", changes_str," td: ", td);
 }
 
+
+clingo_literal_t max_w(const Group* g) {
+    if (g->max_und == SETTINGS::NONE) return SETTINGS::NONE; // No max undefined value 
+
+    try {
+        return g->ord_l[g->max_und]; // Get the literal using max_und
+    } catch (const std::out_of_range& e) {
+        debug("Error accessing g.ord_l with max_und. Debug info:");
+        debug("g.ord_l: ", vector_to_string(g->ord_l));
+        debug("max_und: " + std::to_string(g->max_und));
+        throw; // Re-throw the exception
+    }
+}
+
+
+// Function to return the min undefined literal
+clingo_literal_t min_w(const Group* g) {
+    if (g->min_und == SETTINGS::NONE) return SETTINGS::NONE; // No max undefined value 
+    return g->ord_l[g->min_und]; // Get the literal using min_und
+}
+
+// Function to select between max_w and min_w
+clingo_literal_t m_w(const Group* g, bool max) {
+    return max ? max_w(g) : min_w(g) ; 
+}
 
 

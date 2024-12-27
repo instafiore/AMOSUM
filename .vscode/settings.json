@@ -76,6 +76,9 @@
         "fstream": "cpp",
         "*.tpp": "cpp",
         "forward_list": "cpp",
-        "__locale": "cpp"
+        "__locale": "cpp",
+        "condition_variable": "cpp",
+        "mutex": "cpp",
+        "thread": "cpp"
     }
 }

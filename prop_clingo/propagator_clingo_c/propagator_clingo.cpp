@@ -55,7 +55,7 @@ bool PropagatorClingo::init(clingo_propagate_init_t *init){
         clingo_symbolic_atoms_next(symbolic_atoms, symbolic_atoms_it, &symbolic_atoms_it);
     }
 
-    debug("max plit: ", max_plit);
+    // debug("max plit: ", max_plit);
 
     for(const auto& [symbolic_atom, plit, slit]: atoms_list_for_mapping){
         this->atomNames.emplace(symbolic_atom, plit);
@@ -79,7 +79,7 @@ bool PropagatorClingo::init(clingo_propagate_init_t *init){
     std::vector<clingo_literal_t> to_watch_plit;
     for (size_t i = 0; i < nt; i++) to_watch_plit = this->propagators[i]->getLiterals(lits) ;
 
-    debug("to watch: ", vector_to_string(to_watch_plit))
+    // debug("to watch: ", vector_to_string(to_watch_plit))
 
     for(clingo_literal_t plit: to_watch_plit){
         clingo_literal_t slit = map_plit_slit[plit];

@@ -64,6 +64,9 @@ struct AmoSumPropagator
     // defining whether the propagator is for the constraint >=  (ge) or <= (le) 
     bool ge; 
 
+    // decision level
+    int dl = 0 ;
+
     // propagate function to implement in propagator file
     const std::vector<clingo_literal_t>* (*propagation_phase)(const Group&, AmoSumPropagator&); // Function pointer for propagation
     
@@ -77,6 +80,9 @@ struct AmoSumPropagator
 
     bool lazy_prop_actived = false;
     bool lazy_condition ;
+
+    // whether is inconsistent or not at level 0
+    bool inconsistent_at_level_0 ;
 
     std::vector<clingo_literal_t> groups_literals ;
 
@@ -103,7 +109,9 @@ struct AmoSumPropagator
           ge(ge),
           choice_cons(std::move(choice_cons)),
           solver(std::move(solver)) {}
-    ~AmoSumPropagator(){}
+    ~AmoSumPropagator(){
+        for(const Group* group : groups)   delete group ;
+    }
 
     std::vector<clingo_literal_t> getLiterals(const std::vector<clingo_literal_t>& lits);
     std::vector<clingo_literal_t> simplifyAtLevelZero(bool delete_lits=false){ return std::vector<clingo_literal_t>(); };

@@ -72,11 +72,11 @@ public:
     int max_und;                   // Index of the maximum undefined literal in ord_l
     int min_und;                   // Index of the minimum undefined literal in ord_l
     std::vector<int> falses_facts; // All false fact literals of the group
-    int id;                        // Group ID
+    std::string id;                        // Group ID
     int id_autoinc;                // Auto-incremented ID for the group
 
     // Constructor
-    Group(std::vector<int> ord_l, std::unordered_map<int, int> ord_i, int id)
+    Group(std::vector<int> ord_l, std::unordered_map<int, int> ord_i, std::string id)
         : ord_l(std::move(ord_l)), ord_i(std::move(ord_i)), id(id), id_autoinc(autoincrement++) {
         N = this->ord_l.size();
         count_undef = N;
@@ -126,6 +126,8 @@ public:
     }
 };
 
+
+
 template <typename V>
 class PerfectHash {
 public:
@@ -171,6 +173,12 @@ std::tuple<bool, const std::vector<clingo_literal_t>* (*)(const Group &G, AmoSum
 std::string get_name(const std::unordered_map<clingo_symbol_t, clingo_literal_t>& atomNames, clingo_literal_t lit);
 void print_propagate(PropagatorClingo* prop, const clingo_literal_t *changes, size_t size, clingo_propagate_control_t *control, int dl, bool force_print, bool wasp_b);
 std::string atomNames_to_string(std::unordered_map<clingo_symbol_t, clingo_literal_t> atomNames);
+
+clingo_literal_t max_w(const Group* g);
+// Function to return the min undefined literal
+clingo_literal_t min_w(const Group* g);
+// Function to select between max_w and min_w
+clingo_literal_t m_w(const Group* g, bool max);
 
 struct Minimize {
     static constexpr const char* NO_MINIMIZATION = "default" ;

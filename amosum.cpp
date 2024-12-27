@@ -7,11 +7,6 @@
 std::vector<clingo_literal_t> AmoSumPropagator::getLiterals(const std::vector<clingo_literal_t>& lits){
         N = lits[0] + 1;
         
-        // TODO: remove
-        std::vector<clingo_literal_t> to_watch;
-        extend_vector(to_watch, lits, 1);
-        // 
-        
         minimization = get_map(params, std::string("min_r"), std::string(Minimize::NO_MINIMIZATION)) ;
         strategy = get_map(params, std::string("strategy"), strategy);
         N = lits[0] + 1;
@@ -99,12 +94,58 @@ std::vector<clingo_literal_t> AmoSumPropagator::getLiterals(const std::vector<cl
                         handle_error(clingo_symbol_arguments(symbolic_atom, &terms, &terms_size));
                         std::string id_str = from_symbol_to_string(terms[1]);
                         if (terms_size != 2 or id_str != ID) continue ;
-                        // if not bound is None:
-                        //         assert False 
+                        
                         if(bound != SETTINGS::NONE) assert(false) ;
                         bound = (ge ? lb = std::stoi(from_symbol_to_string(terms[0])) : ub = std::stoi(from_symbol_to_string(terms[0])));
                 }
         } 
-        debug("bound: ",bound);
-        return to_watch;
+        // debug("bound: ",bound);
+
+        for(auto &[group_id, lits_group]: groups_raw){
+                std::vector<std::pair<int, int>> lits_ord;
+                for (int lit : lits_group) lits_ord.emplace_back(lit, weight->get(lit));
+                std::sort(lits_ord.begin(), lits_ord.end(), [](const std::pair<int, int>& a, const std::pair<int, int>& b) {
+                        return a.second < b.second; 
+                });
+                std::vector<clingo_literal_t> ord_l(lits_ord.size(), SETTINGS::NONE);
+                std::unordered_map<int, int> ord_i; 
+
+                for (size_t i = 0; i < lits_ord.size(); ++i) {
+                        int l = lits_ord[i].first; 
+                        ord_l[i] = l;             
+                        ord_i[l] = i;            
+                }
+
+                Group* G = new Group(ord_l,ord_i,group_id) ;
+
+                _mps = _mps + weight->get(m_w(G, ge)) ;
+
+                groups.push_back(G);
+                
+                for(const clingo_literal_t& lit: lits_group)  group->set(lit, G);
+        }
+
+        size_t nGroup = Group::autoincrement ;
+        true_group.reset(new TrueGroupFunction(nGroup)) ;
+
+        for (size_t i = 1; i < lits.size(); ++i) { // Start from index 1
+            int l = lits[i];
+            try {
+                // update_phase(l); 
+                inconsistent_at_level_0 = false;
+            } catch (const std::exception& e) {
+                inconsistent_at_level_0 = true;
+                // debug("Incosistent at level 0: ",e.what())
+                // break;
+            }
+        }
+
+        // Set facts to literals starting from index 1
+        facts.assign(lits.begin() + 1, lits.end());
+
+        // Set class variables
+        last_decision_lit = 1;
+        dl = 0;
+
+        return bind;
 }
