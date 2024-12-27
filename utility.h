@@ -50,11 +50,11 @@ std::vector<std::string> split(const std::string& str, char delimiter);
 template <typename T>
 std::string vector_to_string(const std::vector<T>& vec);
 std::string cat(const std::string &filename);
-
+std::string from_symbol_to_string(clingo_symbol_t sym);
+clingo_symbol_t from_string_to_symbol(std::string str, const std::unordered_map<clingo_symbol_t, clingo_literal_t> &atomNames);
 
 void handle_error(bool success);
 bool print_model(clingo_model_t const *model);
-bool get_arg(clingo_symbol_t sym, int offset, int *num);
 bool solve(clingo_control_t *ctl, clingo_solve_result_bitset_t *result);
 
 struct AmoSumPropagator;
@@ -130,10 +130,10 @@ template <typename V>
 class PerfectHash {
 public:
     // Constructor that initializes the hash table
-    PerfectHash(int N, V default_value = V()): N(N), values(N,default_value){}
+    PerfectHash(int N, V default_value = V()): N(N), values(2*N,default_value){}
 
     // Getter for index access
-    V& operator[](int key);
+    V& get(int key);
 
     // Setter for index access
     void set(const int &key, const V& value);
@@ -155,7 +155,7 @@ public:
     }
 
     // Overriding the getter to use group ID as the key
-    clingo_literal_t operator[](const Group& group) const {
+    clingo_literal_t get(const Group& group) const {
         int autoincrement = group.id_autoinc;
         return this->values[autoincrement];
     }
@@ -168,9 +168,9 @@ std::vector<clingo_literal_t>* create_reason_falses_ge(const AmoSumPropagator& p
 std::vector<clingo_literal_t>* create_reason_falses_le(const AmoSumPropagator& propagator);
 std::tuple<bool, const std::vector<clingo_literal_t>* (*)(const Group &G, AmoSumPropagator &propagator), std::string>  get_propagator_variables(std::string prop_type);
 // Function to get the name
-std::string get_name(const std::unordered_map<std::string, clingo_literal_t>& atomNames, clingo_literal_t lit);
+std::string get_name(const std::unordered_map<clingo_symbol_t, clingo_literal_t>& atomNames, clingo_literal_t lit);
 void print_propagate(PropagatorClingo* prop, const clingo_literal_t *changes, size_t size, clingo_propagate_control_t *control, int dl, bool force_print, bool wasp_b);
-
+std::string atomNames_to_string(std::unordered_map<clingo_symbol_t, clingo_literal_t> atomNames);
 
 struct Minimize {
     static constexpr const char* NO_MINIMIZATION = "default" ;

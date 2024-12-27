@@ -2,7 +2,7 @@
 #include "settings.h"
 
 template <typename V>
-V& PerfectHash<V>::operator[](int lit) {
+V& PerfectHash<V>::get(int lit) {
     // Determine the index for positive or negative literals
     int i = (lit > 0) ? lit : (abs(lit) + N);
     return values[i];
@@ -12,6 +12,10 @@ template <typename V>
 void PerfectHash<V>::set(const int& key, const V& value) {
     // Determine the index for positive or negative literals
     int i = (key > 0) ? key : (abs(key) + N);
+    if(i < 0 or i >= values.size()){
+        debug("overflow: ",i, " key: ",key);
+        return ; 
+    }
     values[i] = value;
 }
 
@@ -41,6 +45,8 @@ std::string unordered_map_to_string(std::unordered_map<Key, Value> map){
     oss << "}" ;
     return oss.str() ;
 }
+
+
 
 template <typename K, typename V>
 void update_map_value_vector(std::unordered_map<K, std::vector<V>>& umap, K key, V value) {
@@ -85,7 +91,8 @@ private:
     std::vector<T> data_structure;
 
 protected:
-    T NONE  ;     
+    T NONE  ;   
+    virtual T function_negative_lit(T value) const  = 0;  
 
 public:
 
@@ -93,10 +100,9 @@ public:
     explicit SymmetricFunction(size_t N, T NONE = SETTINGS::NONE) : 
         data_structure(N,NONE), NONE(NONE) {}
 
-    virtual T function_negative_lit(T value) const  = 0;
-
+    
     // Getter (accessor)
-    virtual T operator[](int lit) const {
+    virtual T get(int lit) const {
         int i = std::abs(lit);
         auto value = data_structure[i];
         if (lit < 0) value = function_negative_lit(value);
@@ -113,18 +119,15 @@ public:
 
 class WeightFunction: public SymmetricFunction<int>{
 
-
-
     int function_negative_lit(int value) const override { 
         return value ;
     }
 
-    int operator[](int lit) const override{
-        if (lit == NONE) return 0 ;
-        return this->SymmetricFunction::operator[](lit) ;
-    }
-
 public:
+    int get(int lit) const override{
+        if (lit == NONE) return 0 ;
+        return this->SymmetricFunction::get(lit) ;
+    }
     WeightFunction(int N) : SymmetricFunction(N) {}
 };
 

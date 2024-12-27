@@ -19,7 +19,7 @@
 using ParameterMap = std::unordered_map<std::string, std::string>;
 
 // Function to get the name
-std::string get_name(const std::unordered_map<std::string, clingo_literal_t>& atomNames, clingo_literal_t lit) {
+std::string get_name(const std::unordered_map<clingo_symbol_t, clingo_literal_t>& atomNames, clingo_literal_t lit) {
     std::string prefix = "";
 
     if (lit == 0) { // Assuming 0 represents None in this context
@@ -32,13 +32,37 @@ std::string get_name(const std::unordered_map<std::string, clingo_literal_t>& at
 
     for (const auto& [name, atom] : atomNames) {
         if (atom == std::abs(lit)) {
-            return prefix + name;
+            return prefix + from_symbol_to_string(name);
         }
     }
 
     debug(lit, " is not present in atomNames");
     assert(false);
     return ""; 
+}
+
+clingo_symbol_t from_string_to_symbol(std::string str, const std::unordered_map<clingo_symbol_t, clingo_literal_t> &atomNames){
+  
+    for (const auto& [name, atom] : atomNames) {
+        if (str == from_symbol_to_string(name)) {
+            return name ; 
+        }
+    }
+
+    debug(str, " is not present in atomNames");
+    assert(false);
+    return 0; 
+}
+
+
+std::string atomNames_to_string(std::unordered_map<clingo_symbol_t, clingo_literal_t> atomNames){
+    std::ostringstream oss;
+    oss<< "{" ;
+    for (const auto& [key, value] : atomNames) {
+        oss <<"'"<< from_symbol_to_string(key) << "':'" << value<<"', " ;
+    }
+    oss << "}" ;
+    return oss.str() ;
 }
 
 ParameterMap init_param(int argc, char const *argv[]) {
@@ -54,7 +78,7 @@ ParameterMap init_param(int argc, char const *argv[]) {
             args[key] = value;
         } else if (arg[0] == '-'){
             std::string key = arg.substr(1);
-            args[key] = "true";
+            args[key] = SETTINGS::TRUE_STR;
         } else {
             std::cerr << "Invalid argument format: " << arg << "\n";
         }
@@ -66,6 +90,15 @@ ParameterMap init_param(int argc, char const *argv[]) {
 
 void print_unordered_map(std::unordered_map<std::string, std::string> map){
     std::cout << unordered_map_to_string(map) << "\n" ; 
+}
+
+std::string from_symbol_to_string(clingo_symbol_t symbol){
+    size_t symbol_size;
+    handle_error(clingo_symbol_to_string_size(symbol, &symbol_size));
+    char symbol_str_c[symbol_size]; 
+    handle_error(clingo_symbol_to_string(symbol, symbol_str_c, symbol_size));
+    std::string symbol_str = std::string(symbol_str_c);
+    return symbol_str ;
 }
 
 
@@ -135,19 +168,6 @@ std::vector<std::string> split(const std::string& str, char delimiter) {
     return tokens;
 }
 
-
-// returns the offset'th numeric argument of the function symbol sym
-bool get_arg(clingo_symbol_t sym, int offset, int *num) {
-  clingo_symbol_t const *args;
-  size_t args_size;
- 
-  // get the arguments of the function symbol
-  if (!clingo_symbol_arguments(sym, &args, &args_size)) { return false; }
-  // get the requested numeric argument
-  if (!clingo_symbol_number(args[offset], num)) { return false; }
- 
-  return true;
-}
 
 std::string cat(const std::string &filename) {
     std::ifstream file(filename); 

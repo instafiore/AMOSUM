@@ -7,7 +7,7 @@
 using vector_lit_ptr = std::vector<clingo_literal_t>* ;
 struct AmoSumPropagator
 {
-    std::unordered_map<std::string, int> atomsNames;
+    std::unordered_map<clingo_symbol_t, clingo_literal_t> atomsNames;
 
     std::unordered_map<std::string, std::string> params; // Stores additional parameters
 
@@ -91,7 +91,7 @@ struct AmoSumPropagator
 
     AmoSumPropagator(){}
     AmoSumPropagator(
-        std::unordered_map<std::string, int> atomsNames,
+        std::unordered_map<clingo_symbol_t, clingo_literal_t> atomsNames,
         std::unordered_map<std::string, std::string> params,
         const std::vector<clingo_literal_t>* (*propagation_phase)(const Group&, AmoSumPropagator&) = nullptr,
         bool ge = true,

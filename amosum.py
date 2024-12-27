@@ -237,13 +237,13 @@ class AmoSumPropagator:
         for a in self.atomNames:
             if  a.startswith(f'{PREDICATE_GROUP}('):
                 group_literal = self.atomNames[a]
-                # setting every group_literal to false
                 
                 terms = wasp.getTerms(PREDICATE_GROUP,a)
                 # Syntax: PREDICATE_GROUP( lit_name, weight, group_id, aggregate_id)
                 if len(terms) != 5 or terms[4] != self.ID:
                     continue
-
+                
+                # setting every group_literal to false
                 self.groups_literals.append(not_(group_literal))
                 
                 lit_str = terms[0]
@@ -289,7 +289,7 @@ class AmoSumPropagator:
         self.bound = bound
         assert not self.bound is None
 
-
+        # arrived here
         # creating self.groups
         for group_id in groups_raw:
             

@@ -28,7 +28,7 @@ bool PropagatorClingo::init(clingo_propagate_init_t *init){
     handle_error(clingo_symbolic_atoms_begin(symbolic_atoms, NULL, &symbolic_atoms_it));
 
 
-    std::vector<std::tuple<std::string, clingo_literal_t, clingo_literal_t>> atoms_list_for_mapping;
+    std::vector<std::tuple<clingo_symbol_t, clingo_literal_t, clingo_literal_t>> atoms_list_for_mapping;
      
     while (true) {
         bool equal;
@@ -40,11 +40,8 @@ bool PropagatorClingo::init(clingo_propagate_init_t *init){
         handle_error(clingo_symbolic_atoms_iterator_is_equal_to(symbolic_atoms, symbolic_atoms_it, symbolic_atoms_ie, &equal));
         if (equal) { break; }
         handle_error(clingo_symbolic_atoms_symbol(symbolic_atoms, symbolic_atoms_it, &symbol));
-        size_t symbol_size;
-        handle_error(clingo_symbol_to_string_size(symbol, &symbol_size));
-        char symbol_str_c[symbol_size]; 
-        handle_error(clingo_symbol_to_string(symbol, symbol_str_c, symbol_size));
-        std::string symbol_str = std::string(symbol_str_c);
+        std::string symbol_str = from_symbol_to_string(symbol) ;
+
         
         handle_error(clingo_symbolic_atoms_literal(symbolic_atoms, symbolic_atoms_it, &plit));
         handle_error(clingo_propagate_init_solver_literal(init, plit, &slit));
@@ -52,7 +49,7 @@ bool PropagatorClingo::init(clingo_propagate_init_t *init){
         if (plit > max_plit) { max_plit = plit; }
 
         // debug("[init] symbol: ", symbol_str, " plit: ", plit, " slit: ", slit)
-        atoms_list_for_mapping.emplace_back(symbol_str, plit, slit);
+        atoms_list_for_mapping.emplace_back(symbol, plit, slit);
 
       
         clingo_symbolic_atoms_next(symbolic_atoms, symbolic_atoms_it, &symbolic_atoms_it);
@@ -60,15 +57,16 @@ bool PropagatorClingo::init(clingo_propagate_init_t *init){
 
     debug("max plit: ", max_plit);
 
-    for(const auto& [str_symbol, plit, slit]: atoms_list_for_mapping){
-        this->atomNames.emplace(str_symbol, plit);
+    for(const auto& [symbolic_atom, plit, slit]: atoms_list_for_mapping){
+        this->atomNames.emplace(symbolic_atom, plit);
         map_plit_slit[plit] = slit ; 
         map_plit_slit[not_(plit)] = not_(slit) ; 
         update_map_value_vector<clingo_literal_t, clingo_literal_t>(map_slit_plit, slit, plit);
         update_map_value_vector<clingo_literal_t, clingo_literal_t>(map_slit_plit, not_(slit), not_(plit));
     }
 
-    debug("atomNames: ", unordered_map_to_string(atomNames));
+
+    debug("atomNames: ", atomNames_to_string(atomNames));
 
     AmoSumPropagator* propagator = new AmoSumPropagator(atomNames, param, propagation_phase, ge, choice_cons, solver = AmoSumPropagator::CLINGO);
     for (size_t i = 0; i < nt; i++) this->propagators.push_back(propagator);
