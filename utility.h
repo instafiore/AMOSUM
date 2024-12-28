@@ -5,8 +5,12 @@
 #include "settings.h"
 #include <clingo.h>
 #include <sstream>
+#include <cassert>
 
 class PropagatorClingo ;
+class InterpretationFunction;
+class AggregateFunction;
+class GroupFunction;
 // Macro to handle the debug functionality
 
 // Helper variadic template function
@@ -52,7 +56,8 @@ std::string vector_to_string(const std::vector<T>& vec);
 std::string cat(const std::string &filename);
 std::string from_symbol_to_string(clingo_symbol_t sym);
 clingo_symbol_t from_string_to_symbol(std::string str, const std::unordered_map<clingo_symbol_t, clingo_literal_t> &atomNames);
-
+clingo_literal_t from_string_to_lit(std::string str, const std::unordered_map<clingo_symbol_t, clingo_literal_t> &atomNames);
+int64_t from_string_to_symbol_or_lit(std::string str, const std::unordered_map<clingo_symbol_t, clingo_literal_t> &atomNames, bool sym);
 void handle_error(bool success);
 bool print_model(clingo_model_t const *model);
 bool solve(clingo_control_t *ctl, clingo_solve_result_bitset_t *result);
@@ -108,9 +113,9 @@ public:
     int get_most_undefined(bool max);
 
     // Update max or min undefined literal based on some condition
-    std::pair<int, int> update_max(std::unordered_map<int, int>& I, bool all = false, bool update = true, int assuming_und = -1);
-    std::pair<int, int> update_min(std::unordered_map<int, int>& I, bool all = false, bool update = true, int assuming_und = -1);
-    std::pair<int, int> update(std::unordered_map<int, int>& I, bool max, bool all = false, bool update = true, int assuming_und = -1);
+    std::pair<clingo_literal_t, clingo_literal_t> update_max(const std::unique_ptr<InterpretationFunction>& I, bool all, bool update, const clingo_literal_t& assuming_und);
+    std::pair<clingo_literal_t, clingo_literal_t> update_min(const std::unique_ptr<InterpretationFunction>& I, bool all , bool update, const clingo_literal_t& assuming_und);
+    std::pair<clingo_literal_t, clingo_literal_t> update(const std::unique_ptr<InterpretationFunction>& I, bool max, bool all, bool update, const clingo_literal_t& assuming_und);
 
     // Print the group
     void print_group(const std::unordered_map<int, std::string>& atomNames) const;
@@ -135,10 +140,10 @@ public:
     PerfectHash(int N, V default_value = V()): N(N), values(2*N,default_value){}
 
     // Getter for index access
-    V& get(int key);
+    virtual V get(int key);
 
     // Setter for index access
-    void set(const int &key, const V& value);
+    virtual void set(const int &key, const V& value);
 
 protected:
     std::vector<V> values;  
@@ -157,8 +162,8 @@ public:
     }
 
     // Overriding the getter to use group ID as the key
-    clingo_literal_t get(const Group& group) const {
-        int autoincrement = group.id_autoinc;
+    clingo_literal_t get(const Group* group) const {
+        int autoincrement = group->id_autoinc;
         return this->values[autoincrement];
     }
 };
@@ -173,12 +178,17 @@ std::tuple<bool, const std::vector<clingo_literal_t>* (*)(const Group &G, AmoSum
 std::string get_name(const std::unordered_map<clingo_symbol_t, clingo_literal_t>& atomNames, clingo_literal_t lit);
 void print_propagate(PropagatorClingo* prop, const clingo_literal_t *changes, size_t size, clingo_propagate_control_t *control, int dl, bool force_print, bool wasp_b);
 std::string atomNames_to_string(std::unordered_map<clingo_symbol_t, clingo_literal_t> atomNames);
+std::vector<std::string> convert_assparam_to_assarray(const std::string& assumptions);
+std::vector<clingo_literal_t> create_assumptions_lits(const std::vector<std::string>& assumptions_vec, const std::unordered_map<clingo_symbol_t, clingo_literal_t>& atomNames);
+
 
 clingo_literal_t max_w(const Group* g);
 // Function to return the min undefined literal
 clingo_literal_t min_w(const Group* g);
 // Function to select between max_w and min_w
 clingo_literal_t m_w(const Group* g, bool max);
+bool equals(const clingo_literal_t& l1, const clingo_literal_t& l2);
+    
 
 struct Minimize {
     static constexpr const char* NO_MINIMIZATION = "default" ;
@@ -186,5 +196,6 @@ struct Minimize {
     static constexpr const char* CARDINALITY_MINIMAL = "cmin" ;
 };
 
+void simplifyLiterals(std::vector<clingo_literal_t>& lits, AggregateFunction* aggregate, GroupFunction* group, bool max, const std::unique_ptr<InterpretationFunction>& I); 
 #include "utility.tpp"  // Include the template implementation file
 

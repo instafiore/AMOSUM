@@ -7,7 +7,7 @@
 using vector_lit_ptr = std::vector<clingo_literal_t>* ;
 struct AmoSumPropagator
 {
-    std::unordered_map<clingo_symbol_t, clingo_literal_t> atomsNames;
+    std::unordered_map<clingo_symbol_t, clingo_literal_t> atomNames;
 
     std::unordered_map<std::string, std::string> params; // Stores additional parameters
 
@@ -78,7 +78,7 @@ struct AmoSumPropagator
 
     int current_sum ;
 
-    bool lazy_prop_actived = false;
+    bool lazy_prop_activated = false;
     bool lazy_condition ;
 
     // whether is inconsistent or not at level 0
@@ -99,13 +99,13 @@ struct AmoSumPropagator
 
     AmoSumPropagator(){}
     AmoSumPropagator(
-        std::unordered_map<clingo_symbol_t, clingo_literal_t> atomsNames,
+        std::unordered_map<clingo_symbol_t, clingo_literal_t> atomNames,
         std::unordered_map<std::string, std::string> params,
         const std::vector<clingo_literal_t>* (*propagation_phase)(const Group&, AmoSumPropagator&) = nullptr,
         bool ge = true,
         std::string choice_cons = "AMO",
         std::string solver = "WASP")
-        : atomsNames(std::move(atomsNames)),
+        : atomNames(std::move(atomNames)),
           params(std::move(params)),
           propagation_phase(propagation_phase),
           ge(ge),
@@ -116,14 +116,14 @@ struct AmoSumPropagator
     }
 
     std::vector<clingo_literal_t> getLiterals(const std::vector<clingo_literal_t>& lits);
-    std::vector<clingo_literal_t> simplifyAtLevelZero(bool delete_lits=false){ return std::vector<clingo_literal_t>(); };
+    std::vector<clingo_literal_t> simplifyAtLevelZero(bool delete_lits);
     std::vector<clingo_literal_t>* getReasonForLiteral(clingo_literal_t lit){ return new std::vector<clingo_literal_t>(); }
     std::vector<clingo_literal_t>* onLiteralTrue(clingo_literal_t plit, int dl){ return new std::vector<clingo_literal_t>();}
     void onLiteralsUndefined(const std::vector<clingo_literal_t> &plit_list, bool wasp){}
 
 
     std::pair<bool, Group*> update_phase(clingo_literal_t l, int dl);
-    void update_lazy_propagation(){}
+    void update_lazy_propagation();
 };
 
 

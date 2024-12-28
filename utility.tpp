@@ -1,8 +1,9 @@
+#pragma once
 #include "utility.h"
 #include "settings.h"
 
 template <typename V>
-V& PerfectHash<V>::get(int lit) {
+V PerfectHash<V>::get(int lit) {
     // Determine the index for positive or negative literals
     int i = (lit > 0) ? lit : (abs(lit) + N);
     return values[i];
@@ -146,6 +147,7 @@ class AggregateFunction: public PerfectHash<bool>{
 public:
     AggregateFunction(size_t N): PerfectHash(N, false){}
 };
+
 class GroupFunction: public PerfectHash<Group*>{
 public:
     GroupFunction(size_t N): PerfectHash(N, nullptr){}

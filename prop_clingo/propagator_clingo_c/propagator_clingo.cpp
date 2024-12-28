@@ -48,7 +48,7 @@ bool PropagatorClingo::init(clingo_propagate_init_t *init){
 
         if (plit > max_plit) { max_plit = plit; }
 
-        // debug("[init] symbol: ", symbol_str, " plit: ", plit, " slit: ", slit)
+        // debug("[init] symbol: ", symbol_str, " symbol: ", symbol, " plit: ", plit, " slit: ", slit)
         atoms_list_for_mapping.emplace_back(symbol, plit, slit);
 
       
@@ -79,7 +79,7 @@ bool PropagatorClingo::init(clingo_propagate_init_t *init){
     std::vector<clingo_literal_t> to_watch_plit;
     for (size_t i = 0; i < nt; i++) to_watch_plit = this->propagators[i]->getLiterals(lits) ;
 
-    // debug("to watch: ", vector_to_string(to_watch_plit))
+    debug("to watch: ", vector_to_string(to_watch_plit))
 
     for(clingo_literal_t plit: to_watch_plit){
         clingo_literal_t slit = map_plit_slit[plit];
@@ -93,11 +93,12 @@ bool PropagatorClingo::init(clingo_propagate_init_t *init){
     if (S_plit.size() == 1 and S_plit[0] == BOTTOM) return true; // inconsistent
 
     add_clauses_propagated_lits(init, S_plit, 0, true);
-
+   
     return true ;
 }
 
 bool PropagatorClingo::add_clauses_propagated_lits(void *control, const std::vector<clingo_literal_t>& S_plit, int dl, bool init=false){
+ 
     int td ;
     init ? td = 0 : td = clingo_propagate_control_thread_id((clingo_propagate_control*) control); 
 
@@ -132,7 +133,7 @@ bool PropagatorClingo::add_clauses_propagated_lits(void *control, const std::vec
 }   
 
 bool PropagatorClingo::propagate(clingo_propagate_control_t *control, const clingo_literal_t *changes, size_t size){
-
+    
     const clingo_assignment_t *assignment = clingo_propagate_control_assignment(control);
     int dl = clingo_assignment_decision_level(assignment);
     int td; 
@@ -176,6 +177,7 @@ std::string PropagatorClingo::compute_changes_str(const clingo_literal_t *change
 
 
 void PropagatorClingo::undo(clingo_propagate_control_t *control, const clingo_literal_t *changes, size_t size){
+   
     const clingo_assignment_t *assignment = clingo_propagate_control_assignment(control);
     int dl = clingo_assignment_decision_level(assignment);
     int td; 

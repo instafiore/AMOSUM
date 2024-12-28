@@ -79,6 +79,9 @@
         "__locale": "cpp",
         "condition_variable": "cpp",
         "mutex": "cpp",
-        "thread": "cpp"
+        "thread": "cpp",
+        "__config": "cpp",
+        "iomanip": "cpp",
+        "stop_token": "cpp"
     }
 }

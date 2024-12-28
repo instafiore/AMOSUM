@@ -2,6 +2,7 @@
 #include <iostream>
 #include <utility>
 #include <cassert>
+#include "prop_clingo/propagator_clingo_c/propagator_clingo.h"
 
 
 std::vector<clingo_literal_t> AmoSumPropagator::getLiterals(const std::vector<clingo_literal_t>& lits){
@@ -19,12 +20,12 @@ std::vector<clingo_literal_t> AmoSumPropagator::getLiterals(const std::vector<cl
         _mps = 0;
         ID = get_map(params, std::string("id"), std::string("0"));
         groups.clear();  // Initialize as empty
-        assumptions = get_map(params, std::string("ass"), std::string(""));
+        assumptions = get_map(params, std::string("ass"), SETTINGS::NONE_STR);
         current_sum = 0;
-        lazy_prop_actived = get_map(params, std::string("lazy"), SETTINGS::FALSE_STR) == SETTINGS::TRUE_STR;
-        lazy_condition = !lazy_prop_actived;
+        lazy_prop_activated = get_map(params, std::string("lazy"), SETTINGS::FALSE_STR) == SETTINGS::TRUE_STR;
+        lazy_condition = !lazy_prop_activated;
 
-        std::string lazy_perc_str = lazy_prop_actived ? " lazy threshold " + std::to_string(AmoSumPropagator::LAZY_PERC) : "";
+        std::string lazy_perc_str = lazy_prop_activated ? " lazy threshold " + std::to_string(AmoSumPropagator::LAZY_PERC) : SETTINGS::NONE_STR;
         debugf("Starting propagator with param ",unordered_map_to_string(params), lazy_perc_str);
         // debug("N: ",N);
         std::unordered_map<std::string, std::vector<clingo_literal_t>> groups_raw;
@@ -40,7 +41,7 @@ std::vector<clingo_literal_t> AmoSumPropagator::getLiterals(const std::vector<cl
 
         ID = get_map(params, std::string("id"), std::string("0"));
      
-        for(auto &[symbolic_atom, literal]: atomsNames){
+        for(auto &[symbolic_atom, literal]: atomNames){
                 std::string a = from_symbol_to_string(symbolic_atom);
                 if (a.length() > SETTINGS::PREDICATE_GROUP.length() and a.substr(0, SETTINGS::PREDICATE_GROUP.length() + 1) == SETTINGS::PREDICATE_GROUP + "(") {
                         clingo_literal_t group_literal = literal ;
@@ -62,10 +63,10 @@ std::vector<clingo_literal_t> AmoSumPropagator::getLiterals(const std::vector<cl
                         std::smatch match;
                         if (std::regex_match(lit_str, match, negative_lit_regex)) {
                                 atom_name = match[1].str(); 
-                                lit = atomsNames[from_string_to_symbol(atom_name, atomsNames)];
+                                lit = atomNames[from_string_to_symbol(atom_name, atomNames)];
                                 lit = not_(lit);
                         }else{
-                                lit = atomsNames[from_string_to_symbol(atom_name, atomsNames)];
+                                lit = atomNames[from_string_to_symbol(atom_name, atomNames)];
                         }
 
                 
@@ -83,7 +84,7 @@ std::vector<clingo_literal_t> AmoSumPropagator::getLiterals(const std::vector<cl
                         G.push_back(lit);
                         groups_raw[group_id] = G ;
                         aggregate->set(lit, true);
-                
+
                         bind.push_back(lit);
                         bind.push_back(not_(lit));
                         // debug("group:",a," atom_name: ",atom_name, " weight: ", weight->get(lit), " group_id: ", group_id);
@@ -131,7 +132,7 @@ std::vector<clingo_literal_t> AmoSumPropagator::getLiterals(const std::vector<cl
         for (size_t i = 1; i < lits.size(); ++i) { // Start from index 1
             int l = lits[i];
             try {
-                update_phase(l); 
+                update_phase(l, 0); 
                 inconsistent_at_level_0 = false;
             } catch (const std::exception& e) {
                 inconsistent_at_level_0 = true;
@@ -146,12 +147,31 @@ std::vector<clingo_literal_t> AmoSumPropagator::getLiterals(const std::vector<cl
         // Set class variables
         last_decision_lit = 1;
         dl = 0;
-
         return bind;
 }
 
-std::pair<bool, Group*> AmoSumPropagator::update_phase(clingo_literal_t l, int dl = 0) {
+void AmoSumPropagator::update_lazy_propagation() {
+        float p;
+        if (ge) {
+            mps_violated = _mps < lb;
+            p = bound / _mps;
+        } else {
+            mps_violated = _mps > ub;
+            p = _mps / bound;
+        }
 
+        lazy_condition = p >= AmoSumPropagator::LAZY_PERC;
+        if (mps_violated) {
+            lazy_condition = true;
+        }
+
+        if (!lazy_prop_activated) {
+            lazy_condition = true; // Forcing to not be lazy
+        }
+}
+
+std::pair<bool, Group*> AmoSumPropagator::update_phase(clingo_literal_t l, int dl = 0) {
+       
         int w_p = 0;
         int w_n = 0;
         I->set(l, true);
@@ -163,32 +183,31 @@ std::pair<bool, Group*> AmoSumPropagator::update_phase(clingo_literal_t l, int d
         if (aggregate->get(l)) {
             G = group->get(l);
             G->decrease_und();
-            true_group->set(G,true);
+            true_group->set(G,l);
             w_p = weight->get(m_w(G, ge));
             w_n = weight->get(l);
             tg = true;
             current_sum += w_n;
         } else if (aggregate->get(not_(l))) {
-        //     G = group[not_(l)];
-        //     G->decrease_und();
-        //     auto [new_lit, prev] = G->update(I, ge, false, l);
-        //     if (not_(l) == prev) {
-        //         G->set_max_min(new_lit, ge);
-        //         if (true_group[G] == 0) { // Assuming nullptr for None
-        //             w_n = weight[new_lit];
-        //             w_p = weight[prev];
-        //         }
-
-        //         if (choice_cons == "AMO") {
-        //             amo_condition = true;
-        //         }
-        //     } else if (not_(l) != new_lit) {
-        //         return {false, nullptr};
-        //     } else if (choice_cons == "AMO") {
-        //         amo_condition = true;
-        //     } else {
-        //         return {false, nullptr};
-        //     }
+            G = group->get(not_(l));
+            G->decrease_und();
+            auto [new_lit, prev] = G->update(I, ge, false, false, l);
+            if (not_(l) == prev) {
+                G->set_max_min(new_lit, ge);
+                if (true_group->get(G) == SETTINGS::NONE) { 
+                    w_n = weight->get(new_lit);
+                    w_p = weight->get(prev);
+                }
+                if (choice_cons == "AMO") {
+                    amo_condition = true;
+                }
+            } else if (not_(l) != new_lit) {
+                return {false, nullptr};
+            } else if (choice_cons == "AMO") {
+                amo_condition = true;
+            } else {
+                return {false, nullptr};
+            }
         } else {
             return {false, nullptr};
         }
@@ -202,3 +221,40 @@ std::pair<bool, Group*> AmoSumPropagator::update_phase(clingo_literal_t l, int d
 
         return {next_phase, G};
 }
+
+std::vector<clingo_literal_t> AmoSumPropagator::simplifyAtLevelZero(bool delete_lits=false){ 
+       
+        debug("_mps: ",_mps)
+        std::string error_string = ge ? (std::to_string(_mps) + " < " + std::to_string(lb) + " !!!") : (std::to_string(_mps) + " > " + std::to_string(ub) + " !!!");
+        if ((ge && _mps < lb) || (!ge && _mps > ub)) {
+                debugf(error_string)
+                return {PropagatorClingo::BOTTOM};
+        }
+
+        assert(!mps_violated);
+
+        update_lazy_propagation();
+        // auto prop_from_facts = lazy_condition ? propagation_phase(nullptr, this, atomNames) : std::vector<clingo_literal_t>();
+        std::vector<clingo_literal_t>* prop_from_facts = new std::vector<clingo_literal_t>();
+        
+        // if (delete_lits) {
+        //          TODO: segfault here
+        //         simplifyLiterals(facts, aggregate.get(), group.get(), ge, I); 
+        // }
+
+        std::vector<std::string> assumptions_vec ;
+        if (!assumptions.empty()) {
+                assumptions_vec = convert_assparam_to_assarray(assumptions);
+        }
+
+        std::vector<clingo_literal_t> propagated_at_level_0 ;
+        std::vector<clingo_literal_t> assumption_literals = create_assumptions_lits(assumptions_vec, atomNames);
+        extend_vector(propagated_at_level_0, assumption_literals);
+        extend_vector(propagated_at_level_0, *(prop_from_facts));
+        extend_vector(propagated_at_level_0, groups_literals);
+
+        // return assumption_literals;
+        delete prop_from_facts ;
+        return std::vector<clingo_literal_t>(); 
+        return propagated_at_level_0; 
+};

@@ -16,4 +16,7 @@ const std::string PREDICATE_LB = "__lb__";
 const std::string PREDICATE_UB = "__ub__";
 const std::string PREDICATE_GROUP = "__group__";
 const std::string PREDICATE_AUX = "__aux__";
+const char SEPARATOR_ASSUMPTIONS = ':';
+const char NOT = '~';
+const std::string NONE_STR = "";
 }

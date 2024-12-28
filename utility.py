@@ -17,10 +17,10 @@ FOCUSED_GROUP = 2
 FOCUSING = False
 
 # assumptions
-SEPARATOR = ":"
+SEPARATOR_ASSUMPTIONS = ":"
 NOT = "~"
-REGEX_LIT = rf"{NOT}?(\w+(\(\w+({SEPARATOR}\w+)*\))?)" 
-REGEX_ASSUMPTIONS = rf"^\[{REGEX_LIT}({SEPARATOR}{NOT}?{REGEX_LIT})*\]$"
+REGEX_LIT = rf"{NOT}?(\w+(\(\w+({SEPARATOR_ASSUMPTIONS}\w+)*\))?)" 
+REGEX_ASSUMPTIONS = rf"^\[{REGEX_LIT}({SEPARATOR_ASSUMPTIONS}{NOT}?{REGEX_LIT})*\]$"
 VALID_VALUES_ASS = f"[[{NOT}]<atom_name>[(param1,parm2,...)]:...] "
 
 def set_debug(debug):
@@ -221,7 +221,7 @@ def convert_assparam_to_assarray(assumptions):
     stripped_string = assumptions.strip("[]")
 
     # Split the string by comma
-    array = stripped_string.split(SEPARATOR)
+    array = stripped_string.split(SEPARATOR_ASSUMPTIONS)
 
     # If there might be extra spaces around the elements, you can also strip each element
     array = [element.strip() for element in array]

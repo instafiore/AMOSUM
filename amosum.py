@@ -113,8 +113,8 @@ class AmoSumPropagator:
     WASP = 1
     CLINGO = 2
 
-    def __init__(self, atomsNames: dict[str: int], sys_parameters: List[str], propagation_phase: Callable[[Group, 'AmoSumPropagator'],  List[int]] = None, ge: bool = True, choice_cons: str = "AMO", solver = WASP) -> None:
-        self.atomNames = atomsNames
+    def __init__(self, atomNames: dict[str: int], sys_parameters: List[str], propagation_phase: Callable[[Group, 'AmoSumPropagator'],  List[int]] = None, ge: bool = True, choice_cons: str = "AMO", solver = WASP) -> None:
+        self.atomNames = atomNames
         self.param = sys_parameters
         self.facts : List[int] = []
         self.reason : List[int] = []
@@ -215,11 +215,11 @@ class AmoSumPropagator:
         self.groups = []
         self.assumptions = param.get("ass", False)
         self.current_sum = 0 
-        self.lazy_prop_actived = param.get("lazy",False)
-        self.lazy_condition = not self.lazy_prop_actived
+        self.lazy_prop_activated = param.get("lazy",False)
+        self.lazy_condition = not self.lazy_prop_activated
         self.groups_literals = []
 
-        lazy_perc_str = f" lazy threshold {AmoSumPropagator.LAZY_PERC}" if self.lazy_prop_actived else ""
+        lazy_perc_str = f" lazy threshold {AmoSumPropagator.LAZY_PERC}" if self.lazy_prop_activated else ""
         debug(f"Starting propagator with param {param}{lazy_perc_str}", force_print=True)
 
         #used to create the self.groups
@@ -389,7 +389,7 @@ class AmoSumPropagator:
         if self.mps_violated:
             self.lazy_condition = True
 
-        if not self.lazy_prop_actived:
+        if not self.lazy_prop_activated:
             self.lazy_condition = True #forcing to not be lazy
 
 
@@ -653,6 +653,6 @@ class AmoSumPropagator:
             changes_str.append((get_name(atomNames=self.atomNames, lit = plit), plit))
         return changes_str
 
-    def create_propagator(atomsNames, sys_parameters, propagation_phase, ge, choice_cons, solver=WASP) -> "AmoSumPropagator":
-        propagator = AmoSumPropagator(atomsNames=atomsNames, sys_parameters=sys_parameters, propagation_phase=propagation_phase, ge=ge, choice_cons=choice_cons, solver=solver)
+    def create_propagator(atomNames, sys_parameters, propagation_phase, ge, choice_cons, solver=WASP) -> "AmoSumPropagator":
+        propagator = AmoSumPropagator(atomNames=atomNames, sys_parameters=sys_parameters, propagation_phase=propagation_phase, ge=ge, choice_cons=choice_cons, solver=solver)
         return propagator

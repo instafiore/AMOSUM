@@ -15,6 +15,7 @@
 #include "prop_wasp/propagator_wasp_c/ge_eo.h" 
 #include "prop_wasp/propagator_wasp_c/le_eo.h" 
 #include "prop_clingo/propagator_clingo_c/propagator_clingo.h"
+#include "utility.tpp"
 
 using ParameterMap = std::unordered_map<std::string, std::string>;
 int Group::autoincrement = 0;
@@ -23,8 +24,8 @@ int Group::autoincrement = 0;
 std::string get_name(const std::unordered_map<clingo_symbol_t, clingo_literal_t>& atomNames, clingo_literal_t lit) {
     std::string prefix = "";
 
-    if (lit == 0) { // Assuming 0 represents None in this context
-        return "None";
+    if (lit == SETTINGS::NONE) { // Assuming 0 represents None in this context
+        return SETTINGS::NONE_STR;
     }
 
     if (lit < 0) {
@@ -39,21 +40,47 @@ std::string get_name(const std::unordered_map<clingo_symbol_t, clingo_literal_t>
 
     debug(lit, " is not present in atomNames");
     assert(false);
-    return ""; 
+    return SETTINGS::NONE_STR; 
 }
 
-clingo_symbol_t from_string_to_symbol(std::string str, const std::unordered_map<clingo_symbol_t, clingo_literal_t> &atomNames){
+clingo_symbol_t from_string_to_symbol(std::string str, const std::unordered_map<clingo_symbol_t, clingo_literal_t> &atomNames){return from_string_to_symbol_or_lit(str, atomNames, true);}
+clingo_literal_t from_string_to_lit(std::string str, const std::unordered_map<clingo_symbol_t, clingo_literal_t> &atomNames){return from_string_to_symbol_or_lit(str, atomNames, false);}
+int64_t from_string_to_symbol_or_lit(std::string str, const std::unordered_map<clingo_symbol_t, clingo_literal_t> &atomNames, bool sym){
   
     for (const auto& [name, atom] : atomNames) {
         if (str == from_symbol_to_string(name)) {
-            return name ; 
+            return sym ? name : atom; 
         }
     }
 
-    debug(str, " is not present in atomNames");
-    assert(false);
+    throw std::runtime_error(str+" is not present in atomNames");
     return 0; 
 }
+
+std::vector<clingo_literal_t> create_assumptions_lits(
+    const std::vector<std::string>& assumptions_vec,
+    const std::unordered_map<clingo_symbol_t, clingo_literal_t>& atomNames) {
+
+    std::vector<clingo_literal_t> res;
+
+    // Regex for atom extraction
+    const std::regex REGEX_LIT(std::to_string(SETTINGS::NOT)+"?(\\w+(\\(\\w+("+std::to_string(SETTINGS::SEPARATOR_ASSUMPTIONS)+"\\w+)*\\))?)");
+
+    for (const auto& ass : assumptions_vec) {
+        std::smatch match;
+        if (std::regex_match(ass, match, REGEX_LIT)) {
+            std::string atom = match[1].str(); // Extracted atom name
+            try{
+                clingo_literal_t lit = from_string_to_lit(ass, atomNames);
+                if (ass.front() == SETTINGS::NOT) lit = not_(lit); // Negate if assumption starts with '~'
+                res.push_back(lit);
+            }catch (const std::runtime_error& e) {}
+        }
+    }
+    return res;
+}
+
+
 
 
 std::string atomNames_to_string(std::unordered_map<clingo_symbol_t, clingo_literal_t> atomNames){
@@ -174,7 +201,7 @@ std::string cat(const std::string &filename) {
     std::ifstream file(filename); 
     if (!file.is_open()) {
         std::cerr << "Error: Could not open file " << filename << std::endl;
-        return "";
+        return SETTINGS::NONE_STR;
     }
 
     std::ostringstream oss ;
@@ -411,4 +438,134 @@ clingo_literal_t m_w(const Group* g, bool max) {
     return max ? max_w(g) : min_w(g) ; 
 }
 
+bool equals(const clingo_literal_t& l1, const clingo_literal_t& l2){
+    if(l1 == SETTINGS::NONE || l2 == SETTINGS::NONE)
+        return l1 == SETTINGS::NONE && l2 == SETTINGS::NONE ;
+    return abs(l1) == abs(l2) ;
+}
 
+std::pair<clingo_literal_t, clingo_literal_t> Group::update_max(
+    const std::unique_ptr<InterpretationFunction>& I, bool all = false, bool update = true, 
+    const clingo_literal_t& assuming_und = SETTINGS::NONE) {
+
+    clingo_literal_t prev_max = (max_und < ord_l.size())? ord_l[max_und]: SETTINGS::NONE;
+
+    int start = all ? (N - 1) : (max_und != SETTINGS::NONE ? (max_und - 1) : -1);
+    if (start < 0) {
+        if (update) max_und = SETTINGS::NONE;
+        return {SETTINGS::NONE, prev_max};
+    }
+
+    for (int i = start; i >= 0; --i) {
+        clingo_literal_t l = ord_l[i];
+        if (I->get(l) == SETTINGS::NONE || equals(l, assuming_und)) {
+            if (update) max_und = i;
+            return {l, prev_max};
+        }
+    }
+
+    if (update) max_und = SETTINGS::NONE;
+    return {SETTINGS::NONE, prev_max};
+}
+
+std::pair<clingo_literal_t, clingo_literal_t> Group::update_min(
+        const std::unique_ptr<InterpretationFunction>& I, bool all = false, bool update = true, 
+        const clingo_literal_t& assuming_und = SETTINGS::NONE) {
+
+        clingo_literal_t prev_min = (min_und < ord_l.size()) ? ord_l[min_und] : SETTINGS::NONE;
+
+        int start = all ? 0 : (min_und != SETTINGS::NONE ? (min_und + 1) : N);
+        if (start >= N) {
+            if (update) min_und = SETTINGS::NONE;
+            return {SETTINGS::NONE, prev_min};
+        }
+
+        for (int i = start; i < N; ++i) {
+            clingo_literal_t l = ord_l[i];
+            if (I->get(l) == SETTINGS::NONE || equals(l, assuming_und)) {
+                if (update) min_und = i;
+                return {l, prev_min};
+            }
+        }
+
+        if (update) min_und = SETTINGS::NONE;
+        return {SETTINGS::NONE, prev_min};
+    }
+
+    std::pair<clingo_literal_t, clingo_literal_t> Group::update(
+        const std::unique_ptr<InterpretationFunction>& I, bool max, bool all = false, bool update = true, 
+        const clingo_literal_t& assuming_und = SETTINGS::NONE) {
+
+        if (max) {
+            return update_max(I, all, update, assuming_und);
+        } else {
+            return update_min(I, all, update, assuming_und);
+        }
+    }
+
+
+std::vector<std::string> convert_assparam_to_assarray(const std::string& assumptions) {
+        if(assumptions == SETTINGS::NONE_STR) return std::vector<std::string>();
+        std::string stripped_string = assumptions;
+        stripped_string.erase(0, stripped_string.find_first_not_of("[]"));
+        stripped_string.erase(stripped_string.find_last_not_of("[]") + 1);
+
+        std::vector<std::string> array;
+        std::istringstream ss(stripped_string);
+        std::string item;
+
+        while (std::getline(ss, item, SETTINGS::SEPARATOR_ASSUMPTIONS)) {
+            array.push_back(item);
+        }
+
+        return array;
+}
+
+void simplifyLiterals(
+    std::vector<clingo_literal_t>& lits,
+    AggregateFunction* aggregate,
+    GroupFunction* group,
+    bool max,
+    const std::unique_ptr<InterpretationFunction>& I
+) {
+    Group* G = nullptr;
+
+    for (auto l : lits) {
+        if (aggregate->get(l)) {
+            G = group->get(l);
+            G->add_false_lit(not_(l));
+        } else if (aggregate->get(not_(l))) {
+            G = group->get(l);
+            G->add_false_lit(l);
+            l = not_(l);
+        } else {
+            continue;
+        }
+
+        int n = G->ord_l.size();
+        int li = G->ord_i[l];
+        G->ord_i[l] = -1;
+
+        // Updating positions of next literals (shifting)
+        for (int lit_i = li + 1; lit_i < n; ++lit_i) {
+            clingo_literal_t lit = G->ord_l[lit_i];
+            G->ord_i[lit] -= 1;
+        }
+
+        // Removing the literal
+        auto it = std::find(G->ord_l.begin(), G->ord_l.end(), l);
+        if (it != G->ord_l.end()) {
+            G->ord_l.erase(it);
+        }
+        G->N = G->ord_l.size();
+
+        // Updating max_und/min_und
+        G->update(I, max, true);
+
+        // Removing from aggregate
+        aggregate->set(l,false);
+        aggregate->set(not_(l),false);
+
+        assert(G->count_undef >= 0);
+    }
+}
