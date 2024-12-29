@@ -535,12 +535,13 @@ void simplifyLiterals(
             G = group->get(l);
             G->add_false_lit(not_(l));
         } else if (aggregate->get(not_(l))) {
-            G = group->get(l);
+            G = group->get(not_(l));
             G->add_false_lit(l);
             l = not_(l);
         } else {
             continue;
         }
+        // continue;
 
         int n = G->ord_l.size();
         int li = G->ord_i[l];

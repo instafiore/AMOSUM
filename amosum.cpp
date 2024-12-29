@@ -237,10 +237,9 @@ std::vector<clingo_literal_t> AmoSumPropagator::simplifyAtLevelZero(bool delete_
         // auto prop_from_facts = lazy_condition ? propagation_phase(nullptr, this, atomNames) : std::vector<clingo_literal_t>();
         std::vector<clingo_literal_t>* prop_from_facts = new std::vector<clingo_literal_t>();
         
-        // if (delete_lits) {
-        //          TODO: segfault here
-        //         simplifyLiterals(facts, aggregate.get(), group.get(), ge, I); 
-        // }
+        if (delete_lits) {
+                simplifyLiterals(facts, aggregate.get(), group.get(), ge, I); 
+        }
 
         std::vector<std::string> assumptions_vec ;
         if (!assumptions.empty()) {
