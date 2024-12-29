@@ -15,8 +15,8 @@ std::vector<clingo_literal_t> AmoSumPropagator::getLiterals(const std::vector<cl
         weight.reset(new WeightFunction(N));
         group.reset(new GroupFunction(N));
         aggregate.reset(new AggregateFunction(N));
-        reason_trues.reset(new PerfectHash<vector_lit_ptr> (N, nullptr));
-        redundant_lits.reset(new PerfectHash<vector_lit_ptr> (N, nullptr));
+        reason_trues.reset(new PerfectHash<std::vector<clingo_literal_t>*> (N, nullptr));
+        redundant_lits.reset(new PerfectHash<std::vector<clingo_literal_t>*> (N, nullptr));
         _mps = 0;
         ID = get_map(params, std::string("id"), std::string("0"));
         groups.clear();  // Initialize as empty
@@ -87,7 +87,7 @@ std::vector<clingo_literal_t> AmoSumPropagator::getLiterals(const std::vector<cl
 
                         bind.push_back(lit);
                         bind.push_back(not_(lit));
-                        // debug("group:",a," atom_name: ",atom_name, " weight: ", weight->get(lit), " group_id: ", group_id);
+                        debug("group:",a," atom_name: ",atom_name, " weight: ", weight->get(lit), " group_id: ", group_id, " sign: ",sign);
                         
                 }else if(a.length() > bound_str.length() and a.substr(0, bound_str.length() + 1) == bound_str + "("){
                         clingo_symbol_t const *terms;
@@ -223,7 +223,6 @@ std::pair<bool, Group*> AmoSumPropagator::update_phase(clingo_literal_t l, int d
 }
 
 std::vector<clingo_literal_t> AmoSumPropagator::simplifyAtLevelZero(bool delete_lits=false){ 
-       
         debug("_mps: ",_mps)
         std::string error_string = ge ? (std::to_string(_mps) + " < " + std::to_string(lb) + " !!!") : (std::to_string(_mps) + " > " + std::to_string(ub) + " !!!");
         if ((ge && _mps < lb) || (!ge && _mps > ub)) {
@@ -234,8 +233,7 @@ std::vector<clingo_literal_t> AmoSumPropagator::simplifyAtLevelZero(bool delete_
         assert(!mps_violated);
 
         update_lazy_propagation();
-        // auto prop_from_facts = lazy_condition ? propagation_phase(nullptr, this, atomNames) : std::vector<clingo_literal_t>();
-        std::vector<clingo_literal_t>* prop_from_facts = new std::vector<clingo_literal_t>();
+        const std::vector<clingo_literal_t>* prop_from_facts = lazy_condition ? propagation_phase(nullptr, this) : new std::vector<clingo_literal_t>();
         
         if (delete_lits) {
                 simplifyLiterals(facts, aggregate.get(), group.get(), ge, I); 
@@ -243,7 +241,7 @@ std::vector<clingo_literal_t> AmoSumPropagator::simplifyAtLevelZero(bool delete_
 
         std::vector<std::string> assumptions_vec ;
         if (!assumptions.empty()) {
-                assumptions_vec = convert_assparam_to_assarray(assumptions);
+            assumptions_vec = convert_assparam_to_assarray(assumptions);
         }
 
         std::vector<clingo_literal_t> propagated_at_level_0 ;
@@ -252,8 +250,31 @@ std::vector<clingo_literal_t> AmoSumPropagator::simplifyAtLevelZero(bool delete_
         extend_vector(propagated_at_level_0, *(prop_from_facts));
         extend_vector(propagated_at_level_0, groups_literals);
 
-        // return assumption_literals;
-        delete prop_from_facts ;
-        return std::vector<clingo_literal_t>(); 
+
+        debug("vector_to_string(propagated_at_level_0): ", vector_to_string(propagated_at_level_0));
+      
         return propagated_at_level_0; 
+
 };
+
+std::tuple<int, clingo_literal_t, clingo_literal_t> AmoSumPropagator::mps(Group* g, clingo_literal_t l, bool assumed) {
+    if (assumed) {
+        clingo_literal_t ml_g = m_w(g, ge);
+        int mw_g = weight->get(ml_g);
+
+        // Ensure true_group[g] is not set
+        assert(true_group->get(g) == SETTINGS::NONE);
+
+        int mps_h = _mps - mw_g + weight->get(l);
+        return {mps_h, l, ml_g};
+    } else {
+        assert(true_group->get(g) == SETTINGS::NONE);
+        auto [sml_g, ml_g] = g->update(I, ge, false, false, SETTINGS::NONE);
+        int mw_g = weight->get(ml_g);
+
+        if (ml_g != l) return {_mps, sml_g, ml_g};
+        int mps_h = _mps - mw_g + weight->get(sml_g);
+        return {mps_h, sml_g, ml_g};
+    
+    }
+}

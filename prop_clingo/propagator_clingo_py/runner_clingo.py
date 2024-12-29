@@ -90,7 +90,7 @@ class RunnerClingoPython(RunnerWasp):
 
         
         for amosum in preprocess_map["amosum_set"]:
-            self.registerPropagator(choice_cons=amosum.prop_type, id=amosum.id)
+            self.registerPropagator(prop_type=amosum.prop_type, id=amosum.id)
 
 
         # Collect all models

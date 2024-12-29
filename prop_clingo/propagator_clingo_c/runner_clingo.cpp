@@ -96,12 +96,10 @@ void register_propagator(clingo_control_t *ctl, clingo_propagator_t prop,
     std::string prop_type, ParameterMap param,
     std::vector<PropagatorClingo*> &propagators){
 
-    std::tuple<bool, 
-    const std::vector<clingo_literal_t>* (*)(const Group &G, 
-    AmoSumPropagator &propagator), std::string> result = get_propagator_variables(prop_type=prop_type);
+    std::tuple<bool, const std::vector<clingo_literal_t>* (*)(const Group*, AmoSumPropagator*), std::string> result = get_propagator_variables(prop_type=prop_type);
 
     bool ge = std::get<0>(result);
-    const std::vector<clingo_literal_t>* (*propagation_phase)(const Group &G, AmoSumPropagator &propagator) = std::get<1>(result);
+    const std::vector<clingo_literal_t>* (*propagation_phase)(const Group*, AmoSumPropagator*) = std::get<1>(result);
     std::string choice_cons = std::get<2>(result);
 
     PropagatorClingo* propagator_clingo = new PropagatorClingo(param, propagation_phase, ge, choice_cons);

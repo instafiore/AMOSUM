@@ -12,67 +12,68 @@
 #include <limits>
 
 
-const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group &G, AmoSumPropagator &propagator){
+const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, AmoSumPropagator* propagator){
+   
+    if (propagator->mps_violated) {
+        create_reason_falses_ge(propagator);
+        propagator->S.clear();
+        propagator->S.push_back(not_(propagator->current_literal));
+        return &propagator->S;
+    }
 
-    std::vector<clingo_literal_t>* S ;
-    // S = new std::vector<clingo_literal_t>();
+    for (Group* g : propagator->groups) {
+        if (g == G || propagator->true_group->get(g) != SETTINGS::NONE) continue;
 
-    // if (propagator.mps_violated) {
-    //     propagator.reason=create_reason_falses_ge(propagator);
-    //     S->emplace_back(not_(propagator.mps_violated));
-    //     return S;
-    // }
-    
-    // // Iterate over groups and apply logic
-    // for (auto& g : propagator.groups) {
-    //     TrueGroupFunction true_group = *propagator.true_group;
-    //     if (g == G or not true_group[g]) {
-    //         continue;
-    //     }
+        int ml_g = max_w(g);
+        if (ml_g == SETTINGS::NONE) continue;
 
-    //     int ml_g = propagator.mps(g, 0, false, true);
-    //     if (ml_g == 0) {
-    //         continue;
-    //     }
+        auto [mps_h, sml_g, ml_g_res] = propagator->mps(g, ml_g, false);
+        
+        bool propagate_to_true = false;
+        if (mps_h < propagator->lb) {
+            int i = sml_g != SETTINGS::NONE ? g->ord_i[sml_g] : SETTINGS::NONE;
+            int j = g->ord_i[ml_g_res];
+            auto rst = propagator->reason_trues->get(ml_g);
+            if(rst == nullptr) {
+                rst = new std::vector<clingo_literal_t>();
+                propagator->reason_trues->set(ml_g, rst);
+            }
+            else rst->clear();
+            
+            for (int k = i; k < j; ++k) {
+                clingo_literal_t lit = g->ord_l[k];
+                if (!propagator->I->get(lit)) {
+                    rst->push_back(lit);
+                }
+            }
+            
+            propagator->S.push_back(ml_g_res);
+            // propagator->propagated[ml_g_res] = true;
+            propagate_to_true = true;
+            // TODO: try to understand why it propagates not aux to true
+            debug("propagating to true: ", get_name(propagator->atomNames, ml_g_res)," because mps_h is ",mps_h, " propagator->true_group->get(g): ",propagator->true_group->get(g))
+        }
 
-    //     int mps, sml_g;
-    //     std::tie(mps, sml_g, ml_g) = propagator.mps(g, ml_g, false, true);
-    //     bool propagate_to_true = false;
+        // if (!propagate_to_true) {
+        //     for (int l : g->ord_l) {
+        //         if (propagator->I[l] == 0) {
+        //             if (std::get<0>(propagator->mps(g, l, true, false)) < propagator->lb) {
+        //                 S.push_back(not_(l));
+        //                 propagator->propagated[not_(l)] = true;
+        //             } else {
+        //                 break;
+        //             }
+        //         }
+        //     }
+        // }
+    }
 
-    //     if (mps < propagator.lb) {
-    //         int i = sml_g != 0 ? g->ord_i[sml_g] : 0;
-    //         int j = g->ord_i[ml_g];
-    //         for (int lit : g->ord_l) {
-    //             if (propagator.I[lit] == false) {
-    //                 propagator.reason_trues[ml_g].push_back(lit);
-    //             }
-    //         }
-    //         S.push_back(ml_g);
-    //         propagator.propagated[ml_g] = true;
-    //         propagate_to_true = true;
-    //     }
-
-    //     if (!propagate_to_true) {
-    //         for (int l : g->ord_l) {
-    //             if (propagator.I.find(l) == propagator.I.end()) {
-    //                 if (propagator.mps(g, l, true, false) < propagator.lb) {
-    //                     S.push_back(not_(l));
-    //                     propagator.propagated[not_(l)] = true;
-    //                 } else {
-    //                     break;
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
-
-    // // Compute minimal reason if necessary
-    // propagator.reason.clear();
-    // if (!S.empty() && propagator.dl != 0) {
-    //     propagator.reason = propagator.create_reason_falses_ge();
-    //     propagator.compute_minimal_reason(propagator.reason, S);
+    // propagator->reason.clear();
+    // if (!S.empty() && propagator->dl != 0) {
+    //     propagator->reason = create_reason_falses_ge(propagator);
+    //     propagator->compute_minimal_reason(propagator->reason, S);
     // }
 
     // print_derivation(atomNames, S);
-    return S;
+    return &propagator->S;
 }

@@ -109,13 +109,34 @@ bool PropagatorClingo::add_clauses_propagated_lits(void *control, const std::vec
         size_t clause_size = R_plit->size() + 1 ;
         clingo_literal_t* clause = new clingo_literal_t[clause_size] ;
         clingo_literal_t slit = map_plit_slit[plit];
-        clause[0] = plit ; 
-        for (size_t i = 1; i < clause_size; i++) clause[i] = (*R_plit)[i];
+        clause[0] = slit ; 
+        for (size_t i = 1; i < clause_size; i++) {
+            clingo_literal_t r_plit =  (*R_plit)[i];
+            clause[i] = map_plit_slit[r_plit];
+        }
+
+
+        // const clingo_assignment_t *assignment = clingo_propagate_init_assignment((clingo_propagate_init*) control);
+        // clingo_truth_value_t truth_value;
+
+        // // Get the truth value of the literal
+        // if (!clingo_assignment_truth_value(assignment, slit, &truth_value)) {
+        //     fprintf(stderr, "Error: Failed to get truth value of literal.\n");
+        //     return true ;
+        // }
+
+        // // Check if the literal is already true
+        // if (truth_value == clingo_truth_value_true) {
+        //     printf("Literal %d is already true; no need to add a unit clause.\n", slit);
+        //     return true;
+        // }
+        
 
         bool result_add_clause;
-        init ? clingo_propagate_init_add_clause((clingo_propagate_init*) control, clause, clause_size, &result_add_clause) :
-        clingo_propagate_control_add_clause((clingo_propagate_control*) control, clause, clause_size, clingo_clause_type_learnt, &result_add_clause) ;
-
+        init ? handle_error(clingo_propagate_init_add_clause((clingo_propagate_init*) control, clause, clause_size, &result_add_clause)) :
+        handle_error(clingo_propagate_control_add_clause((clingo_propagate_control*) control, clause, clause_size, clingo_clause_type_learnt, &result_add_clause)) ;
+        // debug("result_add_clause: ",result_add_clause, " plit: ", plit, " slit: ", slit, " name: ", get_name(atomNames, plit));
+        
         delete R_plit ;
 
         // propagation must return immediately, there is a conflict
@@ -133,7 +154,6 @@ bool PropagatorClingo::add_clauses_propagated_lits(void *control, const std::vec
 }   
 
 bool PropagatorClingo::propagate(clingo_propagate_control_t *control, const clingo_literal_t *changes, size_t size){
-    
     const clingo_assignment_t *assignment = clingo_propagate_control_assignment(control);
     int dl = clingo_assignment_decision_level(assignment);
     int td; 
@@ -167,7 +187,7 @@ std::string PropagatorClingo::compute_changes_str(const clingo_literal_t *change
         clingo_literal_t slit = changes[i] ;
         for(clingo_literal_t plit: map_slit_plit_watched[slit]){
             std::string name = get_name(atomNames, plit);
-            std::string res = "[" + name + ", " + std::to_string(plit) + ", " +  std::to_string(slit) + "]";
+            std::string res = "[" + name + ", plit: " + std::to_string(plit) + ", slit: " +  std::to_string(slit) + "]";
             changes_name_vec.push_back(res);
         }
     }

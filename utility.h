@@ -135,6 +135,7 @@ public:
 
 template <typename V>
 class PerfectHash {
+friend AmoSumPropagator ;
 public:
     // Constructor that initializes the hash table
     PerfectHash(int N, V default_value = V()): N(N), values(2*N,default_value){}
@@ -158,7 +159,7 @@ public:
     // Overriding the setter to use group ID as the key
     void set(const Group* key, const clingo_literal_t &value) {
         int autoincrement = key->id_autoinc;
-        this->values[autoincrement] = value;
+        this->values[autoincrement] = value ;
     }
 
     // Overriding the getter to use group ID as the key
@@ -170,10 +171,10 @@ public:
 
 inline int not_(int literal) { return -literal; }
 
-std::vector<clingo_literal_t>* create_reason_falses(const AmoSumPropagator& propagator, bool ge);
-std::vector<clingo_literal_t>* create_reason_falses_ge(const AmoSumPropagator& propagator);
-std::vector<clingo_literal_t>* create_reason_falses_le(const AmoSumPropagator& propagator);
-std::tuple<bool, const std::vector<clingo_literal_t>* (*)(const Group &G, AmoSumPropagator &propagator), std::string>  get_propagator_variables(std::string prop_type);
+void create_reason_falses(AmoSumPropagator* propagator, bool ge);
+void create_reason_falses_ge(AmoSumPropagator* propagator);
+void create_reason_falses_le(AmoSumPropagator* propagator);
+std::tuple<bool, const std::vector<clingo_literal_t>* (*)(const Group*, AmoSumPropagator*), std::string>  get_propagator_variables(std::string prop_type);
 // Function to get the name
 std::string get_name(const std::unordered_map<clingo_symbol_t, clingo_literal_t>& atomNames, clingo_literal_t lit);
 void print_propagate(PropagatorClingo* prop, const clingo_literal_t *changes, size_t size, clingo_propagate_control_t *control, int dl, bool force_print, bool wasp_b);

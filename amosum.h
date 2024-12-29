@@ -36,15 +36,19 @@ struct AmoSumPropagator
     // Literals derived at level 0
     std::vector<clingo_literal_t> facts ;
 
-    // Literals derived at level 0
-    std::unique_ptr<std::vector<clingo_literal_t>> reason ;
+    // Set of derived lits
+    std::vector<clingo_literal_t> S ;
+
+    // reason common to all literals (either true or false literal)
+    std::vector<clingo_literal_t> reason  ;
 
     // A reason for true literals
-    std::unique_ptr<PerfectHash<vector_lit_ptr>> reason_trues ;
+    std::unique_ptr<PerfectHash<std::vector<clingo_literal_t>*>> reason_trues ;
 
     // Redundant literals in reason of a literal l
     // it is a funtion lits -> 2^(lits)
-    std::unique_ptr<PerfectHash<vector_lit_ptr>> redundant_lits ;
+    std::unique_ptr<PerfectHash<std::vector<clingo_literal_t>*>> redundant_lits ;
+    
 
     // assumptions as a list of atom names [json notation]
     std::string assumptions;
@@ -68,7 +72,7 @@ struct AmoSumPropagator
     int dl = 0 ;
 
     // propagate function to implement in propagator file
-    const std::vector<clingo_literal_t>* (*propagation_phase)(const Group&, AmoSumPropagator&); // Function pointer for propagation
+    const std::vector<clingo_literal_t>* (*propagation_phase)(const Group*, AmoSumPropagator*); // Function pointer for propagation
     
     // treshold for lazy propagation activation
     float LAZY_PERC = 0.98 ;
@@ -92,6 +96,7 @@ struct AmoSumPropagator
     int _mps;    // max/min possible sum
     int ub;      // upper bound
     int bound = SETTINGS::NONE ; // either lb or ub depending on ge
+    clingo_literal_t current_literal;
 
     std::string solver; 
     static constexpr const char* CLINGO = "clingo";
@@ -101,7 +106,7 @@ struct AmoSumPropagator
     AmoSumPropagator(
         std::unordered_map<clingo_symbol_t, clingo_literal_t> atomNames,
         std::unordered_map<std::string, std::string> params,
-        const std::vector<clingo_literal_t>* (*propagation_phase)(const Group&, AmoSumPropagator&) = nullptr,
+        const std::vector<clingo_literal_t>* (*propagation_phase)(const Group*, AmoSumPropagator*) = nullptr,
         bool ge = true,
         std::string choice_cons = "AMO",
         std::string solver = "WASP")
@@ -113,6 +118,12 @@ struct AmoSumPropagator
           solver(std::move(solver)) {}
     ~AmoSumPropagator(){
         for(const Group* group : groups)   delete group ;
+        for(int i=0; i< reason_trues->N; ++i){
+            auto ptr = reason_trues->get(i);
+            if (ptr != nullptr) delete ptr ;
+            ptr = redundant_lits->get(i);
+            if (ptr != nullptr) delete ptr ;
+        }
     }
 
     std::vector<clingo_literal_t> getLiterals(const std::vector<clingo_literal_t>& lits);
@@ -122,8 +133,9 @@ struct AmoSumPropagator
     void onLiteralsUndefined(const std::vector<clingo_literal_t> &plit_list, bool wasp){}
 
 
-    std::pair<bool, Group*> update_phase(clingo_literal_t l, int dl);
     void update_lazy_propagation();
+    std::pair<bool, Group*> update_phase(clingo_literal_t l, int dl);
+    std::tuple<int, clingo_literal_t, clingo_literal_t> mps(Group* g, clingo_literal_t l, bool assumed);
 };
 
 

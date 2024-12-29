@@ -340,9 +340,7 @@ class Group:
             self.set_min(l)
 
     def get_most_undefined(self, max):
-        return m_w(self, max=max)
-        
-    # adding support for at most k constraint
+        raise NotImplementedError()
 
 
     def update_max(self, I: SymmetricFunction, all = False, update = True, assuming_und = None):

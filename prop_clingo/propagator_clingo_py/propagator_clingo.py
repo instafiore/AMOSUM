@@ -40,7 +40,7 @@ class PropagatorClingo(clingo.Propagator):
 
         self.atomNames = { str_symbol : program_literal for str_symbol, program_literal, solver_literal in atoms_list_for_mapping}
         # arrived here with cpp
-        self.propagators = [amosum.AmoSumPropagator(atomsNames=self.atomNames, sys_parameters=self.sys_parameters,
+        self.propagators = [amosum.AmoSumPropagator(atomNames=self.atomNames, sys_parameters=self.sys_parameters,
                                       propagation_phase=self.propagation_phase, ge=self.ge, choice_cons=self.choice_cons, solver=AmoSumPropagator.CLINGO) for i in range(nt)]
 
         # This is a map for mapping each solver literal (slit) to its program literal(s) (plit).
@@ -122,7 +122,7 @@ class PropagatorClingo(clingo.Propagator):
             td = 0 if dl == 0 else control.thread_id
             prop = self.propagators[td]
             
-            # print_propagate(self, changes=changes, control=control, dl=dl, force_print=True)
+            print_propagate(self, changes=changes, control=control, dl=dl)
             for slit in changes:
                 plit_list = self.map_slit_plit_watched[slit]
                 for plit in plit_list:

@@ -12,9 +12,9 @@
 #include <limits>
 
 
-const std::vector<clingo_literal_t>* propagation_phase_ge_eo(const Group &G, AmoSumPropagator &propagator){
+const std::vector<clingo_literal_t>* propagation_phase_ge_eo(const Group* G, AmoSumPropagator* propagator){
 
-    std::vector<clingo_literal_t>* S ;
+     std::vector<clingo_literal_t>* S = new std::vector<clingo_literal_t>();
     // S = new std::vector<clingo_literal_t>();
 
     // if (propagator.mps_violated) {

@@ -324,11 +324,11 @@ bool solve(clingo_control_t *ctl, clingo_solve_result_bitset_t *result) {
   return clingo_solve_handle_close(handle) && ret;
 }
 
-std::tuple<bool, const std::vector<clingo_literal_t>* (*)(const Group &G, AmoSumPropagator &propagator), std::string>  get_propagator_variables(std::string prop_type){
+std::tuple<bool, const std::vector<clingo_literal_t>* (*)(const Group*, AmoSumPropagator*), std::string>  get_propagator_variables(std::string prop_type){
     
     bool ge;
     std::string choice_cons;
-    const std::vector<clingo_literal_t>* (*propagation_phase)(const Group &G, AmoSumPropagator &propagator);
+    const std::vector<clingo_literal_t>* (*propagation_phase)(const Group*, AmoSumPropagator*);
 
     if (prop_type == "ge_amo") {
         ge = true;
@@ -352,22 +352,21 @@ std::tuple<bool, const std::vector<clingo_literal_t>* (*)(const Group &G, AmoSum
     return std::make_tuple(ge, propagation_phase, choice_cons);
 }
 
-std::vector<clingo_literal_t>* create_reason_falses(const AmoSumPropagator &propagator, bool ge) {
+void create_reason_falses(AmoSumPropagator* propagator, bool ge) {
+    // TODO: modify propagator->reason
     if (ge) {
-        return create_reason_falses_ge(propagator);
+        create_reason_falses_ge(propagator);
     } else {
-        return create_reason_falses_le(propagator);
+        create_reason_falses_le(propagator);
     }
 }
 
-std::vector<clingo_literal_t>* create_reason_falses_ge(const AmoSumPropagator &propagator) {
-    std::vector<clingo_literal_t>* R;
-    return R;
+void create_reason_falses_ge(AmoSumPropagator* propagator) {
+    // TODO: modify propagator->reason
 }
 
-std::vector<clingo_literal_t>* create_reason_falses_le(const AmoSumPropagator &propagator) {
-    std::vector<clingo_literal_t>* R;
-    return R;
+void create_reason_falses_le(AmoSumPropagator* propagator) {
+    // TODO: modify propagator->reason
 }
 
 void raise_exception(std::string message){

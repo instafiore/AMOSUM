@@ -18,7 +18,7 @@ public:
     std::unordered_map<clingo_symbol_t, clingo_literal_t> atomNames;
     static const clingo_literal_t BOTTOM = 1 ;
     std::unordered_map<std::string, std::string> param;
-    const std::vector<clingo_literal_t>* (*propagation_phase)(const Group&, AmoSumPropagator&);
+    const std::vector<clingo_literal_t>* (*propagation_phase)(const Group*, AmoSumPropagator*);
     bool ge;
     std::string choice_cons;
     std::string solver;
@@ -36,7 +36,7 @@ public:
 
     PropagatorClingo(
             const std::unordered_map<std::string, std::string>& param,
-            const std::vector<clingo_literal_t>* (*propagation_phase)(const Group&, AmoSumPropagator&),
+            const std::vector<clingo_literal_t>* (*propagation_phase)(const Group*, AmoSumPropagator*),
             bool ge,
             const std::string& choice_cons
         )

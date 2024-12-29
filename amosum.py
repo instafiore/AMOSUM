@@ -350,6 +350,7 @@ class AmoSumPropagator:
     def simplifyAtLevelZero(self, delete_lits = False):
 
         # INCOHERENT
+        debug(f"_mps: {self._mps}")
         error_string = f"{self._mps} < {self.lb} !!!" if self.ge else f"{self._mps} > {self.ub} !!!"
         if (self.ge and self._mps < self.lb) or (not self.ge and self._mps > self.ub) :
             debug(error_string)
@@ -491,12 +492,13 @@ class AmoSumPropagator:
     
     def mps(self, g: Group, l: int, assumed:bool, return_literals = False):
         if assumed:
-            ml_g = g.get_most_undefined(max=self.ge)
+            ml_g = m_w(g, max=max)
             mw_g = self.weight[ml_g]
             assert self.true_group[g] is None
             mps = self._mps - mw_g + self.weight[l]
             return mps if not return_literals else (mps, l, ml_g)
         else:
+            assert self.true_group[g] is None
             sml_g, ml_g =  g.update(self.I, update=False, max=self.ge)
             mw_g =  self.weight[ml_g]
             if ml_g != l:
