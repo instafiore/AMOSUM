@@ -50,8 +50,7 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, Am
             propagator->S.push_back(ml_g_res);
             // propagator->propagated[ml_g_res] = true;
             propagate_to_true = true;
-            // TODO: try to understand why it propagates not aux to true
-            debug("propagating to true: ", get_name(propagator->atomNames, ml_g_res)," because mps_h is ",mps_h, " propagator->true_group->get(g): ",propagator->true_group->get(g))
+            
         }
 
         // if (!propagate_to_true) {

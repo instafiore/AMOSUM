@@ -87,7 +87,7 @@ std::vector<clingo_literal_t> AmoSumPropagator::getLiterals(const std::vector<cl
 
                         bind.push_back(lit);
                         bind.push_back(not_(lit));
-                        debug("group:",a," atom_name: ",atom_name, " weight: ", weight->get(lit), " group_id: ", group_id, " sign: ",sign);
+                        // debug("group:",a," atom_name: ",atom_name, " weight: ", weight->get(lit), " group_id: ", group_id, " sign: ",sign);
                         
                 }else if(a.length() > bound_str.length() and a.substr(0, bound_str.length() + 1) == bound_str + "("){
                         clingo_symbol_t const *terms;
@@ -128,9 +128,9 @@ std::vector<clingo_literal_t> AmoSumPropagator::getLiterals(const std::vector<cl
 
         size_t nGroup = Group::autoincrement ;
         true_group.reset(new TrueGroupFunction(nGroup)) ;
-
+        // debug("lits: ", vector_to_string(lits));
         for (size_t i = 1; i < lits.size(); ++i) { // Start from index 1
-            int l = lits[i];
+            clingo_literal_t l = lits[i];
             try {
                 update_phase(l, 0); 
                 inconsistent_at_level_0 = false;

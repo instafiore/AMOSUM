@@ -101,8 +101,8 @@ public:
     }
 
     // Setting max and min undefined literals
-    void set_max(int l) { max_und = (l != -1) ? ord_i[l] : -1; }
-    void set_min(int l) { min_und = (l != -1) ? ord_i[l] : -1; }
+    void set_max(int l) { max_und = (l != SETTINGS::NONE) ? ord_i[l] : SETTINGS::NONE; }
+    void set_min(int l) { min_und = (l != SETTINGS::NONE) ? ord_i[l] : SETTINGS::NONE; }
 
     void set_max_min(int l, bool max) {
         if (max) set_max(l);
