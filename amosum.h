@@ -4,6 +4,7 @@
 #include "utility.h"
 #include <vector>
 #include <memory>
+#include <unordered_set>
 using vector_lit_ptr = std::vector<clingo_literal_t>* ;
 struct AmoSumPropagator
 {
@@ -47,7 +48,7 @@ struct AmoSumPropagator
 
     // Redundant literals in reason of a literal l
     // it is a funtion lits -> 2^(lits)
-    std::unique_ptr<PerfectHash<std::vector<clingo_literal_t>*>> redundant_lits ;
+    std::unique_ptr<PerfectHash<std::unordered_set<clingo_literal_t>*>> redundant_lits ;
     
 
     // assumptions as a list of atom names [json notation]
@@ -119,23 +120,26 @@ struct AmoSumPropagator
     ~AmoSumPropagator(){
         for(const Group* group : groups)   delete group ;
         for(int i=0; i< reason_trues->N; ++i){
-            auto ptr = reason_trues->get(i);
-            if (ptr != nullptr) delete ptr ;
-            ptr = redundant_lits->get(i);
-            if (ptr != nullptr) delete ptr ;
+            auto ptr_vec = reason_trues->get(i);
+            if (ptr_vec != nullptr) delete ptr_vec ;
+            auto ptr_set = redundant_lits->get(i);
+            if (ptr_set != nullptr) delete ptr_set ;
         }
     }
 
-    std::vector<clingo_literal_t> getLiterals(const std::vector<clingo_literal_t>& lits);
-    std::vector<clingo_literal_t> simplifyAtLevelZero(bool delete_lits);
-    std::vector<clingo_literal_t>* getReasonForLiteral(clingo_literal_t lit){ return new std::vector<clingo_literal_t>(); }
-    std::vector<clingo_literal_t>* onLiteralTrue(clingo_literal_t plit, int dl){ return new std::vector<clingo_literal_t>();}
+    const std::vector<clingo_literal_t> getLiterals(const std::vector<clingo_literal_t>& lits);
+    const std::vector<clingo_literal_t> simplifyAtLevelZero(const bool& delete_lits);
+    const std::vector<clingo_literal_t>* getReasonForLiteral(const clingo_literal_t& lit);
+    const std::vector<clingo_literal_t>* onLiteralTrue(const clingo_literal_t& lit, const int& dl);
     void onLiteralsUndefined(const std::vector<clingo_literal_t> &plit_list, bool wasp){}
 
 
     void update_lazy_propagation();
     std::pair<bool, Group*> update_phase(clingo_literal_t l, int dl);
     std::tuple<int, clingo_literal_t, clingo_literal_t> mps(Group* g, clingo_literal_t l, bool assumed);
+    void updated_dl(int lit, int new_dl);
+    inline bool is_in_aggregate(clingo_literal_t lit){ return aggregate->get(lit) || aggregate->get(not_(lit));}
+
 };
 
 

@@ -13,13 +13,16 @@
 
 
 const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, AmoSumPropagator* propagator){
-   
+
+    
     if (propagator->mps_violated) {
         create_reason_falses_ge(propagator);
         propagator->S.clear();
         propagator->S.push_back(not_(propagator->current_literal));
         return &propagator->S;
     }
+
+
 
     for (Group* g : propagator->groups) {
         if (g == G || propagator->true_group->get(g) != SETTINGS::NONE) continue;
@@ -40,7 +43,7 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, Am
             }
             else rst->clear();
             
-            for (int k = i; k < j; ++k) {
+            for (int k = i; propagator->dl != 0 and k < j; ++k) {
                 clingo_literal_t lit = g->ord_l[k];
                 if (!propagator->I->get(lit)) {
                     rst->push_back(lit);
@@ -53,26 +56,25 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, Am
             
         }
 
-        // if (!propagate_to_true) {
-        //     for (int l : g->ord_l) {
-        //         if (propagator->I[l] == 0) {
-        //             if (std::get<0>(propagator->mps(g, l, true, false)) < propagator->lb) {
-        //                 S.push_back(not_(l));
-        //                 propagator->propagated[not_(l)] = true;
-        //             } else {
-        //                 break;
-        //             }
-        //         }
-        //     }
-        // }
+        if (!propagate_to_true) {
+            for (int l : g->ord_l) {
+                if (propagator->I->get(l) == SETTINGS::NONE) {
+                    if (std::get<0>(propagator->mps(g, l, true)) < propagator->lb) {
+                        propagator->S.push_back(not_(l));
+                        // propagator->propagated[not_(l)] = true;
+                    } else {
+                        break;
+                    }
+                }
+            }
+        }
     }
 
-    // propagator->reason.clear();
-    // if (!S.empty() && propagator->dl != 0) {
-    //     propagator->reason = create_reason_falses_ge(propagator);
-    //     propagator->compute_minimal_reason(propagator->reason, S);
-    // }
+    if (!propagator->S.empty() && propagator->dl != 0) {
+        create_reason_falses_ge(propagator);
+        // propagator->compute_minimal_reason(propagator->reason, S);
+    }
 
-    // print_derivation(atomNames, S);
+    print_derivation(propagator->atomNames, propagator->S, false);
     return &propagator->S;
 }

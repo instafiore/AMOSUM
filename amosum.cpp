@@ -5,7 +5,7 @@
 #include "prop_clingo/propagator_clingo_c/propagator_clingo.h"
 
 
-std::vector<clingo_literal_t> AmoSumPropagator::getLiterals(const std::vector<clingo_literal_t>& lits){
+const std::vector<clingo_literal_t> AmoSumPropagator::getLiterals(const std::vector<clingo_literal_t>& lits){
         N = lits[0] + 1;
         
         minimization = get_map(params, std::string("min_r"), std::string(Minimize::NO_MINIMIZATION)) ;
@@ -16,7 +16,7 @@ std::vector<clingo_literal_t> AmoSumPropagator::getLiterals(const std::vector<cl
         group.reset(new GroupFunction(N));
         aggregate.reset(new AggregateFunction(N));
         reason_trues.reset(new PerfectHash<std::vector<clingo_literal_t>*> (N, nullptr));
-        redundant_lits.reset(new PerfectHash<std::vector<clingo_literal_t>*> (N, nullptr));
+        redundant_lits.reset(new PerfectHash<std::unordered_set<clingo_literal_t>*> (N, nullptr));
         _mps = 0;
         ID = get_map(params, std::string("id"), std::string("0"));
         groups.clear();  // Initialize as empty
@@ -222,7 +222,7 @@ std::pair<bool, Group*> AmoSumPropagator::update_phase(clingo_literal_t l, int d
         return {next_phase, G};
 }
 
-std::vector<clingo_literal_t> AmoSumPropagator::simplifyAtLevelZero(bool delete_lits=false){ 
+const std::vector<clingo_literal_t> AmoSumPropagator::simplifyAtLevelZero(const bool& delete_lits=false){ 
         debug("_mps: ",_mps)
         std::string error_string = ge ? (std::to_string(_mps) + " < " + std::to_string(lb) + " !!!") : (std::to_string(_mps) + " > " + std::to_string(ub) + " !!!");
         if ((ge && _mps < lb) || (!ge && _mps > ub)) {
@@ -250,9 +250,6 @@ std::vector<clingo_literal_t> AmoSumPropagator::simplifyAtLevelZero(bool delete_
         extend_vector(propagated_at_level_0, *(prop_from_facts));
         extend_vector(propagated_at_level_0, groups_literals);
 
-
-        debug("vector_to_string(propagated_at_level_0): ", vector_to_string(propagated_at_level_0));
-      
         return propagated_at_level_0; 
 
 };
@@ -277,4 +274,53 @@ std::tuple<int, clingo_literal_t, clingo_literal_t> AmoSumPropagator::mps(Group*
         return {mps_h, sml_g, ml_g};
     
     }
+}
+
+const std::vector<clingo_literal_t>* AmoSumPropagator::getReasonForLiteral(const clingo_literal_t& lit){
+
+    std::vector<clingo_literal_t>* rt = reason_trues->get(lit);
+    std::vector<clingo_literal_t> &R = rt != nullptr and rt->size() > 0 ? *rt : reason ;
+    if(rt != nullptr and rt->size() > 0) extend_vector(R, reason);
+
+    std::unordered_set<clingo_literal_t>* rl = redundant_lits->get(lit) ;
+
+    bool removed = false ;
+
+    if(rl != nullptr && rl->size() > 0){
+        removed  = true ; 
+        remove_elements(R, *rl);
+    }
+
+    print_reason(atomNames, R, false);
+
+    return &R; 
+}
+
+void AmoSumPropagator::updated_dl(int lit, int new_dl) {
+    if (new_dl != dl) {
+        last_decision_lit = lit;  // Update the last decision literal if dl is different
+    }
+    dl = new_dl;  // Update the decision level
+}
+
+
+const std::vector<clingo_literal_t>* AmoSumPropagator::onLiteralTrue(const clingo_literal_t& lit, const int& dl){
+
+    if(!is_in_aggregate(lit))   return nullptr ;
+
+    updated_dl(lit, dl);
+    current_literal = lit ;
+
+    if(I->get(lit) == true) return nullptr ; // If lit is already true then no progation will take place
+
+    assert(I->get(lit) != false);
+
+    auto [next_phase, G] = update_phase(lit, dl);
+
+    if (dl == 0) {
+        std::vector<clingo_literal_t> singleton = {lit} ;
+        simplifyLiterals(singleton, aggregate.get(), group.get(), ge, I); 
+    }
+    
+    return next_phase ? propagation_phase(nullptr, this) : nullptr;
 }

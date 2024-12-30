@@ -79,7 +79,7 @@ bool PropagatorClingo::init(clingo_propagate_init_t *init){
     std::vector<clingo_literal_t> to_watch_plit;
     for (size_t i = 0; i < nt; i++) to_watch_plit = this->propagators[i]->getLiterals(lits) ;
 
-    debug("to watch: ", vector_to_string(to_watch_plit))
+    debug(vector_lit_to_string(atomNames, to_watch_plit, "to watch: "))
 
     for(clingo_literal_t plit: to_watch_plit){
         clingo_literal_t slit = map_plit_slit[plit];
@@ -98,20 +98,21 @@ bool PropagatorClingo::init(clingo_propagate_init_t *init){
 }
 
 bool PropagatorClingo::add_clauses_propagated_lits(void *control, const std::vector<clingo_literal_t>& S_plit, int dl, bool init=false){
- 
+    
     int td ;
     init ? td = 0 : td = clingo_propagate_control_thread_id((clingo_propagate_control*) control); 
 
+    
     AmoSumPropagator* prop = propagators[td];
-
+    // dl = 0 ; // debugging
     for(clingo_literal_t plit: S_plit){
-        const std::vector<clingo_literal_t>* R_plit = prop->getReasonForLiteral(plit);
-        size_t clause_size = R_plit->size() + 1 ;
+        const std::vector<clingo_literal_t>* R_plit = dl > 0 ? prop->getReasonForLiteral(plit) : nullptr;
+        size_t clause_size = (dl > 0 ? R_plit->size() : 0) + 1 ;
         clingo_literal_t* clause = new clingo_literal_t[clause_size] ;
         clingo_literal_t slit = map_plit_slit[plit];
         clause[0] = slit ; 
         for (size_t i = 1; i < clause_size; i++) {
-            clingo_literal_t r_plit =  (*R_plit)[i];
+            clingo_literal_t r_plit =  (*R_plit)[i-1];
             clause[i] = map_plit_slit[r_plit];
         }
 
@@ -130,14 +131,14 @@ bool PropagatorClingo::add_clauses_propagated_lits(void *control, const std::vec
         //     printf("Literal %d is already true; no need to add a unit clause.\n", slit);
         //     return true;
         // }
-        
 
         bool result_add_clause;
         init ? handle_error(clingo_propagate_init_add_clause((clingo_propagate_init*) control, clause, clause_size, &result_add_clause)) :
         handle_error(clingo_propagate_control_add_clause((clingo_propagate_control*) control, clause, clause_size, clingo_clause_type_learnt, &result_add_clause)) ;
         // debug("result_add_clause: ",result_add_clause, " plit: ", plit, " slit: ", slit, " name: ", get_name(atomNames, plit));
         
-        delete R_plit ;
+        return true ;
+        // if(R_plit != nullptr) delete R_plit ; // it is handled internally
 
         // propagation must return immediately, there is a conflict
         if (not result_add_clause) return true ;
@@ -167,13 +168,11 @@ bool PropagatorClingo::propagate(clingo_propagate_control_t *control, const clin
         clingo_literal_t slit = changes[i];
         std::vector<clingo_literal_t> plit_list = map_slit_plit_watched[slit];
         for(clingo_literal_t plit: plit_list){
-            const std::vector<clingo_literal_t>* S_plit = prop->onLiteralTrue(plit, dl);
-            if (add_clauses_propagated_lits(control, *S_plit, dl, false)){
+            const std::vector<clingo_literal_t>* S_plit = prop->onLiteralTrue(plit, dl); // handled internally 
+            if (S_plit != nullptr && add_clauses_propagated_lits(control, *S_plit, dl, false)){
                 // Conflict added hence propagation has to stop
-                delete S_plit ;
                 return true;
-            } 
-            delete S_plit ;
+            }
         }
     }
     
@@ -192,7 +191,7 @@ std::string PropagatorClingo::compute_changes_str(const clingo_literal_t *change
         }
     }
 
-    return vector_to_string(changes_name_vec);
+    return vector_to_string(changes_name_vec,"");
 }
 
 

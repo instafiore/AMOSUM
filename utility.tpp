@@ -1,5 +1,6 @@
 #pragma once
 #include "utility.h"
+#include <type_traits>
 #include "settings.h"
 
 template <typename V>
@@ -20,20 +21,22 @@ void PerfectHash<V>::set(const int& key, const V& value) {
     values[i] = value;
 }
 
+#include <typeinfo>
+
+
 template <typename T>
-std::string vector_to_string(const std::vector<T>& vec){
+std::string vector_to_string(const std::vector<T>& vec, std::string name = ""){
     std::ostringstream oss;
     int n = vec.size() ;
-    oss<<"[";
-    for (int i = 0; i < n-1; i++)
-    {
-        oss<<"'"<<vec[i]<<"'"<<"," ;
-    }
+    
+    oss<<name<<"[";
+    for (int i = 0; i < n-1; i++)  oss<<"'"<<vec[i]<<"'"<<"," ;
     if (n > 0) oss<<"'"<<vec[n-1]<<"'";
 
     oss<<"]";
     return oss.str();
 }
+
 
 template <typename Key, typename Value>
 std::string unordered_map_to_string(std::unordered_map<Key, Value> map){

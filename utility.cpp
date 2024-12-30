@@ -361,13 +361,68 @@ void create_reason_falses(AmoSumPropagator* propagator, bool ge) {
     }
 }
 
-void create_reason_falses_ge(AmoSumPropagator* propagator) {
-    // TODO: modify propagator->reason
+void remove_elements(std::vector<clingo_literal_t>& original, const std::unordered_set<clingo_literal_t>& to_remove_set) {
+ 
+    // Use erase-remove idiom to remove elements in place
+    original.erase(
+        std::remove_if(original.begin(), original.end(),
+                       [&to_remove_set](int element) {
+                           return to_remove_set.find(element) != to_remove_set.end();
+                       }),
+        original.end());
 }
 
-void create_reason_falses_le(AmoSumPropagator* propagator) {
-    // TODO: modify propagator->reason
+void create_reason_falses_ge(AmoSumPropagator* propagator) {
+    propagator->reason.clear(); // Clear the existing reason vector.
+
+    for (auto* g : propagator->groups) {
+        auto ord_l = g->ord_l;
+
+        if (g->count_undef == 0 && propagator->true_group->get(g) == SETTINGS::NONE) {
+            // Appending reversed(ord_l) to reason
+            // propagator->reason.insert(propagator->reason.end(), ord_l.rbegin(), ord_l.rend());
+            extend_vector(propagator->reason, ord_l);
+        } 
+        else if (propagator->true_group->get(g) == SETTINGS::NONE) {
+            clingo_literal_t ml_g = m_w(g, propagator->ge);
+            int mw_g = propagator->weight->get(ml_g);
+
+            for (int i = static_cast<int>(ord_l.size()) - 1; i >= 0; --i) {
+                clingo_literal_t l = ord_l[i];
+                if (propagator->weight->get(l) < mw_g) break;
+                if (propagator->I->get(l) != SETTINGS::NONE) {
+                    propagator->reason.push_back(l);
+                }
+            }
+        } 
+        else {
+            propagator->reason.push_back(not_(propagator->true_group->get(g)));
+        }
+    }
 }
+
+
+void create_reason_falses_le(AmoSumPropagator* propagator) {
+    propagator->reason.clear(); // Clear the existing reason vector.
+
+    for (auto* g : propagator->groups) {
+        if (propagator->true_group->get(g) == SETTINGS::NONE) {
+            clingo_literal_t ml_g = m_w(g, !propagator->ge); // Use min_w when `ge` is false.
+            int mw_g = propagator->weight->get(ml_g);
+            auto ord_l = g->ord_l;
+
+            for (clingo_literal_t l : ord_l) {
+                if (propagator->weight->get(l) > mw_g) break;
+                if (propagator->I->get(l) != SETTINGS::NONE) {
+                    propagator->reason.push_back(l);
+                }
+            }
+        } else {
+            propagator->reason.push_back(not_(propagator->true_group->get(g)));
+        }
+    }
+}
+
 
 void raise_exception(std::string message){
     throw std::runtime_error(message);
@@ -376,6 +431,29 @@ void raise_exception(std::string message){
 void raise_wasp_not_implemented_exception(){
     raise_exception("wasp not yet implemented");
 }
+
+
+void print_derivation(const std::unordered_map<clingo_symbol_t, clingo_literal_t> atomNames, const std::vector<clingo_literal_t>& S, bool force_print = false){
+    bool debug_b = false ;
+    #ifdef DEBUG
+        debug_b = true ;
+    #endif
+    if (not force_print and not debug_b) return ;
+
+    debug(vector_lit_to_string(atomNames, S, "Derived"));
+}
+
+void print_reason(const std::unordered_map<clingo_symbol_t, clingo_literal_t> atomNames, const std::vector<clingo_literal_t>& S, bool force_print = false){
+    bool debug_b = false ;
+    #ifdef DEBUG
+        debug_b = true ;
+    #endif
+    if (not force_print and not debug_b) return ;
+
+    debug(vector_lit_to_string(atomNames, S, "Reason"));
+}
+
+
 
 
 void print_propagate(PropagatorClingo* prop, const clingo_literal_t *changes, size_t size, clingo_propagate_control_t *control, int dl, bool force_print = false, bool wasp_b = false){
@@ -419,10 +497,22 @@ clingo_literal_t max_w(const Group* g) {
         return g->ord_l[g->max_und]; // Get the literal using max_und
     } catch (const std::out_of_range& e) {
         debug("Error accessing g.ord_l with max_und. Debug info:");
-        debug("g.ord_l: ", vector_to_string(g->ord_l));
+        debug(vector_to_string(g->ord_l,"g.ord_l: "));
         debug("max_und: " + std::to_string(g->max_und));
         throw; // Re-throw the exception
     }
+}
+
+std::string vector_lit_to_string(std::unordered_map<clingo_symbol_t, clingo_literal_t> atomNames, const std::vector<clingo_literal_t>& vec, std::string name = ""){
+    std::ostringstream oss;
+    int n = vec.size() ;
+    
+    oss<<name<<"[";
+    for (int i = 0; i < n-1; i++) oss << "'" <<get_name(atomNames, vec[i])<< "'" << ",";
+    if (n > 0) oss<<"'"<<get_name(atomNames, vec[n-1])<<"'";
+
+    oss<<"]";
+    return oss.str();
 }
 
 

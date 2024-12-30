@@ -136,6 +136,7 @@ class AmoSumPropagator:
     def getReason(self):
         return self.reason
     
+    # arrived here
     def getReasonForLiteral(self, lit):
     
         reason = self.reason + self.reason_trues[lit]
