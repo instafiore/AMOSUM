@@ -79,7 +79,7 @@ bool PropagatorClingo::init(clingo_propagate_init_t *init){
     std::vector<clingo_literal_t> to_watch_plit;
     for (size_t i = 0; i < nt; i++) to_watch_plit = this->propagators[i]->getLiterals(lits) ;
 
-    debug(vector_lit_to_string(atomNames, to_watch_plit, "to watch: "))
+    // debug(vector_lit_to_string(atomNames, to_watch_plit, "to watch: "))
 
     for(clingo_literal_t plit: to_watch_plit){
         clingo_literal_t slit = map_plit_slit[plit];
@@ -87,13 +87,17 @@ bool PropagatorClingo::init(clingo_propagate_init_t *init){
         handle_error(clingo_propagate_init_add_watch(init, slit));
     }
 
+
     std::vector<clingo_literal_t> S_plit ;
     for (size_t i = 0; i < nt; i++) S_plit = propagators[i]->simplifyAtLevelZero(true);
     
-    if (S_plit.size() == 1 and S_plit[0] == BOTTOM) return true; // inconsistent
+    if (S_plit.size() == 1 and S_plit[0] == BOTTOM){ 
+        bool result ; 
+        handle_error(clingo_propagate_init_add_clause((clingo_propagate_init*) init, NULL, 0, &result));
+        return true; 
+    }// inconsistent
 
     add_clauses_propagated_lits(init, S_plit, 0, true);
-   
     return true ;
 }
 
@@ -161,7 +165,7 @@ bool PropagatorClingo::propagate(clingo_propagate_control_t *control, const clin
     dl == 0 ? td = 0 : td = clingo_propagate_control_thread_id(control) ; 
     AmoSumPropagator* prop = propagators[td];
 
-    print_propagate(this, changes, size, control, dl, true, false);
+    print_propagate(this, changes, size, control, dl, false, false);
 
     for (size_t i = 0; i < size; i++)
     {

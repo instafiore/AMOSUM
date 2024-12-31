@@ -75,12 +75,7 @@ class RunnerClingoC(RunnerWasp):
         # running test
         self.maps_weights_list = []
         # compile propagator
-        compile_with_debug = "DEBUG=-DDEBUG" if self.param.get("d",False) else ""
-        clean_run = f"make -C {PROPAGATOR_DIR_LOCATION_CLINGO_C} clean"
-        compile_run = f"make -C {PROPAGATOR_DIR_LOCATION_CLINGO_C} {compile_with_debug}"
-        # print(compile_run)
-        subprocess.run(clean_run, shell=True)
-        subprocess.run(compile_run, shell=True)
+        self.compile()
         run_process = subprocess.run(run, shell=True, capture_output=True, text=True)
 
         output = run_process.stdout
@@ -125,4 +120,17 @@ class RunnerClingoC(RunnerWasp):
 
             self.update_maps_weights_list(input = line)
 
-        return answer_sets, 0
+        return answer_sets, time
+    
+
+    def compile(self):
+        compile = self.param.get("compile",False) 
+        compile_with_debug = "DEBUG=-DDEBUG" if self.param.get("d",False) else ""
+        compile =  True if compile_with_debug == "DEBUG=-DDEBUG" else compile 
+        if not compile: 
+            return
+        clean_run = f"make -C {PROPAGATOR_DIR_LOCATION_CLINGO_C} clean"
+        compile_run = f"make -C {PROPAGATOR_DIR_LOCATION_CLINGO_C} {compile_with_debug}"
+        # print(compile_run)
+        subprocess.run(clean_run, shell=True)
+        subprocess.run(compile_run, shell=True)

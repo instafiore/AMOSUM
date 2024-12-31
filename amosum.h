@@ -131,7 +131,7 @@ struct AmoSumPropagator
     const std::vector<clingo_literal_t> simplifyAtLevelZero(const bool& delete_lits);
     const std::vector<clingo_literal_t>* getReasonForLiteral(const clingo_literal_t& lit);
     const std::vector<clingo_literal_t>* onLiteralTrue(const clingo_literal_t& lit, const int& dl);
-    void onLiteralsUndefined(const std::vector<clingo_literal_t> &plit_list, bool wasp){}
+    void onLiteralsUndefined(const std::vector<clingo_literal_t> &plit_list, bool wasp);
 
 
     void update_lazy_propagation();

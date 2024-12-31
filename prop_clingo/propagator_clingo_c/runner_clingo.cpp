@@ -10,6 +10,7 @@
 #include <vector>
 #include <limits>
 #include "propagator_clingo.h"
+#include <time.h>
 
 
 void register_propagator(clingo_control_t *ctl, clingo_propagator_t prop, std::string prop_type, ParameterMap param, std::vector<PropagatorClingo*> &propagators);
@@ -80,10 +81,9 @@ int main(int argc, char const *argv[])
     // solve using a model callback
     handle_error(solve(ctl, &solve_ret));
     
-
     // FREE
     for(auto& propagator: propagators){
-        delete propagator;
+        if(propagator) delete propagator;
     }
     if (ctl) { clingo_control_free(ctl); }
     

@@ -87,6 +87,7 @@ class PropagatorClingo(clingo.Propagator):
         # print_derivation(atomNames=self.atomNames, S=S_plit)
         if S_plit == [1] or self.add_clauses_propagated_lits(control=init, S_plit=S_plit, dl = 0):
             # adding empty clause
+            init.add_clause([])
             return
         
         

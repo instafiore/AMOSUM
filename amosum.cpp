@@ -37,7 +37,7 @@ const std::vector<clingo_literal_t> AmoSumPropagator::getLiterals(const std::vec
         std::string bound_str = this->ge ? SETTINGS::PREDICATE_LB : SETTINGS::PREDICATE_UB;
        
 
-        std::unordered_map<std::string,std::string> weights_names ; 
+        std::unordered_map<std::string,int> weights_names ; 
 
         ID = get_map(params, std::string("id"), std::string("0"));
      
@@ -77,7 +77,7 @@ const std::vector<clingo_literal_t> AmoSumPropagator::getLiterals(const std::vec
 
                         int w = std::stoi(from_symbol_to_string(terms[2]));
                         weight->set(lit, w) ; 
-                        weights_names[atom_name] = w ;
+                        weights_names[lit_str] = w ;
                         std::string group_id = from_symbol_to_string(terms[3]);
 
                         std::vector<clingo_literal_t> G = get_map_value_vector(groups_raw, group_id);
@@ -101,6 +101,8 @@ const std::vector<clingo_literal_t> AmoSumPropagator::getLiterals(const std::vec
                 }
         } 
         // debug("bound: ",bound);
+        
+        weights_names_log(ID, weights_names);
 
         for(auto &[group_id, lits_group]: groups_raw){
                 std::vector<std::pair<int, int>> lits_ord;
@@ -323,4 +325,101 @@ const std::vector<clingo_literal_t>* AmoSumPropagator::onLiteralTrue(const cling
     }
     
     return next_phase ? propagation_phase(nullptr, this) : nullptr;
+}
+
+
+void AmoSumPropagator::onLiteralsUndefined(const std::vector<clingo_literal_t>& lits, bool wasp = true) {
+    int start = wasp ? 1 : 0;
+
+    for (size_t i = start; i < lits.size(); ++i) {
+        clingo_literal_t l = lits[i];
+
+        // Check if the literal is in the aggregate
+        if (!is_in_aggregate(l)) {
+            continue;
+        }
+
+        // propagated[l] = false;
+
+        // Handle early stop in propagation phase
+        if (I->get(l) == SETTINGS::NONE) {
+            continue;
+        }
+
+        // Update interpretation
+        I->set(l, SETTINGS::NONE);
+
+        // Update the group and max weight
+        Group* G = group->get(l);
+        if (G == nullptr) {
+            G = group->get(not_(l));
+            l = not_(l);
+        }
+
+        assert(G != nullptr);
+
+        // Increase the number of undefined literals in the group
+        G->increase_und();
+
+        clingo_literal_t tg = true_group->get(G);
+
+        // Handle the case where the true literal becomes undefined
+        int w_l = weight->get(l);
+        if (tg == l) {
+            true_group->set(G, SETTINGS::NONE);
+            current_sum -= w_l;
+        }
+
+        clingo_literal_t m_und = m_w(G, ge);
+
+        if (m_und == SETTINGS::NONE) {
+            if (ge) {
+                G->set_max(l);
+            } else {
+                G->set_min(l);
+            }
+
+            if (tg == SETTINGS::NONE) {
+                if (choice_cons == "AMO") {
+                    _mps += w_l;
+                } else {
+                    assert(false);
+                }
+            }
+            continue;
+        }
+
+        int pos_m = G->ord_i[m_und];
+        int pos_l = G->ord_i[l];
+        int m_weight = weight->get(m_und);
+
+        if (tg == l) {
+            // Update the _mps
+            if ((m_weight > w_l && ge) || (m_weight < w_l && !ge)) {
+                _mps = _mps - w_l + m_weight;
+            }
+
+            // Update max or min undefined
+            if ((ge && pos_m < pos_l) || (!ge && pos_m > pos_l)) {
+                if (ge) {
+                    G->set_max(l);
+                } else {
+                    G->set_min(l);
+                }
+            }
+        } else {
+            if ((ge && w_l >= m_weight && pos_l > pos_m) || (!ge && w_l <= m_weight && pos_l < pos_m)) {
+                if (ge) {
+                    G->set_max(l);
+                } else {
+                    G->set_min(l);
+                }
+
+                if (tg == SETTINGS::NONE) {
+                    _mps = _mps - m_weight + w_l;
+                }
+            }
+        }
+    }
+
 }

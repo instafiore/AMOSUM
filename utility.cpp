@@ -16,6 +16,7 @@
 #include "prop_wasp/propagator_wasp_c/le_eo.h" 
 #include "prop_clingo/propagator_clingo_c/propagator_clingo.h"
 #include "utility.tpp"
+#include <time.h>
 
 using ParameterMap = std::unordered_map<std::string, std::string>;
 int Group::autoincrement = 0;
@@ -303,25 +304,28 @@ out:
 }
 
 bool solve(clingo_control_t *ctl, clingo_solve_result_bitset_t *result) {
-  bool ret = true;
-  clingo_solve_handle_t *handle;
-  clingo_model_t const *model;
+    bool ret = true;
+    clingo_solve_handle_t *handle;
+    clingo_model_t const *model;
+
+    // get a solve handle
+    handle_error(clingo_control_solve(ctl, clingo_solve_mode_yield, NULL, 0, NULL, NULL, &handle));
+    // loop over all models
  
-  // get a solve handle
-  handle_error(clingo_control_solve(ctl, clingo_solve_mode_yield, NULL, 0, NULL, NULL, &handle));
-  // loop over all models
-  while (true) {
+    while (true) {
     handle_error(clingo_solve_handle_resume(handle));
     handle_error(clingo_solve_handle_model(handle, &model));
+    
     // print the model
     if (model) { print_model(model); }
     // stop if there are no more models
     else       { break; }
-  }
-  // close the solve handle
-  handle_error(clingo_solve_handle_get(handle, result));
- 
-  return clingo_solve_handle_close(handle) && ret;
+    }
+   
+    // close the solve handle
+    handle_error(clingo_solve_handle_get(handle, result));
+
+    return clingo_solve_handle_close(handle) && ret;
 }
 
 std::tuple<bool, const std::vector<clingo_literal_t>* (*)(const Group*, AmoSumPropagator*), std::string>  get_propagator_variables(std::string prop_type){
@@ -346,9 +350,6 @@ std::tuple<bool, const std::vector<clingo_literal_t>* (*)(const Group*, AmoSumPr
         assert(false && "Unexpected prop_type!");
     }
 
-    // Print for debugging purposes
-    std::cout << "ge: " << ge << ", choice_cons: " << choice_cons << std::endl;
-    
     return std::make_tuple(ge, propagation_phase, choice_cons);
 }
 
@@ -370,6 +371,15 @@ void remove_elements(std::vector<clingo_literal_t>& original, const std::unorder
                            return to_remove_set.find(element) != to_remove_set.end();
                        }),
         original.end());
+}
+
+void weights_names_log(const std::string& ID, const std::unordered_map<std::string, int>& weights_names) {
+    
+    nlohmann::json json_weights = weights_names; // Convert weights_names to JSON
+    std::ostringstream oss;
+    oss << "id: " << ID << " total_weight_names: " << json_weights.dump();
+    debug(oss.str());
+    
 }
 
 void create_reason_falses_ge(AmoSumPropagator* propagator) {

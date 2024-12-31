@@ -7,6 +7,7 @@
 #include <sstream>
 #include <cassert>
 #include <unordered_set>
+#include <nlohmann/json.hpp> 
 
 class PropagatorClingo ;
 class InterpretationFunction;
@@ -31,17 +32,16 @@ void print(const Args&... args) {
 
 
 #ifdef DEBUG
-    #define debugf(...) \
-        debug_print(__VA_ARGS__); \
-    
     #define debug(...) \
         if ((DEBUG)) { \
             debug_print(__VA_ARGS__); \
         }
 #else
-    #define debugf(...)
     #define debug(...)
 #endif
+
+#define debugf(...) \
+    debug_print(__VA_ARGS__); \
 
 using ParameterMap = std::unordered_map<std::string, std::string>;
 
@@ -184,7 +184,7 @@ std::string atomNames_to_string(std::unordered_map<clingo_symbol_t, clingo_liter
 std::vector<std::string> convert_assparam_to_assarray(const std::string& assumptions);
 std::vector<clingo_literal_t> create_assumptions_lits(const std::vector<std::string>& assumptions_vec, const std::unordered_map<clingo_symbol_t, clingo_literal_t>& atomNames);
 std::string vector_lit_to_string(std::unordered_map<clingo_symbol_t, clingo_literal_t> atomNames, const std::vector<clingo_literal_t>& vec, std::string name);
-
+void weights_names_log(const std::string& ID, const std::unordered_map<std::string, int>& weights_names);
 clingo_literal_t max_w(const Group* g);
 // Function to return the min undefined literal
 clingo_literal_t min_w(const Group* g);
