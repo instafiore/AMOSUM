@@ -286,7 +286,7 @@ class RunnerWasp:
                 match = re.match(self.atom_answerset_regex, atom)
                 key = match.group(self.key_weight_atom_amo)
                 mps += maps_weights.get(key, 0)
-            mps_str += f"[mps_{id}]: {mps}"
+            mps_str += f" [mps_{id}]: {mps}"
 
         return mps_str    
         
@@ -383,6 +383,12 @@ class RunnerWasp:
             print(f"{output}")
 
         avoiding_time_information_regex = r"(real \d+\.\d+|user \d+\.\d+|sys \d+\.\d+)"
+        possible_error = False
+        if re.search(r"err", error):
+            possible_error
+
+        print("possible error detected") if possible_error else ""
+        
         error = re.sub(avoiding_time_information_regex, "", error, count=0, flags=0).strip()
         if RunnerWasp.PRINT_ERROR_SOLVER and error != "":
             print(error, file=sys.stderr)

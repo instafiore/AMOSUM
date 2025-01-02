@@ -179,7 +179,8 @@ std::tuple<bool, const std::vector<clingo_literal_t>* (*)(const Group*, AmoSumPr
 std::string get_name(const std::unordered_map<clingo_symbol_t, clingo_literal_t>& atomNames, clingo_literal_t lit);
 void print_propagate(PropagatorClingo* prop, const clingo_literal_t *changes, size_t size, clingo_propagate_control_t *control, int dl, bool force_print, bool wasp_b);
 void print_derivation(const std::unordered_map<clingo_symbol_t, clingo_literal_t> atomNames, const std::vector<clingo_literal_t>& S, bool force_print);
-void print_reason(const std::unordered_map<clingo_symbol_t, clingo_literal_t> atomNames, const std::vector<clingo_literal_t>& S, bool force_print );
+void print_undo(PropagatorClingo* prop, const clingo_literal_t *changes, size_t size, clingo_propagate_control_t *control, int dl, int td, bool force_print , bool wasp_b );
+void print_reason(const std::unordered_map<clingo_symbol_t, clingo_literal_t> atomNames, const std::vector<clingo_literal_t>& R, clingo_literal_t lit, bool force_print );
 std::string atomNames_to_string(std::unordered_map<clingo_symbol_t, clingo_literal_t> atomNames);
 std::vector<std::string> convert_assparam_to_assarray(const std::string& assumptions);
 std::vector<clingo_literal_t> create_assumptions_lits(const std::vector<std::string>& assumptions_vec, const std::unordered_map<clingo_symbol_t, clingo_literal_t>& atomNames);

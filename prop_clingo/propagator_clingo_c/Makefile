@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS = -Wall -Wextra -std=c++17 $(DEBUG)
+CFLAGS = -Wall -Wextra -std=c++17 $(DEBUG) -O3
 LDFLAGS =  -lclingo
 BUILD_DIR = build
 BIN_DIR = bin

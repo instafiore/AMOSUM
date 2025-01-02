@@ -112,6 +112,7 @@ class RunnerClingoC(RunnerWasp):
                 # print(f"line:{line} regex_query: {regex_query} answer_set:{answer_set}")
                 answer_sets.append(set(answer_set))
         
+        time = "error"
         for line in lines_error:
             if not re.search(regex_real, line) is None:
                 time = re.search(regex_real, line).group(1)
@@ -124,13 +125,11 @@ class RunnerClingoC(RunnerWasp):
     
 
     def compile(self):
-        compile = self.param.get("compile",False) 
+        clean = self.param.get("clean",False) 
         compile_with_debug = "DEBUG=-DDEBUG" if self.param.get("d",False) else ""
-        compile =  True if compile_with_debug == "DEBUG=-DDEBUG" else compile 
-        if not compile: 
-            return
+        clean =  True if compile_with_debug == "DEBUG=-DDEBUG" else clean 
         clean_run = f"make -C {PROPAGATOR_DIR_LOCATION_CLINGO_C} clean"
         compile_run = f"make -C {PROPAGATOR_DIR_LOCATION_CLINGO_C} {compile_with_debug}"
         # print(compile_run)
-        subprocess.run(clean_run, shell=True)
+        subprocess.run(clean_run, shell=True) if clean else ""
         subprocess.run(compile_run, shell=True)

@@ -117,7 +117,7 @@ class PropagatorClingo(clingo.Propagator):
     
 
     def propagate(self, control: clingo.PropagateControl, changes: Sequence[int]) -> None:
-        # start = time.time()
+        start = time.time()
         try:
             dl = control.assignment.decision_level
             td = 0 if dl == 0 else control.thread_id
@@ -144,22 +144,26 @@ class PropagatorClingo(clingo.Propagator):
             debug(e, force_print=True)
             raise e
         
-        # end = time.time()
-        # duration = end - start 
-        # debug(f"duration: {duration} ", force_print=True)
+        end = time.time()
+        duration = end - start 
+        debug(f"propagate time: {duration} ", force_print=True)
 
     def undo(self, thread_id: int, assignment: clingo.Assignment, changes: Sequence[int]) -> None:
+        start = time.time()
         prop = self.propagators[thread_id]
         plit_list = []
         for slit in changes:
             for plit in self.map_slit_plit_watched[slit]:
                 plit_list.append(plit)
-        # print_undo(self, changes=changes, thread_id=thread_id)
+        print_undo(self, changes=changes, thread_id=thread_id)
         try:
             prop.onLiteralsUndefined(*plit_list, wasp=False)
         except Exception as e:
             debug(e, force_print=True)
             raise e
+        end = time.time()
+        duration = end - start 
+        debug(f"undo time: {duration} ", force_print=True)
 
     def compute_changes_str(self, changes, thread_id):
         changes_str = []

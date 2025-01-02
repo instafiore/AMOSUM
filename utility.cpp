@@ -16,7 +16,7 @@
 #include "prop_wasp/propagator_wasp_c/le_eo.h" 
 #include "prop_clingo/propagator_clingo_c/propagator_clingo.h"
 #include "utility.tpp"
-#include <time.h>
+#include <chrono>
 
 using ParameterMap = std::unordered_map<std::string, std::string>;
 int Group::autoincrement = 0;
@@ -309,22 +309,27 @@ bool solve(clingo_control_t *ctl, clingo_solve_result_bitset_t *result) {
     clingo_model_t const *model;
 
     // get a solve handle
+    
+
     handle_error(clingo_control_solve(ctl, clingo_solve_mode_yield, NULL, 0, NULL, NULL, &handle));
     // loop over all models
+
+    
  
     while (true) {
-    handle_error(clingo_solve_handle_resume(handle));
-    handle_error(clingo_solve_handle_model(handle, &model));
-    
-    // print the model
-    if (model) { print_model(model); }
-    // stop if there are no more models
-    else       { break; }
+        handle_error(clingo_solve_handle_resume(handle));
+        handle_error(clingo_solve_handle_model(handle, &model));
+        
+        // print the model
+        if (model) { print_model(model);}
+        // stop if there are no more models
+        else       { 
+            break; 
+        }
     }
-   
-    // close the solve handle
-    handle_error(clingo_solve_handle_get(handle, result));
 
+    handle_error(clingo_solve_handle_get(handle, result));
+   
     return clingo_solve_handle_close(handle) && ret;
 }
 
@@ -378,7 +383,7 @@ void weights_names_log(const std::string& ID, const std::unordered_map<std::stri
     nlohmann::json json_weights = weights_names; // Convert weights_names to JSON
     std::ostringstream oss;
     oss << "id: " << ID << " total_weight_names: " << json_weights.dump();
-    debug(oss.str());
+    debugf(oss.str());
     
 }
 
@@ -453,17 +458,18 @@ void print_derivation(const std::unordered_map<clingo_symbol_t, clingo_literal_t
     debug(vector_lit_to_string(atomNames, S, "Derived"));
 }
 
-void print_reason(const std::unordered_map<clingo_symbol_t, clingo_literal_t> atomNames, const std::vector<clingo_literal_t>& S, bool force_print = false){
+
+
+void print_reason(const std::unordered_map<clingo_symbol_t, clingo_literal_t> atomNames, const std::vector<clingo_literal_t>& R, clingo_literal_t lit, bool force_print = false){
     bool debug_b = false ;
     #ifdef DEBUG
         debug_b = true ;
     #endif
     if (not force_print and not debug_b) return ;
 
-    debug(vector_lit_to_string(atomNames, S, "Reason"));
+    std::string reason_name = "Reason("+std::to_string(lit)+") ";
+    debug(vector_lit_to_string(atomNames, R, reason_name));
 }
-
-
 
 
 void print_propagate(PropagatorClingo* prop, const clingo_literal_t *changes, size_t size, clingo_propagate_control_t *control, int dl, bool force_print = false, bool wasp_b = false){
@@ -499,6 +505,22 @@ void print_propagate(PropagatorClingo* prop, const clingo_literal_t *changes, si
     debugf("[", decision_literal_name,", ",dl,"] propagate ", changes_str," td: ", td);
 }
 
+void print_undo(PropagatorClingo* prop, const clingo_literal_t *changes, size_t size, clingo_propagate_control_t *control, int dl, int td, bool force_print = false, bool wasp_b = false){
+    bool debug_b = false ;
+    #ifdef DEBUG
+        debug_b = true ;
+    #endif
+    if (not force_print and not debug_b) return ;
+
+
+    std::string changes_str ;
+    
+    if (wasp_b)  raise_wasp_not_implemented_exception() ;
+    else  changes_str = prop->compute_changes_str(changes, size, td) ;
+
+
+    debugf("undo ", changes_str," thread_id: ", td);
+}
 
 clingo_literal_t max_w(const Group* g) {
     if (g->max_und == SETTINGS::NONE) return SETTINGS::NONE; // No max undefined value 

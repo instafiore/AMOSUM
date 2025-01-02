@@ -6,6 +6,7 @@
 
 
 const std::vector<clingo_literal_t> AmoSumPropagator::getLiterals(const std::vector<clingo_literal_t>& lits){
+        auto start = std::chrono::high_resolution_clock::now();
         N = lits[0] + 1;
         
         minimization = get_map(params, std::string("min_r"), std::string(Minimize::NO_MINIMIZATION)) ;
@@ -40,66 +41,90 @@ const std::vector<clingo_literal_t> AmoSumPropagator::getLiterals(const std::vec
         std::unordered_map<std::string,int> weights_names ; 
 
         ID = get_map(params, std::string("id"), std::string("0"));
-     
+
+        int count = 0 ;
+        
+        std::chrono::duration<double> whole_first_for_inner(0.0);
         for(auto &[symbolic_atom, literal]: atomNames){
-                std::string a = from_symbol_to_string(symbolic_atom);
-                if (a.length() > SETTINGS::PREDICATE_GROUP.length() and a.substr(0, SETTINGS::PREDICATE_GROUP.length() + 1) == SETTINGS::PREDICATE_GROUP + "(") {
-                        clingo_literal_t group_literal = literal ;
-                        clingo_symbol_t const *terms;
-                        size_t terms_size ;
-                        handle_error(clingo_symbol_arguments(symbolic_atom, &terms, &terms_size));
+            std::chrono::time_point<std::chrono::high_resolution_clock> start;
+            std::chrono::time_point<std::chrono::high_resolution_clock> end(start);
+            
+            std::string a = from_symbol_to_string(symbolic_atom);
+            if (a.length() > SETTINGS::PREDICATE_GROUP.length() and a.substr(0, SETTINGS::PREDICATE_GROUP.length() + 1) == SETTINGS::PREDICATE_GROUP + "(") {
+                    start = std::chrono::high_resolution_clock::now();
+                      
+                    clingo_literal_t group_literal = literal ;
+                    clingo_symbol_t const *terms;
+                    size_t terms_size ;
+                    handle_error(clingo_symbol_arguments(symbolic_atom, &terms, &terms_size));
 
-                        if (terms_size != 5) continue;
+                    if (terms_size != 5) continue;
 
-                        std::string id_str = from_symbol_to_string(terms[4]);
-                        if ( id_str != ID) {
-                                continue;
-                        };
+                    std::string id_str = from_symbol_to_string(terms[4]);
+                    if ( id_str != ID) {
+                            continue;
+                    };
+                    
 
-                        groups_literals.push_back(not_(group_literal));
-                        std::string lit_str = from_symbol_to_string(terms[0]);
-                        std::string atom_name = lit_str ;
-                        clingo_literal_t lit ;
-                        std::smatch match;
-                        if (std::regex_match(lit_str, match, negative_lit_regex)) {
-                                atom_name = match[1].str(); 
-                                lit = atomNames[from_string_to_symbol(atom_name, atomNames)];
-                                lit = not_(lit);
-                        }else{
-                                lit = atomNames[from_string_to_symbol(atom_name, atomNames)];
-                        }
+                    groups_literals.push_back(not_(group_literal));
+                    std::string lit_str = from_symbol_to_string(terms[0]);
+                    std::string atom_name = lit_str ;
+                    clingo_literal_t lit ;
+                    std::smatch match;
+                     
+                    // if (std::regex_match(lit_str, match, negative_lit_regex)) {
+                    //         atom_name = match[1].str(); 
+                    //         lit = atomNames[from_string_to_symbol(atom_name, atomNames)];
+                    //         lit = not_(lit);
+                    // }else{
+                    //         lit = atomNames[from_string_to_symbol(atom_name, atomNames)];
+                    // }
+                    end = std::chrono::high_resolution_clock::now();     
+                    lit = atomNames[from_string_to_symbol(atom_name, atomNames)];
+                    
+            
+                    std::string plus_str = from_symbol_to_string(terms[1]);
+                    bool plus_bool = plus_str == "\"+\""  ;
+                    int sign = plus_bool ? 1 : -1 ;
+                    lit *= sign;
 
-                
-                        std::string plus_str = from_symbol_to_string(terms[1]);
-                        bool plus_bool = plus_str == "\"+\""  ;
-                        int sign = plus_bool ? 1 : -1 ;
-                        lit *= sign;
+                    int w = std::stoi(from_symbol_to_string(terms[2]));
+                    weight->set(lit, w) ; 
+                    weights_names[lit_str] = w ;
+                    std::string group_id = from_symbol_to_string(terms[3]);
 
-                        int w = std::stoi(from_symbol_to_string(terms[2]));
-                        weight->set(lit, w) ; 
-                        weights_names[lit_str] = w ;
-                        std::string group_id = from_symbol_to_string(terms[3]);
+                    std::vector<clingo_literal_t> G = get_map_value_vector(groups_raw, group_id);
+                    G.push_back(lit);
+                    groups_raw[group_id] = G ;
+                    aggregate->set(lit, true);
 
-                        std::vector<clingo_literal_t> G = get_map_value_vector(groups_raw, group_id);
-                        G.push_back(lit);
-                        groups_raw[group_id] = G ;
-                        aggregate->set(lit, true);
+                    bind.push_back(lit);
+                    bind.push_back(not_(lit));
+                    // debug("group:",a," atom_name: ",atom_name, " weight: ", weight->get(lit), " group_id: ", group_id, " sign: ",sign);
+            }else if(a.length() > bound_str.length() and a.substr(0, bound_str.length() + 1) == bound_str + "("){
+                    clingo_symbol_t const *terms;
+                    size_t terms_size ;
+                    handle_error(clingo_symbol_arguments(symbolic_atom, &terms, &terms_size));
+                    std::string id_str = from_symbol_to_string(terms[1]);
+                    if (terms_size != 2 or id_str != ID) continue ;
+                    
+                    if(bound != SETTINGS::NONE) assert(false) ;
+                    bound = (ge ? lb = std::stoi(from_symbol_to_string(terms[0])) : ub = std::stoi(from_symbol_to_string(terms[0])));
+            }
+            
+            std::chrono::duration<double> elapsed = end - start;
+            whole_first_for_inner += elapsed;
 
-                        bind.push_back(lit);
-                        bind.push_back(not_(lit));
-                        // debug("group:",a," atom_name: ",atom_name, " weight: ", weight->get(lit), " group_id: ", group_id, " sign: ",sign);
-                        
-                }else if(a.length() > bound_str.length() and a.substr(0, bound_str.length() + 1) == bound_str + "("){
-                        clingo_symbol_t const *terms;
-                        size_t terms_size ;
-                        handle_error(clingo_symbol_arguments(symbolic_atom, &terms, &terms_size));
-                        std::string id_str = from_symbol_to_string(terms[1]);
-                        if (terms_size != 2 or id_str != ID) continue ;
-                        
-                        if(bound != SETTINGS::NONE) assert(false) ;
-                        bound = (ge ? lb = std::stoi(from_symbol_to_string(terms[0])) : ub = std::stoi(from_symbol_to_string(terms[0])));
-                }
+            ++count;
         } 
+        debugf("count first for getLiterals: ", count);
+        auto end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed = end - start;
+        debugf("whole_first_for_inner mean time: ",whole_first_for_inner.count()/count, "s");
+        debugf("whole_first_for_inner time: ",whole_first_for_inner.count(), "s");
+        debugf("getLiterals [inner] time: ",elapsed.count(), "s");
+     
+        
         // debug("bound: ",bound);
         
         weights_names_log(ID, weights_names);
@@ -149,6 +174,7 @@ const std::vector<clingo_literal_t> AmoSumPropagator::getLiterals(const std::vec
         // Set class variables
         last_decision_lit = 1;
         dl = 0;
+        
         return bind;
 }
 
@@ -180,6 +206,7 @@ std::pair<bool, Group*> AmoSumPropagator::update_phase(clingo_literal_t l, int d
         bool tg = false;
         Group* G = nullptr;
         mps_violated = false;
+        ++count;
 
         bool amo_condition = false;
         if (aggregate->get(l)) {
@@ -216,6 +243,9 @@ std::pair<bool, Group*> AmoSumPropagator::update_phase(clingo_literal_t l, int d
 
         _mps = _mps - w_p + w_n;
         update_lazy_propagation();
+
+        if(lazy_condition and count % 10000 == 0) debugf("[mps: ",_mps,", id: ",ID,"] iteration: ",count,"");
+
     
         G = (choice_cons == "EO") ? G : nullptr;
         bool current_sum_condition = !ge || current_sum < bound;
@@ -293,7 +323,7 @@ const std::vector<clingo_literal_t>* AmoSumPropagator::getReasonForLiteral(const
         remove_elements(R, *rl);
     }
 
-    print_reason(atomNames, R, false);
+    print_reason(atomNames, R, lit, false);
 
     return &R; 
 }
@@ -324,7 +354,7 @@ const std::vector<clingo_literal_t>* AmoSumPropagator::onLiteralTrue(const cling
         simplifyLiterals(singleton, aggregate.get(), group.get(), ge, I); 
     }
     
-    return next_phase ? propagation_phase(nullptr, this) : nullptr;
+    return next_phase ? propagation_phase(G, this) : nullptr;
 }
 
 

@@ -103,6 +103,8 @@ struct AmoSumPropagator
     static constexpr const char* CLINGO = "clingo";
     static constexpr const char* WASP = "wasp";
 
+    unsigned long count = 0 ;
+
     AmoSumPropagator(){}
     AmoSumPropagator(
         std::unordered_map<clingo_symbol_t, clingo_literal_t> atomNames,

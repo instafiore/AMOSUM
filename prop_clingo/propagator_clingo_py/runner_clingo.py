@@ -7,6 +7,8 @@ from typing import Dict, List
 import re
 import sys
 import os
+
+from clingo import SolveResult
 import AmoSumParser
 from amosum import *
 from clingo.symbol import Number
@@ -110,16 +112,30 @@ class RunnerClingoPython(RunnerWasp):
             # print(f"filtered_model: {filtered_model} model_str: {model} regex_query: {regex_query}")
             models.append(set(filtered_model))
 
+        
+
             
         # Solve and get all models
         start_time = time.time()  
         res = "timeout"
+        sat = True
+
+        def on_unsat(x):
+            global sat
+            print("UNSAT")
+            sat = False
+
+        def on_finish(x: SolveResult):
+            debug(f"result: {x}", force_print=True)
+
         try:
-            handle : clingo.SolveHandle = self.ctl.solve(on_model=on_model, async_ = True)
+            handle : clingo.SolveHandle = self.ctl.solve(on_finish=on_finish ,on_model=on_model, on_unsat=on_unsat, async_ = True)
             res = handle.wait(self.timeout_m * 60 if not self.exp else None)
         except Exception as e:
             res = "error"
             print(e)
+
+    
         end_time = time.time()  # End time
 
         for propagator in self.propagators:
@@ -133,7 +149,7 @@ class RunnerClingoPython(RunnerWasp):
         self.print_stats_to_file(filename=filename)
         
         wall_time = end_time - start_time 
-        wall_time = round(wall_time, 2) if res != "timeout" and res != "error" else res 
+        wall_time = round(wall_time, 2) if res else "timeout" 
 
         # restoring the instance.asp file
         self.comment_bound(instance=instance, ub=False, restore=True)
