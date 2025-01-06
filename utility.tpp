@@ -4,7 +4,7 @@
 #include "settings.h"
 
 template <typename V>
-V PerfectHash<V>::get(int lit) {
+V PerfectHash<V>::get(int lit) const{
     // Determine the index for positive or negative literals
     int i = (lit > 0) ? lit : (abs(lit) + N);
     return values[i];
@@ -39,7 +39,7 @@ std::string vector_to_string(const std::vector<T>& vec, std::string name = ""){
 
 
 template <typename Key, typename Value>
-std::string unordered_map_to_string(std::unordered_map<Key, Value> map){
+std::string unordered_map_to_string(const std::unordered_map<Key, Value>& map){
 
     std::ostringstream oss;
     oss<< "{" ;

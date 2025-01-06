@@ -351,7 +351,7 @@ class AmoSumPropagator:
     def simplifyAtLevelZero(self, delete_lits = False):
 
         # INCOHERENT
-        debug(f"_mps: {self._mps}")
+        # debug(f"_mps: {self._mps}")
         error_string = f"{self._mps} < {self.lb} !!!" if self.ge else f"{self._mps} > {self.ub} !!!"
         if (self.ge and self._mps < self.lb) or (not self.ge and self._mps > self.ub) :
             debug(error_string)
@@ -483,7 +483,7 @@ class AmoSumPropagator:
 
         self._mps = self._mps - w_p + w_n
         self.update_lazy_propagation()
-        debug(f"[mps: {self._mps}, id: {self.ID}] iteration: {self.count}", force_print=self.lazy_condition and self.count % 10000 == 0)
+        # debug(f"[mps: {self._mps}, id: {self.ID}] iteration: {self.count}", force_print=self.lazy_condition and self.count % 50000 == 0)
 
         G = G if self.choice_cons == "EO" else None
         current_sum_condition = not self.ge or self.current_sum < self.bound

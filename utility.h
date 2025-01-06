@@ -13,6 +13,7 @@ class PropagatorClingo ;
 class InterpretationFunction;
 class AggregateFunction;
 class GroupFunction;
+class WeightFunction ;
 // Macro to handle the debug functionality
 
 // Helper variadic template function
@@ -48,20 +49,22 @@ using ParameterMap = std::unordered_map<std::string, std::string>;
 
 std::unordered_map<std::string, std::string> init_param(int argc, char const *argv[]);
 void remove_elements(std::vector<int>& original, const std::unordered_set<clingo_literal_t>& to_remove_set);
-void print_unordered_map(std::unordered_map<std::string, std::string> map);
+void print_unordered_map(const std::unordered_map<std::string, std::string>& map);
 std::vector<std::pair<std::string, ParameterMap>> process_sys_parameters(const std::vector<std::string>& sys_parameters);
 template <typename Key, typename Value>
-std::string unordered_map_to_string(std::unordered_map<Key, Value> map);
+std::string unordered_map_to_string(const std::unordered_map<Key, Value>& map);
 std::vector<std::string> split(const std::string& str, char delimiter);
 std::string cat(const std::string &filename);
 std::string from_symbol_to_string(clingo_symbol_t sym);
 clingo_symbol_t from_string_to_symbol(std::string str, const std::unordered_map<clingo_symbol_t, clingo_literal_t> &atomNames);
 clingo_literal_t from_string_to_lit(std::string str, const std::unordered_map<clingo_symbol_t, clingo_literal_t> &atomNames);
 int64_t from_string_to_symbol_or_lit(std::string str, const std::unordered_map<clingo_symbol_t, clingo_literal_t> &atomNames, bool sym);
+std::unordered_map<std::string, clingo_literal_t> create_atomNames_string(const std::unordered_map<clingo_symbol_t, clingo_literal_t> &atomNames);
 void handle_error(bool success);
 bool print_model(clingo_model_t const *model);
 bool solve(clingo_control_t *ctl, clingo_solve_result_bitset_t *result);
-
+std::chrono::time_point<std::chrono::high_resolution_clock> start_timer();
+void display_end_timer(const std::chrono::time_point<std::chrono::high_resolution_clock>& start, std::string name);
 struct AmoSumPropagator;
 
 class Group {
@@ -141,7 +144,7 @@ public:
     PerfectHash(int N, V default_value = V()): N(N), values(2*N,default_value){}
 
     // Getter for index access
-    virtual V get(int key);
+    virtual V get(int key) const;
 
     // Setter for index access
     virtual void set(const int &key, const V& value);
@@ -178,13 +181,14 @@ std::tuple<bool, const std::vector<clingo_literal_t>* (*)(const Group*, AmoSumPr
 // Function to get the name
 std::string get_name(const std::unordered_map<clingo_symbol_t, clingo_literal_t>& atomNames, clingo_literal_t lit);
 void print_propagate(PropagatorClingo* prop, const clingo_literal_t *changes, size_t size, clingo_propagate_control_t *control, int dl, bool force_print, bool wasp_b);
-void print_derivation(const std::unordered_map<clingo_symbol_t, clingo_literal_t> atomNames, const std::vector<clingo_literal_t>& S, bool force_print);
+void print_derivation(const std::unordered_map<clingo_symbol_t, clingo_literal_t>& atomNames, const std::vector<clingo_literal_t>& S, bool force_print);
 void print_undo(PropagatorClingo* prop, const clingo_literal_t *changes, size_t size, clingo_propagate_control_t *control, int dl, int td, bool force_print , bool wasp_b );
-void print_reason(const std::unordered_map<clingo_symbol_t, clingo_literal_t> atomNames, const std::vector<clingo_literal_t>& R, clingo_literal_t lit, bool force_print );
-std::string atomNames_to_string(std::unordered_map<clingo_symbol_t, clingo_literal_t> atomNames);
+void print_reason(const std::unordered_map<clingo_symbol_t, clingo_literal_t>& atomNames, const std::vector<clingo_literal_t>& R, clingo_literal_t lit, bool force_print );
+void print_reduction_reason(const AmoSumPropagator& propagator, const std::vector<clingo_literal_t>& reason_c, const std::vector<clingo_literal_t>& reason, clingo_literal_t lit, float p, bool force_print);
+std::string atomNames_to_string(const std::unordered_map<clingo_symbol_t, clingo_literal_t>& atomNames);
 std::vector<std::string> convert_assparam_to_assarray(const std::string& assumptions);
 std::vector<clingo_literal_t> create_assumptions_lits(const std::vector<std::string>& assumptions_vec, const std::unordered_map<clingo_symbol_t, clingo_literal_t>& atomNames);
-std::string vector_lit_to_string(std::unordered_map<clingo_symbol_t, clingo_literal_t> atomNames, const std::vector<clingo_literal_t>& vec, std::string name);
+std::string vector_lit_to_string(const std::unordered_map<clingo_symbol_t, clingo_literal_t>& atomNames, const std::vector<clingo_literal_t>& vec, std::string name);
 void weights_names_log(const std::string& ID, const std::unordered_map<std::string, int>& weights_names);
 clingo_literal_t max_w(const Group* g);
 // Function to return the min undefined literal
@@ -201,5 +205,34 @@ struct Minimize {
 };
 
 void simplifyLiterals(std::vector<clingo_literal_t>& lits, AggregateFunction* aggregate, GroupFunction* group, bool max, const std::unique_ptr<InterpretationFunction>& I); 
+
+
+// Increment function
+int increment_f(int l, const std::unordered_set<clingo_literal_t>& current_subset_maximal,
+                const WeightFunction*& weight, const GroupFunction*& group,
+                int head_reason, const std::unique_ptr<InterpretationFunction>& I, int max_b);
+
+// Maximal subset with groups
+void maximal_subset_sum_less_than_s_with_groups(const std::vector<clingo_literal_t>& literals, int s,
+                                                           const WeightFunction* weight,
+                                                           const GroupFunction* group,
+                                                           int head_reason, const std::unique_ptr<InterpretationFunction>& I, int max,
+                                                           std::unordered_set<clingo_literal_t>& subset_maximal);
+
+// Compute increment literals
+std::unordered_map<int, int> compute_increment_literals(const std::vector<int>& literals,
+                                                        const GroupFunction* group,
+                                                        const WeightFunction* weight);
+
+// Get all literals below a literal
+std::vector<clingo_literal_t> get_all_lit_below_you(int lit, const GroupFunction* group,
+                                    const InterpretationFunction* I, const std::vector<int>& reason);
+
+// Maximum subset sum with groups
+std::unordered_set<clingo_literal_t> maximum_subset_sum_less_than_s_with_groups(const std::vector<clingo_literal_t>& literals, int s,
+                                                            const GroupFunction* group,
+                                                            const WeightFunction* weight,
+                                                            const InterpretationFunction* I);
+
 #include "utility.tpp"  // Include the template implementation file
 

@@ -44,15 +44,14 @@ const std::vector<clingo_literal_t> AmoSumPropagator::getLiterals(const std::vec
 
         int count = 0 ;
         
-        std::chrono::duration<double> whole_first_for_inner(0.0);
+        
+        std::unordered_map<std::string, clingo_literal_t> atomNamesString(create_atomNames_string(atomNames));
+
         for(auto &[symbolic_atom, literal]: atomNames){
-            std::chrono::time_point<std::chrono::high_resolution_clock> start;
-            std::chrono::time_point<std::chrono::high_resolution_clock> end(start);
-            
+             
             std::string a = from_symbol_to_string(symbolic_atom);
             if (a.length() > SETTINGS::PREDICATE_GROUP.length() and a.substr(0, SETTINGS::PREDICATE_GROUP.length() + 1) == SETTINGS::PREDICATE_GROUP + "(") {
-                    start = std::chrono::high_resolution_clock::now();
-                      
+                     
                     clingo_literal_t group_literal = literal ;
                     clingo_symbol_t const *terms;
                     size_t terms_size ;
@@ -79,10 +78,9 @@ const std::vector<clingo_literal_t> AmoSumPropagator::getLiterals(const std::vec
                     // }else{
                     //         lit = atomNames[from_string_to_symbol(atom_name, atomNames)];
                     // }
-                    end = std::chrono::high_resolution_clock::now();     
-                    lit = atomNames[from_string_to_symbol(atom_name, atomNames)];
+                    // clingo_symbol_t sym = from_string_to_symbol(atom_name, atomNames) ;
+                    lit = atomNamesString[atom_name];
                     
-            
                     std::string plus_str = from_symbol_to_string(terms[1]);
                     bool plus_bool = plus_str == "\"+\""  ;
                     int sign = plus_bool ? 1 : -1 ;
@@ -112,22 +110,14 @@ const std::vector<clingo_literal_t> AmoSumPropagator::getLiterals(const std::vec
                     bound = (ge ? lb = std::stoi(from_symbol_to_string(terms[0])) : ub = std::stoi(from_symbol_to_string(terms[0])));
             }
             
-            std::chrono::duration<double> elapsed = end - start;
-            whole_first_for_inner += elapsed;
-
+        
             ++count;
         } 
-        debugf("count first for getLiterals: ", count);
-        auto end = std::chrono::high_resolution_clock::now();
-        std::chrono::duration<double> elapsed = end - start;
-        debugf("whole_first_for_inner mean time: ",whole_first_for_inner.count()/count, "s");
-        debugf("whole_first_for_inner time: ",whole_first_for_inner.count(), "s");
-        debugf("getLiterals [inner] time: ",elapsed.count(), "s");
-     
+        
         
         // debug("bound: ",bound);
         
-        weights_names_log(ID, weights_names);
+        // weights_names_log(ID, weights_names);
 
         for(auto &[group_id, lits_group]: groups_raw){
                 std::vector<std::pair<int, int>> lits_ord;
@@ -155,6 +145,7 @@ const std::vector<clingo_literal_t> AmoSumPropagator::getLiterals(const std::vec
 
         size_t nGroup = Group::autoincrement ;
         true_group.reset(new TrueGroupFunction(nGroup)) ;
+       
         // debug("lits: ", vector_to_string(lits));
         for (size_t i = 1; i < lits.size(); ++i) { // Start from index 1
             clingo_literal_t l = lits[i];
@@ -167,6 +158,8 @@ const std::vector<clingo_literal_t> AmoSumPropagator::getLiterals(const std::vec
                 // break;
             }
         }
+
+        debugf("Intial mps of ",ID ,"is: ", _mps);
 
         // Set facts to literals starting from index 1
         facts.assign(lits.begin() + 1, lits.end());
@@ -244,7 +237,7 @@ std::pair<bool, Group*> AmoSumPropagator::update_phase(clingo_literal_t l, int d
         _mps = _mps - w_p + w_n;
         update_lazy_propagation();
 
-        if(lazy_condition and count % 10000 == 0) debugf("[mps: ",_mps,", id: ",ID,"] iteration: ",count,"");
+        // if(lazy_condition and count % 50000 == 0) debugf("[mps: ",_mps,", id: ",ID,"] iteration: ",count,"");
 
     
         G = (choice_cons == "EO") ? G : nullptr;
@@ -255,7 +248,7 @@ std::pair<bool, Group*> AmoSumPropagator::update_phase(clingo_literal_t l, int d
 }
 
 const std::vector<clingo_literal_t> AmoSumPropagator::simplifyAtLevelZero(const bool& delete_lits=false){ 
-        debug("_mps: ",_mps)
+        // debug("_mps: ",_mps)
         std::string error_string = ge ? (std::to_string(_mps) + " < " + std::to_string(lb) + " !!!") : (std::to_string(_mps) + " > " + std::to_string(ub) + " !!!");
         if ((ge && _mps < lb) || (!ge && _mps > ub)) {
                 debugf(error_string)
@@ -315,7 +308,7 @@ const std::vector<clingo_literal_t>* AmoSumPropagator::getReasonForLiteral(const
     if(rt != nullptr and rt->size() > 0) extend_vector(R, reason);
 
     std::unordered_set<clingo_literal_t>* rl = redundant_lits->get(lit) ;
-
+    std::vector<clingo_literal_t> R_copy = R ;
     bool removed = false ;
 
     if(rl != nullptr && rl->size() > 0){
@@ -324,6 +317,18 @@ const std::vector<clingo_literal_t>* AmoSumPropagator::getReasonForLiteral(const
     }
 
     print_reason(atomNames, R, lit, false);
+
+    if(get_map(params, std::string("min_r"), std::string(Minimize::NO_MINIMIZATION)) !=  Minimize::NO_MINIMIZATION){
+        double p ;
+        if (!R.empty()) {
+            double lc = static_cast<double>(R_copy.size());
+            p = (1.0 - (static_cast<double>(R.size()) / lc)) * 100.0;
+        } else {
+            p = 100.0;
+        }
+
+        print_reduction_reason(*this, R_copy, R, lit, p, true);
+    }
 
     return &R; 
 }
@@ -338,6 +343,7 @@ void AmoSumPropagator::updated_dl(int lit, int new_dl) {
 
 const std::vector<clingo_literal_t>* AmoSumPropagator::onLiteralTrue(const clingo_literal_t& lit, const int& dl){
 
+    
     if(!is_in_aggregate(lit))   return nullptr ;
 
     updated_dl(lit, dl);
@@ -354,7 +360,9 @@ const std::vector<clingo_literal_t>* AmoSumPropagator::onLiteralTrue(const cling
         simplifyLiterals(singleton, aggregate.get(), group.get(), ge, I); 
     }
     
-    return next_phase ? propagation_phase(G, this) : nullptr;
+    const std::vector<clingo_literal_t>* propagated = next_phase ? propagation_phase(G, this) : nullptr;
+    
+    return propagated ;
 }
 
 
@@ -452,4 +460,52 @@ void AmoSumPropagator::onLiteralsUndefined(const std::vector<clingo_literal_t>& 
         }
     }
 
+}
+
+void AmoSumPropagator::compute_minimal_reason(const std::vector<clingo_literal_t>& to_minimize) {
+    // Invariants: reason is grouped by self.group id, and in each self.group, literals are sorted in descending order.
+
+    if (minimization == Minimize::NO_MINIMIZATION) {
+        return;
+    }
+
+    for (auto l : to_minimize) {
+        Group* g = group->get(l);
+        bool derived_true = true;
+
+        if (!g) {
+            g = group->get(not_(l));
+            derived_true = false;
+        }
+        assert(g != nullptr);
+
+        auto [mps_h, sml_g, ml_g] = mps(g, l, !derived_true);
+        int s = lb - mps_h - 1;
+
+        auto rd = redundant_lits->get(l);
+        if(rd == nullptr) {
+            rd = new std::unordered_set<clingo_literal_t>();
+            redundant_lits->set(l, rd);
+        }
+        else rd->clear();
+
+        if (minimization == Minimize::MINIMAL) {
+            maximal_subset_sum_less_than_s_with_groups(reason, s, weight.get(), group.get(), l, I, ge, *rd);
+        } else if (minimization == Minimize::CARDINALITY_MINIMAL) {
+            // auto increment = compute_increment_literals(
+            //     reason,
+            //     group.get(),
+            //     weight.get()
+            // );
+            // redundant_lits->set(l, maximum_subset_sum_less_than_s_with_groups(
+            //     reason,
+            //     s,
+            //     increment,
+            //     group.get(),
+            //     I.get()
+            // ));
+        } else {
+            assert(false && "Unknown minimization strategy.");
+        }
+    }
 }

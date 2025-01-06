@@ -146,7 +146,7 @@ class PropagatorClingo(clingo.Propagator):
         
         end = time.time()
         duration = end - start 
-        debug(f"propagate time: {duration} ", force_print=True)
+        # debug(f"propagate time: {duration} ", force_print=True)
 
     def undo(self, thread_id: int, assignment: clingo.Assignment, changes: Sequence[int]) -> None:
         start = time.time()
@@ -163,7 +163,7 @@ class PropagatorClingo(clingo.Propagator):
             raise e
         end = time.time()
         duration = end - start 
-        debug(f"undo time: {duration} ", force_print=True)
+        # debug(f"undo time: {duration} ", force_print=True)
 
     def compute_changes_str(self, changes, thread_id):
         changes_str = []

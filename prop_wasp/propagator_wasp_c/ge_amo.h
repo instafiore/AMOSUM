@@ -14,7 +14,6 @@
 
 const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, AmoSumPropagator* propagator){
 
-    
     if (propagator->mps_violated) {
         create_reason_falses_ge(propagator);
         propagator->S.clear();
@@ -22,8 +21,9 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, Am
         return &propagator->S;
     }
 
-
+    // auto start = start_timer();
     propagator->S.clear();
+    std::vector<clingo_literal_t> derived_true ;
     for (Group* g : propagator->groups) {
         if (g == G || propagator->true_group->get(g) != SETTINGS::NONE) continue;
 
@@ -51,6 +51,7 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, Am
             }
             
             propagator->S.push_back(ml_g_res);
+            derived_true.push_back(ml_g_res);
             // propagator->propagated[ml_g_res] = true;
             propagate_to_true = true;
             
@@ -70,11 +71,16 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, Am
         }
     }
 
+    
     if (!propagator->S.empty() && propagator->dl != 0) {
         create_reason_falses_ge(propagator);
-        // propagator->compute_minimal_reason(propagator->reason, S);
+        // auto start = start_timer() ;
+        propagator->compute_minimal_reason(derived_true);
+        // display_end_timer(start, "compute_minimal_reason");
     }
 
     print_derivation(propagator->atomNames, propagator->S, false);
+    
+    // display_end_timer(start, "propagation_phase whole");
     return &propagator->S;
 }

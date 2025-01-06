@@ -76,7 +76,7 @@ struct AmoSumPropagator
     const std::vector<clingo_literal_t>* (*propagation_phase)(const Group*, AmoSumPropagator*); // Function pointer for propagation
     
     // treshold for lazy propagation activation
-    float LAZY_PERC = 0.98 ;
+    float LAZY_PERC = 0.99 ;
 
     // whether the mps is violated
     bool mps_violated = false ; 
@@ -141,7 +141,7 @@ struct AmoSumPropagator
     std::tuple<int, clingo_literal_t, clingo_literal_t> mps(Group* g, clingo_literal_t l, bool assumed);
     void updated_dl(int lit, int new_dl);
     inline bool is_in_aggregate(clingo_literal_t lit){ return aggregate->get(lit) || aggregate->get(not_(lit));}
-
+    void compute_minimal_reason(const std::vector<clingo_literal_t>& to_minimize);
 };
 
 

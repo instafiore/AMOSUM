@@ -71,7 +71,7 @@ class RunnerWasp:
     SILENT = ""
     # SILENT = "--silent=2"
 
-    TIMEOUT = 20
+    TIMEOUT = 60
     TIMEOUT_LIGHT = 10
 
     

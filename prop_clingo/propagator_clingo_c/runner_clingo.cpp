@@ -16,32 +16,32 @@ std::chrono::duration<double> whole_init_time(0.0);
 std::chrono::duration<double> whole_propagate_time(0.0);  
 std::chrono::duration<double> whole_undo_time(0.0);
 
-void register_propagator(clingo_control_t *ctl, clingo_propagator_t prop, std::string prop_type, ParameterMap param, std::vector<PropagatorClingo*> &propagators);
+void register_propagator(clingo_control_t *ctl, clingo_propagator_t prop, std::string prop_type, const ParameterMap& param, std::vector<PropagatorClingo*> &propagators);
 bool init(clingo_propagate_init_t *init, PropagatorClingo *propagator){
-    auto start = std::chrono::high_resolution_clock::now();
+    // auto start = std::chrono::high_resolution_clock::now();
     bool res =  propagator->init(init);
-    auto end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> elapsed = end - start;
-    debugf("init time: ",elapsed.count(), "s");
-    whole_init_time += elapsed;
+    // auto end = std::chrono::high_resolution_clock::now();
+    // std::chrono::duration<double> elapsed = end - start;
+    // debugf("init time: ",elapsed.count(), "s");
+    // whole_init_time += elapsed;
     return res;
 }
 bool propagate(clingo_propagate_control_t *control, const clingo_literal_t *changes, size_t size, PropagatorClingo *propagator){ 
-    auto start = std::chrono::high_resolution_clock::now();
+    // auto start = std::chrono::high_resolution_clock::now();
     bool res =  propagator->propagate(control, changes, size);
-    auto end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> elapsed = end - start;
-    debugf("propagate time: ",elapsed.count(), "s");
-    whole_propagate_time += elapsed;
+    // auto end = std::chrono::high_resolution_clock::now();
+    // std::chrono::duration<double> elapsed = end - start;
+    // debugf("propagate time: ",elapsed.count(), "s");
+    // whole_propagate_time += elapsed;
     return res;
 }
 void undo(clingo_propagate_control_t *control, const clingo_literal_t *changes, size_t size, PropagatorClingo *propagator){
-    auto start = std::chrono::high_resolution_clock::now();
+    // auto start = std::chrono::high_resolution_clock::now();
     propagator->undo(control, changes, size);
-    auto end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> elapsed = end - start;
-    debugf("undo time: ",elapsed.count(), "s");
-    whole_undo_time += elapsed;
+    // auto end = std::chrono::high_resolution_clock::now();
+    // std::chrono::duration<double> elapsed = end - start;
+    // debugf("undo time: ",elapsed.count(), "s");
+    // whole_undo_time += elapsed;
 }
 
 int main(int argc, char const *argv[])
@@ -109,11 +109,11 @@ int main(int argc, char const *argv[])
     handle_error(solve(ctl, &solve_ret));
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed = end - start;
-    debugf("whole solve time: ",elapsed.count(), "s")
+    // debugf("whole solve time: ",elapsed.count(), "s")
 
-    debugf("whole_init_time: ", whole_init_time.count(),"s");
-    debugf("whole_propagate_time: ", whole_propagate_time.count(),"s");
-    debugf("whole_undo_time: ", whole_undo_time.count(),"s");
+    // debugf("whole_init_time: ", whole_init_time.count(),"s");
+    // debugf("whole_propagate_time: ", whole_propagate_time.count(),"s");
+    // debugf("whole_undo_time: ", whole_undo_time.count(),"s");
 
     // Interpret the result
     if (solve_ret & clingo_solve_result_satisfiable) {
@@ -145,7 +145,7 @@ int main(int argc, char const *argv[])
 }
 
 void register_propagator(clingo_control_t *ctl, clingo_propagator_t prop, 
-    std::string prop_type, ParameterMap param,
+    std::string prop_type, const ParameterMap& param,
     std::vector<PropagatorClingo*> &propagators){
 
     std::tuple<bool, const std::vector<clingo_literal_t>* (*)(const Group*, AmoSumPropagator*), std::string> result = get_propagator_variables(prop_type);

@@ -66,7 +66,7 @@ bool PropagatorClingo::init(clingo_propagate_init_t *init){
     }
 
 
-    debug("atomNames: ", atomNames_to_string(atomNames));
+    // debug("atomNames: ", atomNames_to_string(atomNames));
 
     AmoSumPropagator* propagator = new AmoSumPropagator(atomNames, param, propagation_phase, ge, choice_cons, solver = AmoSumPropagator::CLINGO);
     for (size_t i = 0; i < nt; i++) this->propagators.push_back(propagator);
@@ -145,7 +145,6 @@ bool PropagatorClingo::add_clauses_propagated_lits(void *control, const std::vec
         handle_error(clingo_propagate_control_add_clause((clingo_propagate_control*) control, clause, clause_size, clingo_clause_type_learnt, &result_add_clause)) ;
         // debug("result_add_clause: ",result_add_clause, " plit: ", plit, " slit: ", slit, " name: ", get_name(atomNames, plit));
         
-        return true ;
         // if(R_plit != nullptr) delete R_plit ; // it is handled internally
 
         // propagation must return immediately, there is a conflict
@@ -181,11 +180,13 @@ bool PropagatorClingo::propagate(clingo_propagate_control_t *control, const clin
                 // Conflict added hence propagation has to stop
                 return true;
             }
+                  
         }
     }
-    
     return true;
 }
+
+
 
 std::string PropagatorClingo::compute_changes_str(const clingo_literal_t *changes, size_t size, int td){
     std::vector<std::string> changes_name_vec ; 
@@ -201,6 +202,8 @@ std::string PropagatorClingo::compute_changes_str(const clingo_literal_t *change
 
     return vector_to_string(changes_name_vec,"");
 }
+
+
 
 
 void PropagatorClingo::undo(clingo_propagate_control_t *control, const clingo_literal_t *changes, size_t size){

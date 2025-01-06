@@ -47,15 +47,27 @@ std::string get_name(const std::unordered_map<clingo_symbol_t, clingo_literal_t>
 clingo_symbol_t from_string_to_symbol(std::string str, const std::unordered_map<clingo_symbol_t, clingo_literal_t> &atomNames){return from_string_to_symbol_or_lit(str, atomNames, true);}
 clingo_literal_t from_string_to_lit(std::string str, const std::unordered_map<clingo_symbol_t, clingo_literal_t> &atomNames){return from_string_to_symbol_or_lit(str, atomNames, false);}
 int64_t from_string_to_symbol_or_lit(std::string str, const std::unordered_map<clingo_symbol_t, clingo_literal_t> &atomNames, bool sym){
-  
+    
+    // auto start = std::chrono::high_resolution_clock::now();
     for (const auto& [name, atom] : atomNames) {
         if (str == from_symbol_to_string(name)) {
+            // auto end = std::chrono::high_resolution_clock::now();
+            // std::chrono::duration<double> elapsed = end - start;
+            // debugf("duration from_symbol_to_string: ",elapsed.count());
             return sym ? name : atom; 
         }
     }
-
+    
     throw std::runtime_error(str+" is not present in atomNames");
     return 0; 
+}
+
+std::unordered_map<std::string, clingo_literal_t> create_atomNames_string(const std::unordered_map<clingo_symbol_t, clingo_literal_t> &atomNames){
+    std::unordered_map<std::string, clingo_literal_t> atomNamesString ;
+    for (const auto& [name, atom] : atomNames) {
+        atomNamesString[from_symbol_to_string(name)] = atom ;
+    }
+    return std::move(atomNamesString); 
 }
 
 std::vector<clingo_literal_t> create_assumptions_lits(
@@ -84,7 +96,7 @@ std::vector<clingo_literal_t> create_assumptions_lits(
 
 
 
-std::string atomNames_to_string(std::unordered_map<clingo_symbol_t, clingo_literal_t> atomNames){
+std::string atomNames_to_string(const std::unordered_map<clingo_symbol_t, clingo_literal_t>& atomNames){
     std::ostringstream oss;
     oss<< "{" ;
     for (const auto& [key, value] : atomNames) {
@@ -117,7 +129,7 @@ ParameterMap init_param(int argc, char const *argv[]) {
 }
 
 
-void print_unordered_map(std::unordered_map<std::string, std::string> map){
+void print_unordered_map(const std::unordered_map<std::string, std::string>& map){
     std::cout << unordered_map_to_string(map) << "\n" ; 
 }
 
@@ -388,6 +400,7 @@ void weights_names_log(const std::string& ID, const std::unordered_map<std::stri
 }
 
 void create_reason_falses_ge(AmoSumPropagator* propagator) {
+    // auto start = start_timer();
     propagator->reason.clear(); // Clear the existing reason vector.
 
     for (auto* g : propagator->groups) {
@@ -414,6 +427,8 @@ void create_reason_falses_ge(AmoSumPropagator* propagator) {
             propagator->reason.push_back(not_(propagator->true_group->get(g)));
         }
     }
+
+    // display_end_timer(start, "create_reason");
 }
 
 
@@ -448,7 +463,7 @@ void raise_wasp_not_implemented_exception(){
 }
 
 
-void print_derivation(const std::unordered_map<clingo_symbol_t, clingo_literal_t> atomNames, const std::vector<clingo_literal_t>& S, bool force_print = false){
+void print_derivation(const std::unordered_map<clingo_symbol_t, clingo_literal_t>& atomNames, const std::vector<clingo_literal_t>& S, bool force_print = false){
     bool debug_b = false ;
     #ifdef DEBUG
         debug_b = true ;
@@ -460,7 +475,7 @@ void print_derivation(const std::unordered_map<clingo_symbol_t, clingo_literal_t
 
 
 
-void print_reason(const std::unordered_map<clingo_symbol_t, clingo_literal_t> atomNames, const std::vector<clingo_literal_t>& R, clingo_literal_t lit, bool force_print = false){
+void print_reason(const std::unordered_map<clingo_symbol_t, clingo_literal_t>& atomNames, const std::vector<clingo_literal_t>& R, clingo_literal_t lit, bool force_print = false){
     bool debug_b = false ;
     #ifdef DEBUG
         debug_b = true ;
@@ -469,6 +484,38 @@ void print_reason(const std::unordered_map<clingo_symbol_t, clingo_literal_t> at
 
     std::string reason_name = "Reason("+std::to_string(lit)+") ";
     debug(vector_lit_to_string(atomNames, R, reason_name));
+}
+
+
+void print_reduction_reason(const AmoSumPropagator& propagator,
+                            const std::vector<clingo_literal_t>& reason_c,
+                            const std::vector<clingo_literal_t>& reason,
+                            clingo_literal_t lit, float p,
+                            bool force_print = false) {
+    bool debug_b = false;
+    #ifdef DEBUG
+        debug_b = true;
+    #endif;
+    
+    if (!force_print && !debug_b) return;
+    
+    // Generate redundant literals string for the first message
+    std::string redundant_lits_str = "from " + std::to_string(reason_c.size()) + " to " + std::to_string(reason.size()) +
+        " with p: " + std::to_string(p) + "%";
+
+    debugf(redundant_lits_str);
+}
+
+
+
+std::chrono::time_point<std::chrono::high_resolution_clock> start_timer(){
+    return std::chrono::high_resolution_clock::now(); 
+}
+
+void display_end_timer(const std::chrono::time_point<std::chrono::high_resolution_clock>& start, std::string name){
+    auto end = std::chrono::high_resolution_clock::now(); 
+    std::chrono::duration<double> elapsed = (end - start);
+    debugf(name," time: ", elapsed.count(), "s");
 }
 
 
@@ -535,7 +582,7 @@ clingo_literal_t max_w(const Group* g) {
     }
 }
 
-std::string vector_lit_to_string(std::unordered_map<clingo_symbol_t, clingo_literal_t> atomNames, const std::vector<clingo_literal_t>& vec, std::string name = ""){
+std::string vector_lit_to_string(const std::unordered_map<clingo_symbol_t, clingo_literal_t>& atomNames, const std::vector<clingo_literal_t>& vec, std::string name = ""){
     std::ostringstream oss;
     int n = vec.size() ;
     
@@ -690,4 +737,152 @@ void simplifyLiterals(
 
         assert(G->count_undef >= 0);
     }
+}
+
+
+int increment_f(int l, const std::unordered_set<clingo_literal_t>& current_subset_maximal,
+                const WeightFunction*& weight, const GroupFunction*& group,
+                int head_reason, const std::unique_ptr<InterpretationFunction>& I, int max_b) {
+    Group* g = group->get(l);
+    bool tr = false;
+
+    if (!g) {
+        l = not_(l);
+        g = group->get(l);
+        tr = true;
+    }
+
+    if (g->ord_l.size() <= 1) {
+        return 0;
+    }
+
+    int w = weight->get(l);
+
+    if (tr) {
+        int w_mw_g = g->ord_l.empty() ? w : weight->get(g->ord_l.back());
+        return w_mw_g - w;
+    } else {
+        int i = g->ord_l.size() - 1;
+        int mw_g;
+        Group* head_group = group->get(head_reason);
+
+        if (g == head_group) {
+            auto [sml_g, ml_g] = g->update(I, max_b, false, false, SETTINGS::NONE);
+            mw_g = weight->get(sml_g);
+        } else {
+            mw_g = weight->get(max_w(g));
+        }
+
+        int current_l = g->ord_l[i];
+        int increment = w - mw_g;
+
+        while (mw_g < weight->get(current_l)) {
+            if (std::find(current_subset_maximal.begin(), current_subset_maximal.end(), current_l) != current_subset_maximal.end()) {
+                increment = std::max(0, w - weight->get(current_l));
+                break;
+            }
+            if (--i <= 0) break;
+            current_l = g->ord_l[i];
+        }
+        return increment;
+    }
+}
+
+// Maximal subset with groups
+void maximal_subset_sum_less_than_s_with_groups(const std::vector<clingo_literal_t>& literals, int s,
+                                                           const WeightFunction* weight,
+                                                           const GroupFunction* group,
+                                                           int head_reason, const std::unique_ptr<InterpretationFunction>& I, int max,
+                                                           std::unordered_set<clingo_literal_t>& current_subset_maximal) {
+    current_subset_maximal.clear();
+    int current_sum = 0;
+
+    for (int l : literals) {
+        int inc = increment_f(l, current_subset_maximal, weight, group, head_reason, I, max);
+        if (current_sum + inc <= s) {
+            current_sum += inc;
+            current_subset_maximal.emplace(l);
+        }
+    }
+}
+
+// Compute increment literals
+std::unordered_map<int, int> compute_increment_literals(const std::vector<int>& literals,
+                                                        const GroupFunction* group,
+                                                        const WeightFunction* weight) {
+    std::unordered_map<int, int> increment;
+
+    for (int l : literals) {
+        Group* g = group->get(l);
+        bool tg = false;
+
+        if (!g) {
+            g = group->get(not_(l));
+            tg = true;
+        }
+
+        int mw_g = max_w(g);
+        int w_mw_g = weight->get(mw_g);
+        int w = weight->get(l);
+
+        int i = tg ? (weight->get(g->ord_l.back()) - w) : (w - w_mw_g);
+        increment[l] = i;
+    }
+    return increment;
+}
+
+// Get all literals below a literal
+std::vector<clingo_literal_t> get_all_lit_below_you(int lit, const GroupFunction* group,
+                                    const InterpretationFunction* I, const std::vector<int>& reason) {
+    std::vector<clingo_literal_t> res{lit};
+    Group* g = group->get(lit);
+
+    if (!g) {
+        g = group->get(not_(lit));
+        return res;
+    }
+
+    int start = g->ord_i[lit];
+
+    for (int i = start - 1; i >= 0; --i) {
+        int l = g->ord_l[i];
+        if (I->get(l) == 0) break;
+        if (std::find(reason.begin(), reason.end(), l) != reason.end()) {
+            res.push_back(l);
+        }
+    }
+    return res;
+}
+
+// Maximum subset sum with groups
+std::unordered_set<clingo_literal_t> maximum_subset_sum_less_than_s_with_groups(const std::vector<clingo_literal_t>& literals, int s,
+                                                            const GroupFunction* group,
+                                                            const WeightFunction* weight,
+                                                            const InterpretationFunction* I) {
+    int n = literals.size();
+    std::vector<std::vector<std::vector<clingo_literal_t>>> subset(s + 1, std::vector<std::vector<clingo_literal_t>>(n + 1));
+
+    for (int i = 0; i <= n; ++i) {
+        subset[0][i] = {};
+        if (i == 0) continue;
+        int l = literals[i - 1];
+        subset[0][i] = (weight->get(l) == 0) ? subset[0][i - 1] : subset[0][i - 1];
+    }
+
+    for (int i = 1; i <= s; ++i) {
+        for (int j = 1; j <= n; ++j) {
+            int lit = literals[j - 1];
+            int w = weight->get(lit);
+            subset[i][j] = subset[i][j - 1];
+
+            if (i >= w && !subset[i - w][j - 1].empty()) {
+                subset[i][j] = std::max(subset[i][j],
+                                        subset[i - w][j - 1],
+                                        [](const std::vector<clingo_literal_t>& a, const std::vector<clingo_literal_t>& b) {
+                                            return a.size() < b.size();
+                                        });
+            }
+        }
+    }
+    return std::unordered_set<clingo_literal_t>(subset[s][n].begin(), subset[s][n].end());
 }
