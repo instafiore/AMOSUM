@@ -15,6 +15,7 @@ class InstanceFactory:
         "researcher": (30, 0.19),
     }
 
+    SIGMA_P = 0.05
     max_hours_working_per_month = 125
     months = 12
 
@@ -73,7 +74,7 @@ class InstanceFactory:
     
     def _create_bound(self, mps):
         mu = mps * 0.5
-        sigma = mu * 0.1  
+        sigma = mu * InstanceFactory.SIGMA_P
         return  np.random.normal(mu, sigma)   
         
 
@@ -93,7 +94,7 @@ class InstanceFactory:
 class SatInstanceFactory(InstanceFactory):      
     def _create_bound(self, mps):
         mu = mps * 0.10
-        sigma = mu * 0.1  
+        sigma = mu * InstanceFactory.SIGMA_P
         return np.random.normal(mu, sigma)  
     
     def __repr__(self):
@@ -102,7 +103,7 @@ class SatInstanceFactory(InstanceFactory):
 class PossiblyUnsatInstanceFactory(InstanceFactory):
     def _create_bound(self, mps):
         mu = mps * 0.9
-        sigma = mu * 0.1  
+        sigma = mu * InstanceFactory.SIGMA_P
         return np.random.normal(mu, sigma)  
     
     def __repr__(self):
@@ -112,9 +113,9 @@ class PossiblyUnsatInstanceFactory(InstanceFactory):
 class BenchmarkCreator():
 
     instances_type_distribution = {
-        "sat": (SatInstanceFactory, 3),
-        "possibly_unsat": (PossiblyUnsatInstanceFactory, 3),
-        "middle": (InstanceFactory, 4),
+        "sat": (SatInstanceFactory, 1),
+        "possibly_unsat": (PossiblyUnsatInstanceFactory, 1),
+        "middle": (InstanceFactory, 1),
     }
 
     def __init__(self, project_configurations, people_configurations):
@@ -151,13 +152,13 @@ def main(argv):
 	# 	- projects 5-10-15
 	# 	- people 30-40-50-60
     project_configurations = (5, 10, 15)
-    people_configurations = (30, 40, 50, 60)
+    people_configurations = (20, 30, 40, 50)
     benchmarkCreator = BenchmarkCreator(project_configurations, people_configurations)
     
-    # benchmarkCreator.create_benchmark()
+    benchmarkCreator.create_benchmark()
     # benchmarkCreator.print_instance(PossiblyUnsatInstanceFactory(num_projects=5, num_people=10), "")
-    benchmarkCreator.print_instance(SatInstanceFactory(num_projects=10, num_people=30), "")
-    benchmarkCreator.print_instance(InstanceFactory(num_projects=5, num_people=15), "")
+    # benchmarkCreator.print_instance(SatInstanceFactory(num_projects=10, num_people=30), "")
+    # benchmarkCreator.print_instance(InstanceFactory(num_projects=5, num_people=15), "")
 
 if __name__ == "__main__":
     main(sys.argv)
