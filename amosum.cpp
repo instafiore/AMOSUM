@@ -31,7 +31,7 @@ const std::vector<clingo_literal_t> AmoSumPropagator::getLiterals(const std::vec
 
         
         // debug("N: ",N);
-        std::unordered_map<std::string, std::vector<clingo_literal_t>> groups_raw;
+        std::map<std::string, std::vector<clingo_literal_t>> groups_raw;
 
         lb = SETTINGS::NONE;
         ub = SETTINGS::NONE;
@@ -92,7 +92,7 @@ const std::vector<clingo_literal_t> AmoSumPropagator::getLiterals(const std::vec
                     weight->set(lit, w) ; 
                     weights_names[lit_str] = w ;
                     std::string group_id = from_symbol_to_string(terms[3]);
-
+                
                     std::vector<clingo_literal_t> G = get_map_value_vector(groups_raw, group_id);
                     G.push_back(lit);
                     groups_raw[group_id] = G ;

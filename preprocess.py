@@ -26,7 +26,7 @@ def preprocess_ground_program(file: str) -> dict:
     ignore_all = False
 
     result_map = dict()
-    amosum_set = set()
+    amosum_set = [] 
     for line in file.splitlines():
         if ignore_all:
             continue
@@ -44,7 +44,7 @@ def preprocess_ground_program(file: str) -> dict:
                     terms = getTerms(PREDICATE_AUX, l[1])
                     id = terms[0]
                     prop_type = terms[1]
-                    amosum_set.add(amosum_aggregate(id=id, prop_type=prop_type))
+                    amosum_set.append(amosum_aggregate(id=id, prop_type=prop_type))
 
 
     result_map["amosum_set"] = amosum_set

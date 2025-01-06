@@ -48,7 +48,7 @@ int main(int argc, char const *argv[])
 {
     debugf("propagator_clingo.cpp started");
 
-    std::unordered_map<std::string, std::string> params =  init_param(argc, argv);
+    ParameterMap params =  init_param(argc, argv);
     // print_unordered_map(params);
 
     std::string encoding_path = "" ;
@@ -75,8 +75,13 @@ int main(int argc, char const *argv[])
     int ret = 0;
     clingo_solve_result_bitset_t solve_ret;
     clingo_control_t *ctl = NULL;
-    handle_error(clingo_control_new(NULL, 0, NULL, NULL, 20, &ctl));
+    const char *args[] = {"--seed=42", "--parallel-mode=1"};
+    handle_error(clingo_control_new(args, 2, NULL, NULL, 20, &ctl));
     clingo_part_t parts[] = {{"base", NULL, 0 }};
+
+
+    clingo_configuration_t *config = NULL;
+    clingo_id_t root_key, solve_key, seed_key;
 
     // create a propagator with the functions above
     // using the default implementation for the model check
@@ -114,6 +119,14 @@ int main(int argc, char const *argv[])
     // debugf("whole_init_time: ", whole_init_time.count(),"s");
     // debugf("whole_propagate_time: ", whole_propagate_time.count(),"s");
     // debugf("whole_undo_time: ", whole_undo_time.count(),"s");
+
+    int max_count = 0 ;
+    for(auto propagator: propagators){
+        if (max_count < propagator->propagators[0]->count)
+            max_count = propagator->propagators[0]->count ;
+    }
+
+    debugf("Iterations: ", max_count);
 
     // Interpret the result
     if (solve_ret & clingo_solve_result_satisfiable) {

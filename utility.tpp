@@ -72,7 +72,16 @@ std::vector<V> get_map_value_vector(std::unordered_map<K, std::vector<V>>& umap,
     }
 
     return umap[key];
+}
 
+template <typename K, typename V>
+std::vector<V> get_map_value_vector(std::map<K, std::vector<V>>& umap, K key) {
+   
+    if (umap.find(key) == umap.end()) {
+        return std::vector<V>();
+    }
+
+    return umap[key];
 }
 
 template <typename K, typename V>
