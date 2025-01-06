@@ -23,11 +23,13 @@ const std::vector<clingo_literal_t> AmoSumPropagator::getLiterals(const std::vec
         groups.clear();  // Initialize as empty
         assumptions = get_map(params, std::string("ass"), SETTINGS::NONE_STR);
         current_sum = 0;
-        lazy_prop_activated = get_map(params, std::string("lazy"), SETTINGS::FALSE_STR) == SETTINGS::TRUE_STR;
+        std::string lazy_param = get_map(params, std::string("lazy"), SETTINGS::FALSE_STR) ;
+        lazy_prop_activated = lazy_param != SETTINGS::FALSE_STR;
+        bool lazy_dynamic = lazy_param == "dynamic" ;
+        LAZY_PERC = lazy_prop_activated && lazy_param != SETTINGS::TRUE_STR && !lazy_dynamic ? std::stoi(lazy_param) : LAZY_PERC ;
         lazy_condition = !lazy_prop_activated;
 
-        std::string lazy_perc_str = lazy_prop_activated ? " lazy threshold " + std::to_string(AmoSumPropagator::LAZY_PERC) : SETTINGS::NONE_STR;
-        debugf("Starting propagator with param ",unordered_map_to_string(params), lazy_perc_str);
+        
         // debug("N: ",N);
         std::unordered_map<std::string, std::vector<clingo_literal_t>> groups_raw;
 
@@ -119,6 +121,7 @@ const std::vector<clingo_literal_t> AmoSumPropagator::getLiterals(const std::vec
         
         // weights_names_log(ID, weights_names);
 
+        int max_diff = 0 ;
         for(auto &[group_id, lits_group]: groups_raw){
                 std::vector<std::pair<int, int>> lits_ord;
                 for (int lit : lits_group) lits_ord.emplace_back(lit, weight->get(lit));
@@ -136,7 +139,16 @@ const std::vector<clingo_literal_t> AmoSumPropagator::getLiterals(const std::vec
 
                 Group* G = new Group(ord_l,ord_i,group_id) ;
 
-                _mps = _mps + weight->get(m_w(G, ge)) ;
+                int max_w = weight->get(m_w(G, ge));
+                int min_w = weight->get(m_w(G, !ge)) ;
+
+
+                _mps = _mps + max_w;
+
+                int diff = std::abs(max_w - min_w) ;
+                // debugf("max_w: ", max_w, " min_w: ", min_w, " diff: ", diff);
+
+                if (max_diff < diff)  max_diff = diff ;
 
                 groups.push_back(G);
                 
@@ -159,7 +171,14 @@ const std::vector<clingo_literal_t> AmoSumPropagator::getLiterals(const std::vec
             }
         }
 
-        debugf("Intial mps of ",ID ,"is: ", _mps);
+        // max_diff = ge ? max_diff : -max_diff ;
+        if(lazy_dynamic) LAZY_PERC = ge ? lb / static_cast<float>(lb + max_diff) :  (ub - max_diff) / static_cast<float>(ub);
+        // debugf("max_diff ", max_diff)
+        std::string lazy_perc_str = lazy_prop_activated ? " lazy threshold " + std::to_string(AmoSumPropagator::LAZY_PERC) : SETTINGS::NONE_STR;
+        debugf("Starting propagator with param ",unordered_map_to_string(params), lazy_perc_str);
+
+
+        // debugf("Intial mps of ",ID ,"is: ", _mps);
 
         // Set facts to literals starting from index 1
         facts.assign(lits.begin() + 1, lits.end());
@@ -175,10 +194,10 @@ void AmoSumPropagator::update_lazy_propagation() {
         float p;
         if (ge) {
             mps_violated = _mps < lb;
-            p = bound / _mps;
+            p = bound / static_cast<float>(_mps);
         } else {
             mps_violated = _mps > ub;
-            p = _mps / bound;
+            p = _mps / static_cast<float>(bound);
         }
 
         lazy_condition = p >= AmoSumPropagator::LAZY_PERC;

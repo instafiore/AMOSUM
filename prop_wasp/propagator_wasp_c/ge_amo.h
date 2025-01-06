@@ -18,6 +18,7 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, Am
         create_reason_falses_ge(propagator);
         propagator->S.clear();
         propagator->S.push_back(not_(propagator->current_literal));
+        print_derivation(propagator->atomNames, propagator->S, false);
         return &propagator->S;
     }
 

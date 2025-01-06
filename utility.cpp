@@ -459,7 +459,7 @@ void raise_exception(std::string message){
 }
 
 void raise_wasp_not_implemented_exception(){
-    raise_exception("wasp not yet implemented");
+    raise_exception("wasp not implemented yet");
 }
 
 
@@ -470,7 +470,7 @@ void print_derivation(const std::unordered_map<clingo_symbol_t, clingo_literal_t
     #endif
     if (not force_print and not debug_b) return ;
 
-    debug(vector_lit_to_string(atomNames, S, "Derived"));
+    debugf(vector_lit_to_string(atomNames, S, "Derived"));
 }
 
 
