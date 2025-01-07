@@ -77,11 +77,11 @@ bool PropagatorClingo::init(clingo_propagate_init_t *init){
     extend_vector(lits, facts);
 
     std::vector<clingo_literal_t> to_watch_plit;
-    // auto start = std::chrono::high_resolution_clock::now();
+    auto start = std::chrono::high_resolution_clock::now();
     for (size_t i = 0; i < nt; i++) to_watch_plit = this->propagators[i]->getLiterals(lits) ;
-    // auto end = std::chrono::high_resolution_clock::now();
-    // std::chrono::duration<double> elapsed = end - start;
-    // debugf("getLiterals time: ",elapsed.count(), "s");
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed = end - start;
+    debugf("getLiterals time: ",elapsed.count(), "s");
 
     // debug(vector_lit_to_string(atomNames, to_watch_plit, "to watch: "))
     size_t max_clause_size = this->propagators[0]->N;

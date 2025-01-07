@@ -165,9 +165,9 @@ def main(argv):
     benchmarkCreator = BenchmarkCreator(project_configurations, people_configurations)
     
     # benchmarkCreator.create_benchmark()
-    # benchmarkCreator.print_instance(PossiblyUnsatInstanceFactory(num_projects=10, num_people=30), "")
+    benchmarkCreator.print_instance(PossiblyUnsatInstanceFactory(num_projects=5, num_people=20), "")
     # benchmarkCreator.print_instance(UnsatInstanceFactory(num_projects=10, num_people=30), "")
-    benchmarkCreator.print_instance(SatInstanceFactory(num_projects=10, num_people=20), "")
+    # benchmarkCreator.print_instance(SatInstanceFactory(num_projects=10, num_people=20), "")
     # benchmarkCreator.print_instance(InstanceFactory(num_projects=10, num_people=30), "")
 
 if __name__ == "__main__":
