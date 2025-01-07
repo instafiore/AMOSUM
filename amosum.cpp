@@ -28,7 +28,8 @@ const std::vector<clingo_literal_t> AmoSumPropagator::getLiterals(const std::vec
         std::string lazy_param = get_map(params, std::string("lazy"), SETTINGS::FALSE_STR) ;
         lazy_prop_activated = lazy_param != SETTINGS::FALSE_STR;
         bool lazy_dynamic = lazy_param == "dynamic" ;
-        LAZY_PERC = lazy_prop_activated && lazy_param != SETTINGS::TRUE_STR && !lazy_dynamic ? std::stoi(lazy_param) : LAZY_PERC ;
+  
+        LAZY_PERC = lazy_prop_activated && lazy_param != SETTINGS::TRUE_STR && !lazy_dynamic ? std::stof(lazy_param) : LAZY_PERC ;
         lazy_condition = !lazy_prop_activated;
 
         
