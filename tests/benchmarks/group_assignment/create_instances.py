@@ -1,4 +1,4 @@
-#!/Users/instafiore/instafiore_env/bin/python
+#!/home/s.fiorentino/miniconda3/bin/python
 import re
 import os
 import sys
@@ -15,7 +15,7 @@ class InstanceFactory:
         "researcher": (30, 0.19),
     }
 
-    SIGMA_P = 0.05
+    SIGMA_P = 0.001
     max_hours_working_per_month = 125
     months = 12
 
@@ -70,13 +70,7 @@ class InstanceFactory:
             for _ in range(self.map_project_duration[pro]):
                 mps += salary *  InstanceFactory.max_hours_working_per_month
         
-        return mps
-    
-    def _create_bound(self, mps):
-        mu = mps * 1 / self.num_projects
-        sigma = mu * InstanceFactory.SIGMA_P
-        return  np.random.normal(mu, sigma)   
-        
+        return mps    
 
     def __create_project_bounds(self):
         for pro in self.map_project_duration:
@@ -90,6 +84,11 @@ class InstanceFactory:
     
     def __str__(self):
         return self.__repr__()
+    
+    def _create_bound(self, mps):
+        mu = mps * 1 / self.num_projects
+        sigma = mu * InstanceFactory.SIGMA_P
+        return  np.random.normal(mu, sigma)
 
 class SatInstanceFactory(InstanceFactory):      
     def _create_bound(self, mps):
@@ -102,7 +101,7 @@ class SatInstanceFactory(InstanceFactory):
     
 class PossiblyUnsatInstanceFactory(InstanceFactory):
     def _create_bound(self, mps):
-        mu = mps * (1 - 1 / self.num_projects)
+        mu = mps * 0.9
         sigma = mu * InstanceFactory.SIGMA_P
         return np.random.normal(mu, sigma)  
     
@@ -111,20 +110,21 @@ class PossiblyUnsatInstanceFactory(InstanceFactory):
     
 class UnsatInstanceFactory(InstanceFactory):
     def _create_bound(self, mps):
-        mu = mps
+        mu = mps + 1
         sigma = mu * InstanceFactory.SIGMA_P
         return np.random.normal(mu, sigma)  
     
     def __repr__(self):
-        return "punsat"
+        return "unsat"
     
 
 class BenchmarkCreator():
 
     instances_type_distribution = {
-        "sat": (SatInstanceFactory, 1),
-        "possibly_unsat": (PossiblyUnsatInstanceFactory, 1),
-        "middle": (InstanceFactory, 1),
+        "sat": (SatInstanceFactory, 3),
+        "possibly_unsat": (PossiblyUnsatInstanceFactory, 3),
+        "middle": (InstanceFactory, 3),
+        "unsat": (UnsatInstanceFactory, 1),
     }
 
     def __init__(self, project_configurations, people_configurations):
@@ -160,14 +160,15 @@ def main(argv):
     # Possible configurations
 	# 	- projects 5-10-15
 	# 	- people 30-40-50-60
-    project_configurations = (5, 10, 15)
-    people_configurations = (20, 30, 40, 50)
+    project_configurations = (10, 15, 20)
+    people_configurations = (30, 40, 50, 60)
     benchmarkCreator = BenchmarkCreator(project_configurations, people_configurations)
     
-    benchmarkCreator.create_benchmark()
-    # benchmarkCreator.print_instance(PossiblyUnsatInstanceFactory(num_projects=10, num_people=20), "")
-    # benchmarkCreator.print_instance(SatInstanceFactory(num_projects=5, num_people=10), "")
-    benchmarkCreator.print_instance(InstanceFactory(num_projects=30, num_people=60), "")
+    # benchmarkCreator.create_benchmark()
+    # benchmarkCreator.print_instance(PossiblyUnsatInstanceFactory(num_projects=10, num_people=30), "")
+    # benchmarkCreator.print_instance(UnsatInstanceFactory(num_projects=10, num_people=30), "")
+    benchmarkCreator.print_instance(SatInstanceFactory(num_projects=10, num_people=20), "")
+    # benchmarkCreator.print_instance(InstanceFactory(num_projects=10, num_people=30), "")
 
 if __name__ == "__main__":
     main(sys.argv)

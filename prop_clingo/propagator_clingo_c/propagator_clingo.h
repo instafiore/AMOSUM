@@ -34,6 +34,8 @@ public:
     // inverse of map_slit_plit
     std::unordered_map<clingo_literal_t, clingo_literal_t> map_plit_slit ;
 
+    clingo_literal_t* clause_clingo ;
+
     PropagatorClingo(
             const std::unordered_map<std::string, std::string>& param,
             const std::vector<clingo_literal_t>* (*propagation_phase)(const Group*, AmoSumPropagator*),
@@ -61,5 +63,6 @@ public:
         for(auto& prop: propagators){
             delete prop;
         }
+        if(clause_clingo) delete clause_clingo ;
     }
 };

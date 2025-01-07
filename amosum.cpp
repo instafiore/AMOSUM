@@ -18,6 +18,8 @@ const std::vector<clingo_literal_t> AmoSumPropagator::getLiterals(const std::vec
         aggregate.reset(new AggregateFunction(N));
         reason_trues.reset(new PerfectHash<std::vector<clingo_literal_t>*> (N, nullptr));
         redundant_lits.reset(new PerfectHash<std::unordered_set<clingo_literal_t>*> (N, nullptr));
+        to_be_propagated.reset(new PerfectHash<bool>(N, false));
+
         _mps = 0;
         ID = get_map(params, std::string("id"), std::string("0"));
         groups.clear();  // Initialize as empty
@@ -119,7 +121,7 @@ const std::vector<clingo_literal_t> AmoSumPropagator::getLiterals(const std::vec
         
         // debug("bound: ",bound);
         
-        weights_names_log(ID, weights_names);
+        // weights_names_log(ID, weights_names);
 
         int max_diff = 0 ;
         for(auto &[group_id, lits_group]: groups_raw){
@@ -222,6 +224,7 @@ std::pair<bool, Group*> AmoSumPropagator::update_phase(clingo_literal_t l, int d
 
         bool amo_condition = false;
         if (aggregate->get(l)) {
+            to_be_propagated->set(l, false);
             G = group->get(l);
             G->decrease_und();
             true_group->set(G,l);
@@ -230,6 +233,7 @@ std::pair<bool, Group*> AmoSumPropagator::update_phase(clingo_literal_t l, int d
             tg = true;
             current_sum += w_n;
         } else if (aggregate->get(not_(l))) {
+            to_be_propagated->set(not_(l), false);
             G = group->get(not_(l));
             G->decrease_und();
             auto [new_lit, prev] = G->update(I, ge, false, false, l);

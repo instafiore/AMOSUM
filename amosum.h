@@ -97,13 +97,14 @@ struct AmoSumPropagator
     int _mps;    // max/min possible sum
     int ub;      // upper bound
     int bound = SETTINGS::NONE ; // either lb or ub depending on ge
-    clingo_literal_t current_literal;
+    std::unique_ptr<PerfectHash<bool>> to_be_propagated ;
 
     std::string solver; 
     static constexpr const char* CLINGO = "clingo";
     static constexpr const char* WASP = "wasp";
 
     unsigned long count = 0 ;
+    clingo_literal_t current_literal;
 
     AmoSumPropagator(){}
     AmoSumPropagator(
