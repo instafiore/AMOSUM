@@ -73,7 +73,7 @@ class InstanceFactory:
         return mps
     
     def _create_bound(self, mps):
-        mu = mps * 0.5
+        mu = mps * 1 / self.num_projects
         sigma = mu * InstanceFactory.SIGMA_P
         return  np.random.normal(mu, sigma)   
         
@@ -93,7 +93,7 @@ class InstanceFactory:
 
 class SatInstanceFactory(InstanceFactory):      
     def _create_bound(self, mps):
-        mu = mps * 0.10
+        mu = mps * 1 / self.num_projects * 1 / 4
         sigma = mu * InstanceFactory.SIGMA_P
         return np.random.normal(mu, sigma)  
     
@@ -102,7 +102,16 @@ class SatInstanceFactory(InstanceFactory):
     
 class PossiblyUnsatInstanceFactory(InstanceFactory):
     def _create_bound(self, mps):
-        mu = mps * 0.9
+        mu = mps * (1 - 1 / self.num_projects)
+        sigma = mu * InstanceFactory.SIGMA_P
+        return np.random.normal(mu, sigma)  
+    
+    def __repr__(self):
+        return "punsat"
+    
+class UnsatInstanceFactory(InstanceFactory):
+    def _create_bound(self, mps):
+        mu = mps
         sigma = mu * InstanceFactory.SIGMA_P
         return np.random.normal(mu, sigma)  
     
@@ -156,9 +165,9 @@ def main(argv):
     benchmarkCreator = BenchmarkCreator(project_configurations, people_configurations)
     
     benchmarkCreator.create_benchmark()
-    # benchmarkCreator.print_instance(PossiblyUnsatInstanceFactory(num_projects=5, num_people=10), "")
-    # benchmarkCreator.print_instance(SatInstanceFactory(num_projects=10, num_people=30), "")
-    # benchmarkCreator.print_instance(InstanceFactory(num_projects=5, num_people=15), "")
+    # benchmarkCreator.print_instance(PossiblyUnsatInstanceFactory(num_projects=10, num_people=20), "")
+    # benchmarkCreator.print_instance(SatInstanceFactory(num_projects=5, num_people=10), "")
+    benchmarkCreator.print_instance(InstanceFactory(num_projects=30, num_people=60), "")
 
 if __name__ == "__main__":
     main(sys.argv)

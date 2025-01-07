@@ -27,11 +27,11 @@ bool init(clingo_propagate_init_t *init, PropagatorClingo *propagator){
     return res;
 }
 bool propagate(clingo_propagate_control_t *control, const clingo_literal_t *changes, size_t size, PropagatorClingo *propagator){ 
-    // auto start = std::chrono::high_resolution_clock::now();
+    auto start = std::chrono::high_resolution_clock::now();
     bool res =  propagator->propagate(control, changes, size);
-    // auto end = std::chrono::high_resolution_clock::now();
-    // std::chrono::duration<double> elapsed = end - start;
-    // debugf("propagate time: ",elapsed.count(), "s");
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed = end - start;
+    // debugf(propagator->propagators[0]->ID, " propagate time: ",elapsed.count(), "s");
     // whole_propagate_time += elapsed;
     return res;
 }

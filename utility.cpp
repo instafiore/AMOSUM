@@ -390,14 +390,14 @@ void remove_elements(std::vector<clingo_literal_t>& original, const std::unorder
         original.end());
 }
 
-// void weights_names_log(const std::string& ID, const std::unordered_map<std::string, int>& weights_names) {
+void weights_names_log(const std::string& ID, const std::unordered_map<std::string, int>& weights_names) {
     
-//     nlohmann::json json_weights = weights_names; // Convert weights_names to JSON
-//     std::ostringstream oss;
-//     oss << "id: " << ID << " total_weight_names: " << json_weights.dump();
-//     debugf(oss.str());
+    nlohmann::json json_weights = weights_names; // Convert weights_names to JSON
+    std::ostringstream oss;
+    oss << "id: " << ID << " total_weight_names: " << json_weights.dump();
+    debugf(oss.str());
     
-// }
+}
 
 void create_reason_falses_ge(AmoSumPropagator* propagator) {
     // auto start = start_timer();

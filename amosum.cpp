@@ -119,7 +119,7 @@ const std::vector<clingo_literal_t> AmoSumPropagator::getLiterals(const std::vec
         
         // debug("bound: ",bound);
         
-        // weights_names_log(ID, weights_names);
+        weights_names_log(ID, weights_names);
 
         int max_diff = 0 ;
         for(auto &[group_id, lits_group]: groups_raw){
@@ -380,6 +380,8 @@ const std::vector<clingo_literal_t>* AmoSumPropagator::onLiteralTrue(const cling
     }
     
     const std::vector<clingo_literal_t>* propagated = next_phase ? propagation_phase(G, this) : nullptr;
+
+    // if(next_phase) debugf(ID," propagated");
     
     return propagated ;
 }
