@@ -86,6 +86,10 @@ struct AmoSumPropagator
     bool lazy_prop_activated = false;
     bool lazy_condition ;
 
+    // size_t count_S = 0 ;
+    // size_t count_R = 0 ;
+
+
     // whether is inconsistent or not at level 0
     bool inconsistent_at_level_0 ;
 

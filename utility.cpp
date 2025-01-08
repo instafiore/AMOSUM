@@ -410,9 +410,7 @@ void create_reason_falses_ge(AmoSumPropagator* propagator) {
 
             for (int i = static_cast<int>(g->ord_l.size()) - 1; i >= 0; --i) {
                 clingo_literal_t l = g->ord_l[i];
-                if (propagator->weight->get(l) < mw_g) {
-                    break;
-                }
+                if (propagator->weight->get(l) < mw_g) break;
                 if (propagator->I->get(l) != SETTINGS::NONE) {
                     propagator->reason.push_back(l);
                 }

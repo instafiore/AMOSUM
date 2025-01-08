@@ -22,7 +22,6 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, Am
         return &propagator->S;
     }
 
-    // auto start = start_timer();
     propagator->S.clear();
     std::vector<clingo_literal_t> derived_true ;
     for (Group* g : propagator->groups) {
@@ -76,8 +75,9 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, Am
         }
     }
 
-    
+    // propagator->count_S++;
     if (!propagator->S.empty() && propagator->dl != 0) {
+        // propagator->count_R++;
         create_reason_falses_ge(propagator);
         // auto start = start_timer() ;
         propagator->compute_minimal_reason(derived_true);
@@ -86,6 +86,5 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, Am
 
     print_derivation(propagator->atomNames, propagator->S, false);
     
-    // display_end_timer(start, "propagation_phase whole");
     return &propagator->S;
 }

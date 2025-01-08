@@ -124,6 +124,10 @@ int main(int argc, char const *argv[])
     for(auto propagator: propagators){
         if (max_count < propagator->propagators[0]->count)
             max_count = propagator->propagators[0]->count ;
+        // size_t count_S = propagator->propagators[0]->count_S;
+        // size_t count_R = propagator->propagators[0]->count_R;
+        // if(count_S == 0) debugf("no propagation")
+        // else debugf("count_S ",count_S, " count_R ", count_R," percentage of reason per propagation ", count_R / static_cast<double>(count_S));
     }
 
     debugf("Iterations: ", max_count);
