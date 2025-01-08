@@ -25,7 +25,7 @@ const std::vector<clingo_literal_t> AmoSumPropagator::getLiterals(const std::vec
         groups.clear();  // Initialize as empty
         assumptions = get_map(params, std::string("ass"), SETTINGS::NONE_STR);
         current_sum = 0;
-        std::string lazy_param = get_map(params, std::string("lazy"), SETTINGS::FALSE_STR) ;
+        std::string lazy_param = get_map(params, std::string("lazy"), std::string("dynamic")) ;
         lazy_prop_activated = lazy_param != SETTINGS::FALSE_STR;
         bool lazy_dynamic = lazy_param == "dynamic" ;
   
