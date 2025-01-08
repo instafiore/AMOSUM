@@ -39,7 +39,7 @@ class RunnerWasp:
     PRINT_RUN = True
 
     # whether printing the output of the solver
-    PRINT_OUTPUT_SOLVER = False
+    PRINT_OUTPUT_SOLVER = True
 
     # whether printing the error output of the solver
     PRINT_ERROR_SOLVER = True
@@ -378,24 +378,22 @@ class RunnerWasp:
         lines_error = error.splitlines() 
         
         output = output.strip()
-        
-        if RunnerWasp.PRINT_OUTPUT_SOLVER and output != "" :
-            print(f"{output}")
 
         avoiding_time_information_regex = r"(real \d+\.\d+|user \d+\.\d+|sys \d+\.\d+)"
         possible_error = False
+        output = re.sub(avoiding_time_information_regex, "", error, count=0, flags=0).strip()
         if re.search(r"err", error):
             possible_error
 
         print("possible error detected") if possible_error else ""
         
-        error = re.sub(avoiding_time_information_regex, "", error, count=0, flags=0).strip()
+        # error = re.sub(avoiding_time_information_regex, "", error, count=0, flags=0).strip()
         if RunnerWasp.PRINT_ERROR_SOLVER and error != "":
             print(error, file=sys.stderr)
 
         regex_real = r"^real\s(\d+\.\d+)"
         # regex for the answer set of a given problem
-        regex_answer_set = r"^\{(.+)\}"
+        regex_answer_set = r"\{(.+)\}"
         
         # regex for the interested atoms of a given problem
         regex_query = self.get_regex_query_atom_answerset()
@@ -409,6 +407,8 @@ class RunnerWasp:
                 answer_set = set([match[0] for match in re.findall(regex_query, answer_set_str)]) if self.problem != RunnerWasp.NPD else answer_set_str.split(", ")
                 # print(f"line:{line} regex_query: {regex_query} answer_set:{answer_set}")
                 answer_sets.append(set(answer_set))
+            elif RunnerWasp.PRINT_OUTPUT_SOLVER:
+                print(line)
         
         for line in lines_error:
             if not re.search(regex_real, line) is None:

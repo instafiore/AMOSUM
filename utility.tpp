@@ -91,10 +91,12 @@ V get_map(std::unordered_map<K, V>& umap, K key, V default_value) {
 }
 
 template< typename T>
-void extend_vector(std::vector<T>& to_extend, const std::vector<T>& input, size_t i = 0, int j = -1){
-    if (j==-1) j=input.size();
+void extend_vector(std::vector<T>& to_extend, const std::vector<T>& input, int i = 0, int j = -1){
 
-    for (; i < j; i++)    to_extend.push_back(input[i]);
+    if (j == -1 || j > input.size()) j = input.size();
+    if (i < 0) i = 0;
+
+    for (; i < j; i++) to_extend.push_back(input[i]);
 }
 
 
