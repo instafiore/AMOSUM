@@ -326,17 +326,17 @@ bool solve(clingo_control_t *ctl, clingo_solve_result_bitset_t *result) {
     handle_error(clingo_control_solve(ctl, clingo_solve_mode_yield, NULL, 0, NULL, NULL, &handle));
     // loop over all models
 
+   
     
- 
     while (true) {
         handle_error(clingo_solve_handle_resume(handle));
         handle_error(clingo_solve_handle_model(handle, &model));
-        
+    
         // print the model
         if (model) { print_model(model);}
         // stop if there are no more models
         else       { 
-            break; 
+        break;
         }
     }
 
@@ -404,20 +404,15 @@ void create_reason_falses_ge(AmoSumPropagator* propagator) {
     propagator->reason.clear(); // Clear the existing reason vector.
 
     for (auto* g : propagator->groups) {
-        auto ord_l = g->ord_l;
-
-        if (g->count_undef == 0 && propagator->true_group->get(g) == SETTINGS::NONE) {
-            // Appending reversed(ord_l) to reason
-            // propagator->reason.insert(propagator->reason.end(), ord_l.rbegin(), ord_l.rend());
-            extend_vector(propagator->reason, ord_l);
-        } 
-        else if (propagator->true_group->get(g) == SETTINGS::NONE) {
+        if (propagator->true_group->get(g) == SETTINGS::NONE) {
             clingo_literal_t ml_g = m_w(g, propagator->ge);
             int mw_g = propagator->weight->get(ml_g);
 
-            for (int i = static_cast<int>(ord_l.size()) - 1; i >= 0; --i) {
-                clingo_literal_t l = ord_l[i];
-                if (propagator->weight->get(l) < mw_g) break;
+            for (int i = static_cast<int>(g->ord_l.size()) - 1; i >= 0; --i) {
+                clingo_literal_t l = g->ord_l[i];
+                if (propagator->weight->get(l) < mw_g) {
+                    break;
+                }
                 if (propagator->I->get(l) != SETTINGS::NONE) {
                     propagator->reason.push_back(l);
                 }
@@ -439,9 +434,8 @@ void create_reason_falses_le(AmoSumPropagator* propagator) {
         if (propagator->true_group->get(g) == SETTINGS::NONE) {
             clingo_literal_t ml_g = m_w(g, !propagator->ge); // Use min_w when `ge` is false.
             int mw_g = propagator->weight->get(ml_g);
-            auto ord_l = g->ord_l;
-
-            for (clingo_literal_t l : ord_l) {
+            
+            for (clingo_literal_t l : g->ord_l) {
                 if (propagator->weight->get(l) > mw_g) break;
                 if (propagator->I->get(l) != SETTINGS::NONE) {
                     propagator->reason.push_back(l);

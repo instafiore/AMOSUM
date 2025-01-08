@@ -87,11 +87,11 @@ class RunnerClingoC(RunnerWasp):
         
         output = output.strip()
         
-        if RunnerWasp.PRINT_OUTPUT_SOLVER and output != "" :
-            print(f"{output}")
+        # if RunnerWasp.PRINT_OUTPUT_SOLVER and output != "" :
+        #     print(f"{output}")
 
         avoiding_time_information_regex = r"(real \d+\.\d+|user \d+\.\d+|sys \d+\.\d+)"
-        error = re.sub(avoiding_time_information_regex, "", error, count=0, flags=0).strip()
+        # error = re.sub(avoiding_time_information_regex, "", error, count=0, flags=0).strip()
         if RunnerWasp.PRINT_ERROR_SOLVER and error != "":
             print(error, file=sys.stderr)
 
@@ -104,6 +104,9 @@ class RunnerClingoC(RunnerWasp):
 
         answer_sets = []
 
+        # if RunnerWasp.PRINT_OUTPUT_SOLVER:
+        #         print(output)
+
         for line in lines_output:
             if not re.search(regex_answer_set, line) is None:
                 answer_set_str = re.search(regex_answer_set, line).group(1)
@@ -111,6 +114,8 @@ class RunnerClingoC(RunnerWasp):
                 answer_set = set([match[0] for match in re.findall(regex_query, answer_set_str)]) if self.problem != RunnerWasp.NPD else answer_set_str.split(", ")
                 # print(f"line:{line} regex_query: {regex_query} answer_set:{answer_set}")
                 answer_sets.append(set(answer_set))
+            elif RunnerWasp.PRINT_OUTPUT_SOLVER:
+                print(line)
         
         time = "error"
         for line in lines_error:
