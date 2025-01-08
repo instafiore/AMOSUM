@@ -13,7 +13,7 @@ const std::vector<clingo_literal_t> AmoSumPropagator::getLiterals(const std::vec
         strategy = get_map(params, std::string("strategy"), strategy);
         N = lits[0] + 1;
         I.reset(new InterpretationFunction(N));
-        weight.reset(new WeightFunction(N));
+        weight = new WeightFunction(N);
         group.reset(new GroupFunction(N));
         aggregate.reset(new AggregateFunction(N));
         reason_trues.reset(new PerfectHash<std::vector<clingo_literal_t>*> (N, nullptr));
@@ -51,7 +51,7 @@ const std::vector<clingo_literal_t> AmoSumPropagator::getLiterals(const std::vec
         
         std::unordered_map<std::string, clingo_literal_t> atomNamesString(create_atomNames_string(atomNames));
 
-        for(auto &[symbolic_atom, literal]: atomNames){
+        for(auto &[symbolic_atom, literal]: *atomNames){
              
             std::string a = from_symbol_to_string(symbolic_atom);
             if (a.length() > SETTINGS::PREDICATE_GROUP.length() and a.substr(0, SETTINGS::PREDICATE_GROUP.length() + 1) == SETTINGS::PREDICATE_GROUP + "(") {
@@ -515,7 +515,7 @@ void AmoSumPropagator::compute_minimal_reason(const std::vector<clingo_literal_t
         else rd->clear();
 
         if (minimization == Minimize::MINIMAL) {
-            maximal_subset_sum_less_than_s_with_groups(reason, s, weight.get(), group.get(), l, I, ge, *rd);
+            maximal_subset_sum_less_than_s_with_groups(reason, s, weight, group.get(), l, I, ge, *rd);
         } else if (minimization == Minimize::CARDINALITY_MINIMAL) {
             // auto increment = compute_increment_literals(
             //     reason,

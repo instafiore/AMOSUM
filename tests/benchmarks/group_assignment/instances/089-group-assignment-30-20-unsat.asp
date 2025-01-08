@@ -1,23 +1,23 @@
-project_month(1, 3, 8).
-project_month(2, 5, 7).
-project_month(3, 7, 9).
-project_month(4, 3, 8).
+project_month(1, 1, 6).
+project_month(2, 2, 7).
+project_month(3, 1, 12).
+project_month(4, 1, 6).
 project_month(5, 1, 12).
 project_month(6, 1, 12).
-project_month(7, 6, 11).
-project_month(8, 1, 12).
-project_month(9, 3, 8).
+project_month(7, 7, 12).
+project_month(8, 3, 8).
+project_month(9, 4, 9).
 project_month(10, 1, 12).
-project_month(11, 5, 7).
-project_month(12, 1, 12).
-project_month(13, 1, 12).
+project_month(11, 7, 9).
+project_month(12, 3, 8).
+project_month(13, 7, 9).
 project_month(14, 5, 7).
-project_month(15, 6, 11).
-project_month(16, 4, 6).
-project_month(17, 6, 11).
-project_month(18, 2, 7).
-project_month(19, 1, 12).
-project_month(20, 1, 3).
+project_month(15, 2, 7).
+project_month(16, 7, 12).
+project_month(17, 7, 12).
+project_month(18, 1, 12).
+project_month(19, 4, 9).
+project_month(20, 1, 12).
 role(1, full_professor).
 role(2, full_professor).
 role(3, full_professor).
@@ -48,24 +48,24 @@ role(27, researcher).
 role(28, researcher).
 role(29, researcher).
 role(30, researcher).
-project(1, 1110056, 1332067).
-project(2, 555149, 666179).
-project(3, 554924, 665909).
-project(4, 1109915, 1331898).
-project(5, 2222166, 2666599).
-project(6, 2222585, 2667102).
-project(7, 1108182, 1329818).
-project(8, 2217347, 2660816).
-project(9, 1108195, 1329834).
-project(10, 2221216, 2665459).
-project(11, 555139, 666167).
-project(12, 2217541, 2661049).
-project(13, 2221641, 2665969).
-project(14, 554435, 665322).
-project(15, 1109447, 1331336).
-project(16, 555161, 666193).
-project(17, 1110026, 1332031).
-project(18, 1107789, 1329347).
-project(19, 2221802, 2666162).
-project(20, 554357, 665228).
+project(1, 1110532, 1332638).
+project(2, 1109581, 1331497).
+project(3, 2223276, 2667931).
+project(4, 1108423, 1330108).
+project(5, 2216319, 2659583).
+project(6, 2219356, 2663227).
+project(7, 1110336, 1332403).
+project(8, 1108434, 1330121).
+project(9, 1110137, 1332164).
+project(10, 2220006, 2664007).
+project(11, 555505, 666606).
+project(12, 1112610, 1335132).
+project(13, 554834, 665801).
+project(14, 554824, 665789).
+project(15, 1111527, 1333832).
+project(16, 1110749, 1332899).
+project(17, 1107916, 1329499).
+project(18, 2217768, 2661322).
+project(19, 1111301, 1333561).
+project(20, 2219914, 2663897).
 person(1..30).

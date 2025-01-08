@@ -58,10 +58,10 @@ std::string unordered_map_to_string(const std::unordered_map<Key, Value>& map);
 std::vector<std::string> split(const std::string& str, char delimiter);
 std::string cat(const std::string &filename);
 std::string from_symbol_to_string(clingo_symbol_t sym);
-clingo_symbol_t from_string_to_symbol(std::string str, const std::unordered_map<clingo_symbol_t, clingo_literal_t> &atomNames);
-clingo_literal_t from_string_to_lit(std::string str, const std::unordered_map<clingo_symbol_t, clingo_literal_t> &atomNames);
-int64_t from_string_to_symbol_or_lit(std::string str, const std::unordered_map<clingo_symbol_t, clingo_literal_t> &atomNames, bool sym);
-std::unordered_map<std::string, clingo_literal_t> create_atomNames_string(const std::unordered_map<clingo_symbol_t, clingo_literal_t> &atomNames);
+clingo_symbol_t from_string_to_symbol(std::string str, const std::unordered_map<clingo_symbol_t, clingo_literal_t> *atomNames);
+clingo_literal_t from_string_to_lit(std::string str, const std::unordered_map<clingo_symbol_t, clingo_literal_t> *atomNames);
+int64_t from_string_to_symbol_or_lit(std::string str, const std::unordered_map<clingo_symbol_t, clingo_literal_t> *atomNames, bool sym);
+std::unordered_map<std::string, clingo_literal_t> create_atomNames_string(const std::unordered_map<clingo_symbol_t, clingo_literal_t> *atomNames);
 void handle_error(bool success);
 bool print_model(clingo_model_t const *model);
 bool solve(clingo_control_t *ctl, clingo_solve_result_bitset_t *result);
@@ -123,7 +123,7 @@ public:
     std::pair<clingo_literal_t, clingo_literal_t> update(const std::unique_ptr<InterpretationFunction>& I, bool max, bool all, bool update, const clingo_literal_t& assuming_und);
 
     // Print the group
-    void print_group(const std::unordered_map<int, std::string>& atomNames) const;
+    void print_group(const std::unordered_map<int, std::string>* atomNames) const;
 
     // Overloaded stream operator for printing
     friend std::ostream& operator<<(std::ostream& os, const Group& g) {
@@ -181,16 +181,16 @@ void create_reason_falses_ge(AmoSumPropagator* propagator);
 void create_reason_falses_le(AmoSumPropagator* propagator);
 std::tuple<bool, const std::vector<clingo_literal_t>* (*)(const Group*, AmoSumPropagator*), std::string>  get_propagator_variables(std::string prop_type);
 // Function to get the name
-std::string get_name(const std::unordered_map<clingo_symbol_t, clingo_literal_t>& atomNames, clingo_literal_t lit);
+std::string get_name(const std::unordered_map<clingo_symbol_t, clingo_literal_t>* atomNames, clingo_literal_t lit);
 void print_propagate(PropagatorClingo* prop, const clingo_literal_t *changes, size_t size, clingo_propagate_control_t *control, int dl, bool force_print, bool wasp_b);
-void print_derivation(const std::unordered_map<clingo_symbol_t, clingo_literal_t>& atomNames, const std::vector<clingo_literal_t>& S, bool force_print);
+void print_derivation(const std::unordered_map<clingo_symbol_t, clingo_literal_t>* atomNames, const std::vector<clingo_literal_t>& S, bool force_print);
 void print_undo(PropagatorClingo* prop, const clingo_literal_t *changes, size_t size, clingo_propagate_control_t *control, int dl, int td, bool force_print , bool wasp_b );
-void print_reason(const std::unordered_map<clingo_symbol_t, clingo_literal_t>& atomNames, const std::vector<clingo_literal_t>& R, clingo_literal_t lit, bool force_print );
+void print_reason(const std::unordered_map<clingo_symbol_t, clingo_literal_t>* atomNames, const std::vector<clingo_literal_t>& R, clingo_literal_t lit, bool force_print );
 void print_reduction_reason(const AmoSumPropagator& propagator, const std::vector<clingo_literal_t>& reason_c, const std::vector<clingo_literal_t>& reason, clingo_literal_t lit, float p, bool force_print);
-std::string atomNames_to_string(const std::unordered_map<clingo_symbol_t, clingo_literal_t>& atomNames);
+std::string atomNames_to_string(const std::unordered_map<clingo_symbol_t, clingo_literal_t>* atomNames);
 std::vector<std::string> convert_assparam_to_assarray(const std::string& assumptions);
-std::vector<clingo_literal_t> create_assumptions_lits(const std::vector<std::string>& assumptions_vec, const std::unordered_map<clingo_symbol_t, clingo_literal_t>& atomNames);
-std::string vector_lit_to_string(const std::unordered_map<clingo_symbol_t, clingo_literal_t>& atomNames, const std::vector<clingo_literal_t>& vec, std::string name);
+std::vector<clingo_literal_t> create_assumptions_lits(const std::vector<std::string>& assumptions_vec, const std::unordered_map<clingo_symbol_t, clingo_literal_t>* atomNames);
+std::string vector_lit_to_string(const std::unordered_map<clingo_symbol_t, clingo_literal_t>* atomNames, const std::vector<clingo_literal_t>& vec, std::string name);
 // void weights_names_log(const std::string& ID, const std::unordered_map<std::string, int>& weights_names);
 clingo_literal_t max_w(const Group* g);
 // Function to return the min undefined literal

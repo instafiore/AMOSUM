@@ -1,23 +1,23 @@
-project_month(1, 5, 10).
-project_month(2, 7, 12).
-project_month(3, 7, 12).
-project_month(4, 3, 8).
-project_month(5, 7, 12).
-project_month(6, 2, 7).
+project_month(1, 3, 8).
+project_month(2, 4, 6).
+project_month(3, 2, 7).
+project_month(4, 8, 10).
+project_month(5, 1, 12).
+project_month(6, 8, 10).
 project_month(7, 1, 12).
-project_month(8, 7, 12).
-project_month(9, 2, 7).
+project_month(8, 8, 10).
+project_month(9, 7, 9).
 project_month(10, 1, 12).
-project_month(11, 2, 7).
-project_month(12, 1, 6).
-project_month(13, 5, 10).
-project_month(14, 5, 10).
+project_month(11, 1, 12).
+project_month(12, 1, 12).
+project_month(13, 1, 6).
+project_month(14, 2, 7).
 project_month(15, 2, 4).
-project_month(16, 7, 12).
-project_month(17, 1, 12).
-project_month(18, 7, 12).
-project_month(19, 5, 10).
-project_month(20, 1, 12).
+project_month(16, 1, 12).
+project_month(17, 5, 10).
+project_month(18, 5, 7).
+project_month(19, 1, 12).
+project_month(20, 6, 11).
 role(1, full_professor).
 role(2, full_professor).
 role(3, full_professor).
@@ -48,24 +48,24 @@ role(27, researcher).
 role(28, researcher).
 role(29, researcher).
 role(30, researcher).
-project(1, 55514, 66617).
-project(2, 55346, 66415).
-project(3, 55573, 66688).
-project(4, 55427, 66512).
-project(5, 55565, 66678).
-project(6, 55459, 66551).
-project(7, 110935, 133122).
-project(8, 55419, 66503).
-project(9, 55464, 66557).
-project(10, 111055, 133266).
-project(11, 55444, 66533).
-project(12, 55547, 66656).
+project(1, 55419, 66503).
+project(2, 27805, 33366).
+project(3, 55595, 66714).
+project(4, 27712, 33254).
+project(5, 110869, 133043).
+project(6, 27720, 33264).
+project(7, 111162, 133394).
+project(8, 27765, 33318).
+project(9, 27748, 33298).
+project(10, 110916, 133099).
+project(11, 110975, 133170).
+project(12, 110900, 133080).
 project(13, 55422, 66506).
-project(14, 55635, 66762).
-project(15, 27689, 33227).
-project(16, 55515, 66618).
-project(17, 111091, 133309).
-project(18, 55518, 66622).
-project(19, 55473, 66568).
-project(20, 111107, 133328).
+project(14, 55487, 66584).
+project(15, 27728, 33274).
+project(16, 111111, 133333).
+project(17, 55617, 66740).
+project(18, 27754, 33305).
+project(19, 111037, 133244).
+project(20, 55524, 66629).
 person(1..30).

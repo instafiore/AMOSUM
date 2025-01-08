@@ -8,7 +8,7 @@
 using vector_lit_ptr = std::vector<clingo_literal_t>* ;
 struct AmoSumPropagator
 {
-    std::unordered_map<clingo_symbol_t, clingo_literal_t> atomNames;
+    std::unordered_map<clingo_symbol_t, clingo_literal_t>* atomNames;
 
     std::unordered_map<std::string, std::string> params; // Stores additional parameters
 
@@ -20,7 +20,7 @@ struct AmoSumPropagator
 
     // A function from literals -> weights
     // assuming that the aggregate does not contain the to literal l and !l
-    std::unique_ptr<WeightFunction> weight ;
+    WeightFunction* weight ;
 
     // A function from literals -> {True, False}
     std::unique_ptr<AggregateFunction> aggregate;
@@ -112,7 +112,7 @@ struct AmoSumPropagator
 
     AmoSumPropagator(){}
     AmoSumPropagator(
-        std::unordered_map<clingo_symbol_t, clingo_literal_t> atomNames,
+        std::unordered_map<clingo_symbol_t, clingo_literal_t>* atomNames,
         std::unordered_map<std::string, std::string> params,
         const std::vector<clingo_literal_t>* (*propagation_phase)(const Group*, AmoSumPropagator*) = nullptr,
         bool ge = true,

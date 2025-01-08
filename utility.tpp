@@ -85,8 +85,11 @@ std::vector<V> get_map_value_vector(std::map<K, std::vector<V>>& umap, K key) {
 }
 
 template <typename K, typename V>
-V get_map(std::unordered_map<K, V>& umap, K key, V default_value) {   
-    if (umap.find(key) == umap.end()) return default_value;
+V get_map(std::unordered_map<K, V>& umap, K key, V default_value, bool insert = false) {   
+    if (umap.find(key) == umap.end()){
+        if(insert) umap[key] = default_value ;
+        return default_value;
+    }
     return umap[key];
 }
 

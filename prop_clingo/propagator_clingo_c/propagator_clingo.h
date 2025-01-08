@@ -1,3 +1,4 @@
+#pragma once
 #include <clingo.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -15,7 +16,7 @@ class PropagatorClingo{
 
 private:
 public:
-    std::unordered_map<clingo_symbol_t, clingo_literal_t> atomNames;
+    std::unordered_map<clingo_symbol_t, clingo_literal_t>* atomNames;
     static const clingo_literal_t BOTTOM = 1 ;
     std::unordered_map<std::string, std::string> param;
     const std::vector<clingo_literal_t>* (*propagation_phase)(const Group*, AmoSumPropagator*);
@@ -26,13 +27,13 @@ public:
 
     // This is a map for mapping each solver literal (slit) to its program literal(s) (plit).
     // Can happend that some solver literal has more than one program literal
-    std::unordered_map<clingo_literal_t, std::vector<clingo_literal_t>> map_slit_plit ;
+    std::unordered_map<clingo_literal_t, std::vector<clingo_literal_t>>* map_slit_plit ;
 
     // This map maps each solver literal (watched) to its program literals (watched)
     std::unordered_map<clingo_literal_t, std::vector<clingo_literal_t>> map_slit_plit_watched ;
 
     // inverse of map_slit_plit
-    std::unordered_map<clingo_literal_t, clingo_literal_t> map_plit_slit ;
+    std::unordered_map<clingo_literal_t, clingo_literal_t>* map_plit_slit ;
 
     clingo_literal_t* clause_clingo ;
 

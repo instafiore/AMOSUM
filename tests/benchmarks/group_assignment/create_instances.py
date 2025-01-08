@@ -1,4 +1,4 @@
-#!/home/s.fiorentino/miniconda3/bin/python
+#!/Users/instafiore/instafiore_env/bin/python
 import re
 import os
 import sys
@@ -121,9 +121,9 @@ class UnsatInstanceFactory(InstanceFactory):
 class BenchmarkCreator():
 
     instances_type_distribution = {
-        "sat": (SatInstanceFactory, 3),
-        "possibly_unsat": (PossiblyUnsatInstanceFactory, 3),
-        "middle": (InstanceFactory, 3),
+        "sat": (SatInstanceFactory, 4),
+        "middle": (InstanceFactory, 4),
+        "possibly_unsat": (PossiblyUnsatInstanceFactory, 1),
         "unsat": (UnsatInstanceFactory, 1),
     }
 
@@ -160,8 +160,8 @@ def main(argv):
     # Possible configurations
 	# 	- projects 5-10-15
 	# 	- people 30-40-50-60
-    project_configurations = (10, 15, 20)
-    people_configurations = (30, 40, 50, 60)
+    project_configurations = (10, 15, 20, 25, 35)
+    people_configurations = (30, 50, 75, 100)
     benchmarkCreator = BenchmarkCreator(project_configurations, people_configurations)
     
     benchmarkCreator.create_benchmark()

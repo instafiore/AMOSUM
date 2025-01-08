@@ -22,7 +22,7 @@ using ParameterMap = std::unordered_map<std::string, std::string>;
 int Group::autoincrement = 0;
 
 // Function to get the name
-std::string get_name(const std::unordered_map<clingo_symbol_t, clingo_literal_t>& atomNames, clingo_literal_t lit) {
+std::string get_name(const std::unordered_map<clingo_symbol_t, clingo_literal_t>* atomNames, clingo_literal_t lit) {
     std::string prefix = "";
 
     if (lit == SETTINGS::NONE) { // Assuming 0 represents None in this context
@@ -33,7 +33,7 @@ std::string get_name(const std::unordered_map<clingo_symbol_t, clingo_literal_t>
         prefix = "not ";
     }
 
-    for (const auto& [name, atom] : atomNames) {
+    for (const auto& [name, atom] : *atomNames) {
         if (atom == std::abs(lit)) {
             return prefix + from_symbol_to_string(name);
         }
@@ -44,12 +44,12 @@ std::string get_name(const std::unordered_map<clingo_symbol_t, clingo_literal_t>
     return SETTINGS::NONE_STR; 
 }
 
-clingo_symbol_t from_string_to_symbol(std::string str, const std::unordered_map<clingo_symbol_t, clingo_literal_t> &atomNames){return from_string_to_symbol_or_lit(str, atomNames, true);}
-clingo_literal_t from_string_to_lit(std::string str, const std::unordered_map<clingo_symbol_t, clingo_literal_t> &atomNames){return from_string_to_symbol_or_lit(str, atomNames, false);}
-int64_t from_string_to_symbol_or_lit(std::string str, const std::unordered_map<clingo_symbol_t, clingo_literal_t> &atomNames, bool sym){
+clingo_symbol_t from_string_to_symbol(std::string str, const std::unordered_map<clingo_symbol_t, clingo_literal_t> *atomNames){return from_string_to_symbol_or_lit(str, atomNames, true);}
+clingo_literal_t from_string_to_lit(std::string str, const std::unordered_map<clingo_symbol_t, clingo_literal_t> *atomNames){return from_string_to_symbol_or_lit(str, atomNames, false);}
+int64_t from_string_to_symbol_or_lit(std::string str, const std::unordered_map<clingo_symbol_t, clingo_literal_t> *atomNames, bool sym){
     
     // auto start = std::chrono::high_resolution_clock::now();
-    for (const auto& [name, atom] : atomNames) {
+    for (const auto& [name, atom] : (*atomNames)) {
         if (str == from_symbol_to_string(name)) {
             // auto end = std::chrono::high_resolution_clock::now();
             // std::chrono::duration<double> elapsed = end - start;
@@ -62,9 +62,9 @@ int64_t from_string_to_symbol_or_lit(std::string str, const std::unordered_map<c
     return 0; 
 }
 
-std::unordered_map<std::string, clingo_literal_t> create_atomNames_string(const std::unordered_map<clingo_symbol_t, clingo_literal_t> &atomNames){
+std::unordered_map<std::string, clingo_literal_t> create_atomNames_string(const std::unordered_map<clingo_symbol_t, clingo_literal_t> *atomNames){
     std::unordered_map<std::string, clingo_literal_t> atomNamesString ;
-    for (const auto& [name, atom] : atomNames) {
+    for (const auto& [name, atom] : (*atomNames)) {
         atomNamesString[from_symbol_to_string(name)] = atom ;
     }
     return std::move(atomNamesString); 
@@ -72,7 +72,7 @@ std::unordered_map<std::string, clingo_literal_t> create_atomNames_string(const 
 
 std::vector<clingo_literal_t> create_assumptions_lits(
     const std::vector<std::string>& assumptions_vec,
-    const std::unordered_map<clingo_symbol_t, clingo_literal_t>& atomNames) {
+    const std::unordered_map<clingo_symbol_t, clingo_literal_t>* atomNames) {
 
     std::vector<clingo_literal_t> res;
 
@@ -96,10 +96,10 @@ std::vector<clingo_literal_t> create_assumptions_lits(
 
 
 
-std::string atomNames_to_string(const std::unordered_map<clingo_symbol_t, clingo_literal_t>& atomNames){
+std::string atomNames_to_string(const std::unordered_map<clingo_symbol_t, clingo_literal_t>* atomNames){
     std::ostringstream oss;
     oss<< "{" ;
-    for (const auto& [key, value] : atomNames) {
+    for (const auto& [key, value] : (*atomNames)) {
         oss <<"'"<< from_symbol_to_string(key) << "':'" << value<<"', " ;
     }
     oss << "}" ;
@@ -455,7 +455,7 @@ void raise_wasp_not_implemented_exception(){
 }
 
 
-void print_derivation(const std::unordered_map<clingo_symbol_t, clingo_literal_t>& atomNames, const std::vector<clingo_literal_t>& S, bool force_print = false){
+void print_derivation(const std::unordered_map<clingo_symbol_t, clingo_literal_t>* atomNames, const std::vector<clingo_literal_t>& S, bool force_print = false){
     bool debug_b = false ;
     #ifdef DEBUG
         debug_b = true ;
@@ -467,7 +467,7 @@ void print_derivation(const std::unordered_map<clingo_symbol_t, clingo_literal_t
 
 
 
-void print_reason(const std::unordered_map<clingo_symbol_t, clingo_literal_t>& atomNames, const std::vector<clingo_literal_t>& R, clingo_literal_t lit, bool force_print = false){
+void print_reason(const std::unordered_map<clingo_symbol_t, clingo_literal_t>* atomNames, const std::vector<clingo_literal_t>& R, clingo_literal_t lit, bool force_print = false){
     bool debug_b = false ;
     #ifdef DEBUG
         debug_b = true ;
@@ -532,7 +532,7 @@ void print_propagate(PropagatorClingo* prop, const clingo_literal_t *changes, si
     clingo_literal_t plit = 0 ;
 
     if (not wasp_b and decision_slit != 1){
-        plit = prop->map_slit_plit[decision_slit][0];
+        plit = (*prop->map_slit_plit)[decision_slit][0];
     }else if (wasp_b)
     {
         raise_wasp_not_implemented_exception();
@@ -574,7 +574,7 @@ clingo_literal_t max_w(const Group* g) {
     }
 }
 
-std::string vector_lit_to_string(const std::unordered_map<clingo_symbol_t, clingo_literal_t>& atomNames, const std::vector<clingo_literal_t>& vec, std::string name = ""){
+std::string vector_lit_to_string(const std::unordered_map<clingo_symbol_t, clingo_literal_t>* atomNames, const std::vector<clingo_literal_t>& vec, std::string name = ""){
     std::ostringstream oss;
     int n = vec.size() ;
     

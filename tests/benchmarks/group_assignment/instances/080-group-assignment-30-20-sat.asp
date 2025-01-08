@@ -1,22 +1,22 @@
-project_month(1, 1, 12).
-project_month(2, 5, 7).
-project_month(3, 1, 12).
+project_month(1, 6, 8).
+project_month(2, 9, 11).
+project_month(3, 2, 7).
 project_month(4, 1, 12).
-project_month(5, 6, 11).
-project_month(6, 3, 5).
-project_month(7, 1, 12).
-project_month(8, 1, 6).
+project_month(5, 1, 12).
+project_month(6, 1, 12).
+project_month(7, 2, 4).
+project_month(8, 4, 9).
 project_month(9, 1, 12).
-project_month(10, 1, 12).
-project_month(11, 5, 10).
+project_month(10, 9, 11).
+project_month(11, 1, 12).
 project_month(12, 1, 12).
-project_month(13, 9, 11).
+project_month(13, 1, 12).
 project_month(14, 1, 12).
-project_month(15, 1, 6).
-project_month(16, 2, 4).
-project_month(17, 5, 7).
-project_month(18, 5, 7).
-project_month(19, 1, 6).
+project_month(15, 2, 4).
+project_month(16, 1, 12).
+project_month(17, 3, 5).
+project_month(18, 2, 4).
+project_month(19, 3, 5).
 project_month(20, 1, 12).
 role(1, full_professor).
 role(2, full_professor).
@@ -48,24 +48,24 @@ role(27, researcher).
 role(28, researcher).
 role(29, researcher).
 role(30, researcher).
-project(1, 27756, 33307).
-project(2, 6929, 8315).
-project(3, 27761, 33313).
-project(4, 27756, 33307).
-project(5, 13873, 16648).
-project(6, 6935, 8322).
-project(7, 27721, 33265).
-project(8, 13859, 16631).
-project(9, 27727, 33272).
-project(10, 27743, 33292).
-project(11, 13884, 16661).
-project(12, 27784, 33341).
-project(13, 6938, 8326).
-project(14, 27730, 33276).
-project(15, 13871, 16645).
-project(16, 6930, 8316).
-project(17, 6937, 8324).
-project(18, 6951, 8341).
-project(19, 13871, 16645).
-project(20, 27739, 33287).
+project(1, 6925, 8310).
+project(2, 6950, 8340).
+project(3, 13885, 16662).
+project(4, 27795, 33354).
+project(5, 27764, 33317).
+project(6, 27784, 33341).
+project(7, 6945, 8334).
+project(8, 13856, 16627).
+project(9, 27788, 33346).
+project(10, 6931, 8317).
+project(11, 27717, 33260).
+project(12, 27767, 33320).
+project(13, 27767, 33320).
+project(14, 27701, 33241).
+project(15, 6946, 8335).
+project(16, 27732, 33278).
+project(17, 6941, 8329).
+project(18, 6946, 8335).
+project(19, 6937, 8324).
+project(20, 27756, 33307).
 person(1..30).

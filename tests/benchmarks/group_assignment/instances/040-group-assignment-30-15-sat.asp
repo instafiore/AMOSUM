@@ -1,18 +1,18 @@
-project_month(1, 4, 9).
-project_month(2, 1, 12).
-project_month(3, 1, 12).
-project_month(4, 5, 10).
-project_month(5, 7, 12).
+project_month(1, 1, 12).
+project_month(2, 3, 8).
+project_month(3, 9, 11).
+project_month(4, 10, 12).
+project_month(5, 1, 3).
 project_month(6, 3, 5).
-project_month(7, 3, 5).
-project_month(8, 4, 9).
+project_month(7, 1, 12).
+project_month(8, 6, 11).
 project_month(9, 1, 12).
 project_month(10, 1, 12).
-project_month(11, 6, 8).
-project_month(12, 1, 12).
-project_month(13, 1, 12).
+project_month(11, 5, 7).
+project_month(12, 4, 9).
+project_month(13, 1, 6).
 project_month(14, 1, 12).
-project_month(15, 3, 8).
+project_month(15, 1, 6).
 role(1, full_professor).
 role(2, full_professor).
 role(3, full_professor).
@@ -43,19 +43,19 @@ role(27, researcher).
 role(28, researcher).
 role(29, researcher).
 role(30, researcher).
-project(1, 18532, 22238).
-project(2, 36998, 44398).
-project(3, 37021, 44425).
-project(4, 18505, 22206).
-project(5, 18492, 22190).
-project(6, 9254, 11105).
-project(7, 9259, 11111).
-project(8, 18527, 22232).
-project(9, 37039, 44447).
-project(10, 36989, 44387).
-project(11, 9257, 11108).
-project(12, 36976, 44371).
-project(13, 36971, 44365).
-project(14, 36984, 44381).
-project(15, 18484, 22181).
+project(1, 36927, 44312).
+project(2, 18515, 22218).
+project(3, 9259, 11111).
+project(4, 9246, 11095).
+project(5, 9245, 11094).
+project(6, 9253, 11104).
+project(7, 36985, 44382).
+project(8, 18508, 22210).
+project(9, 37014, 44417).
+project(10, 37003, 44404).
+project(11, 9250, 11100).
+project(12, 18516, 22219).
+project(13, 18521, 22225).
+project(14, 36991, 44389).
+project(15, 18502, 22202).
 person(1..30).
