@@ -29,4 +29,14 @@ public:
     void common_phase(AmoSumPropagator* amosum_propagator);
     void assign(AmoSumPropagator* amosum_propagator);
     void specific_phase(const std::vector<clingo_literal_t>& lits, AmoSumPropagator* amosum_propagator);
+
+    ~AmoSumInitializer(){
+        for(auto& [key, value]: generic_data_map){
+            if(value) delete value;
+        }
+    }
+
+    static void cleanup(){
+        delete instance ;
+    }
 };

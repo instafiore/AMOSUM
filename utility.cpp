@@ -39,7 +39,7 @@ std::string get_name(const std::unordered_map<clingo_symbol_t, clingo_literal_t>
         }
     }
 
-    debug(lit, " is not present in atomNames");
+    debug(lit, " is not present in atomNames ", atomNames_to_string(atomNames));
     assert(false);
     return SETTINGS::NONE_STR; 
 }
@@ -512,6 +512,7 @@ void display_end_timer(const std::chrono::time_point<std::chrono::high_resolutio
 
 
 void print_propagate(PropagatorClingo* prop, const clingo_literal_t *changes, size_t size, clingo_propagate_control_t *control, int dl, bool force_print = false, bool wasp_b = false){
+    
     bool debug_b = false ;
     #ifdef DEBUG
         debug_b = true ;
@@ -524,13 +525,12 @@ void print_propagate(PropagatorClingo* prop, const clingo_literal_t *changes, si
     
     if (wasp_b)  raise_wasp_not_implemented_exception() ;
     else  changes_str = prop->compute_changes_str(changes, size, td) ;
-
+    
     const clingo_assignment_t *assignment = clingo_propagate_control_assignment(control);
     clingo_literal_t decision_slit ;
     handle_error(clingo_assignment_decision(assignment, dl, &decision_slit));
 
     clingo_literal_t plit = 0 ;
-
     if (not wasp_b and decision_slit != 1){
         plit = (*prop->map_slit_plit)[decision_slit][0];
     }else if (wasp_b)
@@ -539,9 +539,12 @@ void print_propagate(PropagatorClingo* prop, const clingo_literal_t *changes, si
     }
     
     std::string decision_literal_name ; 
-    decision_slit != 1 ? decision_literal_name = get_name(prop->atomNames, plit) : decision_literal_name = "from facts" ;
 
-    debugf("[", decision_literal_name,", ",dl,"] propagate ", changes_str," td: ", td);
+    
+    
+    // decision_slit != 1 ? decision_literal_name = get_name(prop->atomNames, plit) : decision_literal_name = "from facts" ;
+
+    // debugf("[", decision_literal_name,", ",dl,"] propagate ", changes_str," td: ", td);
 }
 
 void print_undo(PropagatorClingo* prop, const clingo_literal_t *changes, size_t size, clingo_propagate_control_t *control, int dl, int td, bool force_print = false, bool wasp_b = false){

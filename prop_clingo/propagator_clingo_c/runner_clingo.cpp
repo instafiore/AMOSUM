@@ -17,9 +17,9 @@
 // std::chrono::duration<double> whole_undo_time(0.0);
 
 void register_propagator(clingo_control_t *ctl, clingo_propagator_t prop, std::string prop_type, const ParameterMap& param, std::vector<PropagatorClingo*> &propagators);
-bool init(clingo_propagate_init_t *init, PropagatorClingo *propagator){
+bool init(clingo_propagate_init_t *_init, PropagatorClingo *propagator){
     // auto start = std::chrono::high_resolution_clock::now();
-    bool res =  propagator->init(init);
+    bool res =  propagator->init(_init);
     // auto end = std::chrono::high_resolution_clock::now();
     // std::chrono::duration<double> elapsed = end - start;
     // debugf("init time: ",elapsed.count(), "s");
@@ -149,13 +149,15 @@ int main(int argc, char const *argv[])
     }
     
     // FREE
+    
     for(auto& propagator: propagators){
         if(propagator) delete propagator;
     }
     if (ctl) { clingo_control_free(ctl); }
 
 
-    
+    AmoSumInitializer::cleanup();
+    PropagatorClingoInitializer::cleanup();
     return ret;
 
     

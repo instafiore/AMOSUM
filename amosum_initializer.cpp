@@ -41,8 +41,6 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
     }
 
     void AmoSumInitializer::common_phase(AmoSumPropagator* amosum_propagator){
-        std::regex negative_lit_regex("^not\\s+([\\w()]+)");
-    
         
         atomNamesString = create_atomNames_string(amosum_propagator->atomNames);
 
@@ -66,7 +64,6 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
                      
                     std::string atom_name = lit_str ;
                     clingo_literal_t lit ;
-                    std::smatch match;
                         
                     lit = atomNamesString[atom_name];
                     

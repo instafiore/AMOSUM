@@ -21,7 +21,7 @@ private:
     static PropagatorClingoInitializer* instance;
 
 public:
-    std::unique_ptr<std::unordered_map<clingo_symbol_t, clingo_literal_t>> atomNames;
+    std::unordered_map<clingo_symbol_t, clingo_literal_t>* atomNames;
     std::unique_ptr<std::unordered_map<clingo_literal_t, std::vector<clingo_literal_t>>> map_slit_plit ;
     std::unique_ptr<std::unordered_map<clingo_literal_t, clingo_literal_t>> map_plit_slit ;
     size_t nt;
@@ -35,7 +35,15 @@ public:
     }
     
 
-    bool init(clingo_propagate_init_t *init, PropagatorClingo& propagator);
+    void init(clingo_propagate_init* _init, PropagatorClingo& propagator);
 
+    ~PropagatorClingoInitializer(){
+        if(lits) delete lits ;
+        if(atomNames) delete atomNames;
+    }
+
+    static void cleanup(){
+        delete instance ;
+    }
 
 };

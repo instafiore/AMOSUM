@@ -11,6 +11,8 @@
 #include <vector>
 #include <limits>
 #include <memory>
+#include "propagator_clingo_initializer.h"
+#include "../../amosum_initializer.h"
 
 class PropagatorClingo{
 
@@ -49,7 +51,7 @@ public:
             choice_cons(choice_cons),
             solver(AmoSumPropagator::CLINGO) {}
 
-    bool init(clingo_propagate_init_t *init);
+    bool init(clingo_propagate_init_t *_init);
     bool propagate(clingo_propagate_control_t *control, const clingo_literal_t *changes, size_t size);
     void undo(clingo_propagate_control_t *control, const clingo_literal_t *changes, size_t size);
 
@@ -62,7 +64,7 @@ public:
     // std::unique_ptr<std::vector<clingo_literal_t>> S_plit ;
     ~PropagatorClingo(){
         for(auto& prop: propagators){
-            delete prop;
+            if(prop) delete prop;
         }
         if(clause_clingo) delete clause_clingo ;
     }

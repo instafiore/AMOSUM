@@ -81,7 +81,7 @@ class RunnerClingoC(RunnerWasp):
         output = run_process.stdout
         error = run_process.stderr
         output_error = output + error
-
+    
         lines_output = output.splitlines() 
         lines_error = error.splitlines() 
         

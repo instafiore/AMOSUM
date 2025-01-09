@@ -11,34 +11,27 @@
 #include <vector>
 #include <limits>
 #include "propagator_clingo.h"
-#include "propagator_clingo_initializer.h"
-#include "../../amosum_initializer.h"
 
-bool PropagatorClingo::init(clingo_propagate_init_t *init){
 
-    PropagatorClingoInitializer::get_instance()->init(init, *this);
+bool PropagatorClingo::init(clingo_propagate_init_t *_init){
+
+    PropagatorClingoInitializer::get_instance()->init(_init, *this);
 
     AmoSumPropagator* propagator = new AmoSumPropagator(atomNames, param, propagation_phase, ge, choice_cons, solver = AmoSumPropagator::CLINGO);
     for (size_t i = 0; i < PropagatorClingoInitializer::get_instance()->nt; i++) this->propagators.push_back(propagator);
 
     std::vector<clingo_literal_t> to_watch_plit;
-    // auto start = std::chrono::high_resolution_clock::now();
-   
+
     for (size_t i = 0; i < PropagatorClingoInitializer::get_instance()->nt; i++) to_watch_plit = AmoSumInitializer::get_instance()->getLiterals(*PropagatorClingoInitializer::get_instance()->lits, this->propagators[i]) ;
     // for (size_t i = 0; i < PropagatorClingoInitializer::get_instance()->nt; i++) to_watch_plit = this->propagators[i]->getLiterals(*PropagatorClingoInitializer::get_instance()->lits) ;
-    
-    // auto end = std::chrono::high_resolution_clock::now();
-    // std::chrono::duration<double> elapsed = end - start;
-    // debugf("getLiterals time: ",elapsed.count(), "s");
 
-    // debug(vector_lit_to_string(atomNames, to_watch_plit, "to watch: "))
     size_t max_clause_size = this->propagators[0]->N;
     clause_clingo = new clingo_literal_t[max_clause_size];
 
     for(clingo_literal_t plit: to_watch_plit){
         clingo_literal_t slit = (*map_plit_slit)[plit];
         update_map_value_vector(map_slit_plit_watched, slit, plit);
-        handle_error(clingo_propagate_init_add_watch(init, slit));
+        handle_error(clingo_propagate_init_add_watch(_init, slit));
     }
 
 
@@ -47,11 +40,11 @@ bool PropagatorClingo::init(clingo_propagate_init_t *init){
     
     if (S_plit.size() == 1 and S_plit[0] == BOTTOM){ 
         bool result ; 
-        handle_error(clingo_propagate_init_add_clause((clingo_propagate_init*) init, NULL, 0, &result));
+        handle_error(clingo_propagate_init_add_clause((clingo_propagate_init*) _init, NULL, 0, &result));
         return true; 
     }// inconsistent
 
-    add_clauses_propagated_lits(init, S_plit, 0, true);
+    add_clauses_propagated_lits(_init, S_plit, 0, true);
     return true ;
 }
 
@@ -95,18 +88,19 @@ bool PropagatorClingo::add_clauses_propagated_lits(void *control, const std::vec
 }   
 
 bool PropagatorClingo::propagate(clingo_propagate_control_t *control, const clingo_literal_t *changes, size_t size){
+
     const clingo_assignment_t *assignment = clingo_propagate_control_assignment(control);
     int dl = clingo_assignment_decision_level(assignment);
     int td; 
     dl == 0 ? td = 0 : td = clingo_propagate_control_thread_id(control) ; 
     AmoSumPropagator* prop = propagators[td];
-
     print_propagate(this, changes, size, control, dl, false, false);
 
     for (size_t i = 0; i < size; i++)
     {
         clingo_literal_t slit = changes[i];
         std::vector<clingo_literal_t> plit_list = map_slit_plit_watched[slit];
+        
         for(clingo_literal_t plit: plit_list){
             const std::vector<clingo_literal_t>* S_plit = prop->onLiteralTrue(plit, dl); // handled internally 
             if (S_plit != nullptr && add_clauses_propagated_lits(control, *S_plit, dl, false)){
@@ -116,7 +110,9 @@ bool PropagatorClingo::propagate(clingo_propagate_control_t *control, const clin
                   
         }
     }
+
     return true;
+    
 }
 
 
@@ -127,6 +123,7 @@ std::string PropagatorClingo::compute_changes_str(const clingo_literal_t *change
     {
         clingo_literal_t slit = changes[i] ;
         for(clingo_literal_t plit: map_slit_plit_watched[slit]){
+            assert(atomNames != NULL);
             std::string name = get_name(atomNames, plit);
             std::string res = "[" + name + ", plit: " + std::to_string(plit) + ", slit: " +  std::to_string(slit) + "]";
             changes_name_vec.push_back(res);
