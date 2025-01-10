@@ -787,7 +787,6 @@ void maximal_subset_sum_less_than_s_with_groups(const std::vector<clingo_literal
                                                            const GroupFunction* group,
                                                            int head_reason, const std::unique_ptr<InterpretationFunction>& I, int max,
                                                            std::unordered_set<clingo_literal_t>& current_subset_maximal) {
-    current_subset_maximal.clear();
     int current_sum = 0;
 
     for (int l : literals) {

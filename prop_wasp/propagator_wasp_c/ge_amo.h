@@ -15,6 +15,7 @@
 const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, AmoSumPropagator* propagator){
 
     if (propagator->mps_violated) {
+        propagator->reason.clear();
         create_reason_falses_ge(propagator);
         propagator->S.clear();
         propagator->S.push_back(not_(propagator->current_literal));
@@ -77,16 +78,15 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, Am
         }
     }
 
-    // propagator->count_S++;
+    propagator->reason.clear();
     if (!propagator->S.empty() && propagator->dl != 0) {
-        // propagator->count_R++;
         create_reason_falses_ge(propagator);
-        // auto start = start_timer() ;
         propagator->compute_minimal_reason(derived_true);
-        // display_end_timer(start, "compute_minimal_reason");
     }
 
     print_derivation(propagator->atomNames, propagator->S, false);
     
     return &propagator->S;
 }
+
+// Time: 203.28, found 1 models:
