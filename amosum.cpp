@@ -5,192 +5,189 @@
 #include "prop_clingo/propagator_clingo_c/propagator_clingo.h"
 
 
-const std::vector<clingo_literal_t> AmoSumPropagator::getLiterals(const std::vector<clingo_literal_t>& lits){
-        auto start = std::chrono::high_resolution_clock::now();
-        N = lits[0] + 1;
+// const std::vector<clingo_literal_t> AmoSumPropagator::getLiterals(const std::vector<clingo_literal_t>& lits){
+//         auto start = std::chrono::high_resolution_clock::now();
+//         N = lits[0] + 1;
         
-        minimization = get_map(params, std::string("min_r"), std::string(Minimize::NO_MINIMIZATION)) ;
-        strategy = get_map(params, std::string("strategy"), strategy);
-        N = lits[0] + 1;
-        I.reset(new InterpretationFunction(N));
-        weight = new WeightFunction(N);
-        group.reset(new GroupFunction(N));
-        aggregate.reset(new AggregateFunction(N));
-        reason_trues.reset(new PerfectHash<std::vector<clingo_literal_t>*> (N, nullptr));
-        redundant_lits.reset(new PerfectHash<std::unordered_set<clingo_literal_t>*> (N, nullptr));
-        to_be_propagated.reset(new PerfectHash<bool>(N, false));
+//         minimization = get_map(params, std::string("min_r"), std::string(Minimize::NO_MINIMIZATION)) ;
+//         strategy = get_map(params, std::string("strategy"), strategy);
+//         N = lits[0] + 1;
+//         I.reset(new InterpretationFunction(N));
+//         weight = new WeightFunction(N);
+//         group.reset(new GroupFunction(N));
+//         aggregate.reset(new AggregateFunction(N));
+//         reason_trues.reset(new PerfectHash<std::vector<clingo_literal_t>*> (N, nullptr));
+//         redundant_lits.reset(new PerfectHash<std::unordered_set<clingo_literal_t>*> (N, nullptr));
+//         to_be_propagated.reset(new PerfectHash<bool>(N, false));
 
-        _mps = 0;
-        ID = get_map(params, std::string("id"), std::string("0"));
-        groups.clear();  // Initialize as empty
-        assumptions = get_map(params, std::string("ass"), SETTINGS::NONE_STR);
-        current_sum = 0;
-        std::string lazy_param = get_map(params, std::string("lazy"), std::string("dynamic")) ;
-        lazy_prop_activated = lazy_param != SETTINGS::FALSE_STR;
-        bool lazy_dynamic = lazy_param == "dynamic" ;
-        LAZY_PERC = lazy_prop_activated && lazy_param != SETTINGS::TRUE_STR && !lazy_dynamic ? std::stof(lazy_param) : LAZY_PERC ;
-        lazy_condition = !lazy_prop_activated;
+//         _mps = 0;
+//         ID = get_map(params, std::string("id"), std::string("0"));
+//         groups.clear();  // Initialize as empty
+//         assumptions = get_map(params, std::string("ass"), SETTINGS::NONE_STR);
+//         current_sum = 0;
+//         std::string lazy_param = get_map(params, std::string("lazy"), std::string("dynamic")) ;
+//         lazy_prop_activated = lazy_param != SETTINGS::FALSE_STR;
+//         bool lazy_dynamic = lazy_param == "dynamic" ;
+//         LAZY_PERC = lazy_prop_activated && lazy_param != SETTINGS::TRUE_STR && !lazy_dynamic ? std::stof(lazy_param) : LAZY_PERC ;
+//         lazy_condition = !lazy_prop_activated;
 
         
-        // debug("N: ",N);
-        std::map<std::string, std::vector<clingo_literal_t>> groups_raw;
+//         // debug("N: ",N);
+//         std::map<std::string, std::vector<clingo_literal_t>> groups_raw;
 
-        lb = SETTINGS::NONE;
-        ub = SETTINGS::NONE;
-        std::vector<clingo_literal_t> bind;
-        std::regex negative_lit_regex("^not\\s+([\\w()]+)");
-        std::string bound_str = this->ge ? SETTINGS::PREDICATE_LB : SETTINGS::PREDICATE_UB;
+//         lb = SETTINGS::NONE;
+//         ub = SETTINGS::NONE;
+//         std::vector<clingo_literal_t> bind;
+//         std::regex negative_lit_regex("^not\\s+([\\w()]+)");
+//         std::string bound_str = this->ge ? SETTINGS::PREDICATE_LB : SETTINGS::PREDICATE_UB;
        
 
-        std::unordered_map<std::string,int> weights_names ; 
+//         std::unordered_map<std::string,int> weights_names ; 
 
-        ID = get_map(params, std::string("id"), std::string("0"));
+//         ID = get_map(params, std::string("id"), std::string("0"));
 
-        int count = 0 ;
+//         int count = 0 ;
         
         
-        std::unordered_map<std::string, clingo_literal_t> atomNamesString(create_atomNames_string(atomNames));
+//         std::unordered_map<std::string, clingo_literal_t> atomNamesString(create_atomNames_string(atomNames));
 
-        for(auto &[symbolic_atom, literal]: *atomNames){
+//         for(auto &[symbolic_atom, literal]: *atomNames){
              
-            std::string a = from_symbol_to_string(symbolic_atom);
-            if (a.length() > SETTINGS::PREDICATE_GROUP.length() and a.substr(0, SETTINGS::PREDICATE_GROUP.length() + 1) == SETTINGS::PREDICATE_GROUP + "(") {
+//             std::string a = from_symbol_to_string(symbolic_atom);
+//             if (a.length() > SETTINGS::PREDICATE_GROUP.length() and a.substr(0, SETTINGS::PREDICATE_GROUP.length() + 1) == SETTINGS::PREDICATE_GROUP + "(") {
                      
-                    clingo_literal_t group_literal = literal ;
-                    clingo_symbol_t const *terms;
-                    size_t terms_size ;
-                    handle_error(clingo_symbol_arguments(symbolic_atom, &terms, &terms_size));
+//                     clingo_literal_t group_literal = literal ;
+//                     clingo_symbol_t const *terms;
+//                     size_t terms_size ;
+//                     handle_error(clingo_symbol_arguments(symbolic_atom, &terms, &terms_size));
 
-                    if (terms_size != 5) continue;
+//                     if (terms_size != 5) continue;
 
-                    std::string id_str = from_symbol_to_string(terms[4]);
-                    if ( id_str != ID) {
-                            continue;
-                    };
+//                     std::string id_str = from_symbol_to_string(terms[4]);
+//                     if ( id_str != ID) {
+//                             continue;
+//                     };
                     
 
-                    groups_literals.push_back(not_(group_literal));
-                    std::string lit_str = from_symbol_to_string(terms[0]);
-                    std::string atom_name = lit_str ;
-                    clingo_literal_t lit ;
-                    std::smatch match;
+//                     groups_literals.push_back(not_(group_literal));
+//                     std::string lit_str = from_symbol_to_string(terms[0]);
+//                     std::string atom_name = lit_str ;
+//                     clingo_literal_t lit ;
+//                     std::smatch match;
                      
-                    // if (std::regex_match(lit_str, match, negative_lit_regex)) {
-                    //         atom_name = match[1].str(); 
-                    //         lit = atomNames[from_string_to_symbol(atom_name, atomNames)];
-                    //         lit = not_(lit);
-                    // }else{
-                    //         lit = atomNames[from_string_to_symbol(atom_name, atomNames)];
-                    // }
-                    // clingo_symbol_t sym = from_string_to_symbol(atom_name, atomNames) ;
-                    lit = atomNamesString[atom_name];
+//                     // if (std::regex_match(lit_str, match, negative_lit_regex)) {
+//                     //         atom_name = match[1].str(); 
+//                     //         lit = atomNames[from_string_to_symbol(atom_name, atomNames)];
+//                     //         lit = not_(lit);
+//                     // }else{
+//                     //         lit = atomNames[from_string_to_symbol(atom_name, atomNames)];
+//                     // }
+//                     // clingo_symbol_t sym = from_string_to_symbol(atom_name, atomNames) ;
+//                     lit = atomNamesString[atom_name];
                     
-                    std::string plus_str = from_symbol_to_string(terms[1]);
-                    bool plus_bool = plus_str == "\"+\""  ;
-                    int sign = plus_bool ? 1 : -1 ;
-                    lit *= sign;
+//                     std::string plus_str = from_symbol_to_string(terms[1]);
+//                     bool plus_bool = plus_str == "\"+\""  ;
+//                     int sign = plus_bool ? 1 : -1 ;
+//                     lit *= sign;
 
-                    int w = std::stoi(from_symbol_to_string(terms[2]));
-                    weight->set(lit, w) ; 
-                    weights_names[lit_str] = w ;
-                    std::string group_id = from_symbol_to_string(terms[3]);
+//                     int w = std::stoi(from_symbol_to_string(terms[2]));
+//                     weight->set(lit, w) ; 
+//                     weights_names[lit_str] = w ;
+//                     std::string group_id = from_symbol_to_string(terms[3]);
                 
-                    std::vector<clingo_literal_t> G = get_map_value_vector(groups_raw, group_id);
-                    G.push_back(lit);
-                    groups_raw[group_id] = G ;
-                    aggregate->set(lit, true);
+//                     std::vector<clingo_literal_t> G = get_map_value_vector(groups_raw, group_id);
+//                     G.push_back(lit);
+//                     groups_raw[group_id] = G ;
+//                     aggregate->set(lit, true);
 
-                    bind.push_back(lit);
-                    bind.push_back(not_(lit));
-                    // debug("group:",a," atom_name: ",atom_name, " weight: ", weight->get(lit), " group_id: ", group_id, " sign: ",sign);
-            }else if(a.length() > bound_str.length() and a.substr(0, bound_str.length() + 1) == bound_str + "("){
-                    clingo_symbol_t const *terms;
-                    size_t terms_size ;
-                    handle_error(clingo_symbol_arguments(symbolic_atom, &terms, &terms_size));
-                    std::string id_str = from_symbol_to_string(terms[1]);
-                    if (terms_size != 2 or id_str != ID) continue ;
+//                     bind.push_back(lit);
+//                     bind.push_back(not_(lit));
+//                     // debug("group:",a," atom_name: ",atom_name, " weight: ", weight->get(lit), " group_id: ", group_id, " sign: ",sign);
+//             }else if(a.length() > bound_str.length() and a.substr(0, bound_str.length() + 1) == bound_str + "("){
+//                     clingo_symbol_t const *terms;
+//                     size_t terms_size ;
+//                     handle_error(clingo_symbol_arguments(symbolic_atom, &terms, &terms_size));
+//                     std::string id_str = from_symbol_to_string(terms[1]);
+//                     if (terms_size != 2 or id_str != ID) continue ;
                     
-                    if(bound != SETTINGS::NONE) assert(false) ;
-                    bound = (ge ? lb = std::stoi(from_symbol_to_string(terms[0])) : ub = std::stoi(from_symbol_to_string(terms[0])));
-            }
+//                     if(bound != SETTINGS::NONE) assert(false) ;
+//                     bound = (ge ? lb = std::stoi(from_symbol_to_string(terms[0])) : ub = std::stoi(from_symbol_to_string(terms[0])));
+//             }
             
         
-            ++count;
-        } 
+//             ++count;
+//         } 
         
         
-        // debug("bound: ",bound);
-        
-        // weights_names_log(ID, weights_names);
 
-        int max_diff = 0 ;
-        for(auto &[group_id, lits_group]: groups_raw){
-                std::vector<std::pair<int, int>> lits_ord;
-                for (int lit : lits_group) lits_ord.emplace_back(lit, weight->get(lit));
-                std::sort(lits_ord.begin(), lits_ord.end(), [](const std::pair<int, int>& a, const std::pair<int, int>& b) {
-                        return a.second < b.second; 
-                });
-                std::vector<clingo_literal_t> ord_l(lits_ord.size(), SETTINGS::NONE);
-                std::unordered_map<int, int> ord_i; 
+//         int max_diff = 0 ;
+//         for(auto &[group_id, lits_group]: groups_raw){
+//                 std::vector<std::pair<int, int>> lits_ord;
+//                 for (int lit : lits_group) lits_ord.emplace_back(lit, weight->get(lit));
+//                 std::sort(lits_ord.begin(), lits_ord.end(), [](const std::pair<int, int>& a, const std::pair<int, int>& b) {
+//                         return a.second < b.second; 
+//                 });
+//                 std::vector<clingo_literal_t> ord_l(lits_ord.size(), SETTINGS::NONE);
+//                 std::unordered_map<int, int> ord_i; 
 
-                for (size_t i = 0; i < lits_ord.size(); ++i) {
-                        int l = lits_ord[i].first; 
-                        ord_l[i] = l;             
-                        ord_i[l] = i;            
-                }
+//                 for (size_t i = 0; i < lits_ord.size(); ++i) {
+//                         int l = lits_ord[i].first; 
+//                         ord_l[i] = l;             
+//                         ord_i[l] = i;            
+//                 }
 
-                Group* G = new Group(ord_l,ord_i,group_id) ;
+//                 Group* G = new Group(ord_l,ord_i,group_id) ;
 
-                int max_w = weight->get(m_w(G, ge));
-                int min_w = weight->get(m_w(G, !ge)) ;
+//                 int max_w = weight->get(m_w(G, ge));
+//                 int min_w = weight->get(m_w(G, !ge)) ;
 
 
-                _mps = _mps + max_w;
+//                 _mps = _mps + max_w;
 
-                int diff = std::abs(max_w - min_w) ;
-                // debugf("max_w: ", max_w, " min_w: ", min_w, " diff: ", diff);
+//                 int diff = std::abs(max_w - min_w) ;
+//                 // debugf("max_w: ", max_w, " min_w: ", min_w, " diff: ", diff);
 
-                if (max_diff < diff)  max_diff = diff ;
+//                 if (max_diff < diff)  max_diff = diff ;
 
-                groups.push_back(G);
+//                 groups.push_back(G);
                 
-                for(const clingo_literal_t& lit: lits_group)  group->set(lit, G);
-        }
+//                 for(const clingo_literal_t& lit: lits_group)  group->set(lit, G);
+//         }
 
-        size_t nGroup = Group::autoincrement ;
-        true_group.reset(new TrueGroupFunction(nGroup)) ;
+//         size_t nGroup = Group::autoincrement ;
+//         true_group.reset(new TrueGroupFunction(nGroup)) ;
        
-        // debug("lits: ", vector_to_string(lits));
-        for (size_t i = 1; i < lits.size(); ++i) { // Start from index 1
-            clingo_literal_t l = lits[i];
-            try {
-                update_phase(l, 0); 
-                inconsistent_at_level_0 = false;
-            } catch (const std::exception& e) {
-                inconsistent_at_level_0 = true;
-                // debug("Incosistent at level 0: ",e.what())
-                // break;
-            }
-        }
+//         // debug("lits: ", vector_to_string(lits));
+//         for (size_t i = 1; i < lits.size(); ++i) { // Start from index 1
+//             clingo_literal_t l = lits[i];
+//             try {
+//                 update_phase(l, 0); 
+//                 inconsistent_at_level_0 = false;
+//             } catch (const std::exception& e) {
+//                 inconsistent_at_level_0 = true;
+//                 // debug("Incosistent at level 0: ",e.what())
+//                 // break;
+//             }
+//         }
 
-        // max_diff = ge ? max_diff : -max_diff ;
-        if(lazy_dynamic) LAZY_PERC = ge ? lb / static_cast<float>(lb + max_diff) :  (ub - max_diff) / static_cast<float>(ub);
-        // debugf("max_diff ", max_diff)
-        std::string lazy_perc_str = lazy_prop_activated ? " lazy threshold " + std::to_string(AmoSumPropagator::LAZY_PERC) : SETTINGS::NONE_STR;
-        debugf("Starting propagator with param ",unordered_map_to_string(params), lazy_perc_str);
+//         // max_diff = ge ? max_diff : -max_diff ;
+//         if(lazy_dynamic) LAZY_PERC = ge ? lb / static_cast<float>(lb + max_diff) :  (ub - max_diff) / static_cast<float>(ub);
+//         // debugf("max_diff ", max_diff)
+//         std::string lazy_perc_str = lazy_prop_activated ? " lazy threshold " + std::to_string(AmoSumPropagator::LAZY_PERC) : SETTINGS::NONE_STR;
+//         debugf("Starting propagator with param ",unordered_map_to_string(params), lazy_perc_str);
 
 
-        // debugf("Intial mps of ",ID ,"is: ", _mps);
+//         // debugf("Intial mps of ",ID ,"is: ", _mps);
 
-        // Set facts to literals starting from index 1
-        facts.assign(lits.begin() + 1, lits.end());
+//         // Set facts to literals starting from index 1
+//         facts.assign(lits.begin() + 1, lits.end());
 
-        // Set class variables
-        last_decision_lit = 1;
-        dl = 0;
+//         // Set class variables
+//         last_decision_lit = 1;
+//         dl = 0;
         
-        return bind;
-}
+//         return bind;
+// }
 
 void AmoSumPropagator::update_lazy_propagation() {
         float p;
@@ -314,6 +311,8 @@ std::tuple<int, clingo_literal_t, clingo_literal_t> AmoSumPropagator::mps(Group*
         return {mps_h, l, ml_g};
     } else {
         assert(true_group->get(g) == SETTINGS::NONE);
+        // clingo_literal_t ml = m_w(g, ge);
+        // if (ml != l) return {_mps, SETTINGS::NONE, ml};
         auto [sml_g, ml_g] = g->update(I, ge, false, false, SETTINGS::NONE);
         int mw_g = weight->get(ml_g);
 
@@ -327,32 +326,40 @@ std::tuple<int, clingo_literal_t, clingo_literal_t> AmoSumPropagator::mps(Group*
 const std::vector<clingo_literal_t>* AmoSumPropagator::getReasonForLiteral(const clingo_literal_t& lit){
 
     std::vector<clingo_literal_t>* rt = reason_trues->get(lit);
-    std::vector<clingo_literal_t> &R = rt != nullptr and rt->size() > 0 ? *rt : reason ;
-    if(rt != nullptr and rt->size() > 0) extend_vector(R, reason);
+    bool true_literal = rt != nullptr and rt->size() > 0 ;
+    std::vector<clingo_literal_t> &R = true_literal ? *rt : reason ;
+    if(true_literal) extend_vector(R, reason);
 
     std::unordered_set<clingo_literal_t>* rl = redundant_lits->get(lit) ;
-    std::vector<clingo_literal_t> R_copy = R ;
+    
+    // std::vector<clingo_literal_t> R_copy = R ;
+
     bool removed = false ;
 
-    if(rl != nullptr && rl->size() > 0){
+    // reduction just for true literals (it should happend more frequently)
+    if(rl != nullptr && rl->size() > 0 && true_literal){
         removed  = true ; 
         remove_elements(R, *rl);
     }
 
     print_reason(atomNames, R, lit, false);
 
-    if(get_map(params, std::string("min_r"), std::string(Minimize::NO_MINIMIZATION)) !=  Minimize::NO_MINIMIZATION){
-        double p ;
-        if (!R.empty()) {
-            double lc = static_cast<double>(R_copy.size());
-            p = (1.0 - (static_cast<double>(R.size()) / lc)) * 100.0;
-        } else {
-            p = 100.0;
-        }
+    // if(get_map(params, std::string("min_r"), std::string(Minimize::NO_MINIMIZATION)) !=  Minimize::NO_MINIMIZATION){
+    //     double p ;
+    //     if (!R.empty()) {
+    //         double lc = static_cast<double>(R_copy.size());
+    //         p = (1.0 - (static_cast<double>(R.size()) / lc)) * 100.0;
+    //     } else {
+    //         p = 100.0;
+    //     }
 
-        print_reduction_reason(*this, R_copy, R, lit, p, true);
+    //     print_reduction_reason(*this, R_copy, R, lit, p, true);
+    // }
+
+    reason.clear();
+    if(true_literal){
+        rt->clear();
     }
-
     return &R; 
 }
 

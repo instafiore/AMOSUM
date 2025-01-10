@@ -331,7 +331,6 @@ bool solve(clingo_control_t *ctl, clingo_solve_result_bitset_t *result) {
     while (true) {
         handle_error(clingo_solve_handle_resume(handle));
         handle_error(clingo_solve_handle_model(handle, &model));
-    
         // print the model
         if (model) { print_model(model);}
         // stop if there are no more models
@@ -390,18 +389,18 @@ void remove_elements(std::vector<clingo_literal_t>& original, const std::unorder
         original.end());
 }
 
-// void weights_names_log(const std::string& ID, const std::unordered_map<std::string, int>& weights_names) {
+#ifdef CHECK_MPS
+void weights_names_log(const std::string& ID, const std::unordered_map<std::string, int>& weights_names) {
     
-//     nlohmann::json json_weights = weights_names; // Convert weights_names to JSON
-//     std::ostringstream oss;
-//     oss << "id: " << ID << " total_weight_names: " << json_weights.dump();
-//     debugf(oss.str());
+    nlohmann::json json_weights = weights_names; // Convert weights_names to JSON
+    std::ostringstream oss;
+    oss << "id: " << ID << " total_weight_names: " << json_weights.dump();
+    debugf(oss.str());
     
-// }
+}
+#endif
 
 void create_reason_falses_ge(AmoSumPropagator* propagator) {
-    // auto start = start_timer();
-    propagator->reason.clear(); // Clear the existing reason vector.
 
     for (auto* g : propagator->groups) {
         if (propagator->true_group->get(g) == SETTINGS::NONE) {
@@ -421,7 +420,6 @@ void create_reason_falses_ge(AmoSumPropagator* propagator) {
         }
     }
 
-    // display_end_timer(start, "create_reason");
 }
 
 

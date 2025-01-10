@@ -26,6 +26,7 @@ bool PropagatorClingo::init(clingo_propagate_init_t *_init){
     // for (size_t i = 0; i < PropagatorClingoInitializer::get_instance()->nt; i++) to_watch_plit = this->propagators[i]->getLiterals(*PropagatorClingoInitializer::get_instance()->lits) ;
 
     size_t max_clause_size = this->propagators[0]->N;
+    // debugf("max_clause_size: ",max_clause_size);
     clause_clingo = new clingo_literal_t[max_clause_size];
 
     for(clingo_literal_t plit: to_watch_plit){
@@ -60,9 +61,9 @@ bool PropagatorClingo::add_clauses_propagated_lits(void *control, const std::vec
         const std::vector<clingo_literal_t>* R_plit = dl > 0 ? prop->getReasonForLiteral(plit) : nullptr;
         size_t clause_size = (dl > 0 ? R_plit->size() : 0) + 1 ;
         clingo_literal_t* clause = clause_clingo;
-        // clingo_literal_t* clause = new clingo_literal_t[clause_size];
         clingo_literal_t slit = (*map_plit_slit)[plit];
         clause[0] = slit ; 
+        assert(clause_size <= this->propagators[0]->N);
         for (size_t i = 1; i < clause_size; i++) {
             clingo_literal_t r_plit =  (*R_plit)[i-1];
             clause[i] = (*map_plit_slit)[r_plit];

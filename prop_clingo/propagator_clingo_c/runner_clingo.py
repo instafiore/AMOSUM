@@ -91,7 +91,7 @@ class RunnerClingoC(RunnerWasp):
         #     print(f"{output}")
 
         avoiding_time_information_regex = r"(real \d+\.\d+|user \d+\.\d+|sys \d+\.\d+)"
-        # error = re.sub(avoiding_time_information_regex, "", error, count=0, flags=0).strip()
+        error = re.sub(avoiding_time_information_regex, "", error, count=0, flags=0).strip()
         if RunnerWasp.PRINT_ERROR_SOLVER and error != "":
             print(error, file=sys.stderr)
 
@@ -131,10 +131,12 @@ class RunnerClingoC(RunnerWasp):
 
     def compile(self):
         clean = self.param.get("clean",False) 
+        clean = clean or self.param.get("d",False) or self.param.get("check_mps",False) or self.param.get("sanitize",False)
         compile_with_debug = "DEBUG=-DDEBUG" if self.param.get("d",False) else ""
-        clean =  True if compile_with_debug == "DEBUG=-DDEBUG" else clean 
+        compile_with_check_mps = "CHECK_MPS=-DCHECK_MPS" if self.param.get("check_mps",False) else ""
+        compile_with_sanitize = 'SANITIZE_ADDRESS="-fsanitize=address -g"' if self.param.get("sanitize", False) else ""
         clean_run = f"make -C {PROPAGATOR_DIR_LOCATION_CLINGO_C} clean"
-        compile_run = f"make -C {PROPAGATOR_DIR_LOCATION_CLINGO_C} {compile_with_debug}"
+        compile_run = f"make -C {PROPAGATOR_DIR_LOCATION_CLINGO_C} {compile_with_debug} {compile_with_check_mps} {compile_with_sanitize}"
         # print(compile_run)
         subprocess.run(clean_run, shell=True) if clean else ""
         subprocess.run(compile_run, shell=True)

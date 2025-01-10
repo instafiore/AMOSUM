@@ -1,6 +1,6 @@
 CC = g++
-CFLAGS = -Wall -Wextra -std=c++17 $(DEBUG) -O3
-LDFLAGS =  -lclingo 
+CFLAGS = -Wall -Wextra -std=c++17 $(DEBUG) $(CHECK_MPS) $(SANITIZE_ADDRESS)  -O3
+LDFLAGS = -lclingo $(SANITIZE_ADDRESS)
 BUILD_DIR = build
 BIN_DIR = bin
 INCLUDES =  
@@ -21,7 +21,7 @@ test:
 $(TARGET): $(OBJS)
 	@echo "Linking $@"
 	@mkdir -p $(BIN_DIR)
-	$(CC)  -o $(BIN_DIR)/$@ $^ $(LDFLAGS)
+	$(CC) -o $(BIN_DIR)/$@ $^ $(LDFLAGS)
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.$(C)
 	@mkdir -p $(BUILD_DIR) # Create build directory if not exists

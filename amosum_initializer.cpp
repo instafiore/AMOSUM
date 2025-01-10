@@ -136,7 +136,11 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
     void AmoSumInitializer::specific_phase(const std::vector<clingo_literal_t>& lits, AmoSumPropagator* amosum_propagator){
         int max_diff = 0 ;
         std::string ID = amosum_propagator->ID ;
-        // weights_names_log(ID,  generic_data_map[ID]->weights_names);
+
+        #ifdef CHECK_MPS
+        weights_names_log(ID, generic_data_map[ID]->weights_names);
+        #endif
+
         for(auto &[group_id, lits_group]: generic_data_map[ID]->groups_raw){
                 std::vector<std::pair<int, int>> lits_ord;
                 for (int lit : lits_group) lits_ord.emplace_back(lit, weight->get(lit));

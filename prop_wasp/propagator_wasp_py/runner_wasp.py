@@ -160,11 +160,11 @@ class RunnerWasp:
         self.ub = self.param["ub"] if "ub" in self.param else None
         self.seed = self.param.get("seed","")
 
-        lb_gc_constraints = self.problem == RunnerWasp.GRAPH_COLOURING and (not self.lb or not self.weights) and re.match("ge",self.enc_type) if not self.exp else False
-        up_gc_constraint = self.problem == RunnerWasp.GRAPH_COLOURING and (not self.ub or not self.weights) and re.match("le",self.enc_type) if not self.exp else False
+        # lb_gc_constraints = self.problem == RunnerWasp.GRAPH_COLOURING and (not self.lb or not self.weights) and re.match("ge",self.enc_type) if not self.exp else False
+        # up_gc_constraint = self.problem == RunnerWasp.GRAPH_COLOURING and (not self.ub or not self.weights) and re.match("le",self.enc_type) if not self.exp else False
         
-        if lb_gc_constraints or up_gc_constraint:
-            raise Exception(f"Constraint of the graph colouring didn't meet, possible problems:\n\tYou did not define a proper bound for the graph colouring problem! ge -> lb, le -> up.\n\tYou did not require to put the 'weights' into the code")
+        # if lb_gc_constraints or up_gc_constraint:
+        #     raise Exception(f"Constraint of the graph colouring didn't meet, possible problems:\n\tYou did not define a proper bound for the graph colouring problem! ge -> lb, le -> up.\n\tYou did not require to put the 'weights' into the code")
 
         # whether or not the number of tests is specified, 
         # if it is not it will run all the instances for the given problem

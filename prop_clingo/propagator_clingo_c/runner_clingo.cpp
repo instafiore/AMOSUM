@@ -12,53 +12,28 @@
 #include "propagator_clingo.h"
 #include <chrono>
 
-// std::chrono::duration<double> whole_init_time(0.0);  
-// std::chrono::duration<double> whole_propagate_time(0.0);  
-// std::chrono::duration<double> whole_undo_time(0.0);
-
 void register_propagator(clingo_control_t *ctl, clingo_propagator_t prop, std::string prop_type, const ParameterMap& param, std::vector<PropagatorClingo*> &propagators);
 bool init(clingo_propagate_init_t *_init, PropagatorClingo *propagator){
-    // auto start = std::chrono::high_resolution_clock::now();
     bool res =  propagator->init(_init);
-    // auto end = std::chrono::high_resolution_clock::now();
-    // std::chrono::duration<double> elapsed = end - start;
-    // debugf("init time: ",elapsed.count(), "s");
-    // whole_init_time += elapsed;
     return res;
 }
 bool propagate(clingo_propagate_control_t *control, const clingo_literal_t *changes, size_t size, PropagatorClingo *propagator){ 
-    // auto start = std::chrono::high_resolution_clock::now();
     bool res =  propagator->propagate(control, changes, size);
-    // auto end = std::chrono::high_resolution_clock::now();
-    // std::chrono::duration<double> elapsed = end - start;
-    // debugf(propagator->propagators[0]->ID, " propagate time: ",elapsed.count(), "s");
-    // whole_propagate_time += elapsed;
     return res;
 }
 void undo(clingo_propagate_control_t *control, const clingo_literal_t *changes, size_t size, PropagatorClingo *propagator){
-    // auto start = std::chrono::high_resolution_clock::now();
     propagator->undo(control, changes, size);
-    // auto end = std::chrono::high_resolution_clock::now();
-    // std::chrono::duration<double> elapsed = end - start;
-    // debugf("undo time: ",elapsed.count(), "s");
-    // whole_undo_time += elapsed;
 }
 
 int main(int argc, char const *argv[])
 {
-    debugf("propagator_clingo.cpp started");
 
     ParameterMap params =  init_param(argc, argv);
-    // print_unordered_map(params);
 
     std::string encoding_path = "" ;
     params.find("enc") != params.end() ? encoding_path = params.find("enc")->second : NULL ;
     std::string instance_path = "" ;
     params.find("i") != params.end() ? instance_path = params.find("i")->second : NULL ;
-
-    // printf("encoding: %s\n", encoding_path.c_str());
-    // print("encoding: ", encoding_path.c_str());
-    // print("instance: ", instance_path.c_str());
 
     std::string encoding = cat(encoding_path);
     std::string instance = cat(instance_path);
@@ -106,31 +81,8 @@ int main(int argc, char const *argv[])
     if (params.find("i") != params.end()) handle_error(clingo_control_load(ctl, instance_path.c_str()));
     
 
-    // ground the pigeon part
     handle_error((clingo_control_ground(ctl, parts, 1, NULL, NULL)));
-    
-    // solve using a model callback
-    // auto start = std::chrono::high_resolution_clock::now();
     handle_error(solve(ctl, &solve_ret));
-    // auto end = std::chrono::high_resolution_clock::now();
-    // std::chrono::duration<double> elapsed = end - start;
-    // debugf("whole solve time: ",elapsed.count(), "s")
-
-    // debugf("whole_init_time: ", whole_init_time.count(),"s");
-    // debugf("whole_propagate_time: ", whole_propagate_time.count(),"s");
-    // debugf("whole_undo_time: ", whole_undo_time.count(),"s");
-
-    // int max_count = 0 ;
-    // for(auto propagator: propagators){
-    //     if (max_count < propagator->propagators[0]->count)
-    //         max_count = propagator->propagators[0]->count ;
-    //     // size_t count_S = propagator->propagators[0]->count_S;
-    //     // size_t count_R = propagator->propagators[0]->count_R;
-    //     // if(count_S == 0) debugf("no propagation")
-    //     // else debugf("count_S ",count_S, " count_R ", count_R," percentage of reason per propagation ", count_R / static_cast<double>(count_S));
-    // }
-
-    // debugf("Iterations: ", max_count);
 
     // Interpret the result
     if (solve_ret & clingo_solve_result_satisfiable) {
@@ -149,7 +101,6 @@ int main(int argc, char const *argv[])
     }
     
     // FREE
-    
     for(auto& propagator: propagators){
         if(propagator) delete propagator;
     }

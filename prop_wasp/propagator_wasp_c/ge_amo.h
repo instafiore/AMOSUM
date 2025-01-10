@@ -36,11 +36,11 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, Am
             int i = sml_g != SETTINGS::NONE ? g->ord_i[sml_g] : SETTINGS::NONE;
             int j = g->ord_i[ml_g_res];
             auto rst = propagator->reason_trues->get(ml_g);
+
             if(rst == nullptr) {
                 rst = new std::vector<clingo_literal_t>();
                 propagator->reason_trues->set(ml_g, rst);
             }
-            else rst->clear();
             
             for (int k = i; propagator->dl != 0 and k < j; ++k) {
                 clingo_literal_t lit = g->ord_l[k];
@@ -48,6 +48,8 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, Am
                     rst->push_back(lit);
                 }
             }
+
+            
             if(!propagator->to_be_propagated->get(ml_g_res)) {
                 propagator->to_be_propagated->set(ml_g_res, true);
                 propagator->S.push_back(ml_g_res);
