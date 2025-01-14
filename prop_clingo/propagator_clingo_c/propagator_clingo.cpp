@@ -69,7 +69,6 @@ bool PropagatorClingo::add_clauses_propagated_lits(void *control, const std::vec
             clause[i] = (*map_plit_slit)[r_plit];
         }
 
-
         bool result_add_clause;
         init ? handle_error(clingo_propagate_init_add_clause((clingo_propagate_init*) control, clause, clause_size, &result_add_clause)) :
         handle_error(clingo_propagate_control_add_clause((clingo_propagate_control*) control, clause, clause_size, clingo_clause_type_learnt, &result_add_clause)) ;
@@ -95,7 +94,7 @@ bool PropagatorClingo::propagate(clingo_propagate_control_t *control, const clin
     int td; 
     dl == 0 ? td = 0 : td = clingo_propagate_control_thread_id(control) ; 
     AmoSumPropagator* prop = propagators[td];
-    print_propagate(this, changes, size, control, dl, false, false);
+    print_propagate(this, changes, size, control, dl, false , false);
 
     for (size_t i = 0; i < size; i++)
     {

@@ -21,7 +21,7 @@ workshift(6,"6-holiday",0).
 % #amosum{ H : assign(N,T,D), workshift(T,_,H) [(D,N)] } <= MAX : nurse(N), maxHoursPerYear(MAX).
 
 % :- nurse(N), minHoursPerYear(MIN), #sum{H,D : assign(N,T,D), workshift(T,_,H)} < MIN.
-#amosum{ H : assign(N,T,D), workshift(T,_,H)[(D,N)] } >= MIN : nurse(N), minHoursPerYear(MIN).
+#amosum{ H : assign(N,T,D), workshift(T,_,H) [(D,N)] } >= MIN : nurse(N), minHoursPerYear(MIN).
 % #amosum{ H : assign(N,T,D), workshift(T,_,H), H > 0 [(D,N)] } >= MIN : nurse(N), minHoursPerYear(MIN).
 
 % Each nurse cannot work twice in 24 hours.

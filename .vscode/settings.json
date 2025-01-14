@@ -89,6 +89,7 @@
         "valarray": "cpp",
         "ranges": "cpp",
         "text_encoding": "cpp",
-        "json.hpp": "c"
+        "json.hpp": "c",
+        "__availability": "cpp"
     }
 }

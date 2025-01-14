@@ -2,6 +2,7 @@
 #include "amosum_initializer.h"
 
 
+const std::string AmoSumInitializer::DEFAULT_LAZY = std::string("dynamic");
 
 const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::vector<clingo_literal_t>& lits, AmoSumPropagator* amosum_propagator){
 
@@ -11,8 +12,13 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
         amosum_propagator->strategy = get_map(amosum_propagator->params, std::string("strategy"), amosum_propagator->strategy);
         amosum_propagator->I.reset(new InterpretationFunction(amosum_propagator->N));
         amosum_propagator->group.reset(new GroupFunction(amosum_propagator->N));
-        
+
+        #ifdef PRIVATE_REASON
+        amosum_propagator->reason.reset(new PerfectHash<std::vector<clingo_literal_t>*> (amosum_propagator->N, nullptr));
+        #else
         amosum_propagator->reason_trues.reset(new PerfectHash<std::vector<clingo_literal_t>*> (amosum_propagator->N, nullptr));
+        #endif
+
         amosum_propagator->redundant_lits.reset(new PerfectHash<std::unordered_set<clingo_literal_t>*> (amosum_propagator->N, nullptr));
         amosum_propagator->to_be_propagated.reset(new PerfectHash<bool>(amosum_propagator->N, false));
         amosum_propagator->_mps = 0;
@@ -136,6 +142,9 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
     void AmoSumInitializer::specific_phase(const std::vector<clingo_literal_t>& lits, AmoSumPropagator* amosum_propagator){
         int max_diff = 0 ;
         std::string ID = amosum_propagator->ID ;
+        std::string lazy_param = get_map(amosum_propagator->params, std::string("lazy"), DEFAULT_LAZY) ;
+        amosum_propagator->lazy_prop_activated = lazy_param != SETTINGS::FALSE_STR;
+        bool lazy_dynamic = lazy_param == "dynamic" ;
 
         #ifdef CHECK_MPS
         weights_names_log(ID, generic_data_map[ID]->weights_names);
@@ -159,7 +168,7 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
                 Group* G = new Group(ord_l,ord_i,group_id) ;
 
                 int max_w = weight->get(m_w(G, amosum_propagator->ge));
-                int min_w = weight->get(m_w(G, !amosum_propagator->ge)) ;
+                int min_w = amosum_propagator->lazy_prop_activated ? weight->get(m_w(G, !amosum_propagator->ge)) : 0 ;
 
 
                 amosum_propagator->_mps = amosum_propagator->_mps + max_w;
@@ -186,9 +195,8 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
             }
         }
 
-        std::string lazy_param = get_map(amosum_propagator->params, std::string("lazy"), std::string("dynamic")) ;
-        amosum_propagator->lazy_prop_activated = lazy_param != SETTINGS::FALSE_STR;
-        bool lazy_dynamic = lazy_param == "dynamic" ;
+        // debugf("max_diff: ", max_diff); 
+
         amosum_propagator->LAZY_PERC = amosum_propagator->lazy_prop_activated && lazy_param != SETTINGS::TRUE_STR && !lazy_dynamic ? std::stof(lazy_param) : amosum_propagator->LAZY_PERC ;
         amosum_propagator->lazy_condition = !amosum_propagator->lazy_prop_activated;
         if(lazy_dynamic) amosum_propagator->LAZY_PERC = amosum_propagator->ge ? amosum_propagator->lb / static_cast<float>(amosum_propagator->lb + max_diff) :  (amosum_propagator->ub - max_diff) / static_cast<float>(amosum_propagator->ub);

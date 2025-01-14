@@ -402,6 +402,7 @@ void weights_names_log(const std::string& ID, const std::unordered_map<std::stri
 
 void create_reason_falses_ge(AmoSumPropagator* propagator, clingo_literal_t flipped = SETTINGS::NONE) {
 
+    
     for (auto* g : propagator->groups) {
         if (propagator->true_group->get(g) == SETTINGS::NONE) {
             clingo_literal_t ml_g = m_w(g, propagator->ge);
@@ -410,21 +411,42 @@ void create_reason_falses_ge(AmoSumPropagator* propagator, clingo_literal_t flip
             for (int i = static_cast<int>(g->ord_l.size()) - 1; i >= 0; --i) {
                 clingo_literal_t l = g->ord_l[i];
                 if (propagator->weight->get(l) < mw_g) break;
-                if (propagator->I->get(l) != SETTINGS::NONE && !equals(l, flipped)) {
+                if (!propagator->I->get(l) && !equals(l, flipped)) {
+                    #ifdef PRIVATE_REASON
+                    for(auto lit : propagator->S){
+                        auto R = get_perfect_hash_with_pointer(propagator->reason.get(), lit);
+                        Group* G = propagator->group->get(lit);
+                        if (G == nullptr) G = propagator->group->get(not_(lit));
+                        if(g == G) continue; 
+                        R->push_back(l);
+                    }
+                    #else
                     propagator->reason_falses.push_back(l);
+                    #endif
                 }
             }
         } 
         else if(!equals(propagator->true_group->get(g), flipped)) {
+            #ifdef PRIVATE_REASON
+            for(auto lit : propagator->S){
+                auto R = get_perfect_hash_with_pointer(propagator->reason.get(), lit);
+                Group* G = propagator->group->get(lit);
+                if (G == nullptr) G = propagator->group->get(not_(lit));
+                if(g == G) continue; 
+                R->push_back(not_(propagator->true_group->get(g)));
+            }
+            #else
             propagator->reason_falses.push_back(not_(propagator->true_group->get(g)));
+            #endif
         }
     }
+    
 
 }
 
 
 void create_reason_falses_le(AmoSumPropagator* propagator, clingo_literal_t flipped = SETTINGS::NONE) {
-    propagator->reason_falses.clear(); // Clear the existing reason vector.
+    // propagator->reason_falses.clear(); // Clear the existing reason vector.
 
     for (auto* g : propagator->groups) {
         if (propagator->true_group->get(g) == SETTINGS::NONE) {
@@ -434,32 +456,49 @@ void create_reason_falses_le(AmoSumPropagator* propagator, clingo_literal_t flip
             for (clingo_literal_t l : g->ord_l) {
                 if (propagator->weight->get(l) > mw_g) break;
                 if (propagator->I->get(l) != SETTINGS::NONE && !equals(l, flipped)) {
-                    propagator->reason_falses.push_back(l);
+                    // propagator->reason_falses.push_back(l);
                 }
             }
         } else if(!equals(propagator->true_group->get(g), flipped)) {
-            propagator->reason_falses.push_back(not_(propagator->true_group->get(g)));
+            // propagator->reason_falses.push_back(not_(propagator->true_group->get(g)));
         }
     }
+}
+
+std::string vector_lit_to_string(const std::unordered_map<clingo_symbol_t, clingo_literal_t>* atomNames, const std::vector<clingo_literal_t>& vec, std::string name = ""){
+    std::ostringstream oss;
+    int n = vec.size() ;
+    
+    oss<<name<<"[";
+    for (int i = 0; i < n-1; i++) oss << "'" <<get_name(atomNames, vec[i])<< "'" << ",";
+    if (n > 0) oss<<"'"<<get_name(atomNames, vec[n-1])<<"'";
+
+    oss<<"]";
+    return oss.str();
 }
 
 void create_reason_true_ge(AmoSumPropagator* propagator, clingo_literal_t sml_g, clingo_literal_t derived, Group* g){
     int i = sml_g != SETTINGS::NONE ? g->ord_i[sml_g] : 0;
     int j = g->ord_i[derived];
-    auto rst = get_perfect_hash_with_pointer(propagator->reason_trues.get(), derived);
-   
-    if(i > j){
-        debugf("i: ",i, " j: ",j, " dl: ", propagator->dl);
-        assert(propagator->dl == 0);
-    }
 
+    #ifdef PRIVATE_REASON
+    auto R = get_perfect_hash_with_pointer(propagator->reason.get(), derived);
+    #else
+    auto rst = get_perfect_hash_with_pointer(propagator->reason_trues.get(), derived);
+    rst->clear();
+    #endif
+
+    assert(i <= j);
     assert(derived != SETTINGS::NONE);
-    assert(rst);
     
     for (int k = i; propagator->dl != 0 and k < j; ++k) {
         clingo_literal_t lit = g->ord_l[k];
         if (!propagator->I->get(lit)) {
+            #ifdef PRIVATE_REASON
+            R->push_back(lit);
+            #else
             rst->push_back(lit);
+            #endif
         }
     }
 }
@@ -472,6 +511,8 @@ void raise_exception(std::string message){
 void raise_wasp_not_implemented_exception(){
     raise_exception("wasp not implemented yet");
 }
+
+
 
 
 void print_derivation(const std::unordered_map<clingo_symbol_t, clingo_literal_t>* atomNames, const std::vector<clingo_literal_t>& S, bool force_print = false){
@@ -558,12 +599,10 @@ void print_propagate(PropagatorClingo* prop, const clingo_literal_t *changes, si
     }
     
     std::string decision_literal_name ; 
-
     
-    
-    // decision_slit != 1 ? decision_literal_name = get_name(prop->atomNames, plit) : decision_literal_name = "from facts" ;
+    decision_slit != 1 ? decision_literal_name = get_name(prop->atomNames, plit) : decision_literal_name = "from facts" ;
 
-    // debugf("[", decision_literal_name,", ",dl,"] propagate ", changes_str," td: ", td);
+    debugf("[", decision_literal_name,", ",dl,"] propagate ", changes_str," td: ", td);
 }
 
 void print_undo(PropagatorClingo* prop, const clingo_literal_t *changes, size_t size, clingo_propagate_control_t *control, int dl, int td, bool force_print = false, bool wasp_b = false){
@@ -596,17 +635,7 @@ clingo_literal_t max_w(const Group* g) {
     }
 }
 
-std::string vector_lit_to_string(const std::unordered_map<clingo_symbol_t, clingo_literal_t>* atomNames, const std::vector<clingo_literal_t>& vec, std::string name = ""){
-    std::ostringstream oss;
-    int n = vec.size() ;
-    
-    oss<<name<<"[";
-    for (int i = 0; i < n-1; i++) oss << "'" <<get_name(atomNames, vec[i])<< "'" << ",";
-    if (n > 0) oss<<"'"<<get_name(atomNames, vec[n-1])<<"'";
 
-    oss<<"]";
-    return oss.str();
-}
 
 
 // Function to return the min undefined literal

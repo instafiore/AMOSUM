@@ -18,7 +18,7 @@ private:
     std::unique_ptr<WeightFunction> weight ;
     std::unordered_map<std::string, AggregateFunction*> aggregate_map ;
     std::unordered_map<std::string, generic_data*> generic_data_map ;
-
+    static const std::string DEFAULT_LAZY;
 public:
     static AmoSumInitializer* get_instance(){
         if(instance == nullptr) instance = new AmoSumInitializer() ;
@@ -40,3 +40,4 @@ public:
         delete instance ;
     }
 };
+

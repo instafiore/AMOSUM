@@ -14,34 +14,39 @@
 
 const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, AmoSumPropagator* propagator){
 
+    #ifndef PRIVATE_REASON
     propagator->reason_falses.clear();
+    #endif
     propagator->S.clear();
 
     if (propagator->mps_violated) {
+
+        assert(propagator->lazy_prop_activated);
+
         clingo_literal_t l = propagator->current_literal ;
-        
+        propagator->S.push_back(not_(l));
+
+        #ifdef PRIVATE_REASON
+        auto R = get_perfect_hash_with_pointer(propagator->reason.get(), not_(l));
+        R->clear();
+        #endif
+
         bool derived_true = false;
         Group* g = propagator->group->get(l);
         if(g == nullptr){
             derived_true = true ;
             g = propagator->group->get(not_(l));
         }
-
-
-        int wl = propagator->weight->get(l);
-        float ap = propagator->lb / static_cast<float>(propagator->_mps);
         
-        assert(false);
-
         create_reason_falses_ge(propagator, not_(l));
         
         if(derived_true){
-            auto [sml_g, ml_g] = g->update_max(propagator->I, true, false, not_(l));
+            clingo_literal_t sml_g = G != nullptr ? max_w(G) : SETTINGS::NONE;
             create_reason_true_ge(propagator, sml_g, not_(l), g);
         }
-        // else  propagator->add_redundant_lits(not_(l), g->ord_l);
 
-        propagator->S.push_back(not_(l));
+        
+
         print_derivation(propagator->atomNames, propagator->S, false);
         return &propagator->S;
     }
@@ -58,14 +63,18 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, Am
         
         bool propagate_to_true = false;
         if (mps_h < propagator->lb) {
-            create_reason_true_ge(propagator, sml_g, ml_g, g);
             
-            // if(!propagator->to_be_propagated->get(ml_g_res)) {
-            //     propagator->to_be_propagated->set(ml_g_res, true);
-            //     propagator->S.push_back(ml_g_res);
-            //     derived_true.push_back(ml_g_res);
-            // }
-            propagator->S.push_back(ml_g_res);
+            if(!propagator->to_be_propagated->get(ml_g_res)) {
+                propagator->to_be_propagated->set(ml_g_res, true);
+                propagator->S.push_back(ml_g_res);
+                derived_true.push_back(ml_g_res);
+                #ifdef PRIVATE_REASON
+                auto R = get_perfect_hash_with_pointer(propagator->reason.get(), ml_g_res);
+                R->clear();
+                #endif
+                create_reason_true_ge(propagator, sml_g, ml_g, g);
+            }
+
             propagate_to_true = true;
             
         }
@@ -75,12 +84,14 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, Am
                 if (propagator->I->get(l) == SETTINGS::NONE) {
                     if (std::get<0>(propagator->mps(g, l, true)) < propagator->lb) {
                         
-                        // if(!propagator->to_be_propagated->get(not_(l))) {
-                        //     // propagator->add_redundant_lits(not_(l), g->ord_l);
-                        //     propagator->to_be_propagated->set(not_(l), true);
-                        //     propagator->S.push_back(not_(l));
-                        // }
-                        propagator->S.push_back(not_(l));
+                        if(!propagator->to_be_propagated->get(not_(l))) {
+                            propagator->to_be_propagated->set(not_(l), true);
+                            propagator->S.push_back(not_(l));
+                            #ifdef PRIVATE_REASON
+                            auto R = get_perfect_hash_with_pointer(propagator->reason.get(), not_(l));
+                            R->clear();
+                            #endif
+                        }
 
                     } else {
                         break;
