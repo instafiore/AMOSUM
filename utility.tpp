@@ -10,13 +10,28 @@ V PerfectHash<V>::get(int lit) const{
     return values[i];
 }
 
+
 template <typename V>
-void PerfectHash<V>::set(const int& key, const V& value) {
+V* get_perfect_hash_with_pointer(PerfectHash<V*>* ph, int lit){
+    // Determine the index for positive or negative literals
+    auto res = ph->get(lit);
+
+    if(res == nullptr) {
+        V* pointer = new V();
+        ph->set(lit, pointer);
+        return pointer ;
+    }
+    else return res ;
+}
+
+
+template <typename V>
+void PerfectHash<V>::set(const int& key, const V& value){
     // Determine the index for positive or negative literals
     int i = (key > 0) ? key : (abs(key) + N);
     if(i < 0 or i >= values.size()){
-        debug("overflow: ",i, " key: ",key);
-        return ; 
+        debugf("overflow: ",i, " key: ",key);
+        exit(0) ; 
     }
     values[i] = value;
 }
@@ -100,6 +115,16 @@ void extend_vector(std::vector<T>& to_extend, const std::vector<T>& input, int i
     if (i < 0) i = 0;
 
     for (; i < j; i++) to_extend.push_back(input[i]);
+}
+
+template <typename T>
+void extend_unordered_set(std::unordered_set<T>& to_extend, const std::vector<T>& input, int i = 0, int j = -1) {
+    if (j == -1 || j > static_cast<int>(input.size())) j = input.size();
+    if (i < 0) i = 0;
+
+    for (; i < j; i++) {
+        to_extend.emplace(input[i]);
+    }
 }
 
 

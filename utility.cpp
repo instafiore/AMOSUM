@@ -369,12 +369,12 @@ std::tuple<bool, const std::vector<clingo_literal_t>* (*)(const Group*, AmoSumPr
     return std::make_tuple(ge, propagation_phase, choice_cons);
 }
 
-void create_reason_falses(AmoSumPropagator* propagator, bool ge) {
+void create_reason_falses(AmoSumPropagator* propagator, bool ge, clingo_literal_t flipped = SETTINGS::NONE) {
     // TODO: modify propagator->reason
     if (ge) {
-        create_reason_falses_ge(propagator);
+        create_reason_falses_ge(propagator, flipped);
     } else {
-        create_reason_falses_le(propagator);
+        create_reason_falses_le(propagator, flipped);
     }
 }
 
@@ -400,7 +400,7 @@ void weights_names_log(const std::string& ID, const std::unordered_map<std::stri
 }
 #endif
 
-void create_reason_falses_ge(AmoSumPropagator* propagator) {
+void create_reason_falses_ge(AmoSumPropagator* propagator, clingo_literal_t flipped = SETTINGS::NONE) {
 
     for (auto* g : propagator->groups) {
         if (propagator->true_group->get(g) == SETTINGS::NONE) {
@@ -410,21 +410,21 @@ void create_reason_falses_ge(AmoSumPropagator* propagator) {
             for (int i = static_cast<int>(g->ord_l.size()) - 1; i >= 0; --i) {
                 clingo_literal_t l = g->ord_l[i];
                 if (propagator->weight->get(l) < mw_g) break;
-                if (propagator->I->get(l) != SETTINGS::NONE) {
-                    propagator->reason.push_back(l);
+                if (propagator->I->get(l) != SETTINGS::NONE && !equals(l, flipped)) {
+                    propagator->reason_falses.push_back(l);
                 }
             }
         } 
-        else {
-            propagator->reason.push_back(not_(propagator->true_group->get(g)));
+        else if(!equals(propagator->true_group->get(g), flipped)) {
+            propagator->reason_falses.push_back(not_(propagator->true_group->get(g)));
         }
     }
 
 }
 
 
-void create_reason_falses_le(AmoSumPropagator* propagator) {
-    propagator->reason.clear(); // Clear the existing reason vector.
+void create_reason_falses_le(AmoSumPropagator* propagator, clingo_literal_t flipped = SETTINGS::NONE) {
+    propagator->reason_falses.clear(); // Clear the existing reason vector.
 
     for (auto* g : propagator->groups) {
         if (propagator->true_group->get(g) == SETTINGS::NONE) {
@@ -433,12 +433,33 @@ void create_reason_falses_le(AmoSumPropagator* propagator) {
             
             for (clingo_literal_t l : g->ord_l) {
                 if (propagator->weight->get(l) > mw_g) break;
-                if (propagator->I->get(l) != SETTINGS::NONE) {
-                    propagator->reason.push_back(l);
+                if (propagator->I->get(l) != SETTINGS::NONE && !equals(l, flipped)) {
+                    propagator->reason_falses.push_back(l);
                 }
             }
-        } else {
-            propagator->reason.push_back(not_(propagator->true_group->get(g)));
+        } else if(!equals(propagator->true_group->get(g), flipped)) {
+            propagator->reason_falses.push_back(not_(propagator->true_group->get(g)));
+        }
+    }
+}
+
+void create_reason_true_ge(AmoSumPropagator* propagator, clingo_literal_t sml_g, clingo_literal_t derived, Group* g){
+    int i = sml_g != SETTINGS::NONE ? g->ord_i[sml_g] : 0;
+    int j = g->ord_i[derived];
+    auto rst = get_perfect_hash_with_pointer(propagator->reason_trues.get(), derived);
+   
+    if(i > j){
+        debugf("i: ",i, " j: ",j, " dl: ", propagator->dl);
+        assert(propagator->dl == 0);
+    }
+
+    assert(derived != SETTINGS::NONE);
+    assert(rst);
+    
+    for (int k = i; propagator->dl != 0 and k < j; ++k) {
+        clingo_literal_t lit = g->ord_l[k];
+        if (!propagator->I->get(lit)) {
+            rst->push_back(lit);
         }
     }
 }
@@ -733,9 +754,7 @@ void simplifyLiterals(
 }
 
 
-int increment_f(int l, const std::unordered_set<clingo_literal_t>& current_subset_maximal,
-                const WeightFunction*& weight, const GroupFunction*& group,
-                int head_reason, const std::unique_ptr<InterpretationFunction>& I, int max_b) {
+int increment_f(bool derived_true, clingo_literal_t l, const std::unordered_set<clingo_literal_t>& current_subset_maximal, const WeightFunction*& weight, const GroupFunction*& group, int head_reason, const std::unique_ptr<InterpretationFunction>& I, int max_b) {
     Group* g = group->get(l);
     bool tr = false;
 
@@ -760,6 +779,7 @@ int increment_f(int l, const std::unordered_set<clingo_literal_t>& current_subse
         Group* head_group = group->get(head_reason);
 
         if (g == head_group) {
+            if(!derived_true) return 0 ; // by default a literal of the same group of derived not l, where l in aggregate, is redundant
             auto [sml_g, ml_g] = g->update(I, max_b, false, false, SETTINGS::NONE);
             mw_g = weight->get(sml_g);
         } else {
@@ -782,15 +802,11 @@ int increment_f(int l, const std::unordered_set<clingo_literal_t>& current_subse
 }
 
 // Maximal subset with groups
-void maximal_subset_sum_less_than_s_with_groups(const std::vector<clingo_literal_t>& literals, int s,
-                                                           const WeightFunction* weight,
-                                                           const GroupFunction* group,
-                                                           int head_reason, const std::unique_ptr<InterpretationFunction>& I, int max,
-                                                           std::unordered_set<clingo_literal_t>& current_subset_maximal) {
+void maximal_subset_sum_less_than_s_with_groups(bool derived_true, const std::vector<clingo_literal_t>& literals, int s,const WeightFunction* weight, const GroupFunction* group, int head_reason, const std::unique_ptr<InterpretationFunction>& I, int max, std::unordered_set<clingo_literal_t>& current_subset_maximal) {
     int current_sum = 0;
 
     for (int l : literals) {
-        int inc = increment_f(l, current_subset_maximal, weight, group, head_reason, I, max);
+        int inc = increment_f(derived_true, l, current_subset_maximal, weight, group, head_reason, I, max);
         if (current_sum + inc <= s) {
             current_sum += inc;
             current_subset_maximal.emplace(l);
