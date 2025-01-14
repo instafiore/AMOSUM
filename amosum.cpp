@@ -15,7 +15,7 @@ void AmoSumPropagator::update_lazy_propagation() {
             p = _mps / static_cast<float>(bound);
         }
 
-        lazy_condition = p >= AmoSumPropagator::LAZY_PERC;
+        lazy_condition = p >= AmoSumPropagator::LAZY_PERC ;
         if (mps_violated) {
             lazy_condition = true;
         }
@@ -74,8 +74,8 @@ std::pair<bool, Group*> AmoSumPropagator::update_phase(clingo_literal_t l, int d
         update_lazy_propagation();
 
         // if(lazy_condition and count % 50000 == 0) debugf("[mps: ",_mps,", id: ",ID,"] iteration: ",count,"");
-
-    
+        // if(mps_violated) debugf(_mps, " violates ", bound, " at level ", dl);
+        
         G = (choice_cons == "EO") ? G : nullptr;
         bool current_sum_condition = !ge || current_sum < bound;
         bool next_phase = current_sum_condition && (w_p != w_n || amo_condition) && lazy_condition;
@@ -94,7 +94,7 @@ const std::vector<clingo_literal_t> AmoSumPropagator::simplifyAtLevelZero(const 
         assert(!mps_violated);
 
         update_lazy_propagation();
-        const std::vector<clingo_literal_t>* prop_from_facts = lazy_condition ? propagation_phase(nullptr, this) : new std::vector<clingo_literal_t>();
+        const std::vector<clingo_literal_t>* prop_from_facts = lazy_condition ? propagation_phase(nullptr, this) : nullptr;
         
         if (delete_lits) {
                 simplifyLiterals(facts, aggregate.get(), group.get(), ge, I); 
@@ -108,7 +108,7 @@ const std::vector<clingo_literal_t> AmoSumPropagator::simplifyAtLevelZero(const 
         std::vector<clingo_literal_t> propagated_at_level_0 ;
         std::vector<clingo_literal_t> assumption_literals = create_assumptions_lits(assumptions_vec, atomNames);
         extend_vector(propagated_at_level_0, assumption_literals);
-        extend_vector(propagated_at_level_0, *(prop_from_facts));
+        if(prop_from_facts) extend_vector(propagated_at_level_0, *(prop_from_facts));
         extend_vector(propagated_at_level_0, groups_literals);
 
         return propagated_at_level_0; 
@@ -143,40 +143,29 @@ const std::vector<clingo_literal_t>* AmoSumPropagator::getReasonForLiteral(const
 
     std::vector<clingo_literal_t>* rt = reason_trues->get(lit);
     bool true_literal = rt != nullptr and rt->size() > 0 ;
-    std::vector<clingo_literal_t> &R = true_literal ? *rt : reason ;
-    if(true_literal) extend_vector(R, reason);
+
+    // reason = true_literal ? *rt : reason_falses ;
+    std::vector<clingo_literal_t>& reason = true_literal ? *rt : reason_falses ;
+    if(true_literal) extend_vector(reason, reason_falses);
 
     std::unordered_set<clingo_literal_t>* rl = redundant_lits->get(lit) ;
-    
-    // std::vector<clingo_literal_t> R_copy = R ;
 
     bool removed = false ;
 
-    // reduction just for true literals (it should happend more frequently)
+
     if(rl != nullptr && rl->size() > 0 && true_literal){
+    // if(rl != nullptr && rl->size() > 0){
         removed  = true ; 
-        remove_elements(R, *rl);
+        remove_elements(reason, *rl);
         rl->clear();
     }
-
-    print_reason(atomNames, R, lit, false);
-
-    // if(get_map(params, std::string("min_r"), std::string(Minimize::NO_MINIMIZATION)) !=  Minimize::NO_MINIMIZATION){
-    //     double p ;
-    //     if (!R.empty()) {
-    //         double lc = static_cast<double>(R_copy.size());
-    //         p = (1.0 - (static_cast<double>(R.size()) / lc)) * 100.0;
-    //     } else {
-    //         p = 100.0;
-    //     }
-
-    //     print_reduction_reason(*this, R_copy, R, lit, p, true);
-    // }
 
     if(true_literal){
         rt->clear();
     }
-    return &R; 
+    
+    print_reason(atomNames, reason, lit, false);
+    return &reason; 
 }
 
 void AmoSumPropagator::updated_dl(int lit, int new_dl) {
@@ -184,6 +173,18 @@ void AmoSumPropagator::updated_dl(int lit, int new_dl) {
         last_decision_lit = lit;  // Update the last decision literal if dl is different
     }
     dl = new_dl;  // Update the decision level
+}
+
+void AmoSumPropagator::add_redundant_lits(clingo_literal_t l, std::vector<clingo_literal_t> redundant_lits_vec){
+    auto rd = get_perfect_hash_with_pointer(redundant_lits.get(), l);
+    rd->clear();
+    extend_unordered_set(*rd, redundant_lits_vec);
+}
+
+void AmoSumPropagator::add_redundant_lit(clingo_literal_t l, clingo_literal_t redundant_l){
+    auto rd = get_perfect_hash_with_pointer(redundant_lits.get(), l);
+    rd->clear();
+    rd->emplace(redundant_l);
 }
 
 
@@ -196,20 +197,15 @@ const std::vector<clingo_literal_t>* AmoSumPropagator::onLiteralTrue(const cling
     current_literal = lit ;
 
     if(I->get(lit) == true) return nullptr ; // If lit is already true then no progation will take place
-
     assert(I->get(lit) != false);
 
     auto [next_phase, G] = update_phase(lit, dl);
-
     if (dl == 0) {
         std::vector<clingo_literal_t> singleton = {lit} ;
         simplifyLiterals(singleton, aggregate.get(), group.get(), ge, I); 
     }
     
     const std::vector<clingo_literal_t>* propagated = next_phase ? propagation_phase(G, this) : nullptr;
-
-    // if(next_phase) debugf(ID," propagated");
-    
     return propagated ;
 }
 
@@ -259,11 +255,7 @@ void AmoSumPropagator::onLiteralsUndefined(const std::vector<clingo_literal_t>& 
         clingo_literal_t m_und = m_w(G, ge);
 
         if (m_und == SETTINGS::NONE) {
-            if (ge) {
-                G->set_max(l);
-            } else {
-                G->set_min(l);
-            }
+            ge ? G->set_max(l) :  G->set_min(l); 
 
             if (tg == SETTINGS::NONE) {
                 if (choice_cons == "AMO") {
@@ -287,19 +279,11 @@ void AmoSumPropagator::onLiteralsUndefined(const std::vector<clingo_literal_t>& 
 
             // Update max or min undefined
             if ((ge && pos_m < pos_l) || (!ge && pos_m > pos_l)) {
-                if (ge) {
-                    G->set_max(l);
-                } else {
-                    G->set_min(l);
-                }
+                ge ? G->set_max(l) :  G->set_min(l); 
             }
         } else {
             if ((ge && w_l >= m_weight && pos_l > pos_m) || (!ge && w_l <= m_weight && pos_l < pos_m)) {
-                if (ge) {
-                    G->set_max(l);
-                } else {
-                    G->set_min(l);
-                }
+                ge ? G->set_max(l) :  G->set_min(l); 
 
                 if (tg == SETTINGS::NONE) {
                     _mps = _mps - m_weight + w_l;
@@ -320,7 +304,6 @@ void AmoSumPropagator::compute_minimal_reason(const std::vector<clingo_literal_t
     for (auto l : to_minimize) {
         Group* g = group->get(l);
         bool derived_true = true;
-
         if (!g) {
             g = group->get(not_(l));
             derived_true = false;
@@ -329,30 +312,16 @@ void AmoSumPropagator::compute_minimal_reason(const std::vector<clingo_literal_t
 
         auto [mps_h, sml_g, ml_g] = mps(g, l, !derived_true);
         int s = lb - mps_h - 1;
-
-        auto rd = redundant_lits->get(l);
-        if(rd == nullptr) {
-            rd = new std::unordered_set<clingo_literal_t>();
-            redundant_lits->set(l, rd);
-        }
+        auto rd = get_perfect_hash_with_pointer(redundant_lits.get(), l);
 
         if (minimization == Minimize::MINIMAL) {
-            maximal_subset_sum_less_than_s_with_groups(reason, s, weight, group.get(), l, I, ge, *rd);
+            maximal_subset_sum_less_than_s_with_groups(derived_true, reason_falses, s, weight, group.get(), l, I, ge, *rd);
         } else if (minimization == Minimize::CARDINALITY_MINIMAL) {
-            // auto increment = compute_increment_literals(
-            //     reason,
-            //     group.get(),
-            //     weight.get()
-            // );
-            // redundant_lits->set(l, maximum_subset_sum_less_than_s_with_groups(
-            //     reason,
-            //     s,
-            //     increment,
-            //     group.get(),
-            //     I.get()
-            // ));
+            // NOT IMPLEMENTED
         } else {
             assert(false && "Unknown minimization strategy.");
         }
     }
 }
+
+

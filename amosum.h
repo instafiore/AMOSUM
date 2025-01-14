@@ -41,6 +41,7 @@ struct AmoSumPropagator
     std::vector<clingo_literal_t> S ;
 
     // reason common to all literals (either true or false literal)
+    std::vector<clingo_literal_t> reason_falses  ;
     std::vector<clingo_literal_t> reason  ;
 
     // A reason for true literals
@@ -147,6 +148,9 @@ struct AmoSumPropagator
     void updated_dl(int lit, int new_dl);
     inline bool is_in_aggregate(clingo_literal_t lit){ return aggregate->get(lit) || aggregate->get(not_(lit));}
     void compute_minimal_reason(const std::vector<clingo_literal_t>& to_minimize);
+
+    void add_redundant_lits(clingo_literal_t l, std::vector<clingo_literal_t> redundant_lits_vec);
+    void add_redundant_lit(clingo_literal_t l, clingo_literal_t redundant_l);
 };
 
 

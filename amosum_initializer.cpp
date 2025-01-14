@@ -43,6 +43,7 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
     void AmoSumInitializer::common_phase(AmoSumPropagator* amosum_propagator){
         
         atomNamesString = create_atomNames_string(amosum_propagator->atomNames);
+        debugf("N: ", amosum_propagator->N);
 
         for(auto &[symbolic_atom, literal]: *amosum_propagator->atomNames){
                 
@@ -101,7 +102,6 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
                     gd->bind.push_back(lit);
                     gd->bind.push_back(not_(lit));
                     
-                    // debug("group:",a," atom_name: ",atom_name, " weight: ", weight->get(lit), " group_id: ", group_id, " sign: ",sign);
             }else if((a.length() > SETTINGS::PREDICATE_LB.length() and a.substr(0, SETTINGS::PREDICATE_LB.length() + 1) == SETTINGS::PREDICATE_LB + "(") || 
                      (a.length() > SETTINGS::PREDICATE_UB.length() and a.substr(0, SETTINGS::PREDICATE_UB.length() + 1) == SETTINGS::PREDICATE_UB + "(")) {
                     clingo_symbol_t const *terms;
@@ -165,8 +165,7 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
                 amosum_propagator->_mps = amosum_propagator->_mps + max_w;
 
                 int diff = std::abs(max_w - min_w) ;
-                // debugf("m_w(G, amosum_propagator->ge): ",m_w(G, amosum_propagator->ge)," max_w: ", max_w, " min_w: ", min_w, " diff: ", diff, " ord_l: ", vector_to_string(ord_l), " ord_i: ", unordered_map_to_string(ord_i));
-
+                
                 if (max_diff < diff)  max_diff = diff ;
 
                 amosum_propagator->groups.push_back(G);
@@ -177,7 +176,6 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
         size_t nGroup = Group::autoincrement ;
         amosum_propagator->true_group.reset(new TrueGroupFunction(nGroup)) ;
         
-        // debugf("amosum_propagator->_mps: ",amosum_propagator->_mps);
         for (size_t i = 1; i < lits.size(); ++i) { // Start from index 1
             clingo_literal_t l = lits[i];
             try {
@@ -185,19 +183,15 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
                 amosum_propagator->inconsistent_at_level_0 = false;
             } catch (const std::exception& e) {
                 amosum_propagator->inconsistent_at_level_0 = true;
-                // debug("Incosistent at level 0: ",e.what())
-                // break;
             }
         }
 
-        // max_diff = ge ? max_diff : -max_diff ;
         std::string lazy_param = get_map(amosum_propagator->params, std::string("lazy"), std::string("dynamic")) ;
         amosum_propagator->lazy_prop_activated = lazy_param != SETTINGS::FALSE_STR;
         bool lazy_dynamic = lazy_param == "dynamic" ;
         amosum_propagator->LAZY_PERC = amosum_propagator->lazy_prop_activated && lazy_param != SETTINGS::TRUE_STR && !lazy_dynamic ? std::stof(lazy_param) : amosum_propagator->LAZY_PERC ;
         amosum_propagator->lazy_condition = !amosum_propagator->lazy_prop_activated;
         if(lazy_dynamic) amosum_propagator->LAZY_PERC = amosum_propagator->ge ? amosum_propagator->lb / static_cast<float>(amosum_propagator->lb + max_diff) :  (amosum_propagator->ub - max_diff) / static_cast<float>(amosum_propagator->ub);
-        // debugf("max_diff ", max_diff)
         std::string lazy_perc_str = amosum_propagator->lazy_prop_activated ? " lazy threshold " + std::to_string(amosum_propagator->LAZY_PERC) : SETTINGS::NONE_STR;
         debugf("Starting propagator with param ",unordered_map_to_string(amosum_propagator->params), lazy_perc_str);
 

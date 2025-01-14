@@ -152,6 +152,8 @@ public:
 
     // Setter for index access
     virtual void set(const int &key, const V& value);
+    
+    // V get_set_default(int lit, const V& invalid_value);
 
 protected:
     std::vector<V> values;  
@@ -178,9 +180,10 @@ public:
 
 inline int not_(int literal) { return -literal; }
 
-void create_reason_falses(AmoSumPropagator* propagator, bool ge);
-void create_reason_falses_ge(AmoSumPropagator* propagator);
-void create_reason_falses_le(AmoSumPropagator* propagator);
+void create_reason_falses(AmoSumPropagator* propagator, bool ge, clingo_literal_t flipped);
+void create_reason_falses_ge(AmoSumPropagator* propagator, clingo_literal_t flipped);
+void create_reason_falses_le(AmoSumPropagator* propagator, clingo_literal_t flipped);
+void create_reason_true_ge(AmoSumPropagator* propagator, clingo_literal_t sml_g, clingo_literal_t derived, Group* g);
 std::tuple<bool, const std::vector<clingo_literal_t>* (*)(const Group*, AmoSumPropagator*), std::string>  get_propagator_variables(std::string prop_type);
 // Function to get the name
 std::string get_name(const std::unordered_map<clingo_symbol_t, clingo_literal_t>* atomNames, clingo_literal_t lit);
@@ -212,12 +215,12 @@ void simplifyLiterals(std::vector<clingo_literal_t>& lits, AggregateFunction* ag
 
 
 // Increment function
-int increment_f(int l, const std::unordered_set<clingo_literal_t>& current_subset_maximal,
+int increment_f(bool derived_true, clingo_literal_t l, const std::unordered_set<clingo_literal_t>& current_subset_maximal,
                 const WeightFunction*& weight, const GroupFunction*& group,
                 int head_reason, const std::unique_ptr<InterpretationFunction>& I, int max_b);
 
 // Maximal subset with groups
-void maximal_subset_sum_less_than_s_with_groups(const std::vector<clingo_literal_t>& literals, int s,
+void maximal_subset_sum_less_than_s_with_groups(bool derived_true, const std::vector<clingo_literal_t>& literals, int s,
                                                            const WeightFunction* weight,
                                                            const GroupFunction* group,
                                                            int head_reason, const std::unique_ptr<InterpretationFunction>& I, int max,
