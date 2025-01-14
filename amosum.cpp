@@ -173,6 +173,7 @@ const std::vector<clingo_literal_t>* AmoSumPropagator::getReasonForLiteral(const
     //     print_reduction_reason(*this, R_copy, R, lit, p, true);
     // }
 
+    
     if(true_literal){
         rt->clear();
     }

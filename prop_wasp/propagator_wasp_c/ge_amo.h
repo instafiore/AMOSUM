@@ -42,7 +42,7 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, Am
                 rst = new std::vector<clingo_literal_t>();
                 propagator->reason_trues->set(ml_g, rst);
             }
-            
+
             for (int k = i; propagator->dl != 0 and k < j; ++k) {
                 clingo_literal_t lit = g->ord_l[k];
                 if (!propagator->I->get(lit)) {
@@ -88,5 +88,3 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, Am
     
     return &propagator->S;
 }
-
-// Time: 203.28, found 1 models:
