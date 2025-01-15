@@ -164,10 +164,10 @@ def main(argv):
     people_configurations = (30, 50, 75, 100)
     benchmarkCreator = BenchmarkCreator(project_configurations, people_configurations)
     
-    benchmarkCreator.create_benchmark()
-    # benchmarkCreator.print_instance(PossiblyUnsatInstanceFactory(num_projects=20, num_people=60), "")
+    # benchmarkCreator.create_benchmark()
+    # benchmarkCreator.print_instance(PossiblyUnsatInstanceFactory(num_projects=2, num_people=5), "")
     # benchmarkCreator.print_instance(UnsatInstanceFactory(num_projects=10, num_people=30), "")
-    # benchmarkCreator.print_instance(SatInstanceFactory(num_projects=10, num_people=20), "")
+    benchmarkCreator.print_instance(SatInstanceFactory(num_projects=1, num_people=5), "")
     # benchmarkCreator.print_instance(InstanceFactory(num_projects=10, num_people=30), "")
 
 if __name__ == "__main__":

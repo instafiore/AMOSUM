@@ -8,6 +8,7 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
 
         auto start = std::chrono::high_resolution_clock::now();
         amosum_propagator->N = lits[0] + 1;
+        debugf("N: ", amosum_propagator->N);
         amosum_propagator->minimization = get_map(amosum_propagator->params, std::string("min_r"), std::string(Minimize::NO_MINIMIZATION)) ;
         amosum_propagator->strategy = get_map(amosum_propagator->params, std::string("strategy"), amosum_propagator->strategy);
         amosum_propagator->I.reset(new InterpretationFunction(amosum_propagator->N));
@@ -49,7 +50,7 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
     void AmoSumInitializer::common_phase(AmoSumPropagator* amosum_propagator){
         
         atomNamesString = create_atomNames_string(amosum_propagator->atomNames);
-        debugf("N: ", amosum_propagator->N);
+        
 
         for(auto &[symbolic_atom, literal]: *amosum_propagator->atomNames){
                 

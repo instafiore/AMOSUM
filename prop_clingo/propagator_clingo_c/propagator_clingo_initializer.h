@@ -25,7 +25,7 @@ public:
     std::unique_ptr<std::unordered_map<clingo_literal_t, std::vector<clingo_literal_t>>> map_slit_plit ;
     std::unique_ptr<std::unordered_map<clingo_literal_t, clingo_literal_t>> map_plit_slit ;
     size_t nt;
-    clingo_literal_t max_plit ;
+    clingo_literal_t max_plit = 0 ;
     std::vector<clingo_literal_t>* lits;
 
 

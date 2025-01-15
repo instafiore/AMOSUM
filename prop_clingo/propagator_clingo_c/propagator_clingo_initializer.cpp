@@ -56,7 +56,7 @@ void PropagatorClingoInitializer::init(clingo_propagate_init* _init, PropagatorC
         clingo_symbolic_atoms_next(symbolic_atoms, symbolic_atoms_it, &symbolic_atoms_it);
     }
 
-    lits = new std::vector<clingo_literal_t>{PropagatorClingoInitializer::max_plit};
+    lits = new std::vector<clingo_literal_t>{max_plit};
 
     std::vector<clingo_literal_t> facts = get_map_value_vector<clingo_literal_t, clingo_literal_t>((*map_slit_plit), 1);
     extend_vector(*lits, facts);

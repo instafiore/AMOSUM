@@ -135,6 +135,7 @@ class RunnerClingoC(RunnerWasp):
         compile_with_debug = "DEBUG=-DDEBUG" if self.param.get("d",False) else ""
         compile_with_check_mps = "CHECK_MPS=-DCHECK_MPS" if self.param.get("check_mps",False) else ""
         compile_with_sanitize = 'SANITIZE_ADDRESS="-fsanitize=address -g"' if self.param.get("sanitize", False) else ""
+        compile_with_sanitize = 'SANITIZE_ADDRESS=-g' if not self.param.get("sanitize", False) and self.param.get("g", False) else compile_with_sanitize
         clean_run = f"make -C {PROPAGATOR_DIR_LOCATION_CLINGO_C} clean"
         compile_run = f"make -C {PROPAGATOR_DIR_LOCATION_CLINGO_C} {compile_with_debug} {compile_with_check_mps} {compile_with_sanitize}"
         # print(compile_run)

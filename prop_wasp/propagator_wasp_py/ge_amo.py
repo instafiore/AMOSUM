@@ -46,6 +46,7 @@ def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
         return propagator.S
     
     derived_true = []
+    # arrived here
     for g in propagator.groups:
         if g == G or not propagator.true_group[g] is None:
             continue
@@ -64,7 +65,7 @@ def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
             propagator.propagated[ml_g] = True
             propagate_to_true = True
         
-        # arrived here
+      
         if not propagate_to_true:
             for l in g.ord_l:
                 if propagator.I[l] is None:

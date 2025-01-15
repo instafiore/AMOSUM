@@ -116,7 +116,7 @@ struct AmoSumPropagator
         bool ge = true,
         std::string choice_cons = "AMO",
         std::string solver = "WASP")
-        : atomNames(std::move(atomNames)),
+        : atomNames(atomNames),
           params(std::move(params)),
           propagation_phase(propagation_phase),
           ge(ge),
