@@ -48,10 +48,13 @@ class AmoSumPropagator:
     facts : List[int]
 
     # reason for literals 
-    reason : List[int] 
+    reason_falses : List[int] 
 
     # reason for true_literals
     reason_trues : PerfectHash
+
+    # reason
+    reason : PerfectHash
 
     # redundant literals in reason of a literal l
     # it is a funtion lits -> 2^(lits)
@@ -117,7 +120,7 @@ class AmoSumPropagator:
         self.atomNames = atomNames
         self.param = sys_parameters
         self.facts : List[int] = []
-        self.reason : List[int] = []
+        self.reason_falses : List[int] = []
         self.strategy = 'default'
         self.last_decision_lit = 0
         self.minimization = Minimize.NO_MINIMIZATION
@@ -128,70 +131,6 @@ class AmoSumPropagator:
         self.propagate_phase = propagation_phase
         self.solver = solver
         self.count = 0
-        
-
-    def getReasonsForCheckFailure(self):
-        return None
-    
-    def getReason(self):
-        return self.reason
-    
-    # arrived here
-    def getReasonForLiteral(self, lit):
-    
-        reason = self.reason + self.reason_trues[lit]
-        rl = self.redundant_lits[lit] 
-        removed = False
-        reason_c = reason
-        self.reason_trues[lit] = []
-
-        # removing redundant lits (if any)
-        if len(rl) > 0:
-            removed = True
-            reason = remove_elements(reason, rl)
-        
-        print_reason(atomNames=self.atomNames, R=reason, literal=lit)
-        
-        # printing/updating reduction statistics
-        if removed:
-            lc = len(reason_c)
-            p = (1 - (len(reason) / lc)) if lc > 0 else 1
-            p *= 100
-            self.sum_p += p
-            self.count_p += 1
-            print_reduction_reason(self, reason_c, reason, lit)
-
-        self.redundant_lits[lit] = []
-        return reason 
-
-    def checkAnswerSet(self, *answer_set):
-
-        write = True if "write_stats_reason" in self.param else False
-
-        if self.minimization == Minimize.NO_MINIMIZATION.value or not write:
-            return wasp.coherent()
-
-        file_to_write : str
-
-        if self.minimization == Minimize.MINIMAL.value:
-            file_to_write = settings.STATISTICS_REASON_FILE_MINIMAL
-        elif self.minimization == Minimize.CARDINALITY_MINIMAL.value:
-            file_to_write = settings.STATISTICS_REASON_FILE_MINIMUM
-        else:
-            assert False
-
-        try:
-            with open(file_to_write, 'a') as file:
-                if self.count_p != 0:
-                    file.write(f"{self.sum_p},{self.count_p}")
-        except IOError as e:
-            print(f"An error occurred: {e}")
-
-        self.sum_p = 0
-        self.count_p = 0
-
-        return wasp.coherent()
-
 
     def getLiterals(self, *lits):
         param = self.param
@@ -210,6 +149,7 @@ class AmoSumPropagator:
         self.propagated = SymmetricFunction(self.N)
         self.aggregate = AggregateFunction(self.N, False)
         self.reason_trues = PerfectHash(self.N,[])
+        self.reason = PerfectHash(self.N,[])
         self.redundant_lits = PerfectHash(self.N,[])
         self._mps = 0
         self.ID = param.get("id","0")
@@ -343,10 +283,8 @@ class AmoSumPropagator:
         self.last_decision_lit = 1
         self.dl = 0        
 
-        # for lit in bind:
-        #     debug(f"binded with: {get_name(atomNames=self.atomNames, lit=lit)}", force_print=True)
-
         return bind 
+        
 
     def simplifyAtLevelZero(self, delete_lits = False):
 
@@ -369,31 +307,6 @@ class AmoSumPropagator:
             self.assumptions = convert_assparam_to_assarray(self.assumptions)
 
         return  create_assumptions_lits(assumptions=self.assumptions,atomNames=self.atomNames) + prop_from_facts + self.groups_literals
-
-    def updated_dl(self, lit, dl):
-        self.last_decision_lit = lit if dl != self.dl else self.last_decision_lit
-        self.dl = dl
-
-    def is_in_aggregate(self, l):
-        return self.aggregate[l] or self.aggregate[not_(l)]
-
-    def update_lazy_propagation(self):
-        
-        p : float
-        if self.ge:
-            self.mps_violated = self._mps < self.lb 
-            p = self.bound / self._mps
-        else:
-            self.mps_violated = self._mps > self.ub
-            p =  self._mps / self.bound
-
-        self.lazy_condition = p >= AmoSumPropagator.LAZY_PERC
-        if self.mps_violated:
-            self.lazy_condition = True
-
-        if not self.lazy_prop_activated:
-            self.lazy_condition = True #forcing to not be lazy
-
 
     def onLiteralTrue(self, lit, dl):
         
@@ -429,10 +342,25 @@ class AmoSumPropagator:
             except Exception as e:
                 print(e, file=sys.stderr)
                 raise e
-        # end = time.time()
-        # duration = end - start 
-        # debug(f"duration: {duration} ", force_print=True)
+        
         return propagated_lits
+
+    def update_lazy_propagation(self):
+        
+        p : float
+        if self.ge:
+            self.mps_violated = self._mps < self.lb 
+            p = self.bound / self._mps
+        else:
+            self.mps_violated = self._mps > self.ub
+            p =  self._mps / self.bound
+
+        self.lazy_condition = p >= AmoSumPropagator.LAZY_PERC
+        if self.mps_violated:
+            self.lazy_condition = True
+
+        if not self.lazy_prop_activated:
+            self.lazy_condition = True #forcing to not be lazy
 
 
     def update_phase(self, l: int) -> tuple[bool, Group]:
@@ -528,6 +456,22 @@ class AmoSumPropagator:
             mps = self._mps - self.weight[l] + self.weight[sml_g]
             return mps if not return_literals else (mps, sml_g, ml_g)
 
+    def getReasonForLiteral(self, lit):
+    
+        R = self.reason[lit]
+        rl = self.redundant_lits[lit] 
+        removed = False
+        self.reason = []
+
+        # removing redundant lits (if any)
+        if len(rl) > 0:
+            removed = True
+            R = remove_elements(R, rl)
+        
+    
+        self.redundant_lits[lit] = []
+        return R 
+
     def compute_minimal_reason(self, reason: List[int], derived: List[int]):
         '''
         Invariants (in case of cmin strategy) reason is grouped by self.group id and in each self.group the literals are sort in descending order
@@ -548,10 +492,10 @@ class AmoSumPropagator:
             s = self.lb - mps - 1 
     
             if self.minimization == Minimize.MINIMAL.value:
-                self.redundant_lits[l] = maximal_subset_sum_less_than_s_with_groups(literals=reason + self.reason_trues[l], s = s, weight= self.weight, group=self.group, head_reason=l, I=self.I, max=self.ge)
+                self.redundant_lits[l] = maximal_subset_sum_less_than_s_with_groups(literals= self.reason[l], s = s, weight= self.weight, group=self.group, head_reason=l, I=self.I, max=self.ge)
             elif self.minimization == Minimize.CARDINALITY_MINIMAL.value:
-                increment = compute_increment_literals(literals=reason + self.reason_trues[l], group=self.group, weight=self.weight)
-                self.redundant_lits[l]  = maximum_subset_sum_less_than_s_with_groups(literals= reason, s = s, weight = increment, group=self.group, I=self.I)            
+                increment = compute_increment_literals(literals=self.reason[l], group=self.group, weight=self.weight)
+                self.redundant_lits[l]  = maximum_subset_sum_less_than_s_with_groups(literals= self.reason[l], s = s, weight = increment, group=self.group, I=self.I)            
             else:
                 assert False
 
@@ -571,6 +515,7 @@ class AmoSumPropagator:
 
             # updating interpretation
             self.I[l] = None
+            self.reason[l] = []
 
 
             # updating max self.weight for self.group(l)
@@ -659,3 +604,41 @@ class AmoSumPropagator:
     def create_propagator(atomNames, sys_parameters, propagation_phase, ge, choice_cons, solver=WASP) -> "AmoSumPropagator":
         propagator = AmoSumPropagator(atomNames=atomNames, sys_parameters=sys_parameters, propagation_phase=propagation_phase, ge=ge, choice_cons=choice_cons, solver=solver)
         return propagator
+
+    def getReasonsForCheckFailure(self):
+        return None
+
+    def checkAnswerSet(self, *answer_set):
+
+        write = True if "write_stats_reason" in self.param else False
+
+        if self.minimization == Minimize.NO_MINIMIZATION.value or not write:
+            return wasp.coherent()
+
+        file_to_write : str
+
+        if self.minimization == Minimize.MINIMAL.value:
+            file_to_write = settings.STATISTICS_REASON_FILE_MINIMAL
+        elif self.minimization == Minimize.CARDINALITY_MINIMAL.value:
+            file_to_write = settings.STATISTICS_REASON_FILE_MINIMUM
+        else:
+            assert False
+
+        try:
+            with open(file_to_write, 'a') as file:
+                if self.count_p != 0:
+                    file.write(f"{self.sum_p},{self.count_p}")
+        except IOError as e:
+            print(f"An error occurred: {e}")
+
+        self.sum_p = 0
+        self.count_p = 0
+
+        return wasp.coherent()
+
+    def updated_dl(self, lit, dl):
+        self.last_decision_lit = lit if dl != self.dl else self.last_decision_lit
+        self.dl = dl
+
+    def is_in_aggregate(self, l):
+        return self.aggregate[l] or self.aggregate[not_(l)]
