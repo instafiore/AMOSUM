@@ -435,27 +435,6 @@ class AmoSumPropagator:
             mps = self._mps - mw_g + self.weight[sml_g]
             return mps if not return_literals else (mps, sml_g, ml_g)
         
-    def mps_k(self, g: Group, l: int, assumed:bool, return_literals = False):
-        if assumed:
-            if l in m_undef_set_g:
-                return self._mps if not return_literals else (self._mps , sml_g, m_undef_set_g)
-            # returning the least undefined
-            m = g.get_least_undefined(max=self.ge)
-            ml_g = g.ord_l[m] if not m is None else None
-            mw_g = self.weight[ml_g]
-            assert self.true_group[g] is None
-            mps = self._mps - mw_g + self.weight[l]
-            return mps if not return_literals else (mps, l, ml_g)
-        else:
-            # returning 
-            # 1) returning the possible new least undefined if the real one was false
-            # 2) returning the undefined set
-            sml_g, m_undef_set_g =  g.update(self.I, update=False, max=self.ge, return_m_undef_set_g = True)
-            if not l in m_undef_set_g:
-                return self._mps if not return_literals else (self._mps , sml_g, m_undef_set_g)
-            mps = self._mps - self.weight[l] + self.weight[sml_g]
-            return mps if not return_literals else (mps, sml_g, ml_g)
-
     def getReasonForLiteral(self, lit):
     
         R = self.reason[lit]

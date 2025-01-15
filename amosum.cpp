@@ -90,13 +90,11 @@ std::pair<bool, Group*> AmoSumPropagator::update_phase(clingo_literal_t l, int d
         Group* G = nullptr;
         mps_violated = false;
         ++count;
-        clingo_literal_t prev_max_und ;
 
         bool amo_condition = false;
         if (aggregate->get(l)) {
             to_be_propagated->set(l, false);
             G = group->get(l);
-            prev_max_und =  m_w(G, ge); // TODO: REMOVE
             G->decrease_und();
             true_group->set(G,l);
             w_p = weight->get(m_w(G, ge));
@@ -106,7 +104,6 @@ std::pair<bool, Group*> AmoSumPropagator::update_phase(clingo_literal_t l, int d
         } else if (aggregate->get(not_(l))) {
             to_be_propagated->set(not_(l), false);
             G = group->get(not_(l));
-            prev_max_und =  m_w(G, ge); // TODO: REMOVE
             G->decrease_und();
             auto [new_lit, prev] = G->update(I, ge, false, false, l);
             if (not_(l) == prev) {
@@ -132,11 +129,6 @@ std::pair<bool, Group*> AmoSumPropagator::update_phase(clingo_literal_t l, int d
         _mps = _mps - w_p + w_n;
         update_lazy_propagation();
 
-
-        // if(lazy_condition and count % 50000 == 0) debugf("[mps: ",_mps,", id: ",ID,"] iteration: ",count,"");
-        // if(mps_violated && dl >= 9666) {
-        //     debugf(_mps, " violates ", bound, " at level ", dl, " with literal ", get_name(atomNames,l), " max_und: ", get_name(atomNames, m_w(G, ge)), " prev_max_und: ",get_name(atomNames, prev_max_und));
-        // }
     
         G = (choice_cons == "EO") ? G : nullptr;
         bool current_sum_condition = !ge || current_sum < bound;
@@ -205,7 +197,41 @@ const std::vector<clingo_literal_t>* AmoSumPropagator::getReasonForLiteral(const
 }
 
 
+void AmoSumPropagator::compute_minimal_reason(const std::vector<clingo_literal_t>& to_minimize) {
+    // Invariants: reason is grouped by self.group id, and in each self.group, literals are sorted in descending order.
 
+    if (minimization == Minimize::NO_MINIMIZATION) {
+        return;
+    }
+
+    for (auto l : to_minimize) {
+        Group* g = group->get(l);
+        bool derived_true = true;
+        if (!g) {
+            g = group->get(not_(l));
+            derived_true = false;
+        }
+        assert(g != nullptr);
+
+        auto [mps_h, sml_g, ml_g] = mps(g, l, !derived_true);
+        int s = lb - mps_h - 1;
+        auto rd = get_perfect_hash_with_pointer(redundant_lits.get(), l);
+
+        if (minimization == Minimize::MINIMAL) {
+            #ifdef PRIVATE_REASON
+            auto R = get_perfect_hash_with_pointer(reason.get(), l);
+            if(R == nullptr) continue ;
+            maximal_subset_sum_less_than_s_with_groups(derived_true, *R, s, weight, group.get(), l, I, ge, *rd);
+            #else
+            maximal_subset_sum_less_than_s_with_groups(derived_true, reason_falses, s, weight, group.get(), l, I, ge, *rd);
+            #endif
+        } else if (minimization == Minimize::CARDINALITY_MINIMAL) {
+            // NOT IMPLEMENTED
+        } else {
+            assert(false && "Unknown minimization strategy.");
+        }
+    }
+}
 
 
 
@@ -303,43 +329,6 @@ void AmoSumPropagator::onLiteralsUndefined(const std::vector<clingo_literal_t>& 
     }
 
 }
-
-void AmoSumPropagator::compute_minimal_reason(const std::vector<clingo_literal_t>& to_minimize) {
-    // Invariants: reason is grouped by self.group id, and in each self.group, literals are sorted in descending order.
-
-    if (minimization == Minimize::NO_MINIMIZATION) {
-        return;
-    }
-
-    for (auto l : to_minimize) {
-        Group* g = group->get(l);
-        bool derived_true = true;
-        if (!g) {
-            g = group->get(not_(l));
-            derived_true = false;
-        }
-        assert(g != nullptr);
-
-        auto [mps_h, sml_g, ml_g] = mps(g, l, !derived_true);
-        int s = lb - mps_h - 1;
-        auto rd = get_perfect_hash_with_pointer(redundant_lits.get(), l);
-
-        if (minimization == Minimize::MINIMAL) {
-            #ifdef PRIVATE_REASON
-            auto R = get_perfect_hash_with_pointer(reason.get(), l);
-            if(R == nullptr) continue ;
-            maximal_subset_sum_less_than_s_with_groups(derived_true, *R, s, weight, group.get(), l, I, ge, *rd);
-            #else
-            maximal_subset_sum_less_than_s_with_groups(derived_true, reason_falses, s, weight, group.get(), l, I, ge, *rd);
-            #endif
-        } else if (minimization == Minimize::CARDINALITY_MINIMAL) {
-            // NOT IMPLEMENTED
-        } else {
-            assert(false && "Unknown minimization strategy.");
-        }
-    }
-}
-
 
 void AmoSumPropagator::updated_dl(int lit, int new_dl) {
     if (new_dl != dl) {

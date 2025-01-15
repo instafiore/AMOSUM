@@ -479,7 +479,7 @@ std::string vector_lit_to_string(const std::unordered_map<clingo_symbol_t, cling
 
 void create_reason_true_ge(AmoSumPropagator* propagator, clingo_literal_t sml_g, clingo_literal_t derived, Group* g){
     int i = sml_g != SETTINGS::NONE ? g->ord_i[sml_g] : 0;
-    int j = g->ord_i[derived];
+    int j = g->ord_l.size();
 
     #ifdef PRIVATE_REASON
     auto R = get_perfect_hash_with_pointer(propagator->reason.get(), derived);
