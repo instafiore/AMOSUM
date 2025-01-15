@@ -112,6 +112,9 @@ class AmoSumPropagator:
     # treshold for lazy propagation activation
     LAZY_PERC : float = 0.98
 
+    # derived lits
+    S : List[int] = []
+
     # SUPPORTED SOLVERS
     WASP = 1
     CLINGO = 2
@@ -131,6 +134,7 @@ class AmoSumPropagator:
         self.propagate_phase = propagation_phase
         self.solver = solver
         self.count = 0
+        self.S = []
 
     def getLiterals(self, *lits):
         param = self.param

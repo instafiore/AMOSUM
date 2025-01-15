@@ -613,25 +613,33 @@ def create_reason_falses(propagator, ge):
     else:
         return create_reason_falses_le(propagator=propagator)
 
-def create_reason_falses_ge(propagator):
-    R = []
+def create_reason_falses_ge(propagator, flipped = None):
     for g in propagator.groups:
         ord_l = g.ord_l
-        if g.count_undef == 0 and propagator.true_group[g] is None:
-            R.extend(reversed(ord_l))
-        elif propagator.true_group[g] is None:
+        if propagator.true_group[g] is None:
             mw_g = propagator.weight[max_w(g)]
             for i in range(len(ord_l) - 1, -1, -1):
                 l = ord_l[i]
                 if propagator.weight[l] < mw_g:
                     break
-                R.append(l) if not propagator.I[l] is None else None
-        else:
-            R.append(not_(propagator.true_group[g]))
-    return R
+                if not propagator.I[l] and not equals(l, flipped):
+                    for lit in propagator.S:
+                        G = propagator.group[lit]
+                        if G is None:
+                            G = propagator.group[not_(l)]
+                        if(g == G):
+                            continue
+                        propagator.reason[lit].append(l) 
+        elif not equals(propagator.true_group[g], flipped):
+            for lit in propagator.S:
+                G = propagator.group[lit]
+                if G is None:
+                    G = propagator.group[not_(l)]
+                if(g == G):
+                    continue
+                propagator.reason[lit].append(not_(propagator.true_group[g])) 
 
 def create_reason_falses_le(propagator):
-    R = []
     for g in propagator.groups:
         if propagator.true_group[g] is None:
             mw_g = propagator.weight[min_w(g)]

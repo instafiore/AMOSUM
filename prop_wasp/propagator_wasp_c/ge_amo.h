@@ -41,7 +41,7 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, Am
         create_reason_falses_ge(propagator, not_(l));
         
         if(derived_true){
-            clingo_literal_t sml_g = G != nullptr ? max_w(G) : SETTINGS::NONE;
+            clingo_literal_t sml_g = max_w(g) ;
             create_reason_true_ge(propagator, sml_g, not_(l), g);
         }
 

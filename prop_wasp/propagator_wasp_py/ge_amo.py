@@ -19,12 +19,34 @@ Invariants:
 
 def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
 
+    propagator.S = []
+
     if propagator.mps_violated:
-        assert propagator.la
+        assert propagator.lazy_prop_activated
+
+        l = propagator.current_literal
+
+        S = [not_(l)]
+
+        propagator.reason = []
+
+        derived_true = False
+        g = propagator.group[l]
+        if(g is None):
+            derived_true = True
+            g = propagator.group[not_(l)]
+
+        create_reason_falses_ge(propagator, not_(l))
+
+        if derived_true:
+            sml_g = max_w(g)
+            
+
+
 
 
     # set of derived literals
-    S : List[int] = []
+    
 
 
     for g in propagator.groups:

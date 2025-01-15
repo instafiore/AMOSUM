@@ -18,7 +18,7 @@ workshift(6,"6-holiday",0).
 
 % Each nurse works from 1687 to 1692 hours per year.
 :- nurse(N), maxHoursPerYear(MAX), #sum{H,D : assign(N,T,D), workshift(T,_,H)} > MAX.
-:- nurse(N), minHoursPerYear(MIN), #sum{H,D : assign(N,T,D), workshift(T,_,H)} < MIN.
+:- nurse(N), minHoursPerYear(MIN), #sum{H,D : assign(N,T,D), workshift(T,_,H), H > 0} < MIN.
 
 % Each nurse cannot work twice in 24 hours.
 :- nurse(N), assign(N, T1, D), assign(N, T2, D+1), T2 < T1, T2 <= 3, T1 <= 3.

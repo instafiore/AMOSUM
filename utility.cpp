@@ -440,7 +440,6 @@ void create_reason_falses_ge(AmoSumPropagator* propagator, clingo_literal_t flip
             #endif
         }
     }
-    
 
 }
 
