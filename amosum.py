@@ -115,6 +115,9 @@ class AmoSumPropagator:
     # derived lits
     S : List[int] = []
 
+    # given a specific literal if it has been propagated but not already processed (onLiteralTrue called)
+    to_be_propagated : PerfectHash
+
     # SUPPORTED SOLVERS
     WASP = 1
     CLINGO = 2
@@ -444,8 +447,7 @@ class AmoSumPropagator:
         R = self.reason[lit]
         rl = self.redundant_lits[lit] 
         removed = False
-        self.reason = []
-
+    
         # removing redundant lits (if any)
         if len(rl) > 0:
             removed = True

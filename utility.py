@@ -652,6 +652,23 @@ def create_reason_falses_le(propagator):
             R.append(not_(propagator.true_group[g]))
     return R
 
+def create_reason_true_ge(propagator, sml_g, derived, g):
+    if propagator.dl == 0: return 
+
+    i = g.ord_i[sml_g] if sml_g is not None else 0
+    j = len(g.ord_l)
+
+    # PRIVATE_REASON logic
+   
+    assert i <= j, "Index i must be less than or equal to j"
+    assert derived is not None, "Derived literal must not be None"
+
+    for k in range(i, j):
+        lit = g.ord_l[k]
+        if not propagator.I.get(lit):
+            propagator.reason[derived].append(lit)
+            
+
 # MINIMIZING REASON 
 #################################################################################################################################################
 class Minimize(Enum):

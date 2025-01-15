@@ -402,6 +402,7 @@ void weights_names_log(const std::string& ID, const std::unordered_map<std::stri
 
 void create_reason_falses_ge(AmoSumPropagator* propagator, clingo_literal_t flipped = SETTINGS::NONE) {
 
+    if(propagator->dl == 0) return ;
     
     for (auto* g : propagator->groups) {
         if (propagator->true_group->get(g) == SETTINGS::NONE) {
@@ -477,6 +478,8 @@ std::string vector_lit_to_string(const std::unordered_map<clingo_symbol_t, cling
 }
 
 void create_reason_true_ge(AmoSumPropagator* propagator, clingo_literal_t sml_g, clingo_literal_t derived, Group* g){
+    if(propagator->dl == 0) return ;
+    
     int i = sml_g != SETTINGS::NONE ? g->ord_i[sml_g] : 0;
     int j = g->ord_l.size();
 
@@ -490,7 +493,7 @@ void create_reason_true_ge(AmoSumPropagator* propagator, clingo_literal_t sml_g,
     assert(i <= j);
     assert(derived != SETTINGS::NONE);
     
-    for (int k = i; propagator->dl != 0 and k < j; ++k) {
+    for (int k = i; k < j; ++k) {
         clingo_literal_t lit = g->ord_l[k];
         if (!propagator->I->get(lit)) {
             #ifdef PRIVATE_REASON
