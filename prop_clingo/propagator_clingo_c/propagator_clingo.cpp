@@ -57,7 +57,8 @@ bool PropagatorClingo::add_clauses_propagated_lits(void *control, const std::vec
     
     AmoSumPropagator* prop = propagators[td];
     // dl = 0 ; // debugging
-    for(clingo_literal_t plit: S_plit){
+    for(int si = 0 ; si < S_plit.size();  ++si){
+        clingo_literal_t plit = S_plit[si];
         const std::vector<clingo_literal_t>* R_plit = dl > 0 ? prop->getReasonForLiteral(plit) : nullptr;
         size_t clause_size = (dl > 0 ? R_plit->size() : 0) + 1 ;
         clingo_literal_t* clause = clause_clingo;
@@ -74,14 +75,26 @@ bool PropagatorClingo::add_clauses_propagated_lits(void *control, const std::vec
         handle_error(clingo_propagate_control_add_clause((clingo_propagate_control*) control, clause, clause_size, clingo_clause_type_learnt, &result_add_clause)) ;
 
         // propagation must return immediately, there is a conflict
-        if (not result_add_clause) return true ;
+        if (not result_add_clause){ 
+            for(int sj = si ; sj < S_plit.size(); ++sj){
+                clingo_literal_t plit_not_propagated = S_plit[sj];
+                prop->to_be_propagated->set(plit_not_propagated, false);
+            }
+            return true ;
+        }
 
         bool result_propagate;
         init ? clingo_propagate_init_propagate((clingo_propagate_init*) control, &result_propagate) :
         clingo_propagate_control_propagate((clingo_propagate_control*) control, &result_propagate) ;
         
         // propagation must return immediately, a conflict has been raised 
-        if (not result_propagate) return true;
+        if (not result_propagate){ 
+            for(int sj = si ; sj < S_plit.size(); ++sj){
+                clingo_literal_t plit_not_propagated = S_plit[sj];
+                prop->to_be_propagated->set(plit_not_propagated, false);
+            }
+            return true;
+        }
         
     }
     return false ;
