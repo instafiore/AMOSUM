@@ -1,4 +1,4 @@
-#!/Users/instafiore/instafiore_env/bin/python
+#!/home/s.fiorentino/.local/bin/python
 import re
 import os
 import sys
@@ -145,7 +145,7 @@ class BenchmarkCreator():
 
     def create_benchmark(self):
         self.instances = []
-        id = 0
+        id = 200
         for nproj in self.project_configurations:
             for nper in self.people_configurations:
                 for instance_type in BenchmarkCreator.instances_type_distribution:
@@ -161,13 +161,13 @@ def main(argv):
 	# 	- projects 5-10-15
 	# 	- people 30-40-50-60
     project_configurations = (10, 15, 20, 25, 35)
-    people_configurations = (30, 50, 75, 100)
+    people_configurations = (150, 200, 250)
     benchmarkCreator = BenchmarkCreator(project_configurations, people_configurations)
     
-    # benchmarkCreator.create_benchmark()
+    benchmarkCreator.create_benchmark()
     # benchmarkCreator.print_instance(PossiblyUnsatInstanceFactory(num_projects=2, num_people=5), "")
     # benchmarkCreator.print_instance(UnsatInstanceFactory(num_projects=10, num_people=30), "")
-    benchmarkCreator.print_instance(SatInstanceFactory(num_projects=1, num_people=5), "")
+    # benchmarkCreator.print_instance(SatInstanceFactory(num_projects=1, num_people=5), "")
     # benchmarkCreator.print_instance(InstanceFactory(num_projects=10, num_people=30), "")
 
 if __name__ == "__main__":
