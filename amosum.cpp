@@ -220,7 +220,7 @@ void AmoSumPropagator::compute_minimal_reason(const std::vector<clingo_literal_t
         if (minimization == Minimize::MINIMAL) {
             #ifdef PRIVATE_REASON
             auto R = get_perfect_hash_with_pointer(reason.get(), l);
-            if(R == nullptr) continue ;
+            if(R == nullptr or R->size() == 0) continue ;
             maximal_subset_sum_less_than_s_with_groups(derived_true, *R, s, weight, group.get(), l, I, ge, *rd);
             #else
             maximal_subset_sum_less_than_s_with_groups(derived_true, reason_falses, s, weight, group.get(), l, I, ge, *rd);
