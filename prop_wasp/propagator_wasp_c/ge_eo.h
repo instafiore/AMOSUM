@@ -18,9 +18,7 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_eo(const Group* G, Amo
     propagator->S.clear();
 
     if (propagator->mps_violated) {
-
-        assert(propagator->lazy_prop_activated);
-
+        
         clingo_literal_t l = propagator->current_literal ;
         propagator->S.push_back(not_(l));
 

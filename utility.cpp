@@ -356,12 +356,12 @@ std::tuple<bool, const std::vector<clingo_literal_t>* (*)(const Group*, AmoSumPr
         propagation_phase = propagation_phase_ge_amo ;
     } else if (prop_type == "le_eo") {
         ge = false;
-        choice_cons = "AMO";
-        propagation_phase = propagation_phase_ge_eo ;
+        choice_cons = "EO";
+        propagation_phase = propagation_phase_le_eo ;
     } else if (prop_type == "ge_eo") {
         ge = true;
         choice_cons = "EO";
-        propagation_phase = propagation_phase_le_eo ;
+        propagation_phase = propagation_phase_ge_eo ;
     } else {
         assert(false && "Unexpected prop_type!");
     }
