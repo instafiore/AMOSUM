@@ -41,8 +41,7 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_eo(const Group* G, Amo
             create_reason_true_ge(propagator, sml_g, not_(l), g);
         }
 
-        
-
+    
         print_derivation(propagator->atomNames, propagator->S, false);
         return &propagator->S;
     }
@@ -51,50 +50,27 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_eo(const Group* G, Amo
     for (Group* g : propagator->groups) {
         if (g == G || propagator->true_group->get(g) != SETTINGS::NONE) continue;
         int ml_g = max_w(g);
-        if (ml_g == SETTINGS::NONE) continue;
+        if(ml_g == SETTINGS::NONE) continue ;
 
-        if(propagator->to_be_propagated->get(ml_g)) continue ;
-
-        auto [mps_h, sml_g, ml_g_res] = propagator->mps(g, ml_g, false);
-        
-        bool propagate_to_true = false;
-        if (mps_h < propagator->lb) {
-            
-            if(!propagator->to_be_propagated->get(ml_g_res)) {
-                propagator->to_be_propagated->set(ml_g_res, true);
-                propagator->S.push_back(ml_g_res);
-                derived_true.push_back(ml_g_res);
-                #ifdef PRIVATE_REASON
-                auto R = get_perfect_hash_with_pointer(propagator->reason.get(), ml_g_res);
-                R->clear();
-                #endif
-                create_reason_true_ge(propagator, sml_g, ml_g, g);
-            }
-
-            propagate_to_true = true;
-            
-        }
-
-        if (!propagate_to_true) {
-            for (int l : g->ord_l) {
-                if (propagator->I->get(l) == SETTINGS::NONE) {
-                    if (std::get<0>(propagator->mps(g, l, true)) < propagator->lb) {
-                        
-                        if(!propagator->to_be_propagated->get(not_(l))) {
-                            propagator->to_be_propagated->set(not_(l), true);
-                            propagator->S.push_back(not_(l));
-                            #ifdef PRIVATE_REASON
-                            auto R = get_perfect_hash_with_pointer(propagator->reason.get(), not_(l));
-                            R->clear();
-                            #endif
-                        }
-
-                    } else {
-                        break;
+        for (int l : g->ord_l) {
+            if (propagator->I->get(l) == SETTINGS::NONE) {
+                if (std::get<0>(propagator->mps(g, l, true)) < propagator->lb) {
+                    
+                    if(!propagator->to_be_propagated->get(not_(l))) {
+                        propagator->to_be_propagated->set(not_(l), true);
+                        propagator->S.push_back(not_(l));
+                        #ifdef PRIVATE_REASON
+                        auto R = get_perfect_hash_with_pointer(propagator->reason.get(), not_(l));
+                        R->clear();
+                        #endif
                     }
+
+                } else {
+                    break;
                 }
             }
         }
+
     }
 
     
