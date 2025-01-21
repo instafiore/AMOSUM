@@ -1,6 +1,6 @@
 CC = g++
-CFLAGS = -Wall -Wextra -std=c++17 $(DEBUG) $(CHECK_MPS) $(SANITIZE_ADDRESS)  -O3
-LDFLAGS = -lclingo $(SANITIZE_ADDRESS)
+CFLAGS = -Wall -Wextra -std=c++17 -I/opt/homebrew/include  $(DEBUG) $(CHECK_MPS) $(SANITIZE_ADDRESS)  -O3
+LDFLAGS = -L/opt/homebrew/lib -lclingo $(SANITIZE_ADDRESS)
 BUILD_DIR = build
 BIN_DIR = bin
 INCLUDES =  
