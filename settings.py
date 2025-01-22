@@ -8,6 +8,9 @@ import subprocess
 # name of the file where the weights are
 WEIGHTS = "weights"
 
+FALSE = "false"
+TRUE = "true"
+
 PROPAGATOR_NAME_ge_eo = "ge_eo"
 PROPAGATOR_NAME_ge_amo = "ge_amo"
 PROPAGATOR_NAME_le_eo = "le_eo"

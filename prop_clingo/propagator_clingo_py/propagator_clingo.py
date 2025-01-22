@@ -15,6 +15,8 @@ import amosum
     Invariants: 
 '''
 import time 
+from prop_clingo.propagator_clingo_py.propagator_clingo_initializer import *
+
 class PropagatorClingo(clingo.Propagator):
 
     def __init__(self, sys_parameters: dict[str: str], propagation_phase: Callable[[Group, AmoSumPropagator], List[int]], ge: bool, choice_cons: str) -> None:
@@ -25,69 +27,35 @@ class PropagatorClingo(clingo.Propagator):
         self.choice_cons = choice_cons
         self.solver = AmoSumPropagator.CLINGO
 
-    def init(self, init: clingo.PropagateInit) -> None:
-        atoms_list_for_mapping = [(str(a.symbol), a.literal, init.solver_literal(a.literal)) for a in init.symbolic_atoms]
-        nt = init.number_of_threads
-        # debug(f"number of threads {nt}", force_print = True)
-        # debug(f"atoms_list_for_mapping {atoms_list_fosr_mapping}", force_print = False)
+    def init(self, _init: clingo.PropagateInit) -> None:
+        PropagatorClingoInitializer.get_instance().init(_init, self)
 
-        max_plit = 0
-        for str_symbol, program_literal, solver_literal in atoms_list_for_mapping:
-            # debug(str_symbol, program_literal, solver_literal, force_print=True)
-            if max_plit < program_literal:
-                max_plit = program_literal
-
-        self.atomNames = { str_symbol : program_literal for str_symbol, program_literal, solver_literal in atoms_list_for_mapping}
-        # arrived here with cpp
         self.propagators = [amosum.AmoSumPropagator(atomNames=self.atomNames, sys_parameters=self.sys_parameters,
-                                      propagation_phase=self.propagation_phase, ge=self.ge, choice_cons=self.choice_cons, solver=AmoSumPropagator.CLINGO) for i in range(nt)]
+                                      propagation_phase=self.propagation_phase, ge=self.ge, choice_cons=self.choice_cons, solver=AmoSumPropagator.CLINGO) for i in range(PropagatorClingoInitializer.get_instance().nt)]
 
-        
-        # This is a map for mapping each solver literal (slit) to its program literal(s) (plit).
-        # Can happend that some solver literal has more than one program literal
-        map_slit_plit = {}
-
-        # This map maps each solver literal (watched) to its program literals (watched)
-        map_slit_plit_watched = {}
-
-        map_plit_slit = {}
-
-        for str_symbol, plit, slit in atoms_list_for_mapping:
-            map_plit_slit[plit] = slit
-            map_plit_slit[-plit] = -slit
-            # name = get_name(self.atomNames, lit=plit)
-            # debug(f"{name} -> {slit}")
-            map_slit_plit.setdefault(slit, [])
-            map_slit_plit.setdefault(-slit, [])
-            map_slit_plit[slit].append(plit)
-            map_slit_plit[-slit].append(-plit)
-
-        lits = [max_plit] + map_slit_plit.get(1,[])
-        for i in range(nt):
-            to_watch_plit = self.propagators[i].getLiterals(*lits)
+        for i in range(PropagatorClingoInitializer.get_instance().nt):
+            to_watch_plit = self.propagators[i].getLiterals(*PropagatorClingoInitializer.get_instance().lits)
 
         # arrived here 
+        map_slit_plit_watched = {}
         for plit in to_watch_plit:
-            slit = map_plit_slit[plit]
+            slit = self.map_plit_slit[plit]
             map_slit_plit_watched.setdefault(slit,[])
             map_slit_plit_watched[slit].append(plit)
             # debug(f"watching: {slit} {get_name(self.atomNames,plit)}", force_print=True)
-            init.add_watch(literal=slit)
+            _init.add_watch(literal=slit)
             
             
-
-        self.map_plit_slit = map_plit_slit
-        self.map_slit_plit = map_slit_plit
         self.map_slit_plit_watched = map_slit_plit_watched
 
         # debug("Propagation ad level 0 started")
-        for i in range(nt):
+        for i in range(PropagatorClingoInitializer.get_instance().nt):
             S_plit = self.propagators[i].simplifyAtLevelZero(delete_lits=True)
             
         # print_derivation(atomNames=self.atomNames, S=S_plit)
-        if S_plit == [1] or self.add_clauses_propagated_lits(control=init, S_plit=S_plit, dl = 0):
+        if S_plit == [1] or self.add_clauses_propagated_lits(control=_init, S_plit=S_plit, dl = 0):
             # adding empty clause
-            init.add_clause([])
+            _init.add_clause([])
             return
         
         

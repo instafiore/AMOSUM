@@ -40,7 +40,7 @@ class PropagatorClingoInitializer:
 
         symbolic_atoms: SymbolicAtoms = _init.symbolic_atoms
         for atom in symbolic_atoms:
-            symbol = atom.symbol
+            symbol = str(atom.symbol)
             plit = atom.literal
             slit = _init.solver_literal(plit)
 
