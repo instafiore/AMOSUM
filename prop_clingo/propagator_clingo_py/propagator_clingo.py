@@ -26,7 +26,6 @@ class PropagatorClingo(clingo.Propagator):
         self.solver = AmoSumPropagator.CLINGO
 
     def init(self, init: clingo.PropagateInit) -> None:
-
         atoms_list_for_mapping = [(str(a.symbol), a.literal, init.solver_literal(a.literal)) for a in init.symbolic_atoms]
         nt = init.number_of_threads
         # debug(f"number of threads {nt}", force_print = True)
@@ -43,6 +42,7 @@ class PropagatorClingo(clingo.Propagator):
         self.propagators = [amosum.AmoSumPropagator(atomNames=self.atomNames, sys_parameters=self.sys_parameters,
                                       propagation_phase=self.propagation_phase, ge=self.ge, choice_cons=self.choice_cons, solver=AmoSumPropagator.CLINGO) for i in range(nt)]
 
+        
         # This is a map for mapping each solver literal (slit) to its program literal(s) (plit).
         # Can happend that some solver literal has more than one program literal
         map_slit_plit = {}
@@ -111,7 +111,6 @@ class PropagatorClingo(clingo.Propagator):
                     print_clause(propagator=self, clause=clause, conflict=True)
                     return True
             except Exception as e:
-                debug(e, force_print=True)
                 raise e
         return False
     
@@ -129,11 +128,7 @@ class PropagatorClingo(clingo.Propagator):
                     # propagated plits
                     S_plit = []
                     # propagating program literal
-                    try:
-                        S_plit = prop.onLiteralTrue(plit, dl)
-                    except Exception as e:
-                        debug(e, force_print=True)
-                        raise e
+                    S_plit = prop.onLiteralTrue(plit, dl)
                     # adding clauses for propagated literals S_plit
                     if self.add_clauses_propagated_lits(control=control, S_plit=S_plit, dl = dl):
                         # Conflict added hence propagation has to stop
@@ -141,6 +136,10 @@ class PropagatorClingo(clingo.Propagator):
             
         except Exception as e:
             debug(e, force_print=True)
+            tb = e.__traceback__
+            while tb:
+                print(f"File: {tb.tb_frame.f_code.co_filename}, Line: {tb.tb_lineno}, Function: {tb.tb_frame.f_code.co_name}", file=sys.stderr)
+                tb = tb.tb_next
             raise e
 
     def undo(self, thread_id: int, assignment: clingo.Assignment, changes: Sequence[int]) -> None:
@@ -154,6 +153,10 @@ class PropagatorClingo(clingo.Propagator):
             prop.onLiteralsUndefined(*plit_list, wasp=False)
         except Exception as e:
             debug(e, force_print=True)
+            tb = e.__traceback__
+            while tb:
+                print(f"File: {tb.tb_frame.f_code.co_filename}, Line: {tb.tb_lineno}, Function: {tb.tb_frame.f_code.co_name}", file=sys.stderr)
+                tb = tb.tb_next
             raise e
 
     def compute_changes_str(self, changes, thread_id):

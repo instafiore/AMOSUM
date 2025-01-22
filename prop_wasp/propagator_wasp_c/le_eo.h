@@ -14,9 +14,7 @@
 
 const std::vector<clingo_literal_t>* propagation_phase_le_eo(const Group* G, AmoSumPropagator* propagator) {
     // Clear the reason vector and derived literals set
-    #ifndef PRIVATE_REASON
-    propagator->reason_falses.clear();
-    #endif
+
     propagator->S.clear();
 
     // Handle case when mps_violated is true
@@ -24,10 +22,8 @@ const std::vector<clingo_literal_t>* propagation_phase_le_eo(const Group* G, Amo
         clingo_literal_t l = propagator->current_literal;
         propagator->S.push_back(not_(l));
 
-        #ifdef PRIVATE_REASON
         auto R = get_perfect_hash_with_pointer(propagator->reason.get(), not_(l));
         R->clear();
-        #endif
 
         bool derived_true = false;
         Group* g = propagator->group->get(l);
@@ -61,11 +57,8 @@ const std::vector<clingo_literal_t>* propagation_phase_le_eo(const Group* G, Amo
                     if (!propagator->to_be_propagated->get(not_(l))) {
                         propagator->to_be_propagated->set(not_(l), true);
                         propagator->S.push_back(not_(l));
-
-                        #ifdef PRIVATE_REASON
                         auto R = get_perfect_hash_with_pointer(propagator->reason.get(), not_(l));
                         R->clear();
-                        #endif
                     }
                 } else {
                     break;

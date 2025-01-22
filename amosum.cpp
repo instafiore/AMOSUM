@@ -8,7 +8,7 @@
 
 
 const std::vector<clingo_literal_t> AmoSumPropagator::simplifyAtLevelZero(const bool& delete_lits=false){ 
-        // debug("_mps: ",_mps)
+
         std::string error_string = ge ? (std::to_string(_mps) + " < " + std::to_string(lb) + " !!!") : (std::to_string(_mps) + " > " + std::to_string(ub) + " !!!");
         if ((ge && _mps < lb) || (!ge && _mps > ub)) {
                 debugf(error_string)
@@ -164,33 +164,18 @@ std::tuple<int, clingo_literal_t, clingo_literal_t> AmoSumPropagator::mps(Group*
 
 const std::vector<clingo_literal_t>* AmoSumPropagator::getReasonForLiteral(const clingo_literal_t& lit){
 
-    #ifdef PRIVATE_REASON
     auto reason_ptr = reason->get(lit) ;
     if(reason_ptr == nullptr) return nullptr ;
     std::vector<clingo_literal_t>& R = *reason_ptr;
-    bool true_literal = true ;
-    #else
-    std::vector<clingo_literal_t>* rt = reason_trues->get(lit);
-    bool true_literal = rt != nullptr and rt->size() > 0 ;
-
-    std::vector<clingo_literal_t>& R = true_literal ? *rt : reason_falses ;
-    if(true_literal) extend_vector(R, reason_falses);
-    #endif
 
     std::unordered_set<clingo_literal_t>* rl = redundant_lits->get(lit) ;
 
     bool removed = false ;
-    if(rl != nullptr && rl->size() > 0 && true_literal){
+    if(rl != nullptr && rl->size() > 0){
         removed  = true ; 
         remove_elements(R, *rl);
         rl->clear();
     }
-
-    #ifndef PRIVATE_REASON
-    if(true_literal){
-        rt->clear();
-    }
-    #endif
 
     print_reason(atomNames, R, lit, false);
     return &R; 
@@ -218,13 +203,9 @@ void AmoSumPropagator::compute_minimal_reason(const std::vector<clingo_literal_t
         auto rd = get_perfect_hash_with_pointer(redundant_lits.get(), l);
 
         if (minimization == Minimize::MINIMAL) {
-            #ifdef PRIVATE_REASON
             auto R = get_perfect_hash_with_pointer(reason.get(), l);
             if(R == nullptr) continue ;
             maximal_subset_sum_less_than_s_with_groups(derived_true, *R, s, weight, group.get(), l, I, ge, *rd);
-            #else
-            maximal_subset_sum_less_than_s_with_groups(derived_true, reason_falses, s, weight, group.get(), l, I, ge, *rd);
-            #endif
         } else if (minimization == Minimize::CARDINALITY_MINIMAL) {
             // NOT IMPLEMENTED
         } else {
@@ -247,8 +228,6 @@ void AmoSumPropagator::onLiteralsUndefined(const std::vector<clingo_literal_t>& 
             continue;
         }
 
-        // propagated[l] = false;
-
         // Handle early stop in propagation phase
         if (I->get(l) == SETTINGS::NONE) {
             continue;
@@ -268,13 +247,8 @@ void AmoSumPropagator::onLiteralsUndefined(const std::vector<clingo_literal_t>& 
 
         assert(G != nullptr);
         
-        #ifdef PRIVATE_REASON
         auto R = get_perfect_hash_with_pointer(reason.get(), l);
         R->clear();
-        #else
-        auto rt = get_perfect_hash_with_pointer(reason_trues.get(), l);
-        rt->clear();
-        #endif
 
         // Increase the number of undefined literals in the group
         G->increase_und();

@@ -12,9 +12,6 @@
 #include <limits>
 
 const std::vector<clingo_literal_t>* propagation_phase_ge_eo(const Group* G, AmoSumPropagator* propagator) {
-    #ifndef PRIVATE_REASON
-    propagator->reason_falses.clear();
-    #endif
     propagator->S.clear();
 
     if (propagator->mps_violated) {
@@ -22,10 +19,8 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_eo(const Group* G, Amo
         clingo_literal_t l = propagator->current_literal ;
         propagator->S.push_back(not_(l));
 
-        #ifdef PRIVATE_REASON
         auto R = get_perfect_hash_with_pointer(propagator->reason.get(), not_(l));
         R->clear();
-        #endif
 
         bool derived_true = false;
         Group* g = propagator->group->get(l);
@@ -50,6 +45,7 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_eo(const Group* G, Amo
     for (Group* g : propagator->groups) {
         if (g == G || propagator->true_group->get(g) != SETTINGS::NONE) continue;
         int ml_g = max_w(g);
+        assert((propagator->true_group->get(g) != SETTINGS::NONE || ml_g != SETTINGS::NONE) || propagator->dl == 0 || g->N == 0);
         if(ml_g == SETTINGS::NONE) continue ;
 
         for (int l : g->ord_l) {
@@ -59,10 +55,8 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_eo(const Group* G, Amo
                     if(!propagator->to_be_propagated->get(not_(l))) {
                         propagator->to_be_propagated->set(not_(l), true);
                         propagator->S.push_back(not_(l));
-                        #ifdef PRIVATE_REASON
                         auto R = get_perfect_hash_with_pointer(propagator->reason.get(), not_(l));
                         R->clear();
-                        #endif
                     }
 
                 } else {

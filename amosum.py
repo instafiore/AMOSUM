@@ -10,6 +10,7 @@ import re
 import settings
 from settings import *
 import time
+import traceback
 
 class AmoSumPropagator:
 
@@ -155,6 +156,7 @@ class AmoSumPropagator:
         self.group = GroupFunction(self.N)
         self.propagated = SymmetricFunction(self.N)
         self.aggregate = AggregateFunction(self.N, False)
+        self.to_be_propagated = PerfectHash(self.N, False)
         self.reason_trues = PerfectHash(self.N,[])
         self.reason = PerfectHash(self.N,[])
         self.redundant_lits = PerfectHash(self.N,[])
@@ -317,6 +319,7 @@ class AmoSumPropagator:
 
     def onLiteralTrue(self, lit, dl):
         
+  
         if not self.is_in_aggregate(lit):
             return []
 
@@ -346,7 +349,6 @@ class AmoSumPropagator:
             try:
                 propagated_lits = self.propagate_phase(G, self, self.atomNames)
             except Exception as e:
-                print(e, file=sys.stderr)
                 raise e
         
         return propagated_lits
@@ -383,6 +385,7 @@ class AmoSumPropagator:
         amo_condition = False
         if self.aggregate[l]:
             G = self.group[l]
+            self.to_be_propagated[l] = False 
             G.decrease_und()
             self.true_group[G] = l
             w_p = self.weight[m_w(G, max = self.ge)]
@@ -392,6 +395,7 @@ class AmoSumPropagator:
             
         elif self.aggregate[not_(l)]:
             G = self.group[not_(l)]
+            self.to_be_propagated[not_(l)] = False 
             G.decrease_und()
             new, prev = G.update(self.I, max=self.ge, update=False, assuming_und = l)
             if not_(l) == prev:
@@ -451,12 +455,13 @@ class AmoSumPropagator:
         if len(rl) > 0:
             removed = True
             R = remove_elements(R, rl)
+            self.redundant_lits[lit] = []
         
     
-        self.redundant_lits[lit] = []
+        
         return R 
 
-    def compute_minimal_reason(self, reason: List[int], derived: List[int]):
+    def compute_minimal_reason(self, to_minimize: List[int]):
         '''
         Invariants (in case of cmin strategy) reason is grouped by self.group id and in each self.group the literals are sort in descending order
         '''
@@ -464,7 +469,7 @@ class AmoSumPropagator:
         if self.minimization == Minimize.NO_MINIMIZATION.value:
             return
         
-        for l in derived:
+        for l in to_minimize:
             g = self.group[l]
             derived_true = True
             if g is None:
@@ -476,8 +481,9 @@ class AmoSumPropagator:
             s = self.lb - mps - 1 
     
             if self.minimization == Minimize.MINIMAL.value:
-                self.redundant_lits[l] = maximal_subset_sum_less_than_s_with_groups(literals= self.reason[l], s = s, weight= self.weight, group=self.group, head_reason=l, I=self.I, max=self.ge)
+                self.redundant_lits[l] = maximal_subset_sum_less_than_s_with_groups(derived_true=derived_true, literals= self.reason[l], s = s, weight= self.weight, group=self.group, head_reason=l, I=self.I, max=self.ge)
             elif self.minimization == Minimize.CARDINALITY_MINIMAL.value:
+                # outdated
                 increment = compute_increment_literals(literals=self.reason[l], group=self.group, weight=self.weight)
                 self.redundant_lits[l]  = maximum_subset_sum_less_than_s_with_groups(literals= self.reason[l], s = s, weight = increment, group=self.group, I=self.I)            
             else:
@@ -500,6 +506,7 @@ class AmoSumPropagator:
             # updating interpretation
             self.I[l] = None
             self.reason[l] = []
+            self.to_be_propagated[l] = False
 
 
             # updating max self.weight for self.group(l)

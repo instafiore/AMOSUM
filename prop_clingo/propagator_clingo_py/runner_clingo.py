@@ -122,7 +122,7 @@ class RunnerClingoPython(RunnerWasp):
 
         def on_unsat(x):
             global sat
-            print("UNSAT")
+            debug("UNSAT", force_print=True)
             sat = False
 
         def on_finish(x: SolveResult):
@@ -133,7 +133,7 @@ class RunnerClingoPython(RunnerWasp):
             res = handle.wait(self.timeout_m * 60 if not self.exp else None)
         except Exception as e:
             res = "error"
-            print(e)
+            raise e
 
     
         end_time = time.time()  # End time
