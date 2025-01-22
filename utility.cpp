@@ -446,21 +446,33 @@ void create_reason_falses_ge(AmoSumPropagator* propagator, clingo_literal_t flip
 
 
 void create_reason_falses_le(AmoSumPropagator* propagator, clingo_literal_t flipped = SETTINGS::NONE) {
-    // propagator->reason_falses.clear(); // Clear the existing reason vector.
+    if(propagator->dl == 0) return ;
 
     for (auto* g : propagator->groups) {
         if (propagator->true_group->get(g) == SETTINGS::NONE) {
-            clingo_literal_t ml_g = m_w(g, !propagator->ge); // Use min_w when `ge` is false.
+            clingo_literal_t ml_g = m_w(g, propagator->ge); 
             int mw_g = propagator->weight->get(ml_g);
             
             for (clingo_literal_t l : g->ord_l) {
                 if (propagator->weight->get(l) > mw_g) break;
-                if (propagator->I->get(l) != SETTINGS::NONE && !equals(l, flipped)) {
-                    // propagator->reason_falses.push_back(l);
+                if (!propagator->I->get(l) && !equals(l, flipped)) {
+                    for(auto lit : propagator->S){
+                        auto R = get_perfect_hash_with_pointer(propagator->reason.get(), lit);
+                        Group* G = propagator->group->get(lit);
+                        if (G == nullptr) G = propagator->group->get(not_(lit));
+                        if(g == G) continue; 
+                        R->push_back(l);
+                    }
                 }
             }
         } else if(!equals(propagator->true_group->get(g), flipped)) {
-            // propagator->reason_falses.push_back(not_(propagator->true_group->get(g)));
+            for(auto lit : propagator->S){
+                auto R = get_perfect_hash_with_pointer(propagator->reason.get(), lit);
+                Group* G = propagator->group->get(lit);
+                if (G == nullptr) G = propagator->group->get(not_(lit));
+                if(g == G) continue; 
+                R->push_back(not_(propagator->true_group->get(g)));
+            }
         }
     }
 }

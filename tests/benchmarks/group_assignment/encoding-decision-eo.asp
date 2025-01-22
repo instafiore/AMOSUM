@@ -13,8 +13,8 @@ possible_hours(100).
 possible_hours(125).
 
 :- person(Per), month(M), max_hours_working_per_month(MAX), #sum{H,Pro: join_project(Per, Pro, H, M)} > MAX.
-% :- project(Pro, _, UB), #sum{ H*S, Per, M: join_project(Per, Pro, H, M), role(Per,R), salary(R,S), project_month(Pro, SM, EM), M >= SM, M <= EM} > UB.
-#eosum{H*S: join_project(Per, Pro, H, M), role(Per,R), salary(R,S), project_month(Pro, SM, EM), M >= SM, M <= EM [(Per, M, Pro)]} <= UB:  project(Pro, LB, UB).
+:- project(Pro, _, UB), #sum{ H*S, Per, M: join_project(Per, Pro, H, M), role(Per,R), salary(R,S), project_month(Pro, SM, EM), M >= SM, M <= EM} > UB.
+% #eosum{H*S: join_project(Per, Pro, H, M), role(Per,R), salary(R,S), project_month(Pro, SM, EM), M >= SM, M <= EM [(Per, M, Pro)]} <= UB:  project(Pro, LB, UB).
 
 % amo
 {join_project(Per,Pro, H, M) : possible_hours(H)} = 1 :- person(Per), project(Pro, LB, UB), month(M), project_month(Pro, SM, EM), M >= SM, M <= EM.
