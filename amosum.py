@@ -317,7 +317,6 @@ class AmoSumPropagator:
 
     def onLiteralTrue(self, lit, dl):
         
-        # start = time.time()
         if not self.is_in_aggregate(lit):
             return []
 
