@@ -495,7 +495,35 @@ void create_reason_true_ge(AmoSumPropagator* propagator, clingo_literal_t sml_g,
     
     for (int k = i; k < j; ++k) {
         clingo_literal_t lit = g->ord_l[k];
-        if (!propagator->I->get(lit)) {
+        if (!propagator->I->get(lit) && !equals(derived, lit)) {
+            #ifdef PRIVATE_REASON
+            R->push_back(lit);
+            #else
+            rst->push_back(lit);
+            #endif
+        }
+    }
+}
+
+void create_reason_true_le(AmoSumPropagator* propagator, clingo_literal_t sml_g, clingo_literal_t derived, Group* g){
+    if(propagator->dl == 0) return ;
+    
+    int i = sml_g != SETTINGS::NONE ? g->ord_i[sml_g] : g->ord_l.size() - 1;
+    int j = 0;
+
+    #ifdef PRIVATE_REASON
+    auto R = get_perfect_hash_with_pointer(propagator->reason.get(), derived);
+    #else
+    auto rst = get_perfect_hash_with_pointer(propagator->reason_trues.get(), derived);
+    rst->clear();
+    #endif
+
+    assert(i >= j);
+    assert(derived != SETTINGS::NONE);
+    
+    for (int k = i; k >= j; --k) {
+        clingo_literal_t lit = g->ord_l[k];
+        if (!propagator->I->get(lit) && !equals(derived, lit)) {
             #ifdef PRIVATE_REASON
             R->push_back(lit);
             #else

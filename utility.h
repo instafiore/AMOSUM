@@ -184,6 +184,7 @@ void create_reason_falses(AmoSumPropagator* propagator, bool ge, clingo_literal_
 void create_reason_falses_ge(AmoSumPropagator* propagator, clingo_literal_t flipped);
 void create_reason_falses_le(AmoSumPropagator* propagator, clingo_literal_t flipped);
 void create_reason_true_ge(AmoSumPropagator* propagator, clingo_literal_t sml_g, clingo_literal_t derived, Group* g);
+void create_reason_true_le(AmoSumPropagator* propagator, clingo_literal_t sml_g, clingo_literal_t derived, Group* g);
 std::tuple<bool, const std::vector<clingo_literal_t>* (*)(const Group*, AmoSumPropagator*), std::string>  get_propagator_variables(std::string prop_type);
 // Function to get the name
 std::string get_name(const std::unordered_map<clingo_symbol_t, clingo_literal_t>* atomNames, clingo_literal_t lit);

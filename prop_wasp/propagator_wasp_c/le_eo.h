@@ -13,52 +13,72 @@
 
 
 const std::vector<clingo_literal_t>* propagation_phase_le_eo(const Group* G, AmoSumPropagator* propagator) {
-    // // Handle the case where the MPS condition is violated
-    // if (propagator->mps_violated) {
-    //     propagator->reason.clear();
-    //     create_reason_falses_le(propagator); // Update the reason for falses
-    //     propagator->S.clear();
-    //     propagator->S.push_back(not_(propagator->current_literal));
-    //     print_derivation(propagator->atomNames, propagator->S, false);
-    //     return &propagator->S;
-    // }
+    // Clear the reason vector and derived literals set
+    #ifndef PRIVATE_REASON
+    propagator->reason_falses.clear();
+    #endif
+    propagator->S.clear();
 
-    // // Set of derived literals
-    // propagator->S.clear();
+    // Handle case when mps_violated is true
+    if (propagator->mps_violated) {
+        clingo_literal_t l = propagator->current_literal;
+        propagator->S.push_back(not_(l));
 
-    // // Iterate over all groups
-    // for (Group* g : propagator->groups) {
-    //     // Skip the current group or any group already determined to be true
-    //     if (g == G || propagator->true_group->get(g) != SETTINGS::NONE) {
-    //         continue;
-    //     }
+        #ifdef PRIVATE_REASON
+        auto R = get_perfect_hash_with_pointer(propagator->reason.get(), not_(l));
+        R->clear();
+        #endif
 
-    //     // Process literals in reverse order
-    //     for (int i = g->ord_l.size() - 1; i >= 0; --i) {
-    //         int l = g->ord_l[i];
+        bool derived_true = false;
+        Group* g = propagator->group->get(l);
+        if (g == nullptr) {
+            derived_true = true;
+            g = propagator->group->get(not_(l));
+        }
 
-    //         // Check if the literal is undefined in the interpretation
-    //         if (propagator->I->get(l) == SETTINGS::NONE) {
-    //             // Check if the MPS condition holds
-    //             auto mps_result = propagator->mps(g, l, true);
-    //             if (std::get<0>(mps_result) > propagator->ub) {
-    //                 // Infer the literal as false
-    //                 propagator->S.push_back(not_(l));
-    //                 propagator->to_be_propagated->set(not_(l), true);
-    //             } else {
-    //                 break;
-    //             }
-    //         }
-    //     }
-    // }
+        create_reason_falses_le(propagator, not_(l));
 
-    // // Clear the reason and update it if necessary
-    // propagator->reason.clear();
-    // if (!propagator->S.empty() && propagator->dl != 0) {
-    //     create_reason_falses_le(propagator);
-    // }
+        if (derived_true) {
+            clingo_literal_t sml_g = min_w(g);
+            create_reason_true_le(propagator, sml_g, not_(l), g);
+        }
 
-    // // Print the derivation and return the set of derived literals
-    // print_derivation(propagator->atomNames, propagator->S, false);
+        print_derivation(propagator->atomNames, propagator->S, false);
+        return &propagator->S;
+    }
+
+    // Iterate over all groups
+    for (Group* g : propagator->groups) {
+        if (g == G || propagator->true_group->get(g) != SETTINGS::NONE) {
+            continue;
+        }
+
+        for (int i = g->ord_l.size() - 1; i >= 0; --i) {
+            clingo_literal_t l = g->ord_l[i];
+            if (propagator->I->get(l) == SETTINGS::NONE) {
+                if (std::get<0>(propagator->mps(g, l, true)) > propagator->ub) {
+                    // Infer l as false
+                    if (!propagator->to_be_propagated->get(not_(l))) {
+                        propagator->to_be_propagated->set(not_(l), true);
+                        propagator->S.push_back(not_(l));
+
+                        #ifdef PRIVATE_REASON
+                        auto R = get_perfect_hash_with_pointer(propagator->reason.get(), not_(l));
+                        R->clear();
+                        #endif
+                    }
+                } else {
+                    break;
+                }
+            }
+        }
+    }
+
+    // Update reason if necessary
+    if (!propagator->S.empty() && propagator->dl != 0) {
+        create_reason_falses_le(propagator, SETTINGS::NONE);
+    }
+
+    print_derivation(propagator->atomNames, propagator->S, false);
     return &propagator->S;
 }

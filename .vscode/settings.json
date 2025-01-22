@@ -90,6 +90,8 @@
         "ranges": "cpp",
         "text_encoding": "cpp",
         "json.hpp": "c",
-        "__availability": "cpp"
+        "__availability": "cpp",
+        "any": "cpp",
+        "clocale": "cpp"
     }
 }
