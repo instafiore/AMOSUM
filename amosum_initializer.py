@@ -4,6 +4,8 @@ from collections import defaultdict
 import json
 import sys
 import os
+
+
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from ast import Tuple
 from typing import Callable, List
@@ -30,6 +32,8 @@ class GenericData:
 class AmoSumInitializer:
     DEFAULT_LAZY = "dynamic"
     instance = None
+    WASP = 1
+    CLINGO = 2
 
     def __init__(self):
         self.first = True
@@ -51,8 +55,8 @@ class AmoSumInitializer:
 
     def get_literals(self, lits, amosum_propagator):
         amosum_propagator.N = lits[0] + 1
-        amosum_propagator.minimization = amosum_propagator.get_map(amosum_propagator.params, "min_r", "NO_MINIMIZATION")
-        amosum_propagator.strategy = amosum_propagator.get_map(amosum_propagator.params, "strategy", amosum_propagator.strategy)
+        amosum_propagator.minimization = amosum_propagator.get_map(amosum_propagator.param, "min_r", "NO_MINIMIZATION")
+        amosum_propagator.strategy = amosum_propagator.get_map(amosum_propagator.param, "strategy", amosum_propagator.strategy)
         amosum_propagator.I = SymmetricFunction(amosum_propagator.N)
         amosum_propagator.group = GroupFunction(amosum_propagator.N)
         amosum_propagator.propagated = SymmetricFunction(amosum_propagator.N)
@@ -62,11 +66,11 @@ class AmoSumInitializer:
         amosum_propagator.reason = PerfectHash(amosum_propagator.N, [])
         amosum_propagator.redundant_lits = PerfectHash(amosum_propagator.N, [])
         amosum_propagator._mps = 0
-        amosum_propagator.ID = amosum_propagator.get_map(amosum_propagator.params, "id", "0")
+        amosum_propagator.ID = amosum_propagator.get_map(amosum_propagator.param, "id", "0")
         amosum_propagator.groups = []
-        amosum_propagator.assumptions = amosum_propagator.get_map(amosum_propagator.params, "ass", False)
+        amosum_propagator.assumptions = amosum_propagator.get_map(amosum_propagator.param, "ass", False)
         amosum_propagator.current_sum = 0
-        amosum_propagator.lazy_prop_activated = amosum_propagator.get_map(amosum_propagator.params, "lazy", False)
+        amosum_propagator.lazy_prop_activated = amosum_propagator.get_map(amosum_propagator.param, "lazy", False)
         amosum_propagator.lazy_condition = not amosum_propagator.lazy_prop_activated
         amosum_propagator.groups_literals = []
 
@@ -142,13 +146,17 @@ class AmoSumInitializer:
         if amosum_propagator.ge: amosum_propagator.lb = self.generic_data_map[ID].bound
         else: amosum_propagator.ub = self.generic_data_map[ID].bound
         amosum_propagator.bound = self.generic_data_map[ID].bound
+        amosum_propagator.weights_names = self.generic_data_map[ID].weights_names
 
     def specific_phase(self, lits, amosum_propagator):
         max_diff = 0
         ID = amosum_propagator.ID
-        lazy_param = amosum_propagator.params.getdefault("lazy", self.DEFAULT_LAZY)
+        lazy_param = amosum_propagator.param.getdefault("lazy", self.DEFAULT_LAZY)
         amosum_propagator.lazy_prop_activated = lazy_param != settings.FALSE
         lazy_dynamic = lazy_param == "dynamic"
+
+        check_mps = amosum_propagator.param.get("check_mps", False)
+        debug(f"id: {amosum_propagator.ID} total_weight_names: {json.dumps(amosum_propagator.weights_names)}", force_print=True) if amosum_propagator.solver == AmoSumInitializer.WASP and check_mps else None
 
         # Logging and preprocessing
         for group_id, lits_group in self.generic_data_map[ID].groups_raw.items():
@@ -184,7 +192,7 @@ class AmoSumInitializer:
             amosum_propagator.LAZY_PERC = amosum_propagator.lb / (amosum_propagator.lb + max_diff) if amosum_propagator.ge else (amosum_propagator.ub - max_diff) / amosum_propagator.ub
 
         # Debugging lazy threshold and propagation
-        debug(f"Starting propagator with param {amosum_propagator.params} lazy threshold {amosum_propagator.LAZY_PERC}", force_print=True)
+        debug(f"Starting propagator with param {amosum_propagator.param} lazy threshold {amosum_propagator.LAZY_PERC}", force_print=True)
 
         amosum_propagator.facts = lits[1:]
         amosum_propagator.last_decision_lit = 1

@@ -159,6 +159,8 @@ class RunnerClingoPython(RunnerWasp):
     
     def update_maps_weights_list(self, input: AmoSumPropagator):
 
+        if not input.param.get("check_mps", False):
+            return
         id = input.ID
         maps_weights = input.weights_names
         self.maps_weights_list.append((id, maps_weights))
