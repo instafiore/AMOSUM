@@ -8,6 +8,8 @@ from clingo.symbol import Number, Function
 from clingo.control import Control
 from clingo.symbol import Function
 
+from amosum_initializer import AmoSumInitializer
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from amosum import *
 import amosum
@@ -33,8 +35,8 @@ class PropagatorClingo(clingo.Propagator):
         self.propagators = [amosum.AmoSumPropagator(atomNames=self.atomNames, sys_parameters=self.sys_parameters,
                                       propagation_phase=self.propagation_phase, ge=self.ge, choice_cons=self.choice_cons, solver=AmoSumPropagator.CLINGO) for i in range(PropagatorClingoInitializer.get_instance().nt)]
 
-        for i in range(PropagatorClingoInitializer.get_instance().nt):
-            to_watch_plit = self.propagators[i].getLiterals(*PropagatorClingoInitializer.get_instance().lits)
+        for i in range(PropagatorClingoInitializer.get_instance().nt): to_watch_plit = AmoSumInitializer.get_instance().getLiterals(PropagatorClingoInitializer.get_instance().lits, self.propagators[i])
+        # for i in range(PropagatorClingoInitializer.get_instance().nt): to_watch_plit = self.propagators[i].getLiterals(*PropagatorClingoInitializer.get_instance().lits)
 
         # arrived here 
         map_slit_plit_watched = {}
@@ -64,19 +66,24 @@ class PropagatorClingo(clingo.Propagator):
         td = 0 if isinstance(control, clingo.PropagateInit) else control.thread_id
         prop = self.propagators[td]
 
-        for plit in S_plit:
+        for si in range(len(S_plit)):
+            plit = S_plit[si]
             try:
                 R_plit = prop.getReasonForLiteral(plit)
 
-                slit   = self.map_plit_slit[plit]
+                slit  = self.map_plit_slit[plit]
                 # first part of the clause is the reason
                 clause = [self.map_plit_slit[plit_r] for plit_r in R_plit] 
-                # the last literal is the implied literal (undefined)
+                
+                # the last literal is the implied literal (undefined or false)
                 clause.append(slit)
-               
+                
                 if not control.add_clause(clause) or not control.propagate():
                     # propagation must return immediately, a conflict has been raised
-                    print_clause(propagator=self, clause=clause, conflict=True)
+                    print_clause(propagator=self, clause=clause, conflict=True, force_print=False)
+                    for sj in range(si, len(S_plit)):
+                        plit_not_propagated = S_plit[sj]
+                        prop.to_be_propagated[plit_not_propagated] = False
                     return True
             except Exception as e:
                 raise e
@@ -89,7 +96,7 @@ class PropagatorClingo(clingo.Propagator):
             td = 0 if dl == 0 else control.thread_id
             prop = self.propagators[td]
             
-            print_propagate(self, changes=changes, control=control, dl=dl)
+            # print_propagate(self, changes=changes, control=control, dl=dl, force_print=True)
             for slit in changes:
                 plit_list = self.map_slit_plit_watched[slit]
                 for plit in plit_list:

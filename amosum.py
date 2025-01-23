@@ -421,12 +421,12 @@ class AmoSumPropagator:
 
         self._mps = self._mps - w_p + w_n
         self.update_lazy_propagation()
-        # debug(f"[mps: {self._mps}, id: {self.ID}] iteration: {self.count}", force_print=self.lazy_condition and self.count % 50000 == 0)
 
         G = G if self.choice_cons == "EO" else None
         current_sum_condition = not self.ge or self.current_sum < self.bound
         next_phase = current_sum_condition and (w_p != w_n or amo_condition) and self.lazy_condition 
                 
+        # debug(f"[mps: {self._mps}, id: {self.ID}] iteration: {self.count} next_phase: {next_phase}", force_print=True)
         return (next_phase,  G)
     
     def mps(self, g: Group, l: int, assumed:bool, return_literals = False):
@@ -457,8 +457,7 @@ class AmoSumPropagator:
             R = remove_elements(R, rl)
             self.redundant_lits[lit] = []
         
-    
-        
+        print_reason(atomNames=self.atomNames, R=R, literal=lit)
         return R 
 
     def compute_minimal_reason(self, to_minimize: List[int]):

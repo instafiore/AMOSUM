@@ -43,6 +43,8 @@ def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
             sml_g = max_w(g)
             create_reason_true_ge(propagator, sml_g, not_(l), g)
 
+   
+        print_derivation(propagator.atomNames, propagator.S, force_print=False)  
         return propagator.S
     
     derived_true = []
@@ -87,7 +89,6 @@ def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
     if len(propagator.S) != 0  and propagator.dl != 0:
         create_reason_falses_ge(propagator=propagator)
         propagator.compute_minimal_reason(to_minimize=propagator.S)
-
-    print_derivation(propagator.atomNames, propagator.S)
+        print_derivation(propagator.atomNames, propagator.S, force_print=False)
 
     return propagator.S

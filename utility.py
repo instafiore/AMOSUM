@@ -624,7 +624,7 @@ def create_reason_falses_ge(propagator, flipped = None):
                 l = ord_l[i]
                 if propagator.weight[l] < mw_g:
                     break
-                if not propagator.I[l] and not equals(l, flipped):
+                if propagator.I[l] == False and not equals(l, flipped):
                     for lit in propagator.S:
                         G = propagator.group[lit]
                         if G is None:
@@ -651,7 +651,7 @@ def create_reason_falses_le(propagator, flipped=None):
             for l in ord_l:
                 if propagator.weight[l] > mw_g:
                     break
-                if not propagator.I[l] and not equals(l, flipped):
+                if propagator.I[l] == False and not equals(l, flipped):
                     for lit in propagator.S:
                         G = propagator.group[lit]
                         if G is None:
@@ -680,7 +680,7 @@ def create_reason_true_ge(propagator, sml_g, derived, g):
 
     for k in range(i, j):
         lit = g.ord_l[k]
-        if not propagator.I[lit] and not equals(derived, lit):
+        if propagator.I[lit] == False and not equals(derived, lit):
             propagator.reason[derived].append(lit)
 
 
@@ -695,7 +695,7 @@ def create_reason_true_le(propagator, sml_g, derived, g):
 
     for k in range(j, i-1, -1):
         lit = g.ord_l[k]
-        if not propagator.I[lit] and not equals(derived, lit):
+        if propagator.I[lit] == False and not equals(derived, lit):
             propagator.reason[derived].append(lit)
             
 

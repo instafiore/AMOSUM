@@ -198,6 +198,7 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
         amosum_propagator->LAZY_PERC = amosum_propagator->lazy_prop_activated && lazy_param != SETTINGS::TRUE_STR && !lazy_dynamic ? std::stof(lazy_param) : amosum_propagator->LAZY_PERC ;
         amosum_propagator->lazy_condition = !amosum_propagator->lazy_prop_activated;
         if(lazy_dynamic) amosum_propagator->LAZY_PERC = amosum_propagator->ge ? amosum_propagator->lb / static_cast<float>(amosum_propagator->lb + max_diff) :  (amosum_propagator->ub - max_diff) / static_cast<float>(amosum_propagator->ub);
+        else if(lazy_param == SETTINGS::TRUE_STR) amosum_propagator->LAZY_PERC = 1.001 ;
         std::string lazy_perc_str = amosum_propagator->lazy_prop_activated ? " lazy threshold " + std::to_string(amosum_propagator->LAZY_PERC) : SETTINGS::NONE_STR;
         debugf("Starting propagator with param ",unordered_map_to_string(amosum_propagator->params), lazy_perc_str);
 

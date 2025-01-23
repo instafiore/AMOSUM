@@ -53,25 +53,22 @@ class AmoSumInitializer:
             AmoSumInitializer.instance = AmoSumInitializer()
         return AmoSumInitializer.instance
 
-    def get_literals(self, lits, amosum_propagator):
+    def getLiterals(self, lits, amosum_propagator):
         amosum_propagator.N = lits[0] + 1
-        amosum_propagator.minimization = amosum_propagator.get_map(amosum_propagator.param, "min_r", "NO_MINIMIZATION")
-        amosum_propagator.strategy = amosum_propagator.get_map(amosum_propagator.param, "strategy", amosum_propagator.strategy)
+        amosum_propagator.minimization = amosum_propagator.param.get("min_r",Minimize.NO_MINIMIZATION.value)
+        amosum_propagator.strategy = amosum_propagator.param.get("strategy",self.strategy)
         amosum_propagator.I = SymmetricFunction(amosum_propagator.N)
         amosum_propagator.group = GroupFunction(amosum_propagator.N)
         amosum_propagator.propagated = SymmetricFunction(amosum_propagator.N)
         amosum_propagator.aggregate = AggregateFunction(amosum_propagator.N, False)
         amosum_propagator.to_be_propagated = PerfectHash(amosum_propagator.N, False)
-        amosum_propagator.reason_trues = PerfectHash(amosum_propagator.N, [])
         amosum_propagator.reason = PerfectHash(amosum_propagator.N, [])
         amosum_propagator.redundant_lits = PerfectHash(amosum_propagator.N, [])
         amosum_propagator._mps = 0
-        amosum_propagator.ID = amosum_propagator.get_map(amosum_propagator.param, "id", "0")
+        amosum_propagator.ID = amosum_propagator.param.get("id","0")
         amosum_propagator.groups = []
-        amosum_propagator.assumptions = amosum_propagator.get_map(amosum_propagator.param, "ass", False)
+        amosum_propagator.assumptions = amosum_propagator.param.get("ass", False)
         amosum_propagator.current_sum = 0
-        amosum_propagator.lazy_prop_activated = amosum_propagator.get_map(amosum_propagator.param, "lazy", False)
-        amosum_propagator.lazy_condition = not amosum_propagator.lazy_prop_activated
         amosum_propagator.groups_literals = []
 
         if self.first:
@@ -92,7 +89,7 @@ class AmoSumInitializer:
             a = symbolic_atom
             if a.startswith(PREDICATE_GROUP + "("):
                 # Process PREDICATE_GROUP type
-                terms = self.get_terms(PREDICATE_GROUP, a)
+                terms = wasp.getTerms(PREDICATE_GROUP, a)
                 if len(terms) != 5 :
                     continue
                 id_str = terms[4] 
@@ -103,9 +100,9 @@ class AmoSumInitializer:
                 match = re.match(r"^not\s+(?P<atom_name>[\w()]+)", lit_str)
                 if match:
                     atom_name = match.group("atom_name")
-                    lit = self.amosum_propagator.atomNames[atom_name] * -1
+                    lit = amosum_propagator.atomNames[atom_name] * -1
                 else:
-                    lit = self.amosum_propagator.atomNames[atom_name]
+                    lit = amosum_propagator.atomNames[atom_name]
 
                 sign = 1 if "+" in terms[1] else -1
                 lit *= sign
@@ -120,7 +117,9 @@ class AmoSumInitializer:
                 # Update groups and aggregates
                 gd.groups_raw.setdefault(group_id, [])
                 gd.groups_raw[group_id].append(lit)
-                self.aggregate_map.setdefault(id_str, AggregateFunction(amosum_propagator.N))
+                if id_str not in self.aggregate_map:
+                    self.aggregate_map[id_str] = AggregateFunction(amosum_propagator.N)
+                    
                 self.aggregate_map[id_str][lit] =  True
 
                 gd.bind.append(lit)
@@ -130,7 +129,7 @@ class AmoSumInitializer:
             elif a.startswith(PREDICATE_LB + "(") or a.startswith(PREDICATE_UB + "("):
                 # Process bounds
                 bound_str = PREDICATE_LB if a.startswith(PREDICATE_LB + "(") else PREDICATE_UB 
-                terms = wasp.get_terms(bound_str, a)
+                terms = wasp.getTerms(bound_str, a)
                 if len(terms) != 2:
                     continue
                 id_str = terms[1]
@@ -151,8 +150,9 @@ class AmoSumInitializer:
     def specific_phase(self, lits, amosum_propagator):
         max_diff = 0
         ID = amosum_propagator.ID
-        lazy_param = amosum_propagator.param.getdefault("lazy", self.DEFAULT_LAZY)
+        lazy_param = amosum_propagator.param.get("lazy", self.DEFAULT_LAZY)
         amosum_propagator.lazy_prop_activated = lazy_param != settings.FALSE
+        amosum_propagator.lazy_condition = not amosum_propagator.lazy_prop_activated
         lazy_dynamic = lazy_param == "dynamic"
 
         check_mps = amosum_propagator.param.get("check_mps", False)
@@ -175,21 +175,25 @@ class AmoSumInitializer:
 
             amosum_propagator.groups.append(G)
 
+            for lit in lits_group:  amosum_propagator.group[lit] = G
+
         nGroup = Group.autoincrement
         amosum_propagator.true_group = TrueGroupFunction(nGroup)
 
         for i in range(1, len(lits)):
             l = lits[i]
             try:
-                amosum_propagator.update_phase(l, 0)
+                amosum_propagator.update_phase(l)
                 amosum_propagator.inconsistent_at_level_0 = False
-            except Exception:
+            except Exception as e:
                 amosum_propagator.inconsistent_at_level_0 = True
+                raise e
 
-        amosum_propagator.LAZY_PERC = float(lazy_param) if amosum_propagator.lazy_prop_activated and lazy_param != "TRUE" and not lazy_dynamic else amosum_propagator.LAZY_PERC
+        amosum_propagator.LAZY_PERC = float(lazy_param) if amosum_propagator.lazy_prop_activated and lazy_param != settings.TRUE and not lazy_dynamic else amosum_propagator.LAZY_PERC
         amosum_propagator.lazy_condition = not amosum_propagator.lazy_prop_activated
         if lazy_dynamic:
             amosum_propagator.LAZY_PERC = amosum_propagator.lb / (amosum_propagator.lb + max_diff) if amosum_propagator.ge else (amosum_propagator.ub - max_diff) / amosum_propagator.ub
+        elif lazy_param == settings.TRUE: amosum_propagator.LAZY_PERC = 1.001 
 
         # Debugging lazy threshold and propagation
         debug(f"Starting propagator with param {amosum_propagator.param} lazy threshold {amosum_propagator.LAZY_PERC}", force_print=True)
