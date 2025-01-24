@@ -25,7 +25,7 @@ def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
     if propagator.mps_violated:
         l = propagator.current_literal
 
-        S = [not_(l)]
+        propagator.S = [not_(l)]
         propagator.reason[not_(l)] = []
 
         derived_true = False

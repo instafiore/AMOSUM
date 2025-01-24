@@ -167,7 +167,7 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
                 
                 clingo_literal_t ml = m_w(G, amosum_propagator->ge) ;
                 int max_w = weight->get(ml);
-                int min_w = amosum_propagator->lazy_prop_activated ? weight->get(m_w(G, !amosum_propagator->ge)) : 0 ;
+                int min_w = amosum_propagator->lazy_prop_activated || !amosum_propagator->ge ? weight->get(m_w(G, !amosum_propagator->ge)) : 0 ;
 
 
                 amosum_propagator->_mps = amosum_propagator->_mps + max_w;
@@ -176,6 +176,7 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
                 std::regex pattern(SETTINGS::REGEX_AUX);
                 std::string name = get_name(amosum_propagator->atomNames, ml);
                 bool is_aux = std::regex_search(name, pattern);
+                // debugf("is_aux: ",is_aux, " pattern: ", SETTINGS::REGEX_AUX, " name: ", name, " diff: ",diff);
                 if (max_diff < diff && !is_aux)  max_diff = diff ;
 
                 amosum_propagator->groups.push_back(G);

@@ -166,8 +166,9 @@ class AmoSumInitializer:
 
             G = Group(ord_l, ord_i, group_id)
             ml = m_w(G, amosum_propagator.ge)
+
             max_w = self.weight[ml]
-            min_w = self.weight[m_w(G, not amosum_propagator.ge)] if amosum_propagator.lazy_prop_activated else 0
+            min_w = self.weight[m_w(G, not amosum_propagator.ge)] if amosum_propagator.lazy_prop_activated or not amosum_propagator.ge else 0
 
             amosum_propagator._mps += max_w
             diff = abs(max_w - min_w)
@@ -182,14 +183,15 @@ class AmoSumInitializer:
         nGroup = Group.autoincrement
         amosum_propagator.true_group = TrueGroupFunction(nGroup)
 
-        # debug(f"max_diff is: {max_diff}", force_print=True)
+        debug(f"max_diff: {max_diff} lazy_prop_activated: {amosum_propagator.lazy_prop_activated}", force_print=True)
 
         amosum_propagator.lazy_perc = float(lazy_param) if amosum_propagator.lazy_prop_activated and re.search(lazy_param,settings.TRUE, re.IGNORECASE) and not lazy_hybrid else None
         if re.search(lazy_param,settings.TRUE, re.IGNORECASE) : amosum_propagator.lazy_perc = 1
         elif lazy_hybrid or re.search(lazy_param,settings.FALSE, re.IGNORECASE):  amosum_propagator.lazy_perc = amosum_propagator.lb / (amosum_propagator.lb + max_diff) if amosum_propagator.ge else (amosum_propagator.ub - max_diff) / amosum_propagator.ub
         assert not amosum_propagator.lazy_perc is None
         # Debugging lazy threshold and propagation
-        debug(f"Starting propagator with param {amosum_propagator.param} lazy threshold {amosum_propagator.lazy_perc}", force_print=True)
+        lazy_str = f" lazy threshold {amosum_propagator.lazy_perc}" if amosum_propagator.lazy_prop_activated else ""
+        debug(f"Starting propagator with param {amosum_propagator.param}{lazy_str}", force_print=True)
 
         for i in range(1, len(lits)):
             l = lits[i]

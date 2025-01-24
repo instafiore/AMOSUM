@@ -23,7 +23,7 @@ def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
 
         l = propagator.current_literal
 
-        S = [not_(l)]
+        propagator.S = [not_(l)]
         propagator.reason[not_(l)] = []
 
         derived_true = False

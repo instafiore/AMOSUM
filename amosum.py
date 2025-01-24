@@ -270,7 +270,7 @@ class AmoSumPropagator:
     
     def mps(self, g: Group, l: int, assumed:bool, return_literals = False):
         if assumed:
-            ml_g = m_w(g, max=max)
+            ml_g = m_w(g, max=self.ge)
             mw_g = self.weight[ml_g]
             assert self.true_group[g] is None
             mps = self._mps - mw_g + self.weight[l]
