@@ -110,9 +110,6 @@ class AmoSumPropagator:
     _mps : int 
     # ----------------------------
 
-    # treshold for lazy propagation activation
-    LAZY_PERC : float = 0.98
-
     # derived lits
     S : List[int] = []
 
@@ -139,6 +136,7 @@ class AmoSumPropagator:
         self.solver = solver
         self.count = 0
         self.S = []
+        self.lazy_perc = None
 
     def getLiterals(self, *lits):
         param = self.param
@@ -168,9 +166,8 @@ class AmoSumPropagator:
         self.lazy_prop_activated = param.get("lazy",False)
         self.lazy_condition = not self.lazy_prop_activated
         self.groups_literals = []
+        self.lazy_perc = None
 
-        lazy_perc_str = f" lazy threshold {AmoSumPropagator.LAZY_PERC}" if self.lazy_prop_activated else ""
-        debug(f"Starting propagator with param {param}{lazy_perc_str}", force_print=True)
 
         #used to create the self.groups
         groups_raw : dict[int, List[int]] = {}
@@ -318,8 +315,7 @@ class AmoSumPropagator:
         return  create_assumptions_lits(assumptions=self.assumptions,atomNames=self.atomNames) + prop_from_facts + self.groups_literals
 
     def onLiteralTrue(self, lit, dl):
-        
-  
+
         if not self.is_in_aggregate(lit):
             return []
 
@@ -358,24 +354,21 @@ class AmoSumPropagator:
         p : float
         if self.ge:
             self.mps_violated = self._mps < self.lb 
-            p = self.bound / self._mps
+            p = (self.bound / self._mps) if self._mps != 0 else 1
         else:
             self.mps_violated = self._mps > self.ub
-            p =  self._mps / self.bound
+            p =  (self._mps / self.bound) if self.bound != 0 else 1
 
-        self.lazy_condition = p >= AmoSumPropagator.LAZY_PERC
+        self.lazy_condition = p >= self.lazy_perc
         if self.mps_violated:
             self.lazy_condition = True
-
-        if not self.lazy_prop_activated:
-            self.lazy_condition = True #forcing to not be lazy
-
 
     def update_phase(self, l: int) -> tuple[bool, Group]:
     
         w_p : int = 0
         w_n : int = 0
         self.I[l] = True
+
         tg = False
         G : Group
         self.mps_violated : bool = False
@@ -426,7 +419,7 @@ class AmoSumPropagator:
         current_sum_condition = not self.ge or self.current_sum < self.bound
         next_phase = current_sum_condition and (w_p != w_n or amo_condition) and self.lazy_condition 
                 
-        # debug(f"[mps: {self._mps}, id: {self.ID}] iteration: {self.count} next_phase: {next_phase}", force_print=True)
+        # debug(f"[mps: {self._mps}, id: {self.ID}] iteration: {self.count} next_phase: {next_phase} self.bound / self._mps: {self.bound / self._mps} self.lazy_condition: {self.lazy_condition} {self.lazy_perc} lazy_prop_activated: {self.lazy_prop_activated}", force_print=True)
         return (next_phase,  G)
     
     def mps(self, g: Group, l: int, assumed:bool, return_literals = False):
@@ -457,7 +450,9 @@ class AmoSumPropagator:
             R = remove_elements(R, rl)
             self.redundant_lits[lit] = []
         
-        print_reason(atomNames=self.atomNames, R=R, literal=lit)
+        # print_reason(atomNames=self.atomNames, R=R, literal=lit, force_print=False)
+        # for l in R:
+        #     assert self.I[l] == False
         return R 
 
     def compute_minimal_reason(self, to_minimize: List[int]):
@@ -506,7 +501,7 @@ class AmoSumPropagator:
             self.I[l] = None
             self.reason[l] = []
             self.to_be_propagated[l] = False
-
+            
 
             # updating max self.weight for self.group(l)
             G : Group = self.group[l] 

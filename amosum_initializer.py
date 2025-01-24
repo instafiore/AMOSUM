@@ -84,7 +84,7 @@ class AmoSumInitializer:
 
     def common_phase(self, amosum_propagator):
         # Assuming a debug function and utility functions like `create_atomNames_string` and `from_symbol_to_string` are defined.
-
+        set_debug(amosum_propagator.param.get("d",""))
         for symbolic_atom, literal in amosum_propagator.atomNames.items():
             a = symbolic_atom
             if a.startswith(PREDICATE_GROUP + "("):
@@ -165,12 +165,14 @@ class AmoSumInitializer:
             ord_i = {lit: i for i, (lit, _) in enumerate(lits_ord)}
 
             G = Group(ord_l, ord_i, group_id)
-            max_w = self.weight[m_w(G, amosum_propagator.ge)]
+            ml = m_w(G, amosum_propagator.ge)
+            max_w = self.weight[ml]
             min_w = self.weight[m_w(G, not amosum_propagator.ge)] if amosum_propagator.lazy_prop_activated else 0
 
             amosum_propagator._mps += max_w
             diff = abs(max_w - min_w)
-            if max_diff < diff:
+            is_aux = re.search(settings.REGEX_AUX, get_name(atomNames=amosum_propagator.atomNames, lit = ml))
+            if max_diff < diff and not is_aux:
                 max_diff = diff
 
             amosum_propagator.groups.append(G)
@@ -180,6 +182,15 @@ class AmoSumInitializer:
         nGroup = Group.autoincrement
         amosum_propagator.true_group = TrueGroupFunction(nGroup)
 
+        # debug(f"max_diff is: {max_diff}", force_print=True)
+
+        amosum_propagator.lazy_perc = float(lazy_param) if amosum_propagator.lazy_prop_activated and lazy_param != settings.TRUE and not lazy_dynamic else None
+        if lazy_param == settings.TRUE: amosum_propagator.lazy_perc = 1
+        elif lazy_dynamic or lazy_param == settings.FALSE:  amosum_propagator.lazy_perc = amosum_propagator.lb / (amosum_propagator.lb + max_diff) if amosum_propagator.ge else (amosum_propagator.ub - max_diff) / amosum_propagator.ub
+        assert not amosum_propagator.lazy_perc is None
+        # Debugging lazy threshold and propagation
+        debug(f"Starting propagator with param {amosum_propagator.param} lazy threshold {amosum_propagator.lazy_perc}", force_print=True)
+
         for i in range(1, len(lits)):
             l = lits[i]
             try:
@@ -188,15 +199,6 @@ class AmoSumInitializer:
             except Exception as e:
                 amosum_propagator.inconsistent_at_level_0 = True
                 raise e
-
-        amosum_propagator.LAZY_PERC = float(lazy_param) if amosum_propagator.lazy_prop_activated and lazy_param != settings.TRUE and not lazy_dynamic else amosum_propagator.LAZY_PERC
-        amosum_propagator.lazy_condition = not amosum_propagator.lazy_prop_activated
-        if lazy_dynamic:
-            amosum_propagator.LAZY_PERC = amosum_propagator.lb / (amosum_propagator.lb + max_diff) if amosum_propagator.ge else (amosum_propagator.ub - max_diff) / amosum_propagator.ub
-        elif lazy_param == settings.TRUE: amosum_propagator.LAZY_PERC = 1.001 
-
-        # Debugging lazy threshold and propagation
-        debug(f"Starting propagator with param {amosum_propagator.param} lazy threshold {amosum_propagator.LAZY_PERC}", force_print=True)
 
         amosum_propagator.facts = lits[1:]
         amosum_propagator.last_decision_lit = 1

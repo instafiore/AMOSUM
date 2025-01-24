@@ -71,14 +71,11 @@ void AmoSumPropagator::update_lazy_propagation() {
             p = _mps / static_cast<float>(bound);
         }
 
-        lazy_condition = p >= AmoSumPropagator::LAZY_PERC ;
+        lazy_condition = p >= this->lazy_perc ;
         if (mps_violated) {
             lazy_condition = true;
         }
 
-        if (!lazy_prop_activated) {
-            lazy_condition = true; // Forcing to not be lazy
-        }
 }
 
 std::pair<bool, Group*> AmoSumPropagator::update_phase(clingo_literal_t l, int dl = 0) {

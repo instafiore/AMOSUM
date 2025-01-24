@@ -31,7 +31,7 @@ ENCODING_WITH_AGGR_LE_AMO = "encoding_with_aggregates_le_amo"
 
 
 ROOT = f"{os.path.dirname(os.path.abspath(__file__))}"
-PROPAGATOR_DIR_LOCATION_WASP = f"{os.path.dirname(os.path.abspath(__file__))}/prop_wasp"
+PROPAGATOR_DIR_LOCATION_WASP = f"{os.path.dirname(os.path.abspath(__file__))}/prop_wasp/propagator_wasp_py"
 PROPAGATOR_DIR_LOCATION_CLINGO_C = f"{os.path.dirname(os.path.abspath(__file__))}/prop_clingo/propagator_clingo_c"
 PROPAGATOR_DIR_LOCATION_CLINGO_C_BUILD = f"{PROPAGATOR_DIR_LOCATION_CLINGO_C}/build"
 PROPAGATOR_DIR_LOCATION_CLINGO_C_BIN = f"{PROPAGATOR_DIR_LOCATION_CLINGO_C}/bin"
@@ -61,3 +61,4 @@ PREDICATE_GROUP = "__group__"
 PREDICATE_LB = "__lb__"
 PREDICATE_UB = "__ub__"
 PREDICATE_AUX = "__aux__"
+REGEX_AUX = rf"{PREDICATE_AUX}\([\w\s,\(\)]+,\s*(ge_amo|ge_eo|le_eo)\)"

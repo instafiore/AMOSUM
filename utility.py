@@ -181,7 +181,7 @@ def process_sys_parameters(sys_parameters):
 
         # creating the key
         key = sys_parameters[i]
-        print(f"key: {key}")
+        # print(f"key: {key}")
         res_regex = re.match(regex, key)
         if res_regex is None:
             raise Exception("Every key has to start with a dash! Ex: -id id")
@@ -198,16 +198,15 @@ def process_sys_parameters(sys_parameters):
             if res_regex is None and value not in PROPAGATORS_NAMES:
                 i += 2
                 param[key] = value
-                print(f"value: {value}")
+                # print(f"value: {value}")
                 
             else:
                 i += 1
                 param[key] = True
-                print(f"value: {True}")
+                # print(f"value: {True}")
         
         if i >= len(sys_parameters) or sys_parameters[i] in PROPAGATORS_NAMES:
             params.append((prop_type, param))
-            print(f"appending: {(prop_type, param)}")
             if i < len(sys_parameters):
                 prop_type  = sys_parameters[i] 
                 param = {}
@@ -625,21 +624,21 @@ def create_reason_falses_ge(propagator, flipped = None):
                 if propagator.weight[l] < mw_g:
                     break
                 if propagator.I[l] == False and not equals(l, flipped):
-                    for lit in propagator.S:
-                        G = propagator.group[lit]
+                    for s_lit in propagator.S:
+                        G = propagator.group[s_lit]
                         if G is None:
-                            G = propagator.group[not_(l)]
+                            G = propagator.group[not_(s_lit)]
                         if(g == G):
                             continue
-                        propagator.reason[lit].append(l) 
+                        propagator.reason[s_lit].append(l) 
         elif not equals(propagator.true_group[g], flipped):
-            for lit in propagator.S:
-                G = propagator.group[lit]
+            for s_lit in propagator.S:
+                G = propagator.group[s_lit]
                 if G is None:
-                    G = propagator.group[not_(l)]
+                    G = propagator.group[not_(s_lit)]
                 if(g == G):
                     continue
-                propagator.reason[lit].append(not_(propagator.true_group[g])) 
+                propagator.reason[s_lit].append(not_(propagator.true_group[g])) 
 
 def create_reason_falses_le(propagator, flipped=None):
     if propagator.dl == 0: return 
@@ -652,21 +651,21 @@ def create_reason_falses_le(propagator, flipped=None):
                 if propagator.weight[l] > mw_g:
                     break
                 if propagator.I[l] == False and not equals(l, flipped):
-                    for lit in propagator.S:
-                        G = propagator.group[lit]
+                    for s_lit in propagator.S:
+                        G = propagator.group[s_lit]
                         if G is None:
-                            G = propagator.group[not_(l)]
+                            G = propagator.group[not_(s_lit)]
                         if(g == G):
                             continue
-                        propagator.reason[lit].append(l) 
+                        propagator.reason[s_lit].append(l) 
         elif not equals(propagator.true_group[g], flipped):
-            for lit in propagator.S:
-                G = propagator.group[lit]
+            for s_lit in propagator.S:
+                G = propagator.group[s_lit]
                 if G is None:
-                    G = propagator.group[not_(l)]
+                    G = propagator.group[not_(s_lit)]
                 if(g == G):
                     continue
-                propagator.reason[lit].append(not_(propagator.true_group[g])) 
+                propagator.reason[s_lit].append(not_(propagator.true_group[g])) 
 
 def create_reason_true_ge(propagator, sml_g, derived, g):
     if propagator.dl == 0: return 

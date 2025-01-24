@@ -74,7 +74,7 @@ struct AmoSumPropagator
     const std::vector<clingo_literal_t>* (*propagation_phase)(const Group*, AmoSumPropagator*); // Function pointer for propagation
     
     // treshold for lazy propagation activation
-    float LAZY_PERC = 0.90 ;
+    float lazy_perc = SETTINGS::NONE ;
 
     // whether the mps is violated
     bool mps_violated = false ; 
