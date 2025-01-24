@@ -20,4 +20,5 @@ const std::string REGEX_AUX = PREDICATE_AUX + "\([\w\s,\(\)]+,\s*(ge_amo|ge_eo|l
 const char SEPARATOR_ASSUMPTIONS = ':';
 const char NOT = '~';
 const std::string NONE_STR = "";
+const std::string LAZY_HYBRID = "hybrid";
 }

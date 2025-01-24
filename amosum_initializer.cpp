@@ -2,7 +2,7 @@
 #include "amosum_initializer.h"
 #include <regex>
 
-const std::string AmoSumInitializer::DEFAULT_LAZY = std::string("dynamic");
+const std::string AmoSumInitializer::DEFAULT_LAZY = SETTINGS::FALSE_STR;
 
 const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::vector<clingo_literal_t>& lits, AmoSumPropagator* amosum_propagator){
 
@@ -142,7 +142,7 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
         std::string ID = amosum_propagator->ID ;
         std::string lazy_param = get_map(amosum_propagator->params, std::string("lazy"), DEFAULT_LAZY) ;
         amosum_propagator->lazy_prop_activated = lazy_param != SETTINGS::FALSE_STR;
-        bool lazy_dynamic = lazy_param == "dynamic" ;
+        bool lazy_hybrid = lazy_param == SETTINGS::LAZY_HYBRID ;
 
         #ifdef CHECK_MPS
         weights_names_log(ID, generic_data_map[ID]->weights_names);
@@ -198,10 +198,10 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
 
         debugf("max_diff: ", max_diff); 
 
-        amosum_propagator->lazy_perc = amosum_propagator->lazy_prop_activated && lazy_param != SETTINGS::TRUE_STR && !lazy_dynamic ? std::stof(lazy_param) : amosum_propagator->lazy_perc ;
+        amosum_propagator->lazy_perc = amosum_propagator->lazy_prop_activated && lazy_param != SETTINGS::TRUE_STR && !lazy_hybrid ? std::stof(lazy_param) : amosum_propagator->lazy_perc ;
         amosum_propagator->lazy_condition = !amosum_propagator->lazy_prop_activated;
         if(lazy_param == SETTINGS::TRUE_STR) amosum_propagator->lazy_perc = 1 ;
-        else if (lazy_dynamic || !amosum_propagator->lazy_prop_activated) amosum_propagator->lazy_perc = amosum_propagator->ge ? amosum_propagator->lb / static_cast<float>(amosum_propagator->lb + max_diff) :  (amosum_propagator->ub - max_diff) / static_cast<float>(amosum_propagator->ub);
+        else if (lazy_hybrid || !amosum_propagator->lazy_prop_activated) amosum_propagator->lazy_perc = amosum_propagator->ge ? amosum_propagator->lb / static_cast<float>(amosum_propagator->lb + max_diff) :  (amosum_propagator->ub - max_diff) / static_cast<float>(amosum_propagator->ub);
         std::string lazy_perc_str = amosum_propagator->lazy_prop_activated ? " lazy threshold " + std::to_string(amosum_propagator->lazy_perc) : SETTINGS::NONE_STR;
         debugf("Starting propagator with param ",unordered_map_to_string(amosum_propagator->params), lazy_perc_str);
 

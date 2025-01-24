@@ -30,7 +30,7 @@ class GenericData:
 
 
 class AmoSumInitializer:
-    DEFAULT_LAZY = "dynamic"
+    DEFAULT_LAZY = settings.FALSE
     instance = None
     WASP = 1
     CLINGO = 2
@@ -150,10 +150,10 @@ class AmoSumInitializer:
     def specific_phase(self, lits, amosum_propagator):
         max_diff = 0
         ID = amosum_propagator.ID
-        lazy_param = amosum_propagator.param.get("lazy", self.DEFAULT_LAZY)
-        amosum_propagator.lazy_prop_activated = lazy_param != settings.FALSE
+        lazy_param = str(amosum_propagator.param.get("lazy", self.DEFAULT_LAZY))
+        amosum_propagator.lazy_prop_activated = not re.search(lazy_param,settings.FALSE, re.IGNORECASE)
         amosum_propagator.lazy_condition = not amosum_propagator.lazy_prop_activated
-        lazy_dynamic = lazy_param == "dynamic"
+        lazy_hybrid = re.search(lazy_param,settings.LAZY_HYBRID, re.IGNORECASE)
 
         check_mps = amosum_propagator.param.get("check_mps", False)
         debug(f"id: {amosum_propagator.ID} total_weight_names: {json.dumps(amosum_propagator.weights_names)}", force_print=True) if amosum_propagator.solver == AmoSumInitializer.WASP and check_mps else None
@@ -184,9 +184,9 @@ class AmoSumInitializer:
 
         # debug(f"max_diff is: {max_diff}", force_print=True)
 
-        amosum_propagator.lazy_perc = float(lazy_param) if amosum_propagator.lazy_prop_activated and lazy_param != settings.TRUE and not lazy_dynamic else None
-        if lazy_param == settings.TRUE: amosum_propagator.lazy_perc = 1
-        elif lazy_dynamic or lazy_param == settings.FALSE:  amosum_propagator.lazy_perc = amosum_propagator.lb / (amosum_propagator.lb + max_diff) if amosum_propagator.ge else (amosum_propagator.ub - max_diff) / amosum_propagator.ub
+        amosum_propagator.lazy_perc = float(lazy_param) if amosum_propagator.lazy_prop_activated and re.search(lazy_param,settings.TRUE, re.IGNORECASE) and not lazy_hybrid else None
+        if re.search(lazy_param,settings.TRUE, re.IGNORECASE) : amosum_propagator.lazy_perc = 1
+        elif lazy_hybrid or re.search(lazy_param,settings.FALSE, re.IGNORECASE):  amosum_propagator.lazy_perc = amosum_propagator.lb / (amosum_propagator.lb + max_diff) if amosum_propagator.ge else (amosum_propagator.ub - max_diff) / amosum_propagator.ub
         assert not amosum_propagator.lazy_perc is None
         # Debugging lazy threshold and propagation
         debug(f"Starting propagator with param {amosum_propagator.param} lazy threshold {amosum_propagator.lazy_perc}", force_print=True)
