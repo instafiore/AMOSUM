@@ -81,7 +81,7 @@ class PropagatorClingo(clingo.Propagator):
                 if not control.add_clause(clause) or not control.propagate():
                     # propagation must return immediately, a conflict has been raised
                     print_clause(propagator=self, clause=clause, conflict=True, force_print=False)
-                    for sj in range(si, len(S_plit)):
+                    for sj in range(0, len(S_plit)):
                         plit_not_propagated = S_plit[sj]
                         prop.to_be_propagated[plit_not_propagated] = False
                     return True

@@ -130,7 +130,7 @@ std::pair<bool, Group*> AmoSumPropagator::update_phase(clingo_literal_t l, int d
         G = (choice_cons == "EO") ? G : nullptr;
         bool current_sum_condition = !ge || current_sum < bound;
         bool next_phase = current_sum_condition && (w_p != w_n || amo_condition) && lazy_condition;
-
+        debugf("ID: ",ID," mps: ",_mps, " next_phase: ", next_phase, " lazy_condition: ",lazy_condition);
         return {next_phase, G};
 }
 
@@ -174,7 +174,7 @@ const std::vector<clingo_literal_t>* AmoSumPropagator::getReasonForLiteral(const
         rl->clear();
     }
 
-    print_reason(atomNames, R, lit, false);
+    // print_reason(atomNames, R, lit, false);
     return &R; 
 }
 
@@ -233,6 +233,8 @@ void AmoSumPropagator::onLiteralsUndefined(const std::vector<clingo_literal_t>& 
         // Update interpretation
         I->set(l, SETTINGS::NONE);
 
+        to_be_propagated->set(l, false);
+
         // Update the group and max weight
         Group* G = group->get(l);
         if (G == nullptr) {
@@ -240,8 +242,7 @@ void AmoSumPropagator::onLiteralsUndefined(const std::vector<clingo_literal_t>& 
             l = not_(l);
         }
 
-        to_be_propagated->set(l, false);
-
+        
         assert(G != nullptr);
         
         auto R = get_perfect_hash_with_pointer(reason.get(), l);
