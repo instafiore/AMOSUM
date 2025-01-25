@@ -130,7 +130,7 @@ std::pair<bool, Group*> AmoSumPropagator::update_phase(clingo_literal_t l, int d
         G = (choice_cons == "EO") ? G : nullptr;
         bool current_sum_condition = !ge || current_sum < bound;
         bool next_phase = current_sum_condition && (w_p != w_n || amo_condition) && lazy_condition;
-        debugf("ID: ",ID," mps: ",_mps, " next_phase: ", next_phase, " lazy_condition: ",lazy_condition);
+        // debugf("ID: ",ID," mps: ",_mps, " next_phase: ", next_phase, " lazy_condition: ",lazy_condition);
         return {next_phase, G};
 }
 

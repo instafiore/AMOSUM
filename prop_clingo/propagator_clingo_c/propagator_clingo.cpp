@@ -80,7 +80,6 @@ bool PropagatorClingo::add_clauses_propagated_lits(void *control, const std::vec
                 clingo_literal_t plit_not_propagated = S_plit[sj];
                 prop->to_be_propagated->set(plit_not_propagated, false);
             }
-            debugf("conflict 1");
             return true ;
         }
 
@@ -94,7 +93,6 @@ bool PropagatorClingo::add_clauses_propagated_lits(void *control, const std::vec
                 clingo_literal_t plit_not_propagated = S_plit[sj];
                 prop->to_be_propagated->set(plit_not_propagated, false);
             }
-            debugf("conflict 2");
             return true;
         }
         

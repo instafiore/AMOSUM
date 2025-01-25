@@ -8,7 +8,7 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
 
         auto start = std::chrono::high_resolution_clock::now();
         amosum_propagator->N = lits[0] + 1;
-        debugf("N: ", amosum_propagator->N);
+        // debugf("N: ", amosum_propagator->N);
         amosum_propagator->minimization = get_map(amosum_propagator->params, std::string("min_r"), std::string(Minimize::NO_MINIMIZATION)) ;
         amosum_propagator->strategy = get_map(amosum_propagator->params, std::string("strategy"), amosum_propagator->strategy);
         amosum_propagator->I.reset(new InterpretationFunction(amosum_propagator->N));
@@ -197,7 +197,7 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
             }
         }
 
-        debugf("max_diff: ", max_diff); 
+        // debugf("max_diff: ", max_diff); 
 
         amosum_propagator->lazy_perc = amosum_propagator->lazy_prop_activated && lazy_param != SETTINGS::TRUE_STR && !lazy_hybrid ? std::stof(lazy_param) : amosum_propagator->lazy_perc ;
         amosum_propagator->lazy_condition = !amosum_propagator->lazy_prop_activated;
