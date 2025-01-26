@@ -840,6 +840,7 @@ int increment_f(bool derived_true, clingo_literal_t l, const std::unordered_set<
 void remove_elements(std::vector<clingo_literal_t>& original, const std::unordered_set<clingo_literal_t>& to_remove_set) {
  
     // Use erase-remove idiom to remove elements in place
+    // OLD NOT EFFICIENT
     // auto start = start_timer();
     // original.erase(
     //     ,
