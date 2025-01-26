@@ -47,9 +47,9 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
     void AmoSumInitializer::common_phase(AmoSumPropagator* amosum_propagator){
         
         atomNamesString = create_atomNames_string(amosum_propagator->atomNames);
-        
+        std::map<clingo_symbol_t, clingo_literal_t> atomNamesTmp(amosum_propagator->atomNames->begin(), amosum_propagator->atomNames->end());
 
-        for(auto &[symbolic_atom, literal]: *amosum_propagator->atomNames){
+        for(auto &[symbolic_atom, literal]: atomNamesTmp){
                 
             std::string a = from_symbol_to_string(symbolic_atom);
             if (a.length() > SETTINGS::PREDICATE_GROUP.length() and a.substr(0, SETTINGS::PREDICATE_GROUP.length() + 1) == SETTINGS::PREDICATE_GROUP + "(") {

@@ -170,8 +170,7 @@ const std::vector<clingo_literal_t>* AmoSumPropagator::getReasonForLiteral(const
     bool removed = false ;
     if(rl != nullptr && rl->size() > 0){
         removed  = true ; 
-        remove_elements(R, *rl);
-        rl->clear();
+        remove_elements(R, *rl);    
     }
 
     // print_reason(atomNames, R, lit, false);

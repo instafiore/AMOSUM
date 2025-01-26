@@ -14,7 +14,7 @@ private:
     AmoSumInitializer(){};
     bool first = true ;
     static AmoSumInitializer* instance;
-    std::unordered_map<std::string, clingo_literal_t> atomNamesString;
+    std::map<std::string, clingo_literal_t> atomNamesString;
     std::unique_ptr<WeightFunction> weight ;
     std::unordered_map<std::string, AggregateFunction*> aggregate_map ;
     std::unordered_map<std::string, generic_data*> generic_data_map ;

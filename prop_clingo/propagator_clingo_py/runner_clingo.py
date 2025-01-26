@@ -135,8 +135,14 @@ class RunnerClingoPython(RunnerWasp):
             res = "error"
             raise e
 
-    
         end_time = time.time()  # End time
+
+        iterations = 0 
+        for prop in self.propagators:
+            amosum_prop = prop.propagators[0]
+            iterations += amosum_prop.count 
+        
+        debug(f"iterations: {iterations}", force_print=True)
 
         for propagator in self.propagators:
             amosum_propagator = propagator.propagators[0]

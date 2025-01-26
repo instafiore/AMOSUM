@@ -63,7 +63,7 @@ std::string from_symbol_to_string(clingo_symbol_t sym);
 clingo_symbol_t from_string_to_symbol(std::string str, const std::unordered_map<clingo_symbol_t, clingo_literal_t> *atomNames);
 clingo_literal_t from_string_to_lit(std::string str, const std::unordered_map<clingo_symbol_t, clingo_literal_t> *atomNames);
 int64_t from_string_to_symbol_or_lit(std::string str, const std::unordered_map<clingo_symbol_t, clingo_literal_t> *atomNames, bool sym);
-std::unordered_map<std::string, clingo_literal_t> create_atomNames_string(const std::unordered_map<clingo_symbol_t, clingo_literal_t> *atomNames);
+std::map<std::string, clingo_literal_t> create_atomNames_string(const std::unordered_map<clingo_symbol_t, clingo_literal_t> *atomNames);
 void handle_error(bool success);
 bool print_model(clingo_model_t const *model);
 bool solve(clingo_control_t *ctl, clingo_solve_result_bitset_t *result);

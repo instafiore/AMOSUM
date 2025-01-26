@@ -62,8 +62,8 @@ int64_t from_string_to_symbol_or_lit(std::string str, const std::unordered_map<c
     return 0; 
 }
 
-std::unordered_map<std::string, clingo_literal_t> create_atomNames_string(const std::unordered_map<clingo_symbol_t, clingo_literal_t> *atomNames){
-    std::unordered_map<std::string, clingo_literal_t> atomNamesString ;
+std::map<std::string, clingo_literal_t> create_atomNames_string(const std::unordered_map<clingo_symbol_t, clingo_literal_t> *atomNames){
+    std::map<std::string, clingo_literal_t> atomNamesString ;
     for (const auto& [name, atom] : (*atomNames)) {
         atomNamesString[from_symbol_to_string(name)] = atom ;
     }
@@ -378,16 +378,7 @@ void create_reason_falses(AmoSumPropagator* propagator, bool ge, clingo_literal_
     }
 }
 
-void remove_elements(std::vector<clingo_literal_t>& original, const std::unordered_set<clingo_literal_t>& to_remove_set) {
- 
-    // Use erase-remove idiom to remove elements in place
-    original.erase(
-        std::remove_if(original.begin(), original.end(),
-                       [&to_remove_set](int element) {
-                           return to_remove_set.find(element) != to_remove_set.end();
-                       }),
-        original.end());
-}
+
 
 #ifdef CHECK_MPS
 void weights_names_log(const std::string& ID, const std::unordered_map<std::string, int>& weights_names) {
@@ -835,7 +826,7 @@ int increment_f(bool derived_true, clingo_literal_t l, const std::unordered_set<
         int increment = w - mw_g;
 
         while (mw_g < weight->get(current_l)) {
-            if (std::find(current_subset_maximal.begin(), current_subset_maximal.end(), current_l) != current_subset_maximal.end()) {
+            if (current_subset_maximal.find(current_l) != current_subset_maximal.end()) {
                 increment = std::max(0, w - weight->get(current_l));
                 break;
             }
@@ -846,10 +837,54 @@ int increment_f(bool derived_true, clingo_literal_t l, const std::unordered_set<
     }
 }
 
+void remove_elements(std::vector<clingo_literal_t>& original, const std::unordered_set<clingo_literal_t>& to_remove_set) {
+ 
+    // Use erase-remove idiom to remove elements in place
+    // auto start = start_timer();
+    // original.erase(
+    //     ,
+    //     original.end());
+
+    // auto end_old = original.end() ;
+    // auto end_new = std::remove_if(original.begin(), original.end(),
+    //                    [&to_remove_set](int element) {
+    //                        return to_remove_set.find(element) != to_remove_set.end();
+    //                    });
+    
+    // while(end_new != end_old){
+    //     original.pop_back();
+    //     ++end_new ;
+    // }
+    
+    auto original_c = original ;
+    original.clear();
+    for (size_t i = 0; i < original_c.size(); ++i)
+    {
+        clingo_literal_t lit = original_c[i];
+        if(to_remove_set.find(lit) != to_remove_set.end()){
+            original.push_back(lit);
+        }
+    }
+    
+    // size_t n = original.size() ;
+    // for (size_t i = 0; i < n; ++i)
+    // {
+    //     clingo_literal_t rlit = original[i];
+    //     if(to_remove_set.find(rlit) != to_remove_set.end()){
+    //         original[i] = original[n-1] ;
+    //         original[n-1] = rlit ; 
+    //         original.pop_back();
+    //         --n;
+    //     }
+    // }
+    
+}
+
 // Maximal subset with groups
 void maximal_subset_sum_less_than_s_with_groups(bool derived_true, const std::vector<clingo_literal_t>& literals, int s,const WeightFunction* weight, const GroupFunction* group, int head_reason, const std::unique_ptr<InterpretationFunction>& I, int max, std::unordered_set<clingo_literal_t>& current_subset_maximal) {
     int current_sum = 0;
 
+    current_subset_maximal.clear();
     for (int l : literals) {
         // auto start = start_timer();
         int inc = increment_f(derived_true, l, current_subset_maximal, weight, group, head_reason, I, max);
