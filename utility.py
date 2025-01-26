@@ -7,6 +7,7 @@ import sys
 from typing import Any, List
 import sys
 from settings import *
+import time
 # import clingo 
 
 # Debug mode
@@ -762,11 +763,13 @@ def maximal_subset_sum_less_than_s_with_groups(derived_true: bool, literals: Lis
     current_sum = 0
 
     for l in literals:
-        inc = increment_f(derived_true, l, current_subset_maximal, weight, group, head_reason, I, max)
+        inc = increment_f(derived_true, l, current_subset_maximal, weight, group, head_reason, I, max)  
         if current_sum + inc <= s:
                 # debug(f"{l} has been removed from reason because inc: {inc} is not enougth to arrive above {s} with current_sum {current_sum} ")
                 current_sum += inc
                 current_subset_maximal.append(l)
+
+    
     
     return current_subset_maximal
 

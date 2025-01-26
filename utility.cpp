@@ -851,7 +851,9 @@ void maximal_subset_sum_less_than_s_with_groups(bool derived_true, const std::ve
     int current_sum = 0;
 
     for (int l : literals) {
+        // auto start = start_timer();
         int inc = increment_f(derived_true, l, current_subset_maximal, weight, group, head_reason, I, max);
+        // display_end_timer(start, "increment_f");
         if (current_sum + inc <= s) {
             current_sum += inc;
             current_subset_maximal.emplace(l);
