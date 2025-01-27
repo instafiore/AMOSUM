@@ -224,7 +224,7 @@ class AmoSumPropagator:
         amo_condition = False
         if self.aggregate[l]:
             G = self.group[l]
-            self.to_be_propagated[l] = False 
+            # self.to_be_propagated[l] = False 
             G.decrease_und()
             self.true_group[G] = l
             w_p = self.weight[m_w(G, max = self.ge)]
@@ -234,7 +234,7 @@ class AmoSumPropagator:
             
         elif self.aggregate[not_(l)]:
             G = self.group[not_(l)]
-            self.to_be_propagated[not_(l)] = False 
+            # self.to_be_propagated[not_(l)] = False 
             G.decrease_und()
             new, prev = G.update(self.I, max=self.ge, update=False, assuming_und = l)
             if not_(l) == prev:
@@ -344,7 +344,8 @@ class AmoSumPropagator:
             # updating interpretation
             self.I[l] = None
             self.reason[l] = []
-            self.to_be_propagated[l] = False
+            # self.to_be_propagated[l] = False
+            # self.to_be_propagated[not_(l)] = False
             
 
             # updating max self.weight for self.group(l)

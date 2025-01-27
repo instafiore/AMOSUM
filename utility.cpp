@@ -599,16 +599,21 @@ void print_propagate(PropagatorClingo* prop, const clingo_literal_t *changes, si
 
     clingo_literal_t plit = 0 ;
     if (not wasp_b and decision_slit != 1){
-        plit = (*prop->map_slit_plit)[decision_slit][0];
+        if(prop->map_slit_plit->find(decision_slit) == prop->map_slit_plit->end()){
+            decision_slit = -1 ;
+        }else {
+            plit = (*prop->map_slit_plit)[decision_slit][0];
+        }
     }else if (wasp_b)
     {
         raise_wasp_not_implemented_exception();
     }
     
     std::string decision_literal_name ; 
-    
-    decision_slit != 1 ? decision_literal_name = get_name(prop->atomNames, plit) : decision_literal_name = "from facts" ;
-
+    if(decision_slit != -1)
+        decision_slit != 1 ? decision_literal_name = get_name(prop->atomNames, plit) : decision_literal_name = "from facts" ;
+    else
+        decision_literal_name = "non lo so";
     debugf("[", decision_literal_name,", ",dl,"] propagate ", changes_str," td: ", td);
 }
 
@@ -626,7 +631,7 @@ void print_undo(PropagatorClingo* prop, const clingo_literal_t *changes, size_t 
     else  changes_str = prop->compute_changes_str(changes, size, td) ;
 
 
-    debugf("undo ", changes_str," thread_id: ", td);
+    debugf("dl: ",dl," undo ", changes_str," thread_id: ", td);
 }
 
 clingo_literal_t max_w(const Group* g) {

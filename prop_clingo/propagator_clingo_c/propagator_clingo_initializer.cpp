@@ -45,7 +45,7 @@ void PropagatorClingoInitializer::init(clingo_propagate_init* _init, PropagatorC
 
         if (plit > max_plit) { max_plit = plit; }
 
-        // debug("[init] symbol: ", symbol_str, " symbol: ", symbol, " plit: ", plit, " slit: ", slit)
+        // debugf("[init] symbol: ", symbol_str, " symbol: ", symbol, " plit: ", plit, " slit: ", slit)
 
         atomNames->emplace(symbol, plit);
         (*map_plit_slit)[plit] = slit ; 
@@ -55,7 +55,7 @@ void PropagatorClingoInitializer::init(clingo_propagate_init* _init, PropagatorC
     
         clingo_symbolic_atoms_next(symbolic_atoms, symbolic_atoms_it, &symbolic_atoms_it);
     }
-
+    
     lits = new std::vector<clingo_literal_t>{max_plit};
 
     std::vector<clingo_literal_t> facts = get_map_value_vector<clingo_literal_t, clingo_literal_t>((*map_slit_plit), 1);

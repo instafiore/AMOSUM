@@ -14,13 +14,15 @@
 
 const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, AmoSumPropagator* propagator){
 
+    
     propagator->S.clear();
 
     if (propagator->mps_violated) {
-
+        clingo_literal_t l = propagator->current_literal ;
+        // debugf("literal: ", get_name(propagator->atomNames, l));
         assert(propagator->lazy_prop_activated);
 
-        clingo_literal_t l = propagator->current_literal ;
+        
         propagator->S.push_back(not_(l));
 
         auto R = get_perfect_hash_with_pointer(propagator->reason.get(), not_(l));
@@ -98,7 +100,7 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, Am
         propagator->compute_minimal_reason(propagator->S);
     }
 
-    print_derivation(propagator->atomNames, propagator->S, false);
+    // print_derivation(propagator->atomNames, propagator->S, propagator->dl >= 5000);
     
     return &propagator->S;
 }

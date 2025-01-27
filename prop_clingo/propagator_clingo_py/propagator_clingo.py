@@ -55,7 +55,7 @@ class PropagatorClingo(clingo.Propagator):
             S_plit = self.propagators[i].simplifyAtLevelZero(delete_lits=True)
             
         # print_derivation(atomNames=self.atomNames, S=S_plit)
-        if S_plit == [1] or self.add_clauses_propagated_lits(control=_init, S_plit=S_plit, dl = 0):
+        if S_plit == [1] or self.add_clauses_propagated_lits(control=_init, S_plit=S_plit, dl = 0) or not _init.propagate():
             # adding empty clause
             _init.add_clause([])
             return
@@ -78,12 +78,12 @@ class PropagatorClingo(clingo.Propagator):
                 # the last literal is the implied literal (undefined or false)
                 clause.append(slit)
                 
-                if not control.add_clause(clause) or not control.propagate():
+                if not control.add_clause(clause):
                     # propagation must return immediately, a conflict has been raised
                     print_clause(propagator=self, clause=clause, conflict=True, force_print=False)
-                    for sj in range(0, len(S_plit)):
-                        plit_not_propagated = S_plit[sj]
-                        prop.to_be_propagated[plit_not_propagated] = False
+                    # for sj in range(0, len(S_plit)):
+                    #     plit_not_propagated = S_plit[sj]
+                    #     prop.to_be_propagated[plit_not_propagated] = False
                     return True
             except Exception as e:
                 raise e
@@ -97,18 +97,25 @@ class PropagatorClingo(clingo.Propagator):
             prop = self.propagators[td]
             
             # print_propagate(self, changes=changes, control=control, dl=dl, force_print=True)
-            for slit in changes:
+            to_propagate = []
+            for ci in range(len(changes)):
+                slit = changes[ci]
                 plit_list = self.map_slit_plit_watched[slit]
                 for plit in plit_list:
                     # propagated plits
                     S_plit = []
                     # propagating program literal
                     S_plit = prop.onLiteralTrue(plit, dl)
+                    to_propagate.extend(S_plit)
                     # adding clauses for propagated literals S_plit
                     if self.add_clauses_propagated_lits(control=control, S_plit=S_plit, dl = dl):
-                        # Conflict added hence propagation has to stop
+                        for slit_not_prop in to_propagate:
+                            prop.to_be_propagated[slit_not_prop] = False
                         return 
             
+            for slit_not_prop in to_propagate:
+                prop.to_be_propagated[slit_not_prop] = False
+            control.propagate()
         except Exception as e:
             debug(e, force_print=True)
             tb = e.__traceback__

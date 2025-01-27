@@ -70,32 +70,57 @@ bool PropagatorClingo::add_clauses_propagated_lits(void *control, const std::vec
             clause[i] = (*map_plit_slit)[r_plit];
         }
 
+        // if(slit == 6440) {
+        //     for(auto rplit: *R_plit){
+        //         assert(!prop->I->get(rplit));
+        //     }
+        //     assert(prop->I->get(plit) == SETTINGS::NONE);
+        //     clingo_truth_value_t value;
+        //     size_t unassigned_count = 0;
+        //     const clingo_assignment_t *assignment = clingo_propagate_control_assignment((clingo_propagate_control*)control);
+        //     for (size_t i = 0; i < clause_size; ++i) {
+        //         clingo_literal_t literal = clause[i];
+        //         clingo_assignment_truth_value(assignment, literal, &value);
+
+        //         if (value == clingo_truth_value_free) {
+        //             ++unassigned_count;
+        //         }
+        //     }
+        //     clingo_assignment_truth_value(assignment, slit, &value);
+        //     if(value == clingo_truth_value_free) debugf("slit is undef");
+        //     if(value == clingo_truth_value_true) debugf("slit is true");
+        //     if(value == clingo_truth_value_false) debugf("slit is false");
+        //     debugf("unassigned_count: ", unassigned_count);
+        //     // assert(value == clingo_truth_value_free);
+        //     // assert(unassigned_count == 1);
+            
+        //     debugf(" propagated")
+        // };
+
+
         bool result_add_clause;
         init ? handle_error(clingo_propagate_init_add_clause((clingo_propagate_init*) control, clause, clause_size, &result_add_clause)) :
         handle_error(clingo_propagate_control_add_clause((clingo_propagate_control*) control, clause, clause_size, clingo_clause_type_learnt, &result_add_clause)) ;
 
         // propagation must return immediately, there is a conflict
         if (not result_add_clause){ 
-            for(int sj = 0 ; sj < S_plit.size(); ++sj){
-                clingo_literal_t plit_not_propagated = S_plit[sj];
-                prop->to_be_propagated->set(plit_not_propagated, false);
-            }
+            // for(int sj = si ; sj < S_plit.size(); ++sj){
+            //     clingo_literal_t plit_not_propagated = S_plit[sj];
+            //     prop->to_be_propagated->set(plit_not_propagated, false);
+            // }
+            // debugf("conflict add clause");
             return true ;
         }
 
-        bool result_propagate;
-        init ? clingo_propagate_init_propagate((clingo_propagate_init*) control, &result_propagate) :
-        clingo_propagate_control_propagate((clingo_propagate_control*) control, &result_propagate) ;
-        
-        // propagation must return immediately, a conflict has been raised 
-        if (not result_propagate){ 
-            for(int sj = si ; sj < S_plit.size(); ++sj){
-                clingo_literal_t plit_not_propagated = S_plit[sj];
-                prop->to_be_propagated->set(plit_not_propagated, false);
-            }
-            return true;
-        }
-        
+        // if(slit == 10163){
+        //     const clingo_assignment_t *assignment = clingo_propagate_control_assignment((clingo_propagate_control*)control);
+        //     clingo_truth_value_t value;
+        //     clingo_assignment_truth_value(assignment, slit, &value);
+        //     if(value == clingo_truth_value_free) debugf("slit is undef");
+        //     if(value == clingo_truth_value_true) debugf("slit is true");
+        //     if(value == clingo_truth_value_false) debugf("slit is false");
+        //     assert(value == clingo_truth_value_true);
+        // }
     }
     return false ;
 }   
@@ -107,8 +132,10 @@ bool PropagatorClingo::propagate(clingo_propagate_control_t *control, const clin
     int td; 
     dl == 0 ? td = 0 : td = clingo_propagate_control_thread_id(control) ; 
     AmoSumPropagator* prop = propagators[td];
-    print_propagate(this, changes, size, control, dl, false , false);
+    // print_propagate(this, changes, size, control, dl, dl >= 5000 , false);
 
+    
+    std::vector<clingo_literal_t> to_propagate;
     for (size_t i = 0; i < size; i++)
     {
         clingo_literal_t slit = changes[i];
@@ -116,13 +143,33 @@ bool PropagatorClingo::propagate(clingo_propagate_control_t *control, const clin
         
         for(clingo_literal_t plit: plit_list){
             const std::vector<clingo_literal_t>* S_plit = prop->onLiteralTrue(plit, dl); // handled internally 
+            if(S_plit != nullptr) extend_vector(to_propagate, *S_plit);
             if (S_plit != nullptr && add_clauses_propagated_lits(control, *S_plit, dl, false)){
-                // Conflict added hence propagation has to stop
+                // for (size_t j = i; j < size; j++)
+                // {
+                //     clingo_literal_t slit_not_prop = changes[j];
+                //     prop->to_be_propagated->set(slit_not_prop, false);
+                // }
+                for(auto split: to_propagate){
+                    prop->to_be_propagated->set(split, false);
+                }
+                // debugf("conflict");
                 return true;
             }
                   
         }
     }
+    bool result_propagate;
+    clingo_propagate_control_propagate(control, &result_propagate) ;
+    
+
+    // propagation must return immediately, a conflict has been raised 
+    for(auto split: to_propagate){
+        prop->to_be_propagated->set(split, false);
+    }
+    if (not result_propagate){ 
+        // debugf("conflict propagate");
+    }   
 
     return true;
     
@@ -158,13 +205,23 @@ void PropagatorClingo::undo(clingo_propagate_control_t *control, const clingo_li
     AmoSumPropagator* prop = propagators[td];
 
     std::vector<clingo_literal_t> plit_list;
-
+   
+    
     for (size_t i = 0; i < size; i++)
     {
         clingo_literal_t slit = changes[i];
         extend_vector(plit_list, map_slit_plit_watched[slit]);
     }
-    print_undo(this, changes, size, control, dl, td, false, false);
+    // if(dl >= 5000){
+    //     clingo_literal_t slit = 6440 ;
+    //     const clingo_assignment_t *assignment = clingo_propagate_control_assignment((clingo_propagate_control*)control);
+    //     clingo_truth_value_t value;
+    //     clingo_assignment_truth_value(assignment, slit, &value);
+    //     if(value == clingo_truth_value_free) debugf("slit is undef");
+    //     if(value == clingo_truth_value_true) debugf("slit is true");
+    //     if(value == clingo_truth_value_false) debugf("slit is false");
+    // }
+    // print_undo(this, changes, size, control, dl, td, dl >= 5000, false);
     prop->onLiteralsUndefined(plit_list, false);
 }
 
