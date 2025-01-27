@@ -56,7 +56,6 @@ bool PropagatorClingo::add_clauses_propagated_lits(void *control, const std::vec
 
     
     AmoSumPropagator* prop = propagators[td];
-    // dl = 0 ; // debugging
     for(int si = 0 ; si < S_plit.size();  ++si){
         clingo_literal_t plit = S_plit[si];
         const std::vector<clingo_literal_t>* R_plit = dl > 0 ? prop->getReasonForLiteral(plit) : nullptr;
@@ -69,34 +68,6 @@ bool PropagatorClingo::add_clauses_propagated_lits(void *control, const std::vec
             clingo_literal_t r_plit =  (*R_plit)[i-1];
             clause[i] = (*map_plit_slit)[r_plit];
         }
-
-        // if(slit == 6440) {
-        //     for(auto rplit: *R_plit){
-        //         assert(!prop->I->get(rplit));
-        //     }
-        //     assert(prop->I->get(plit) == SETTINGS::NONE);
-        //     clingo_truth_value_t value;
-        //     size_t unassigned_count = 0;
-        //     const clingo_assignment_t *assignment = clingo_propagate_control_assignment((clingo_propagate_control*)control);
-        //     for (size_t i = 0; i < clause_size; ++i) {
-        //         clingo_literal_t literal = clause[i];
-        //         clingo_assignment_truth_value(assignment, literal, &value);
-
-        //         if (value == clingo_truth_value_free) {
-        //             ++unassigned_count;
-        //         }
-        //     }
-        //     clingo_assignment_truth_value(assignment, slit, &value);
-        //     if(value == clingo_truth_value_free) debugf("slit is undef");
-        //     if(value == clingo_truth_value_true) debugf("slit is true");
-        //     if(value == clingo_truth_value_false) debugf("slit is false");
-        //     debugf("unassigned_count: ", unassigned_count);
-        //     // assert(value == clingo_truth_value_free);
-        //     // assert(unassigned_count == 1);
-            
-        //     debugf(" propagated")
-        // };
-
 
         bool result_add_clause;
         init ? handle_error(clingo_propagate_init_add_clause((clingo_propagate_init*) control, clause, clause_size, &result_add_clause)) :
@@ -111,16 +82,6 @@ bool PropagatorClingo::add_clauses_propagated_lits(void *control, const std::vec
             // debugf("conflict add clause");
             return true ;
         }
-
-        // if(slit == 10163){
-        //     const clingo_assignment_t *assignment = clingo_propagate_control_assignment((clingo_propagate_control*)control);
-        //     clingo_truth_value_t value;
-        //     clingo_assignment_truth_value(assignment, slit, &value);
-        //     if(value == clingo_truth_value_free) debugf("slit is undef");
-        //     if(value == clingo_truth_value_true) debugf("slit is true");
-        //     if(value == clingo_truth_value_false) debugf("slit is false");
-        //     assert(value == clingo_truth_value_true);
-        // }
     }
     return false ;
 }   
@@ -145,14 +106,9 @@ bool PropagatorClingo::propagate(clingo_propagate_control_t *control, const clin
             const std::vector<clingo_literal_t>* S_plit = prop->onLiteralTrue(plit, dl); // handled internally 
             if(S_plit != nullptr) extend_vector(to_propagate, *S_plit);
             if (S_plit != nullptr && add_clauses_propagated_lits(control, *S_plit, dl, false)){
-                // for (size_t j = i; j < size; j++)
-                // {
-                //     clingo_literal_t slit_not_prop = changes[j];
-                //     prop->to_be_propagated->set(slit_not_prop, false);
+                // for(auto split: to_propagate){
+                //     prop->to_be_propagated->set(split, false);
                 // }
-                for(auto split: to_propagate){
-                    prop->to_be_propagated->set(split, false);
-                }
                 // debugf("conflict");
                 return true;
             }
@@ -164,9 +120,9 @@ bool PropagatorClingo::propagate(clingo_propagate_control_t *control, const clin
     
 
     // propagation must return immediately, a conflict has been raised 
-    for(auto split: to_propagate){
-        prop->to_be_propagated->set(split, false);
-    }
+    // for(auto split: to_propagate){
+    //     prop->to_be_propagated->set(split, false);
+    // }
     if (not result_propagate){ 
         // debugf("conflict propagate");
     }   

@@ -91,7 +91,7 @@ std::pair<bool, Group*> AmoSumPropagator::update_phase(clingo_literal_t l, int d
         bool amo_condition = false;
      
         if (aggregate->get(l)) {
-            // to_be_propagated->set(l, false);
+            to_be_propagated->set(l, false);
             G = group->get(l);
             G->decrease_und();
             true_group->set(G,l);
@@ -100,7 +100,7 @@ std::pair<bool, Group*> AmoSumPropagator::update_phase(clingo_literal_t l, int d
             tg = true;
             current_sum += w_n;
         } else if (aggregate->get(not_(l))) {
-            // to_be_propagated->set(not_(l), false);
+            to_be_propagated->set(not_(l), false);
             G = group->get(not_(l));
             G->decrease_und();
             auto [new_lit, prev] = G->update(I, ge, false, false, l);
@@ -230,8 +230,8 @@ void AmoSumPropagator::onLiteralsUndefined(const std::vector<clingo_literal_t>& 
 
         // Update interpretation
         
-        // to_be_propagated->set(l, false);
-        // to_be_propagated->set(not_(l), false);
+        to_be_propagated->set(l, false);
+        to_be_propagated->set(not_(l), false);
 
         if (I->get(l) == SETTINGS::NONE) {
             continue;
