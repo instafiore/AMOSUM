@@ -806,7 +806,7 @@ int increment_f(bool derived_true, clingo_literal_t l, const std::unordered_set<
     }
 
     Group* head_group = group->get(head_reason);
-    if(!derived_true)
+    if(head_group == nullptr)
         head_group = group->get(not_(head_reason));
     assert(head_group != nullptr);
     int w = weight->get(l);
@@ -814,7 +814,8 @@ int increment_f(bool derived_true, clingo_literal_t l, const std::unordered_set<
         assert(!g->ord_l.empty());
         int w_mw_g = weight->get(g->ord_l.back());
         assert(g != head_group);
-        // if(!derived_true) return 999999;
+        // return 999999;
+        if(!derived_true) return 999999;
         assert(w_mw_g >= w);
         return w_mw_g - w;
     } else {
@@ -823,9 +824,6 @@ int increment_f(bool derived_true, clingo_literal_t l, const std::unordered_set<
        
         if (g == head_group) {
             
-            if(!derived_true){
-                assert(false);
-            }
             if(!derived_true) return 0 ; // by default a literal of the same group of derived not l, where l in aggregate, is redundant
             auto [sml_g, ml_g] = g->update(I, max_b, false, false, SETTINGS::NONE);
             mw_g = weight->get(sml_g);
@@ -844,7 +842,7 @@ int increment_f(bool derived_true, clingo_literal_t l, const std::unordered_set<
             if (--i <= 0) break;
             current_l = g->ord_l[i];
         }
-
+        // return 999999;
         // if(!derived_true) return 999999;
         return increment;
     }
@@ -852,19 +850,12 @@ int increment_f(bool derived_true, clingo_literal_t l, const std::unordered_set<
 
 void remove_elements(std::vector<clingo_literal_t>& original, const std::unordered_set<clingo_literal_t>& to_remove_set) {
  
-    // Use erase-remove idiom to remove elements in place
-    // OLD NOT INEFFICIENT
-    // auto start = start_timer();
-    // original.erase(
-    //     ,
-    //     original.end());
 
     auto end_old = original.end() ;
     auto end_new = std::remove_if(original.begin(), original.end(),
                        [&to_remove_set](int element) {
                            return to_remove_set.find(element) != to_remove_set.end();
                        });
-    
     while(end_new != end_old){
         original.pop_back();
         ++end_new ;
@@ -880,33 +871,15 @@ void remove_elements(std::vector<clingo_literal_t>& original, const std::unorder
     //     }
     // }
     
-    // size_t n = original.size() ;
-    // for (size_t i = 0; i < n; ++i)
-    // {
-    //     clingo_literal_t rlit = original[i];
-    //     if(to_remove_set.find(rlit) != to_remove_set.end()){
-    //         original[i] = original[n-1] ;
-    //         original[n-1] = rlit ; 
-    //         original.pop_back();
-    //         --n;
-    //     }
-    // }
-    
 }
 
 // Maximal subset with groups
 void maximal_subset_sum_less_than_s_with_groups(bool derived_true, const std::vector<clingo_literal_t>& literals, int s,const WeightFunction* weight, const GroupFunction* group, int head_reason, const std::unique_ptr<InterpretationFunction>& I, int max, std::unordered_set<clingo_literal_t>& current_subset_maximal) {
     int current_sum = 0;
-
     current_subset_maximal.clear();
     for (int l : literals) {
-        // auto start = start_timer();
         int inc = increment_f(derived_true, l, current_subset_maximal, weight, group, head_reason, I, max);
-        // display_end_timer(start, "increment_f");
         if (current_sum + inc <= s) {
-            // if(l == 2772 && head_reason == 2522){
-            //     debugf("removing 2772 because its increment is: ",inc );
-            // }
             current_sum += inc;
             current_subset_maximal.emplace(l);
         }

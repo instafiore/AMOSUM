@@ -142,8 +142,13 @@ std::tuple<int, clingo_literal_t, clingo_literal_t> AmoSumPropagator::mps(Group*
         int mw_g = weight->get(ml_g);
 
         // Ensure true_group[g] is not set
-        assert(true_group->get(g) == SETTINGS::NONE);
-
+        if(true_group->get(g) != SETTINGS::NONE){
+            std::string name_tr = get_name(atomNames, true_group->get(g));
+            std::string name_l = get_name(atomNames, l);
+            debugf("name_tr: ",name_tr, " name_l: ",name_l);
+            assert(true_group->get(g) == SETTINGS::NONE);
+        }
+        
         int mps_h = _mps - mw_g + weight->get(l);
         return {mps_h, l, ml_g};
     } else {
@@ -196,7 +201,7 @@ void AmoSumPropagator::compute_minimal_reason(const std::vector<clingo_literal_t
         }
         assert(g != nullptr);
 
-        auto [mps_h, sml_g, ml_g] = mps(g, l, !derived_true);
+        auto mps_h = mps_violated ? _mps : std::get<0>(mps(g, l, !derived_true));
         int s = lb - mps_h - 1;
         auto rd = get_perfect_hash_with_pointer(redundant_lits.get(), l);
         auto R = get_perfect_hash_with_pointer(reason.get(), l);
@@ -210,12 +215,6 @@ void AmoSumPropagator::compute_minimal_reason(const std::vector<clingo_literal_t
             // NOT IMPLEMENTED
         } else {
             assert(false && "Unknown minimization strategy.");
-        }
-        if(dl == 438 && l == 2522){
-            print_reason(atomNames, *R, l, true);
-            for(auto red: *rd){
-                debug("red: ", red, " name: ", get_name(atomNames, red));
-            }
         }
     }
 }

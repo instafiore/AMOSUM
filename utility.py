@@ -736,6 +736,8 @@ def increment_f(derived_true: bool, l: int, current_subset_maximal, weight: Weig
         # maximum weight
         mw_g: int 
         head_group = group[head_reason]
+        if head_group is None:
+            head_group = group[not_(head_reason)]
         if g == head_group:
             if not derived_true: return 0 
             sml_g, ml_g = g.update(I, max_b, update=False)

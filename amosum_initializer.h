@@ -6,6 +6,7 @@ struct generic_data{
     std::map<std::string, std::vector<clingo_literal_t>> groups_raw;
     std::vector<clingo_literal_t> bind;
     std::unordered_map<std::string,int> weights_names ;
+    clingo_literal_t aux_lit ;
 };
 
 class AmoSumInitializer{

@@ -36,7 +36,7 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_eo(const Group* G, Amo
             create_reason_true_ge(propagator, sml_g, not_(l), g);
         }
 
-    
+        propagator->compute_minimal_reason(propagator->S);
         print_derivation(propagator->atomNames, propagator->S, false);
         return &propagator->S;
     }

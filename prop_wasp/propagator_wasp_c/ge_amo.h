@@ -100,6 +100,7 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, Am
         create_reason_falses_ge(propagator, SETTINGS::NONE);
         
         propagator->compute_minimal_reason(propagator->S);
+        // propagator->compute_minimal_reason(derived_true);
     }
 
     

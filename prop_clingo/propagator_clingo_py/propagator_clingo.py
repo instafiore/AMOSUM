@@ -106,15 +106,13 @@ class PropagatorClingo(clingo.Propagator):
                     to_propagate.extend(S_plit)
                     # adding clauses for propagated literals S_plit
                     if self.add_clauses_propagated_lits(control=control, S_plit=S_plit, dl = dl):
-                        if prop.lazy_perc < 1:
-                            for slit_not_prop in to_propagate:
-                                prop.to_be_propagated[slit_not_prop] = False
+                        for slit_not_prop in to_propagate:
+                            prop.to_be_propagated[slit_not_prop] = False
                         return 
             
-            if prop.lazy_perc < 1:
+            if not control.propagate():
                 for slit_not_prop in to_propagate:
                     prop.to_be_propagated[slit_not_prop] = False
-            control.propagate()
         except Exception as e:
             debug(e, force_print=True)
             tb = e.__traceback__

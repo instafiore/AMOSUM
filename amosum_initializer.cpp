@@ -45,13 +45,14 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
     }
 
     void AmoSumInitializer::common_phase(AmoSumPropagator* amosum_propagator){
-        
+        std::regex pattern_aux(SETTINGS::REGEX_AUX);
         atomNamesString = create_atomNames_string(amosum_propagator->atomNames);
         std::map<clingo_symbol_t, clingo_literal_t> atomNamesTmp(amosum_propagator->atomNames->begin(), amosum_propagator->atomNames->end());
 
         for(auto &[symbolic_atom, literal]: atomNamesTmp){
                 
             std::string a = from_symbol_to_string(symbolic_atom);
+            
             if (a.length() > SETTINGS::PREDICATE_GROUP.length() and a.substr(0, SETTINGS::PREDICATE_GROUP.length() + 1) == SETTINGS::PREDICATE_GROUP + "(") {
               
                     clingo_literal_t group_literal = literal ;
@@ -68,10 +69,13 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
                     std::string lit_str = from_symbol_to_string(terms[0]);
                      
                     std::string atom_name = lit_str ;
+                    bool is_aux = std::regex_search(atom_name, pattern_aux);
                     clingo_literal_t lit ;
                         
                     lit = atomNamesString[atom_name];
                     
+                    
+
                     std::string plus_str = from_symbol_to_string(terms[1]);
                     bool plus_bool = plus_str == "\"+\""  ;
                     int sign = plus_bool ? 1 : -1 ;
@@ -89,6 +93,9 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
                     if(!gd){ 
                         gd = new generic_data();
                         generic_data_map[id_str] = gd ;
+                    }
+                    if(is_aux){
+                        gd->aux_lit = lit ;
                     }
                     gd->weights_names[lit_str] = w ;
                     std::vector<clingo_literal_t> G = get_map_value_vector(gd->groups_raw, group_id);
@@ -173,10 +180,7 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
                 amosum_propagator->_mps = amosum_propagator->_mps + max_w;
 
                 int diff = std::abs(max_w - min_w) ;
-                std::regex pattern(SETTINGS::REGEX_AUX);
-                std::string name = get_name(amosum_propagator->atomNames, ml);
-                bool is_aux = std::regex_search(name, pattern);
-                // debugf("is_aux: ",is_aux, " pattern: ", SETTINGS::REGEX_AUX, " name: ", name, " diff: ",diff);
+                bool is_aux = equals(generic_data_map[ID]->aux_lit, ml);
                 if (max_diff < diff && !is_aux)  max_diff = diff ;
 
                 amosum_propagator->groups.push_back(G);

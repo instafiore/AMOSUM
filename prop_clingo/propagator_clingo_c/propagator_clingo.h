@@ -25,7 +25,7 @@ public:
     bool ge;
     std::string choice_cons;
     std::string solver;
-    
+    std::vector<clingo_literal_t> to_propagate;
 
     // This is a map for mapping each solver literal (slit) to its program literal(s) (plit).
     // Can happend that some solver literal has more than one program literal
