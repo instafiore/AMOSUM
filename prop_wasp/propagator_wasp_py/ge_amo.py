@@ -19,17 +19,18 @@ Invariants:
 
 def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
 
-    propagator.reason = []    
     propagator.S = []
 
     if propagator.mps_violated:
+
         assert propagator.lazy_prop_activated
+        
 
         l = propagator.current_literal
 
-        S = [not_(l)]
+        propagator.S = [not_(l)]
 
-        propagator.reason = []
+        propagator.reason[not_(l)] = []
 
         derived_true = False
         g = propagator.group[l]
@@ -43,26 +44,34 @@ def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
             sml_g = max_w(g)
             create_reason_true_ge(propagator, sml_g, not_(l), g)
 
+   
+        print_derivation(propagator.atomNames, propagator.S, force_print=False)  
         return propagator.S
     
     derived_true = []
-    # arrived here
+ 
     for g in propagator.groups:
         if g == G or not propagator.true_group[g] is None:
             continue
 
         ml_g =  max_w(g)
+ 
         if ml_g is None:
             continue
 
+        if propagator.to_be_propagated[ml_g]: continue 
+        
         mps, sml_g, ml_g = propagator.mps(g, ml_g, assumed=False, return_literals=True)
         propagate_to_true = False
         if mps < propagator.lb:
-            i = g.ord_i[sml_g] if not sml_g is None else 0
-            j = g.ord_i[ml_g]
-            propagator.reason_trues[ml_g] = [lit for lit in g.ord_l[i:j] if propagator.I[lit] == False]
-            S.append(ml_g)
-            propagator.propagated[ml_g] = True
+            if not propagator.to_be_propagated[ml_g]:
+                propagator.to_be_propagated[ml_g] = True
+                propagator.S.append(ml_g)
+                derived_true.append(ml_g)
+                propagator.reason[ml_g] = []
+                create_reason_true_ge(propagator, sml_g, ml_g, g)
+                propagator.propagated[ml_g] = True
+            
             propagate_to_true = True
         
       
@@ -70,16 +79,19 @@ def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
             for l in g.ord_l:
                 if propagator.I[l] is None:
                     if propagator.mps(g, l, assumed=True) < propagator.lb:
-                        S.append(not_(l))
-                        propagator.propagated[not_(l)] = True
+                        if not propagator.to_be_propagated[not_(l)]:
+                            propagator.to_be_propagated[not_(l)] = True
+                            propagator.S.append(not_(l))
+                            propagator.reason[not_(l)] = []
+                            propagator.propagated[not_(l)] = True
                     else:
                         break
 
       
-    if len(S) != 0  and propagator.dl != 0:
+    if len(propagator.S) != 0  and propagator.dl != 0:
         create_reason_falses_ge(propagator=propagator)
-        propagator.compute_minimal_reason(reason=propagator.reason, derived=S)
+        propagator.compute_minimal_reason(to_minimize=propagator.S)
 
-    print_derivation(propagator.atomNames, S)
-
-    return S
+    
+    print_derivation(propagator.atomNames, propagator.S, force_print=False)
+    return propagator.S

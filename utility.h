@@ -63,7 +63,7 @@ std::string from_symbol_to_string(clingo_symbol_t sym);
 clingo_symbol_t from_string_to_symbol(std::string str, const std::unordered_map<clingo_symbol_t, clingo_literal_t> *atomNames);
 clingo_literal_t from_string_to_lit(std::string str, const std::unordered_map<clingo_symbol_t, clingo_literal_t> *atomNames);
 int64_t from_string_to_symbol_or_lit(std::string str, const std::unordered_map<clingo_symbol_t, clingo_literal_t> *atomNames, bool sym);
-std::unordered_map<std::string, clingo_literal_t> create_atomNames_string(const std::unordered_map<clingo_symbol_t, clingo_literal_t> *atomNames);
+std::map<std::string, clingo_literal_t> create_atomNames_string(const std::unordered_map<clingo_symbol_t, clingo_literal_t> *atomNames);
 void handle_error(bool success);
 bool print_model(clingo_model_t const *model);
 bool solve(clingo_control_t *ctl, clingo_solve_result_bitset_t *result);
@@ -184,6 +184,7 @@ void create_reason_falses(AmoSumPropagator* propagator, bool ge, clingo_literal_
 void create_reason_falses_ge(AmoSumPropagator* propagator, clingo_literal_t flipped);
 void create_reason_falses_le(AmoSumPropagator* propagator, clingo_literal_t flipped);
 void create_reason_true_ge(AmoSumPropagator* propagator, clingo_literal_t sml_g, clingo_literal_t derived, Group* g);
+void create_reason_true_le(AmoSumPropagator* propagator, clingo_literal_t sml_g, clingo_literal_t derived, Group* g);
 std::tuple<bool, const std::vector<clingo_literal_t>* (*)(const Group*, AmoSumPropagator*), std::string>  get_propagator_variables(std::string prop_type);
 // Function to get the name
 std::string get_name(const std::unordered_map<clingo_symbol_t, clingo_literal_t>* atomNames, clingo_literal_t lit);

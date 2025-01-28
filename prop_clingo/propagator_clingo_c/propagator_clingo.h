@@ -58,7 +58,7 @@ public:
     bool add_clauses_propagated_lits(void *control, const std::vector<clingo_literal_t>& S_plit, int dl, bool init);
     std::string compute_changes_str(const clingo_literal_t *changes, size_t size, int td);
 
-    // Dynamic memory
+
     std::vector<AmoSumPropagator*> propagators ; 
     ~PropagatorClingo(){
         for(auto& prop: propagators){

@@ -8,6 +8,8 @@ from clingo.symbol import Number, Function
 from clingo.control import Control
 from clingo.symbol import Function
 
+from amosum_initializer import AmoSumInitializer
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from amosum import *
 import amosum
@@ -15,6 +17,8 @@ import amosum
     Invariants: 
 '''
 import time 
+from prop_clingo.propagator_clingo_py.propagator_clingo_initializer import *
+
 class PropagatorClingo(clingo.Propagator):
 
     def __init__(self, sys_parameters: dict[str: str], propagation_phase: Callable[[Group, AmoSumPropagator], List[int]], ge: bool, choice_cons: str) -> None:
@@ -25,69 +29,35 @@ class PropagatorClingo(clingo.Propagator):
         self.choice_cons = choice_cons
         self.solver = AmoSumPropagator.CLINGO
 
-    def init(self, init: clingo.PropagateInit) -> None:
+    def init(self, _init: clingo.PropagateInit) -> None:
+        PropagatorClingoInitializer.get_instance().init(_init, self)
 
-        atoms_list_for_mapping = [(str(a.symbol), a.literal, init.solver_literal(a.literal)) for a in init.symbolic_atoms]
-        nt = init.number_of_threads
-        # debug(f"number of threads {nt}", force_print = True)
-        # debug(f"atoms_list_for_mapping {atoms_list_fosr_mapping}", force_print = False)
-
-        max_plit = 0
-        for str_symbol, program_literal, solver_literal in atoms_list_for_mapping:
-            # debug(str_symbol, program_literal, solver_literal, force_print=True)
-            if max_plit < program_literal:
-                max_plit = program_literal
-
-        self.atomNames = { str_symbol : program_literal for str_symbol, program_literal, solver_literal in atoms_list_for_mapping}
-        # arrived here with cpp
         self.propagators = [amosum.AmoSumPropagator(atomNames=self.atomNames, sys_parameters=self.sys_parameters,
-                                      propagation_phase=self.propagation_phase, ge=self.ge, choice_cons=self.choice_cons, solver=AmoSumPropagator.CLINGO) for i in range(nt)]
+                                      propagation_phase=self.propagation_phase, ge=self.ge, choice_cons=self.choice_cons, solver=AmoSumPropagator.CLINGO) for i in range(PropagatorClingoInitializer.get_instance().nt)]
 
-        # This is a map for mapping each solver literal (slit) to its program literal(s) (plit).
-        # Can happend that some solver literal has more than one program literal
-        map_slit_plit = {}
-
-        # This map maps each solver literal (watched) to its program literals (watched)
-        map_slit_plit_watched = {}
-
-        map_plit_slit = {}
-
-        for str_symbol, plit, slit in atoms_list_for_mapping:
-            map_plit_slit[plit] = slit
-            map_plit_slit[-plit] = -slit
-            # name = get_name(self.atomNames, lit=plit)
-            # debug(f"{name} -> {slit}")
-            map_slit_plit.setdefault(slit, [])
-            map_slit_plit.setdefault(-slit, [])
-            map_slit_plit[slit].append(plit)
-            map_slit_plit[-slit].append(-plit)
-
-        lits = [max_plit] + map_slit_plit.get(1,[])
-        for i in range(nt):
-            to_watch_plit = self.propagators[i].getLiterals(*lits)
+        for i in range(PropagatorClingoInitializer.get_instance().nt): to_watch_plit = AmoSumInitializer.get_instance().getLiterals(PropagatorClingoInitializer.get_instance().lits, self.propagators[i])
+        # for i in range(PropagatorClingoInitializer.get_instance().nt): to_watch_plit = self.propagators[i].getLiterals(*PropagatorClingoInitializer.get_instance().lits)
 
         # arrived here 
+        map_slit_plit_watched = {}
         for plit in to_watch_plit:
-            slit = map_plit_slit[plit]
+            slit = self.map_plit_slit[plit]
             map_slit_plit_watched.setdefault(slit,[])
             map_slit_plit_watched[slit].append(plit)
             # debug(f"watching: {slit} {get_name(self.atomNames,plit)}", force_print=True)
-            init.add_watch(literal=slit)
+            _init.add_watch(literal=slit)
             
             
-
-        self.map_plit_slit = map_plit_slit
-        self.map_slit_plit = map_slit_plit
         self.map_slit_plit_watched = map_slit_plit_watched
 
         # debug("Propagation ad level 0 started")
-        for i in range(nt):
+        for i in range(PropagatorClingoInitializer.get_instance().nt):
             S_plit = self.propagators[i].simplifyAtLevelZero(delete_lits=True)
             
         # print_derivation(atomNames=self.atomNames, S=S_plit)
-        if S_plit == [1] or self.add_clauses_propagated_lits(control=init, S_plit=S_plit, dl = 0):
+        if S_plit == [1] or self.add_clauses_propagated_lits(control=_init, S_plit=S_plit, dl = 0) or not _init.propagate():
             # adding empty clause
-            init.add_clause([])
+            _init.add_clause([])
             return
         
         
@@ -96,22 +66,26 @@ class PropagatorClingo(clingo.Propagator):
         td = 0 if isinstance(control, clingo.PropagateInit) else control.thread_id
         prop = self.propagators[td]
 
-        for plit in S_plit:
+        for si in range(len(S_plit)):
+            plit = S_plit[si]
             try:
                 R_plit = prop.getReasonForLiteral(plit)
 
-                slit   = self.map_plit_slit[plit]
+                slit  = self.map_plit_slit[plit]
                 # first part of the clause is the reason
                 clause = [self.map_plit_slit[plit_r] for plit_r in R_plit] 
-                # the last literal is the implied literal (undefined)
+                
+                # the last literal is the implied literal (undefined or false)
                 clause.append(slit)
-               
-                if not control.add_clause(clause) or not control.propagate():
+                
+                if not control.add_clause(clause):
                     # propagation must return immediately, a conflict has been raised
-                    print_clause(propagator=self, clause=clause, conflict=True)
+                    print_clause(propagator=self, clause=clause, conflict=True, force_print=False)
+                    # for sj in range(0, len(S_plit)):
+                    #     plit_not_propagated = S_plit[sj]
+                    #     prop.to_be_propagated[plit_not_propagated] = False
                     return True
             except Exception as e:
-                debug(e, force_print=True)
                 raise e
         return False
     
@@ -122,25 +96,32 @@ class PropagatorClingo(clingo.Propagator):
             td = 0 if dl == 0 else control.thread_id
             prop = self.propagators[td]
             
-            print_propagate(self, changes=changes, control=control, dl=dl)
-            for slit in changes:
+            # print_propagate(self, changes=changes, control=control, dl=dl, force_print=True)
+            to_propagate = []
+            for ci in range(len(changes)):
+                slit = changes[ci]
                 plit_list = self.map_slit_plit_watched[slit]
                 for plit in plit_list:
                     # propagated plits
                     S_plit = []
                     # propagating program literal
-                    try:
-                        S_plit = prop.onLiteralTrue(plit, dl)
-                    except Exception as e:
-                        debug(e, force_print=True)
-                        raise e
+                    S_plit = prop.onLiteralTrue(plit, dl)
+                    to_propagate.extend(S_plit)
                     # adding clauses for propagated literals S_plit
                     if self.add_clauses_propagated_lits(control=control, S_plit=S_plit, dl = dl):
-                        # Conflict added hence propagation has to stop
+                        for slit_not_prop in to_propagate:
+                            prop.to_be_propagated[slit_not_prop] = False
                         return 
             
+            for slit_not_prop in to_propagate:
+                prop.to_be_propagated[slit_not_prop] = False
+            control.propagate()
         except Exception as e:
             debug(e, force_print=True)
+            tb = e.__traceback__
+            while tb:
+                print(f"File: {tb.tb_frame.f_code.co_filename}, Line: {tb.tb_lineno}, Function: {tb.tb_frame.f_code.co_name}", file=sys.stderr)
+                tb = tb.tb_next
             raise e
 
     def undo(self, thread_id: int, assignment: clingo.Assignment, changes: Sequence[int]) -> None:
@@ -154,6 +135,10 @@ class PropagatorClingo(clingo.Propagator):
             prop.onLiteralsUndefined(*plit_list, wasp=False)
         except Exception as e:
             debug(e, force_print=True)
+            tb = e.__traceback__
+            while tb:
+                print(f"File: {tb.tb_frame.f_code.co_filename}, Line: {tb.tb_lineno}, Function: {tb.tb_frame.f_code.co_name}", file=sys.stderr)
+                tb = tb.tb_next
             raise e
 
     def compute_changes_str(self, changes, thread_id):

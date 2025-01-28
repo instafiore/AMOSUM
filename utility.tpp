@@ -135,7 +135,9 @@ private:
 
 protected:
     T NONE  ;   
-    virtual T function_negative_lit(T value) const  = 0;  
+    virtual T function_negative_lit(T value) const  {
+        return value ;
+    } 
 
 public:
 

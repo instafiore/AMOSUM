@@ -84,6 +84,13 @@ int main(int argc, char const *argv[])
     handle_error((clingo_control_ground(ctl, parts, 1, NULL, NULL)));
     handle_error(solve(ctl, &solve_ret));
 
+    size_t iterations = 0 ;
+    for(auto prop: propagators){
+        auto amosum_prop = prop->propagators[0];
+        iterations += amosum_prop->count ;
+    }
+    debugf("Iterations: ", iterations);
+
     // Interpret the result
     if (solve_ret & clingo_solve_result_satisfiable) {
         debugf("result: SAT\n");

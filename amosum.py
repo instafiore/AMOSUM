@@ -10,6 +10,7 @@ import re
 import settings
 from settings import *
 import time
+import traceback
 
 class AmoSumPropagator:
 
@@ -109,9 +110,6 @@ class AmoSumPropagator:
     _mps : int 
     # ----------------------------
 
-    # treshold for lazy propagation activation
-    LAZY_PERC : float = 0.98
-
     # derived lits
     S : List[int] = []
 
@@ -138,160 +136,7 @@ class AmoSumPropagator:
         self.solver = solver
         self.count = 0
         self.S = []
-
-    def getLiterals(self, *lits):
-        param = self.param
-
-        set_debug(param.get("d",""))
-
-        
-        
-        # initializing 
-        self.minimization = param.get("min_r",Minimize.NO_MINIMIZATION.value)
-        self.strategy = param.get("strategy",self.strategy)
-        self.N = lits[0] + 1
-        self.I = SymmetricFunction(self.N)
-        self.weight = WeightFunction(self.N)
-        self.group = GroupFunction(self.N)
-        self.propagated = SymmetricFunction(self.N)
-        self.aggregate = AggregateFunction(self.N, False)
-        self.reason_trues = PerfectHash(self.N,[])
-        self.reason = PerfectHash(self.N,[])
-        self.redundant_lits = PerfectHash(self.N,[])
-        self._mps = 0
-        self.ID = param.get("id","0")
-        self.groups = []
-        self.assumptions = param.get("ass", False)
-        self.current_sum = 0 
-        self.lazy_prop_activated = param.get("lazy",False)
-        self.lazy_condition = not self.lazy_prop_activated
-        self.groups_literals = []
-
-        lazy_perc_str = f" lazy threshold {AmoSumPropagator.LAZY_PERC}" if self.lazy_prop_activated else ""
-        debug(f"Starting propagator with param {param}{lazy_perc_str}", force_print=True)
-
-        #used to create the self.groups
-        groups_raw : dict[int, List[int]] = {}
-
-        self.lb = None
-        bind = []
-        negative_lit_regex = re.compile(r"^not\s+(?P<atom_name>[\w()]+)")
-        bound_str = PREDICATE_LB if self.ge else PREDICATE_UB 
-        bound = None
-         
-
-        # selecting the interested literals
-        self.weights_names = dict()
-        for a in self.atomNames:
-            if  a.startswith(f'{PREDICATE_GROUP}('):
-                group_literal = self.atomNames[a]
-                
-                terms = wasp.getTerms(PREDICATE_GROUP,a)
-                # Syntax: PREDICATE_GROUP( lit_name, weight, group_id, aggregate_id)
-                if len(terms) != 5 or terms[4] != self.ID:
-                    continue
-                
-                # setting every group_literal to false
-                self.groups_literals.append(not_(group_literal))
-                
-                lit_str = terms[0]
-                atom_name = lit_str
-                match = negative_lit_regex.match(lit_str)
-                if match:
-                    atom_name = match.group('atom_name')
-                    lit =  self.atomNames[atom_name] * -1
-                else:
-                    lit =  self.atomNames[atom_name]
-            
-                sign = 1 if re.search(r"\+",terms[1]) else -1
-                lit *= sign
-                # updating the self.weight
-                weight = int(terms[2])
-                self.weight[lit] = weight
-                self.weights_names[atom_name] =  weight
-                # updating the self.group id
-                group_id = terms[3]
-
-                G = groups_raw.get(group_id,[])
-                G.append(lit)
-                groups_raw[group_id] = G
-
-                # adding to the self.aggregate
-                self.aggregate[lit] = True
-                
-                bind.append(lit)
-                bind.append(-lit)
-            
-            elif a.startswith(f"{bound_str}("):
-                terms = wasp.getTerms(f'{bound_str}',a)
-                if (len(terms) != 2 or terms[1] != self.ID):
-                    continue
-                if not bound is None:
-                    assert False     
-                if self.ge:
-                    self.lb = int(terms[0])
-                else:
-                    self.ub = int(terms[0])
-                bound = self.lb if self.ge else self.ub
-
-        self.bound = bound
-        assert not self.bound is None
-
-        # creating self.groups
-        for group_id in groups_raw:
-            
-            lits_group = groups_raw[group_id]
-
-            # ordering by self.weight
-            lits_ord = [(lit, self.weight[lit]) for lit in lits_group]
-            lits_ord = sorted(lits_ord, key = lambda x: x[1])
-    
-            ord_l = [None] * len(lits_ord)
-
-            # it cannot become a PerfectHash since the space required would be O(self.N^2) (self.N number of literals)
-            ord_i : dict[int, int] = {}
-
-            for i in range(len(lits_ord)):
-                l = lits_ord[i][0]
-                ord_l[i] = l
-                ord_i[l] = i
-            
-            # creating the self.group
-            G = Group(ord_l,ord_i,group_id)
-            
-            # updatind the max possible sum
-            self._mps = self._mps + self.weight[m_w(G, max = self.ge)]
-        
-            # adding the self.group to the list of self.groups
-            assert G not in self.groups
-            self.groups.append(G)
-
-
-            # defining the function self.group
-            for lit in lits_group:
-                self.group[lit] = G
-        
-        nGroup = Group.autoincrement 
-        self.true_group = TrueGroupFunction(nGroup)
-
-        debug(f"id: {self.ID} total_weight_names: {json.dumps(self.weights_names)}", force_print=True) if self.solver == AmoSumPropagator.WASP else None
-
-        # PREPROCESSING
-        for i in range(1,len(lits)):
-            l = lits[i]
-            try:
-                self.update_phase(l)
-                self.inconsistent_at_level_0 = False
-            except Exception as e:
-                self.inconsistent_at_level_0 = True
-
-        self.facts = lits[1:]
-
-        self.last_decision_lit = 1
-        self.dl = 0        
-
-        return bind 
-        
+        self.lazy_perc = None
 
     def simplifyAtLevelZero(self, delete_lits = False):
 
@@ -316,8 +161,7 @@ class AmoSumPropagator:
         return  create_assumptions_lits(assumptions=self.assumptions,atomNames=self.atomNames) + prop_from_facts + self.groups_literals
 
     def onLiteralTrue(self, lit, dl):
-        
-        # start = time.time()
+
         if not self.is_in_aggregate(lit):
             return []
 
@@ -347,7 +191,6 @@ class AmoSumPropagator:
             try:
                 propagated_lits = self.propagate_phase(G, self, self.atomNames)
             except Exception as e:
-                print(e, file=sys.stderr)
                 raise e
         
         return propagated_lits
@@ -357,24 +200,21 @@ class AmoSumPropagator:
         p : float
         if self.ge:
             self.mps_violated = self._mps < self.lb 
-            p = self.bound / self._mps
+            p = (self.bound / self._mps) if self._mps != 0 else 1
         else:
             self.mps_violated = self._mps > self.ub
-            p =  self._mps / self.bound
+            p =  (self._mps / self.bound) if self.bound != 0 else 1
 
-        self.lazy_condition = p >= AmoSumPropagator.LAZY_PERC
+        self.lazy_condition = p >= self.lazy_perc
         if self.mps_violated:
             self.lazy_condition = True
-
-        if not self.lazy_prop_activated:
-            self.lazy_condition = True #forcing to not be lazy
-
 
     def update_phase(self, l: int) -> tuple[bool, Group]:
     
         w_p : int = 0
         w_n : int = 0
         self.I[l] = True
+
         tg = False
         G : Group
         self.mps_violated : bool = False
@@ -384,6 +224,7 @@ class AmoSumPropagator:
         amo_condition = False
         if self.aggregate[l]:
             G = self.group[l]
+            self.to_be_propagated[l] = False 
             G.decrease_und()
             self.true_group[G] = l
             w_p = self.weight[m_w(G, max = self.ge)]
@@ -393,6 +234,7 @@ class AmoSumPropagator:
             
         elif self.aggregate[not_(l)]:
             G = self.group[not_(l)]
+            self.to_be_propagated[not_(l)] = False 
             G.decrease_und()
             new, prev = G.update(self.I, max=self.ge, update=False, assuming_und = l)
             if not_(l) == prev:
@@ -418,17 +260,17 @@ class AmoSumPropagator:
 
         self._mps = self._mps - w_p + w_n
         self.update_lazy_propagation()
-        # debug(f"[mps: {self._mps}, id: {self.ID}] iteration: {self.count}", force_print=self.lazy_condition and self.count % 50000 == 0)
 
         G = G if self.choice_cons == "EO" else None
         current_sum_condition = not self.ge or self.current_sum < self.bound
         next_phase = current_sum_condition and (w_p != w_n or amo_condition) and self.lazy_condition 
                 
+        # debug(f"[mps: {self._mps}, id: {self.ID}] iteration: {self.count} next_phase: {next_phase} self.bound / self._mps: {self.bound / self._mps} self.lazy_condition: {self.lazy_condition} {self.lazy_perc} lazy_prop_activated: {self.lazy_prop_activated}", force_print=True)
         return (next_phase,  G)
     
     def mps(self, g: Group, l: int, assumed:bool, return_literals = False):
         if assumed:
-            ml_g = m_w(g, max=max)
+            ml_g = m_w(g, max=self.ge)
             mw_g = self.weight[ml_g]
             assert self.true_group[g] is None
             mps = self._mps - mw_g + self.weight[l]
@@ -452,12 +294,12 @@ class AmoSumPropagator:
         if len(rl) > 0:
             removed = True
             R = remove_elements(R, rl)
+            self.redundant_lits[lit] = []
         
-    
-        self.redundant_lits[lit] = []
+        # print_reason(atomNames=self.atomNames, R=R, literal=lit, force_print=False)
         return R 
 
-    def compute_minimal_reason(self, reason: List[int], derived: List[int]):
+    def compute_minimal_reason(self, to_minimize: List[int]):
         '''
         Invariants (in case of cmin strategy) reason is grouped by self.group id and in each self.group the literals are sort in descending order
         '''
@@ -465,7 +307,7 @@ class AmoSumPropagator:
         if self.minimization == Minimize.NO_MINIMIZATION.value:
             return
         
-        for l in derived:
+        for l in to_minimize:
             g = self.group[l]
             derived_true = True
             if g is None:
@@ -477,8 +319,9 @@ class AmoSumPropagator:
             s = self.lb - mps - 1 
     
             if self.minimization == Minimize.MINIMAL.value:
-                self.redundant_lits[l] = maximal_subset_sum_less_than_s_with_groups(literals= self.reason[l], s = s, weight= self.weight, group=self.group, head_reason=l, I=self.I, max=self.ge)
+                self.redundant_lits[l] = maximal_subset_sum_less_than_s_with_groups(derived_true=derived_true, literals= self.reason[l], s = s, weight= self.weight, group=self.group, head_reason=l, I=self.I, max=self.ge)
             elif self.minimization == Minimize.CARDINALITY_MINIMAL.value:
+                # outdated
                 increment = compute_increment_literals(literals=self.reason[l], group=self.group, weight=self.weight)
                 self.redundant_lits[l]  = maximum_subset_sum_less_than_s_with_groups(literals= self.reason[l], s = s, weight = increment, group=self.group, I=self.I)            
             else:
@@ -501,7 +344,9 @@ class AmoSumPropagator:
             # updating interpretation
             self.I[l] = None
             self.reason[l] = []
-
+            # self.to_be_propagated[l] = False
+            # self.to_be_propagated[not_(l)] = False
+            
 
             # updating max self.weight for self.group(l)
             G : Group = self.group[l] 

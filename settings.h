@@ -16,7 +16,9 @@ const std::string PREDICATE_LB = "__lb__";
 const std::string PREDICATE_UB = "__ub__";
 const std::string PREDICATE_GROUP = "__group__";
 const std::string PREDICATE_AUX = "__aux__";
+const std::string REGEX_AUX = PREDICATE_AUX + "\\([\\w\\s,\\(\\)]+,\\s*(ge_amo|ge_eo|le_eo)\\)";
 const char SEPARATOR_ASSUMPTIONS = ':';
 const char NOT = '~';
 const std::string NONE_STR = "";
+const std::string LAZY_HYBRID = "hybrid";
 }

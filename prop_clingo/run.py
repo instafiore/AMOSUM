@@ -1,4 +1,4 @@
-#!/Users/instafiore/instafiore_env/bin/python
+#!/home/s.fiorentino/miniconda3/bin/python
 import sys
 import os
 # adding the root path
@@ -13,7 +13,7 @@ This is the entry file to run the AMO SUM propagator(s) CLINGO
 
 def main():
     
-    DEFAULT_LANG = "c"
+    DEFAULT_LANG = "py"
     param = init_param(sys.argv)
     
     language = param.get("lang", DEFAULT_LANG)

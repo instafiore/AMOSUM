@@ -62,8 +62,8 @@ int64_t from_string_to_symbol_or_lit(std::string str, const std::unordered_map<c
     return 0; 
 }
 
-std::unordered_map<std::string, clingo_literal_t> create_atomNames_string(const std::unordered_map<clingo_symbol_t, clingo_literal_t> *atomNames){
-    std::unordered_map<std::string, clingo_literal_t> atomNamesString ;
+std::map<std::string, clingo_literal_t> create_atomNames_string(const std::unordered_map<clingo_symbol_t, clingo_literal_t> *atomNames){
+    std::map<std::string, clingo_literal_t> atomNamesString ;
     for (const auto& [name, atom] : (*atomNames)) {
         atomNamesString[from_symbol_to_string(name)] = atom ;
     }
@@ -378,16 +378,7 @@ void create_reason_falses(AmoSumPropagator* propagator, bool ge, clingo_literal_
     }
 }
 
-void remove_elements(std::vector<clingo_literal_t>& original, const std::unordered_set<clingo_literal_t>& to_remove_set) {
- 
-    // Use erase-remove idiom to remove elements in place
-    original.erase(
-        std::remove_if(original.begin(), original.end(),
-                       [&to_remove_set](int element) {
-                           return to_remove_set.find(element) != to_remove_set.end();
-                       }),
-        original.end());
-}
+
 
 #ifdef CHECK_MPS
 void weights_names_log(const std::string& ID, const std::unordered_map<std::string, int>& weights_names) {
@@ -413,7 +404,6 @@ void create_reason_falses_ge(AmoSumPropagator* propagator, clingo_literal_t flip
                 clingo_literal_t l = g->ord_l[i];
                 if (propagator->weight->get(l) < mw_g) break;
                 if (!propagator->I->get(l) && !equals(l, flipped)) {
-                    #ifdef PRIVATE_REASON
                     for(auto lit : propagator->S){
                         auto R = get_perfect_hash_with_pointer(propagator->reason.get(), lit);
                         Group* G = propagator->group->get(lit);
@@ -421,14 +411,10 @@ void create_reason_falses_ge(AmoSumPropagator* propagator, clingo_literal_t flip
                         if(g == G) continue; 
                         R->push_back(l);
                     }
-                    #else
-                    propagator->reason_falses.push_back(l);
-                    #endif
                 }
             }
         } 
         else if(!equals(propagator->true_group->get(g), flipped)) {
-            #ifdef PRIVATE_REASON
             for(auto lit : propagator->S){
                 auto R = get_perfect_hash_with_pointer(propagator->reason.get(), lit);
                 Group* G = propagator->group->get(lit);
@@ -436,9 +422,6 @@ void create_reason_falses_ge(AmoSumPropagator* propagator, clingo_literal_t flip
                 if(g == G) continue; 
                 R->push_back(not_(propagator->true_group->get(g)));
             }
-            #else
-            propagator->reason_falses.push_back(not_(propagator->true_group->get(g)));
-            #endif
         }
     }
 
@@ -446,23 +429,35 @@ void create_reason_falses_ge(AmoSumPropagator* propagator, clingo_literal_t flip
 
 
 void create_reason_falses_le(AmoSumPropagator* propagator, clingo_literal_t flipped = SETTINGS::NONE) {
-    // propagator->reason_falses.clear(); // Clear the existing reason vector.
+    if(propagator->dl == 0) return ;
 
-    // for (auto* g : propagator->groups) {
-    //     if (propagator->true_group->get(g) == SETTINGS::NONE) {
-    //         clingo_literal_t ml_g = m_w(g, !propagator->ge); // Use min_w when `ge` is false.
-    //         int mw_g = propagator->weight->get(ml_g);
+    for (auto* g : propagator->groups) {
+        if (propagator->true_group->get(g) == SETTINGS::NONE) {
+            clingo_literal_t ml_g = m_w(g, propagator->ge); 
+            int mw_g = propagator->weight->get(ml_g);
             
-    //         for (clingo_literal_t l : g->ord_l) {
-    //             if (propagator->weight->get(l) > mw_g) break;
-    //             if (propagator->I->get(l) != SETTINGS::NONE && !equals(l, flipped)) {
-    //                 // propagator->reason_falses.push_back(l);
-    //             }
-    //         }
-    //     } else if(!equals(propagator->true_group->get(g), flipped)) {
-    //         // propagator->reason_falses.push_back(not_(propagator->true_group->get(g)));
-    //     }
-    // }
+            for (clingo_literal_t l : g->ord_l) {
+                if (propagator->weight->get(l) > mw_g) break;
+                if (!propagator->I->get(l) && !equals(l, flipped)) {
+                    for(auto lit : propagator->S){
+                        auto R = get_perfect_hash_with_pointer(propagator->reason.get(), lit);
+                        Group* G = propagator->group->get(lit);
+                        if (G == nullptr) G = propagator->group->get(not_(lit));
+                        if(g == G) continue; 
+                        R->push_back(l);
+                    }
+                }
+            }
+        } else if(!equals(propagator->true_group->get(g), flipped)) {
+            for(auto lit : propagator->S){
+                auto R = get_perfect_hash_with_pointer(propagator->reason.get(), lit);
+                Group* G = propagator->group->get(lit);
+                if (G == nullptr) G = propagator->group->get(not_(lit));
+                if(g == G) continue; 
+                R->push_back(not_(propagator->true_group->get(g)));
+            }
+        }
+    }
 }
 
 std::string vector_lit_to_string(const std::unordered_map<clingo_symbol_t, clingo_literal_t>* atomNames, const std::vector<clingo_literal_t>& vec, std::string name = ""){
@@ -483,24 +478,34 @@ void create_reason_true_ge(AmoSumPropagator* propagator, clingo_literal_t sml_g,
     int i = sml_g != SETTINGS::NONE ? g->ord_i[sml_g] : 0;
     int j = g->ord_l.size();
 
-    #ifdef PRIVATE_REASON
     auto R = get_perfect_hash_with_pointer(propagator->reason.get(), derived);
-    #else
-    auto rst = get_perfect_hash_with_pointer(propagator->reason_trues.get(), derived);
-    rst->clear();
-    #endif
 
     assert(i <= j);
     assert(derived != SETTINGS::NONE);
     
     for (int k = i; k < j; ++k) {
         clingo_literal_t lit = g->ord_l[k];
-        if (!propagator->I->get(lit)) {
-            #ifdef PRIVATE_REASON
+        if (!propagator->I->get(lit) && !equals(derived, lit)) {
             R->push_back(lit);
-            #else
-            rst->push_back(lit);
-            #endif
+        }
+    }
+}
+
+void create_reason_true_le(AmoSumPropagator* propagator, clingo_literal_t sml_g, clingo_literal_t derived, Group* g){
+    if(propagator->dl == 0) return ;
+    
+    int i = sml_g != SETTINGS::NONE ? g->ord_i[sml_g] : g->ord_l.size() - 1;
+    int j = 0;
+
+    auto R = get_perfect_hash_with_pointer(propagator->reason.get(), derived);
+
+    assert(i >= j);
+    assert(derived != SETTINGS::NONE);
+    
+    for (int k = i; k >= j; --k) {
+        clingo_literal_t lit = g->ord_l[k];
+        if (!propagator->I->get(lit) && !equals(derived, lit)) {
+            R->push_back(lit);
         }
     }
 }
@@ -594,16 +599,21 @@ void print_propagate(PropagatorClingo* prop, const clingo_literal_t *changes, si
 
     clingo_literal_t plit = 0 ;
     if (not wasp_b and decision_slit != 1){
-        plit = (*prop->map_slit_plit)[decision_slit][0];
+        if(prop->map_slit_plit->find(decision_slit) == prop->map_slit_plit->end()){
+            decision_slit = -1 ;
+        }else {
+            plit = (*prop->map_slit_plit)[decision_slit][0];
+        }
     }else if (wasp_b)
     {
         raise_wasp_not_implemented_exception();
     }
     
     std::string decision_literal_name ; 
-    
-    decision_slit != 1 ? decision_literal_name = get_name(prop->atomNames, plit) : decision_literal_name = "from facts" ;
-
+    if(decision_slit != -1)
+        decision_slit != 1 ? decision_literal_name = get_name(prop->atomNames, plit) : decision_literal_name = "from facts" ;
+    else
+        decision_literal_name = "non lo so";
     debugf("[", decision_literal_name,", ",dl,"] propagate ", changes_str," td: ", td);
 }
 
@@ -621,7 +631,7 @@ void print_undo(PropagatorClingo* prop, const clingo_literal_t *changes, size_t 
     else  changes_str = prop->compute_changes_str(changes, size, td) ;
 
 
-    debugf("undo ", changes_str," thread_id: ", td);
+    debugf("dl: ",dl," undo ", changes_str," thread_id: ", td);
 }
 
 clingo_literal_t max_w(const Group* g) {
@@ -821,7 +831,7 @@ int increment_f(bool derived_true, clingo_literal_t l, const std::unordered_set<
         int increment = w - mw_g;
 
         while (mw_g < weight->get(current_l)) {
-            if (std::find(current_subset_maximal.begin(), current_subset_maximal.end(), current_l) != current_subset_maximal.end()) {
+            if (current_subset_maximal.find(current_l) != current_subset_maximal.end()) {
                 increment = std::max(0, w - weight->get(current_l));
                 break;
             }
@@ -832,12 +842,59 @@ int increment_f(bool derived_true, clingo_literal_t l, const std::unordered_set<
     }
 }
 
+void remove_elements(std::vector<clingo_literal_t>& original, const std::unordered_set<clingo_literal_t>& to_remove_set) {
+ 
+    // Use erase-remove idiom to remove elements in place
+    // OLD NOT EFFICIENT
+    // auto start = start_timer();
+    // original.erase(
+    //     ,
+    //     original.end());
+
+    // auto end_old = original.end() ;
+    // auto end_new = std::remove_if(original.begin(), original.end(),
+    //                    [&to_remove_set](int element) {
+    //                        return to_remove_set.find(element) != to_remove_set.end();
+    //                    });
+    
+    // while(end_new != end_old){
+    //     original.pop_back();
+    //     ++end_new ;
+    // }
+    
+    auto original_c = original ;
+    original.clear();
+    for (size_t i = 0; i < original_c.size(); ++i)
+    {
+        clingo_literal_t lit = original_c[i];
+        if(to_remove_set.find(lit) != to_remove_set.end()){
+            original.push_back(lit);
+        }
+    }
+    
+    // size_t n = original.size() ;
+    // for (size_t i = 0; i < n; ++i)
+    // {
+    //     clingo_literal_t rlit = original[i];
+    //     if(to_remove_set.find(rlit) != to_remove_set.end()){
+    //         original[i] = original[n-1] ;
+    //         original[n-1] = rlit ; 
+    //         original.pop_back();
+    //         --n;
+    //     }
+    // }
+    
+}
+
 // Maximal subset with groups
 void maximal_subset_sum_less_than_s_with_groups(bool derived_true, const std::vector<clingo_literal_t>& literals, int s,const WeightFunction* weight, const GroupFunction* group, int head_reason, const std::unique_ptr<InterpretationFunction>& I, int max, std::unordered_set<clingo_literal_t>& current_subset_maximal) {
     int current_sum = 0;
 
+    current_subset_maximal.clear();
     for (int l : literals) {
+        // auto start = start_timer();
         int inc = increment_f(derived_true, l, current_subset_maximal, weight, group, head_reason, I, max);
+        // display_end_timer(start, "increment_f");
         if (current_sum + inc <= s) {
             current_sum += inc;
             current_subset_maximal.emplace(l);

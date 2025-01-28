@@ -1,24 +1,21 @@
 #pragma once
 #include "amosum_initializer.h"
+#include <regex>
 
-
-const std::string AmoSumInitializer::DEFAULT_LAZY = std::string("dynamic");
+const std::string AmoSumInitializer::DEFAULT_LAZY = SETTINGS::FALSE_STR;
 
 const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::vector<clingo_literal_t>& lits, AmoSumPropagator* amosum_propagator){
 
         auto start = std::chrono::high_resolution_clock::now();
         amosum_propagator->N = lits[0] + 1;
-        debugf("N: ", amosum_propagator->N);
+        // debugf("N: ", amosum_propagator->N);
         amosum_propagator->minimization = get_map(amosum_propagator->params, std::string("min_r"), std::string(Minimize::NO_MINIMIZATION)) ;
         amosum_propagator->strategy = get_map(amosum_propagator->params, std::string("strategy"), amosum_propagator->strategy);
         amosum_propagator->I.reset(new InterpretationFunction(amosum_propagator->N));
         amosum_propagator->group.reset(new GroupFunction(amosum_propagator->N));
 
-        #ifdef PRIVATE_REASON
         amosum_propagator->reason.reset(new PerfectHash<std::vector<clingo_literal_t>*> (amosum_propagator->N, nullptr));
-        #else
-        amosum_propagator->reason_trues.reset(new PerfectHash<std::vector<clingo_literal_t>*> (amosum_propagator->N, nullptr));
-        #endif
+
 
         amosum_propagator->redundant_lits.reset(new PerfectHash<std::unordered_set<clingo_literal_t>*> (amosum_propagator->N, nullptr));
         amosum_propagator->to_be_propagated.reset(new PerfectHash<bool>(amosum_propagator->N, false));
@@ -50,9 +47,9 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
     void AmoSumInitializer::common_phase(AmoSumPropagator* amosum_propagator){
         
         atomNamesString = create_atomNames_string(amosum_propagator->atomNames);
-        
+        std::map<clingo_symbol_t, clingo_literal_t> atomNamesTmp(amosum_propagator->atomNames->begin(), amosum_propagator->atomNames->end());
 
-        for(auto &[symbolic_atom, literal]: *amosum_propagator->atomNames){
+        for(auto &[symbolic_atom, literal]: atomNamesTmp){
                 
             std::string a = from_symbol_to_string(symbolic_atom);
             if (a.length() > SETTINGS::PREDICATE_GROUP.length() and a.substr(0, SETTINGS::PREDICATE_GROUP.length() + 1) == SETTINGS::PREDICATE_GROUP + "(") {
@@ -145,7 +142,7 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
         std::string ID = amosum_propagator->ID ;
         std::string lazy_param = get_map(amosum_propagator->params, std::string("lazy"), DEFAULT_LAZY) ;
         amosum_propagator->lazy_prop_activated = lazy_param != SETTINGS::FALSE_STR;
-        bool lazy_dynamic = lazy_param == "dynamic" ;
+        bool lazy_hybrid = lazy_param == SETTINGS::LAZY_HYBRID ;
 
         #ifdef CHECK_MPS
         weights_names_log(ID, generic_data_map[ID]->weights_names);
@@ -167,16 +164,20 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
                 }
 
                 Group* G = new Group(ord_l,ord_i,group_id) ;
-
-                int max_w = weight->get(m_w(G, amosum_propagator->ge));
-                int min_w = amosum_propagator->lazy_prop_activated ? weight->get(m_w(G, !amosum_propagator->ge)) : 0 ;
+                
+                clingo_literal_t ml = m_w(G, amosum_propagator->ge) ;
+                int max_w = weight->get(ml);
+                int min_w = amosum_propagator->lazy_prop_activated || !amosum_propagator->ge ? weight->get(m_w(G, !amosum_propagator->ge)) : 0 ;
 
 
                 amosum_propagator->_mps = amosum_propagator->_mps + max_w;
 
                 int diff = std::abs(max_w - min_w) ;
-                
-                if (max_diff < diff)  max_diff = diff ;
+                std::regex pattern(SETTINGS::REGEX_AUX);
+                std::string name = get_name(amosum_propagator->atomNames, ml);
+                bool is_aux = std::regex_search(name, pattern);
+                // debugf("is_aux: ",is_aux, " pattern: ", SETTINGS::REGEX_AUX, " name: ", name, " diff: ",diff);
+                if (max_diff < diff && !is_aux)  max_diff = diff ;
 
                 amosum_propagator->groups.push_back(G);
                 
@@ -198,13 +199,12 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
 
         // debugf("max_diff: ", max_diff); 
 
-        amosum_propagator->LAZY_PERC = amosum_propagator->lazy_prop_activated && lazy_param != SETTINGS::TRUE_STR && !lazy_dynamic ? std::stof(lazy_param) : amosum_propagator->LAZY_PERC ;
+        amosum_propagator->lazy_perc = amosum_propagator->lazy_prop_activated && lazy_param != SETTINGS::TRUE_STR && !lazy_hybrid ? std::stof(lazy_param) : amosum_propagator->lazy_perc ;
         amosum_propagator->lazy_condition = !amosum_propagator->lazy_prop_activated;
-        if(lazy_dynamic) amosum_propagator->LAZY_PERC = amosum_propagator->ge ? amosum_propagator->lb / static_cast<float>(amosum_propagator->lb + max_diff) :  (amosum_propagator->ub - max_diff) / static_cast<float>(amosum_propagator->ub);
-        std::string lazy_perc_str = amosum_propagator->lazy_prop_activated ? " lazy threshold " + std::to_string(amosum_propagator->LAZY_PERC) : SETTINGS::NONE_STR;
-        debugf("Starting propagator with param ",unordered_map_to_string(amosum_propagator->params), lazy_perc_str);
-
-        // debugf("Intial mps of ",ID ,"is: ", _mps);
+        if(lazy_param == SETTINGS::TRUE_STR) amosum_propagator->lazy_perc = 1 ;
+        else if (lazy_hybrid || !amosum_propagator->lazy_prop_activated) amosum_propagator->lazy_perc = amosum_propagator->ge ? amosum_propagator->lb / static_cast<float>(amosum_propagator->lb + max_diff) :  (amosum_propagator->ub - max_diff) / static_cast<float>(amosum_propagator->ub);
+        std::string lazy_perc_str = amosum_propagator->lazy_prop_activated ? " lazy threshold " + std::to_string(amosum_propagator->lazy_perc) : SETTINGS::NONE_STR;
+        debugf("Starting c propagator with param ",unordered_map_to_string(amosum_propagator->params), lazy_perc_str);
 
         // Set facts to literals starting from index 1
         amosum_propagator->facts.assign(lits.begin() + 1, lits.end());

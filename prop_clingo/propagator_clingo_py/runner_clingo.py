@@ -122,7 +122,7 @@ class RunnerClingoPython(RunnerWasp):
 
         def on_unsat(x):
             global sat
-            print("UNSAT")
+            debug("UNSAT", force_print=True)
             sat = False
 
         def on_finish(x: SolveResult):
@@ -133,10 +133,16 @@ class RunnerClingoPython(RunnerWasp):
             res = handle.wait(self.timeout_m * 60 if not self.exp else None)
         except Exception as e:
             res = "error"
-            print(e)
+            raise e
 
-    
         end_time = time.time()  # End time
+
+        iterations = 0 
+        for prop in self.propagators:
+            amosum_prop = prop.propagators[0]
+            iterations += amosum_prop.count 
+        
+        debug(f"iterations: {iterations}", force_print=True)
 
         for propagator in self.propagators:
             amosum_propagator = propagator.propagators[0]
@@ -159,6 +165,8 @@ class RunnerClingoPython(RunnerWasp):
     
     def update_maps_weights_list(self, input: AmoSumPropagator):
 
+        if not input.param.get("check_mps", False):
+            return
         id = input.ID
         maps_weights = input.weights_names
         self.maps_weights_list.append((id, maps_weights))

@@ -6,7 +6,7 @@
 #include <memory>
 #include <unordered_set>
 using vector_lit_ptr = std::vector<clingo_literal_t>* ;
-#define PRIVATE_REASON
+
 struct AmoSumPropagator
 {
     std::unordered_map<clingo_symbol_t, clingo_literal_t>* atomNames;
@@ -42,12 +42,8 @@ struct AmoSumPropagator
     std::vector<clingo_literal_t> S ;
 
     // reason common to all literals (either true or false literal)
-    #ifdef PRIVATE_REASON
     std::unique_ptr<PerfectHash<std::vector<clingo_literal_t>*>> reason  ;
-    #else
-    std::vector<clingo_literal_t> reason_falses  ;
-    std::unique_ptr<PerfectHash<std::vector<clingo_literal_t>*>> reason_trues ;
-    #endif
+
     // Redundant literals in reason of a literal l
     // it is a funtion lits -> 2^(lits)
     std::unique_ptr<PerfectHash<std::unordered_set<clingo_literal_t>*>> redundant_lits ;
@@ -78,7 +74,7 @@ struct AmoSumPropagator
     const std::vector<clingo_literal_t>* (*propagation_phase)(const Group*, AmoSumPropagator*); // Function pointer for propagation
     
     // treshold for lazy propagation activation
-    float LAZY_PERC = 0.90 ;
+    float lazy_perc = SETTINGS::NONE ;
 
     // whether the mps is violated
     bool mps_violated = false ; 
@@ -127,13 +123,8 @@ struct AmoSumPropagator
         for(int i=0; i< redundant_lits->N; ++i){
             auto ptr_set = redundant_lits->get(i);
             if (ptr_set != nullptr) delete ptr_set ;
-            #ifdef PRIVATE_REASON
             auto ptr_vec = reason->get(i);
             if (ptr_vec != nullptr) delete ptr_vec ;
-            #else
-            auto ptr_vec = reason_trues->get(i);
-            if (ptr_vec != nullptr) delete ptr_vec ;
-            #endif
         }
     }
 

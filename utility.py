@@ -7,6 +7,7 @@ import sys
 from typing import Any, List
 import sys
 from settings import *
+import time
 # import clingo 
 
 # Debug mode
@@ -181,7 +182,7 @@ def process_sys_parameters(sys_parameters):
 
         # creating the key
         key = sys_parameters[i]
-        print(f"key: {key}")
+        # print(f"key: {key}")
         res_regex = re.match(regex, key)
         if res_regex is None:
             raise Exception("Every key has to start with a dash! Ex: -id id")
@@ -198,16 +199,15 @@ def process_sys_parameters(sys_parameters):
             if res_regex is None and value not in PROPAGATORS_NAMES:
                 i += 2
                 param[key] = value
-                print(f"value: {value}")
+                # print(f"value: {value}")
                 
             else:
                 i += 1
                 param[key] = True
-                print(f"value: {True}")
+                # print(f"value: {True}")
         
         if i >= len(sys_parameters) or sys_parameters[i] in PROPAGATORS_NAMES:
             params.append((prop_type, param))
-            print(f"appending: {(prop_type, param)}")
             if i < len(sys_parameters):
                 prop_type  = sys_parameters[i] 
                 param = {}
@@ -614,6 +614,8 @@ def create_reason_falses(propagator, ge):
         return create_reason_falses_le(propagator=propagator)
 
 def create_reason_falses_ge(propagator, flipped = None):
+    if propagator.dl == 0: return 
+    
     for g in propagator.groups:
         ord_l = g.ord_l
         if propagator.true_group[g] is None:
@@ -622,35 +624,49 @@ def create_reason_falses_ge(propagator, flipped = None):
                 l = ord_l[i]
                 if propagator.weight[l] < mw_g:
                     break
-                if not propagator.I[l] and not equals(l, flipped):
-                    for lit in propagator.S:
-                        G = propagator.group[lit]
+                if propagator.I[l] == False and not equals(l, flipped):
+                    for s_lit in propagator.S:
+                        G = propagator.group[s_lit]
                         if G is None:
-                            G = propagator.group[not_(l)]
+                            G = propagator.group[not_(s_lit)]
                         if(g == G):
                             continue
-                        propagator.reason[lit].append(l) 
+                        propagator.reason[s_lit].append(l) 
         elif not equals(propagator.true_group[g], flipped):
-            for lit in propagator.S:
-                G = propagator.group[lit]
+            for s_lit in propagator.S:
+                G = propagator.group[s_lit]
                 if G is None:
-                    G = propagator.group[not_(l)]
+                    G = propagator.group[not_(s_lit)]
                 if(g == G):
                     continue
-                propagator.reason[lit].append(not_(propagator.true_group[g])) 
+                propagator.reason[s_lit].append(not_(propagator.true_group[g])) 
 
-def create_reason_falses_le(propagator):
+def create_reason_falses_le(propagator, flipped=None):
+    if propagator.dl == 0: return 
+    
     for g in propagator.groups:
+        ord_l = g.ord_l
         if propagator.true_group[g] is None:
             mw_g = propagator.weight[min_w(g)]
-            ord_l = g.ord_l
             for l in ord_l:
                 if propagator.weight[l] > mw_g:
                     break
-                R.append(l) if not propagator.I[l] is None else None
-        else:
-            R.append(not_(propagator.true_group[g]))
-    return R
+                if propagator.I[l] == False and not equals(l, flipped):
+                    for s_lit in propagator.S:
+                        G = propagator.group[s_lit]
+                        if G is None:
+                            G = propagator.group[not_(s_lit)]
+                        if(g == G):
+                            continue
+                        propagator.reason[s_lit].append(l) 
+        elif not equals(propagator.true_group[g], flipped):
+            for s_lit in propagator.S:
+                G = propagator.group[s_lit]
+                if G is None:
+                    G = propagator.group[not_(s_lit)]
+                if(g == G):
+                    continue
+                propagator.reason[s_lit].append(not_(propagator.true_group[g])) 
 
 def create_reason_true_ge(propagator, sml_g, derived, g):
     if propagator.dl == 0: return 
@@ -658,14 +674,28 @@ def create_reason_true_ge(propagator, sml_g, derived, g):
     i = g.ord_i[sml_g] if sml_g is not None else 0
     j = len(g.ord_l)
 
-    # PRIVATE_REASON logic
-   
+ 
     assert i <= j, "Index i must be less than or equal to j"
     assert derived is not None, "Derived literal must not be None"
 
     for k in range(i, j):
         lit = g.ord_l[k]
-        if not propagator.I.get(lit):
+        if propagator.I[lit] == False and not equals(derived, lit):
+            propagator.reason[derived].append(lit)
+
+
+def create_reason_true_le(propagator, sml_g, derived, g):
+    if propagator.dl == 0: return 
+
+    i = g.ord_i[sml_g] if sml_g is not None else len(g.ord_l) - 1
+    j = 0
+
+    assert i >= j, "Index i must be less than or equal to j"
+    assert derived is not None, "Derived literal must not be None"
+
+    for k in range(j, i-1, -1):
+        lit = g.ord_l[k]
+        if propagator.I[lit] == False and not equals(derived, lit):
             propagator.reason[derived].append(lit)
             
 
@@ -683,7 +713,7 @@ def is_true_in_reason(lit, group: GroupFunction):
     g = group[lit]
     return g is None
 
-def increment_f(l: int, current_subset_maximal, weight: WeightFunction, group: GroupFunction, head_reason, I: SymmetricFunction, max_b):
+def increment_f(derived_true: bool, l: int, current_subset_maximal, weight: WeightFunction, group: GroupFunction, head_reason, I: SymmetricFunction, max_b):
 
     g = group[l] 
     tr = False # true in reason
@@ -707,6 +737,7 @@ def increment_f(l: int, current_subset_maximal, weight: WeightFunction, group: G
         mw_g: int 
         head_group = group[head_reason]
         if g == head_group:
+            if not derived_true: return 0 
             sml_g, ml_g = g.update(I, max_b, update=False)
             mw_g = weight[sml_g]
         else:
@@ -726,17 +757,19 @@ def increment_f(l: int, current_subset_maximal, weight: WeightFunction, group: G
         return increment
 
 
-def maximal_subset_sum_less_than_s_with_groups(literals: List[int], s: int, weight: WeightFunction,  group: GroupFunction, head_reason, I: SymmetricFunction, max):
+def maximal_subset_sum_less_than_s_with_groups(derived_true: bool, literals: List[int], s: int, weight: WeightFunction,  group: GroupFunction, head_reason, I: SymmetricFunction, max):
 
     current_subset_maximal = []
     current_sum = 0
 
     for l in literals:
-        inc = increment_f(l, current_subset_maximal, weight, group, head_reason, I, max)
+        inc = increment_f(derived_true, l, current_subset_maximal, weight, group, head_reason, I, max)  
         if current_sum + inc <= s:
                 # debug(f"{l} has been removed from reason because inc: {inc} is not enougth to arrive above {s} with current_sum {current_sum} ")
                 current_sum += inc
                 current_subset_maximal.append(l)
+
+    
     
     return current_subset_maximal
 

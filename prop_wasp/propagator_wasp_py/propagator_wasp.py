@@ -1,6 +1,8 @@
 #!/home/s.fiorentino/miniconda3/bin/python3
 import sys
 import os
+
+from amosum_initializer import AmoSumInitializer
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from ast import Tuple
@@ -33,8 +35,9 @@ def getLiterals(*lits):
     global_literals = []
     for prop_type, param in params:
         ge, propagate_phase, choice_cons = get_propagator_variables(prop_type=prop_type)
-        propagator = AmoSumPropagator.create_propagator(atomsNames=atomNames, sys_parameters=param, propagation_phase=propagate_phase, ge=ge, choice_cons=choice_cons)
-        get_literals = propagator.getLiterals(*lits)
+        propagator = AmoSumPropagator.create_propagator(atomNames=atomNames, sys_parameters=param, propagation_phase=propagate_phase, ge=ge, choice_cons=choice_cons)
+        get_literals = AmoSumInitializer.get_instance().getLiterals(lits, propagator)
+        # get_literals = propagator.getLiterals(*lits)
         global_literals.extend(get_literals)
         propagators.append(propagator)
     return global_literals
@@ -53,10 +56,12 @@ def simplifyAtLevelZero():
 def onLiteralTrue(lit, dl):
     global propagators
     propagators[0].updated_dl(lit, dl)
-    print_propagate(propagator=propagators[0], changes=[lit], dl=dl, wasp_b=True)
-
+    print_propagate(propagator=propagators[0], changes=[lit], dl=dl, wasp_b=True, force_print=False)
+    
     global_S = []
     for propagator in propagators:
+        for l in propagator.S:
+            propagator.to_be_propagated[l] = False
         S = propagator.onLiteralTrue(lit, dl)
         if len(propagators) > 1:
             global_S.extend(S)
@@ -76,6 +81,8 @@ def getReasonForLiteral(lit):
 
 def onLiteralsUndefined(*lits) -> None:
     global propagators
-    print_undo(propagators[0], lits, 0, wasp_b=True)
+    print_undo(propagators[0], lits, 0, wasp_b=True, force_print=False)
     for propagator in propagators:
+        for lit in propagator.S:
+            propagator.to_be_propagated[lit] = False
         propagator.onLiteralsUndefined(*lits)
