@@ -172,9 +172,10 @@ const std::vector<clingo_literal_t>* AmoSumPropagator::getReasonForLiteral(const
     if(rl != nullptr && rl->size() > 0){
         removed  = true ; 
         remove_elements(R, *rl);    
+        rl->clear();
     }
 
-    // print_reason(atomNames, R, lit, false);
+    print_reason(atomNames, R, lit, false);
     return &R; 
 }
 
@@ -198,16 +199,23 @@ void AmoSumPropagator::compute_minimal_reason(const std::vector<clingo_literal_t
         auto [mps_h, sml_g, ml_g] = mps(g, l, !derived_true);
         int s = lb - mps_h - 1;
         auto rd = get_perfect_hash_with_pointer(redundant_lits.get(), l);
-
+        auto R = get_perfect_hash_with_pointer(reason.get(), l);
+        if(R == nullptr) continue ;
+        
         if (minimization == Minimize::MINIMAL) {
-            auto R = get_perfect_hash_with_pointer(reason.get(), l);
-            if(R == nullptr) continue ;
+            
             maximal_subset_sum_less_than_s_with_groups(derived_true, *R, s, weight, group.get(), l, I, ge, *rd);
             // debugf("rd size: ", rd->size());
         } else if (minimization == Minimize::CARDINALITY_MINIMAL) {
             // NOT IMPLEMENTED
         } else {
             assert(false && "Unknown minimization strategy.");
+        }
+        if(dl == 438 && l == 2522){
+            print_reason(atomNames, *R, l, true);
+            for(auto red: *rd){
+                debug("red: ", red, " name: ", get_name(atomNames, red));
+            }
         }
     }
 }

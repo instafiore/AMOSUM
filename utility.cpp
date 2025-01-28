@@ -805,21 +805,27 @@ int increment_f(bool derived_true, clingo_literal_t l, const std::unordered_set<
         tr = true;
     }
 
-    if (g->ord_l.size() <= 1) {
-        return 0;
-    }
-
+    Group* head_group = group->get(head_reason);
+    if(!derived_true)
+        head_group = group->get(not_(head_reason));
+    assert(head_group != nullptr);
     int w = weight->get(l);
-
     if (tr) {
-        int w_mw_g = g->ord_l.empty() ? w : weight->get(g->ord_l.back());
+        assert(!g->ord_l.empty());
+        int w_mw_g = weight->get(g->ord_l.back());
+        assert(g != head_group);
+        // if(!derived_true) return 999999;
+        assert(w_mw_g >= w);
         return w_mw_g - w;
     } else {
         int i = g->ord_l.size() - 1;
         int mw_g;
-        Group* head_group = group->get(head_reason);
-
+       
         if (g == head_group) {
+            
+            if(!derived_true){
+                assert(false);
+            }
             if(!derived_true) return 0 ; // by default a literal of the same group of derived not l, where l in aggregate, is redundant
             auto [sml_g, ml_g] = g->update(I, max_b, false, false, SETTINGS::NONE);
             mw_g = weight->get(sml_g);
@@ -829,7 +835,7 @@ int increment_f(bool derived_true, clingo_literal_t l, const std::unordered_set<
 
         int current_l = g->ord_l[i];
         int increment = w - mw_g;
-
+        assert(w >= mw_g);
         while (mw_g < weight->get(current_l)) {
             if (current_subset_maximal.find(current_l) != current_subset_maximal.end()) {
                 increment = std::max(0, w - weight->get(current_l));
@@ -838,6 +844,8 @@ int increment_f(bool derived_true, clingo_literal_t l, const std::unordered_set<
             if (--i <= 0) break;
             current_l = g->ord_l[i];
         }
+
+        // if(!derived_true) return 999999;
         return increment;
     }
 }
@@ -845,32 +853,32 @@ int increment_f(bool derived_true, clingo_literal_t l, const std::unordered_set<
 void remove_elements(std::vector<clingo_literal_t>& original, const std::unordered_set<clingo_literal_t>& to_remove_set) {
  
     // Use erase-remove idiom to remove elements in place
-    // OLD NOT EFFICIENT
+    // OLD NOT INEFFICIENT
     // auto start = start_timer();
     // original.erase(
     //     ,
     //     original.end());
 
-    // auto end_old = original.end() ;
-    // auto end_new = std::remove_if(original.begin(), original.end(),
-    //                    [&to_remove_set](int element) {
-    //                        return to_remove_set.find(element) != to_remove_set.end();
-    //                    });
+    auto end_old = original.end() ;
+    auto end_new = std::remove_if(original.begin(), original.end(),
+                       [&to_remove_set](int element) {
+                           return to_remove_set.find(element) != to_remove_set.end();
+                       });
     
-    // while(end_new != end_old){
-    //     original.pop_back();
-    //     ++end_new ;
-    // }
-    
-    auto original_c = original ;
-    original.clear();
-    for (size_t i = 0; i < original_c.size(); ++i)
-    {
-        clingo_literal_t lit = original_c[i];
-        if(to_remove_set.find(lit) != to_remove_set.end()){
-            original.push_back(lit);
-        }
+    while(end_new != end_old){
+        original.pop_back();
+        ++end_new ;
     }
+    
+    // auto original_c = original ;
+    // original.clear();
+    // for (size_t i = 0; i < original_c.size(); ++i)
+    // {
+    //     clingo_literal_t lit = original_c[i];
+    //     if(to_remove_set.find(lit) == to_remove_set.end()){
+    //         original.push_back(lit);
+    //     }
+    // }
     
     // size_t n = original.size() ;
     // for (size_t i = 0; i < n; ++i)
@@ -896,6 +904,9 @@ void maximal_subset_sum_less_than_s_with_groups(bool derived_true, const std::ve
         int inc = increment_f(derived_true, l, current_subset_maximal, weight, group, head_reason, I, max);
         // display_end_timer(start, "increment_f");
         if (current_sum + inc <= s) {
+            // if(l == 2772 && head_reason == 2522){
+            //     debugf("removing 2772 because its increment is: ",inc );
+            // }
             current_sum += inc;
             current_subset_maximal.emplace(l);
         }
