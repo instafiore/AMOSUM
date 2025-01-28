@@ -74,11 +74,7 @@ bool PropagatorClingo::add_clauses_propagated_lits(void *control, const std::vec
         handle_error(clingo_propagate_control_add_clause((clingo_propagate_control*) control, clause, clause_size, clingo_clause_type_learnt, &result_add_clause)) ;
 
         // propagation must return immediately, there is a conflict
-        if (not result_add_clause){ 
-            // for(int sj = si ; sj < S_plit.size(); ++sj){
-            //     clingo_literal_t plit_not_propagated = S_plit[sj];
-            //     prop->to_be_propagated->set(plit_not_propagated, false);
-            // }
+        if (not result_add_clause){
             // debugf("conflict add clause");
             return true ;
         }
@@ -93,7 +89,7 @@ bool PropagatorClingo::propagate(clingo_propagate_control_t *control, const clin
     int td; 
     dl == 0 ? td = 0 : td = clingo_propagate_control_thread_id(control) ; 
     AmoSumPropagator* prop = propagators[td];
-    // print_propagate(this, changes, size, control, dl, dl >= 5000 , false);
+    print_propagate(this, changes, size, control, dl, false, false);
 
     
     std::vector<clingo_literal_t> to_propagate;
@@ -105,25 +101,28 @@ bool PropagatorClingo::propagate(clingo_propagate_control_t *control, const clin
         for(clingo_literal_t plit: plit_list){
             const std::vector<clingo_literal_t>* S_plit = prop->onLiteralTrue(plit, dl); // handled internally 
             if(S_plit != nullptr) extend_vector(to_propagate, *S_plit);
-            if (S_plit != nullptr && add_clauses_propagated_lits(control, *S_plit, dl, false)){
-                // for(auto split: to_propagate){
-                //     prop->to_be_propagated->set(split, false);
-                // }
+            if (S_plit != nullptr && add_clauses_propagated_lits(control, *S_plit, dl, false)){ 
+                for(auto split: to_propagate){
+                    prop->to_be_propagated->set(split, false);
+                }
                 // debugf("conflict");
                 return true;
             }
                   
         }
     }
+
+    if(to_propagate.empty()) return true ;
+
     bool result_propagate;
     clingo_propagate_control_propagate(control, &result_propagate) ;
     
 
-    // propagation must return immediately, a conflict has been raised 
-    // for(auto split: to_propagate){
-    //     prop->to_be_propagated->set(split, false);
-    // }
     if (not result_propagate){ 
+        // propagation must return immediately, a conflict has been raised 
+        for(auto split: to_propagate){
+            prop->to_be_propagated->set(split, false);
+        }
         // debugf("conflict propagate");
     }   
 
@@ -177,7 +176,7 @@ void PropagatorClingo::undo(clingo_propagate_control_t *control, const clingo_li
     //     if(value == clingo_truth_value_true) debugf("slit is true");
     //     if(value == clingo_truth_value_false) debugf("slit is false");
     // }
-    // print_undo(this, changes, size, control, dl, td, dl >= 5000, false);
+    print_undo(this, changes, size, control, dl, td, false, false);
     prop->onLiteralsUndefined(plit_list, false);
 }
 

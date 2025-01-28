@@ -80,10 +80,7 @@ class PropagatorClingo(clingo.Propagator):
                 
                 if not control.add_clause(clause):
                     # propagation must return immediately, a conflict has been raised
-                    print_clause(propagator=self, clause=clause, conflict=True, force_print=False)
-                    # for sj in range(0, len(S_plit)):
-                    #     plit_not_propagated = S_plit[sj]
-                    #     prop.to_be_propagated[plit_not_propagated] = False
+                    # print_clause(propagator=self, clause=clause, conflict=True, force_print=False)
                     return True
             except Exception as e:
                 raise e
@@ -109,12 +106,14 @@ class PropagatorClingo(clingo.Propagator):
                     to_propagate.extend(S_plit)
                     # adding clauses for propagated literals S_plit
                     if self.add_clauses_propagated_lits(control=control, S_plit=S_plit, dl = dl):
-                        for slit_not_prop in to_propagate:
-                            prop.to_be_propagated[slit_not_prop] = False
+                        if prop.lazy_perc < 1:
+                            for slit_not_prop in to_propagate:
+                                prop.to_be_propagated[slit_not_prop] = False
                         return 
             
-            for slit_not_prop in to_propagate:
-                prop.to_be_propagated[slit_not_prop] = False
+            if prop.lazy_perc < 1:
+                for slit_not_prop in to_propagate:
+                    prop.to_be_propagated[slit_not_prop] = False
             control.propagate()
         except Exception as e:
             debug(e, force_print=True)

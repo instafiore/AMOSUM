@@ -43,7 +43,7 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, Am
         }
 
         
-
+        propagator->compute_minimal_reason(propagator->S);
         print_derivation(propagator->atomNames, propagator->S, false);
         return &propagator->S;
     }
@@ -94,13 +94,14 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, Am
         }
     }
 
+    print_derivation(propagator->atomNames, propagator->S, false);
     
     if (!propagator->S.empty() && propagator->dl != 0) {
         create_reason_falses_ge(propagator, SETTINGS::NONE);
+        
         propagator->compute_minimal_reason(propagator->S);
     }
 
-    // print_derivation(propagator->atomNames, propagator->S, propagator->dl >= 5000);
     
     return &propagator->S;
 }
