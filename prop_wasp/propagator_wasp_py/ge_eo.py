@@ -21,6 +21,9 @@ def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
 
     if propagator.mps_violated:
 
+        if not propagator.lazy_prop_activated:
+            return propagator.S
+
         l = propagator.current_literal
 
         propagator.S = [not_(l)]

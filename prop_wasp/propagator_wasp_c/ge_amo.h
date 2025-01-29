@@ -19,7 +19,7 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, Am
 
     if (propagator->mps_violated) {
         clingo_literal_t l = propagator->current_literal ;
-        // debugf("literal: ", get_name(propagator->atomNames, l));
+        
         assert(propagator->lazy_prop_activated);
 
         
