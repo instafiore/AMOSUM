@@ -24,8 +24,6 @@ def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
     if propagator.mps_violated:
 
         assert propagator.lazy_prop_activated
-        
-
         l = propagator.current_literal
 
         propagator.S = [not_(l)]
@@ -46,6 +44,7 @@ def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
 
    
         print_derivation(propagator.atomNames, propagator.S, force_print=False)  
+        propagator.propagated[not_(l)] = False
         return propagator.S
     
     derived_true = []

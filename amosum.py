@@ -338,8 +338,7 @@ class AmoSumPropagator:
             
             # This has been added to handle early stop in propagation phase (clingo propagation)
             
-            # updating interpretation
-            self.I[l] = None
+            # updating interpretation  
             self.reason[l] = []
             self.to_be_propagated[l] = False
             self.to_be_propagated[not_(l)] = False
@@ -347,6 +346,8 @@ class AmoSumPropagator:
 
             if self.I[l] is None:
                 continue
+
+            self.I[l] = None
 
             # updating max self.weight for self.group(l)
             G : Group = self.group[l] 
