@@ -80,7 +80,7 @@ def print_derivation(atomNames, S, force_print = False):
 
 def print_reason(atomNames, R, literal, force_print = False):
     if not force_print and not DEBUG:
-            return 
+        return 
     R_str = convert_array_to_string(name=f"Reason({get_name(atomNames=atomNames, lit=literal)})", array=R, atomNames=atomNames)
     debug(R_str, file=sys.stderr, force_print=force_print)
 

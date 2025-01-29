@@ -265,7 +265,7 @@ class AmoSumPropagator:
         current_sum_condition = not self.ge or self.current_sum < self.bound
         next_phase = current_sum_condition and (w_p != w_n or amo_condition) and self.lazy_condition 
                 
-        # debug(f"[mps: {self._mps}, id: {self.ID}] iteration: {self.count} next_phase: {next_phase} self.bound / self._mps: {self.bound / self._mps} self.lazy_condition: {self.lazy_condition} {self.lazy_perc} lazy_prop_activated: {self.lazy_prop_activated}", force_print=True)
+        # debug(f"[lit: {l} mps: {self._mps}, id: {self.ID}] iteration: {self.count} next_phase: {next_phase} self.bound / self._mps: {self.bound / self._mps} self.lazy_condition: {self.lazy_condition} {self.lazy_perc} lazy_prop_activated: {self.lazy_prop_activated}", force_print=True)
         return (next_phase,  G)
     
     def mps(self, g: Group, l: int, assumed:bool, return_literals = False):
@@ -295,8 +295,8 @@ class AmoSumPropagator:
             removed = True
             R = remove_elements(R, rl)
             self.redundant_lits[lit] = []
-        
-        # print_reason(atomNames=self.atomNames, R=R, literal=lit, force_print=False)
+
+        print_reason(atomNames=self.atomNames, R=R, literal=lit, force_print=False)
         return R 
 
     def compute_minimal_reason(self, to_minimize: List[int]):

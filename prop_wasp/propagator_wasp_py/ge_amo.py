@@ -25,10 +25,8 @@ def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
 
         assert propagator.lazy_prop_activated
         l = propagator.current_literal
-
+        propagator.reason[not_(l)] = [] if propagator.solver == AmoSumPropagator.CLINGO else [not_(propagator.current_literal)]
         propagator.S = [not_(l)]
-
-        propagator.reason[not_(l)] = []
 
         derived_true = False
         g = propagator.group[l]
@@ -42,9 +40,9 @@ def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
             sml_g = max_w(g)
             create_reason_true_ge(propagator, sml_g, not_(l), g)
 
-   
+
         print_derivation(propagator.atomNames, propagator.S, force_print=False)  
-        propagator.propagated[not_(l)] = False
+        propagator.propagated[not_(l)] = True
         return propagator.S
     
     derived_true = []
