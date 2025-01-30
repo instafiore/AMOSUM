@@ -189,6 +189,7 @@ class AmoSumPropagator:
         # print_starting_propagation(self, lit, next_phase)
         if next_phase:
             try:
+                debug("PROPAGATING", force_print=True)
                 propagated_lits = self.propagate_phase(G, self, self.atomNames)
             except Exception as e:
                 raise e

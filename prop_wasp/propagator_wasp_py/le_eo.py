@@ -19,7 +19,7 @@ Invariants:
 '''
 
 def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
-
+    
     propagator.S = []
 
     if propagator.mps_violated:
@@ -30,7 +30,7 @@ def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
         l = propagator.current_literal
 
         propagator.S = [not_(l)]
-        propagator.reason[not_(l)] = []
+        propagator.reason[not_(l)] = [] if propagator.solver == AmoSumPropagator.CLINGO else [not_(propagator.current_literal)]
 
         derived_true = False
         g = propagator.group[l]
@@ -43,7 +43,7 @@ def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
         if derived_true:
             sml_g = min_w(g)
             create_reason_true_le(propagator, sml_g, not_(l), g)
-
+        propagator.propagated[not_(l)] = True
         return propagator.S
 
     for g in propagator.groups:

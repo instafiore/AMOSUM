@@ -18,9 +18,9 @@ Invariants:
 '''
 
 def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
-
+       
     propagator.S = []
-
+    
     if propagator.mps_violated:
 
         assert propagator.lazy_prop_activated
