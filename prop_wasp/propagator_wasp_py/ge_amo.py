@@ -65,7 +65,7 @@ def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
                 propagator.to_be_propagated[ml_g] = True
                 propagator.S.append(ml_g)
                 derived_true.append(ml_g)
-                propagator.reason[not_(l)] = [] if propagator.solver == AmoSumPropagator.CLINGO else [not_(propagator.current_literal)]
+                propagator.reason[ml_g] = [] if propagator.solver == AmoSumPropagator.CLINGO else [not_(propagator.current_literal)]
                 create_reason_true_ge(propagator, sml_g, ml_g, g)
                 propagator.propagated[ml_g] = True
             
