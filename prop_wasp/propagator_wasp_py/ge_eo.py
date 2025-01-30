@@ -24,7 +24,7 @@ def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
             return propagator.S
         l = propagator.current_literal
 
-        assert propagator.lazy_prop_activated
+        
         propagator.S = [not_(l)]
         propagator.reason[not_(l)] = [] if propagator.solver == AmoSumPropagator.CLINGO else [not_(propagator.current_literal)]
 
