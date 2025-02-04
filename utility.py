@@ -524,7 +524,7 @@ class PerfectSet(PerfectHash):
     
     def __setitem__(self, lit, value) -> None:
         if value == True: super().__setitem__(lit, self.count)
-        elif value == True: super().__setitem__(lit, self.count-1)
+        elif value == False: super().__setitem__(lit, self.count-1)
         else: assert False
 
     def clear(self): self.count+=1
