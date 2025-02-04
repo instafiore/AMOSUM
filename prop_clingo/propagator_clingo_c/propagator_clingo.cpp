@@ -58,7 +58,6 @@ bool PropagatorClingo::add_clauses_propagated_lits(void *control, const std::vec
     AmoSumPropagator* prop = propagators[td];
     for(int si = 0 ; si < S_plit.size();  ++si){
         clingo_literal_t plit = S_plit[si];
-        // to_propagate.push_back(plit);
         const std::vector<clingo_literal_t>* R_plit = dl > 0 ? prop->getReasonForLiteral(plit) : nullptr;
         size_t clause_size = (dl > 0 ? R_plit->size() : 0) + 1 ;
         clingo_literal_t* clause = clause_clingo;
@@ -110,9 +109,7 @@ bool PropagatorClingo::propagate(clingo_propagate_control_t *control, const clin
     AmoSumPropagator* prop = propagators[td];
     print_propagate(this, changes, size, control, dl, false, false);
 
-    
-    
-    // to_propagate.clear();
+
     for (size_t i = 0; i < size; i++)
     {
         clingo_literal_t slit = changes[i];
@@ -127,19 +124,6 @@ bool PropagatorClingo::propagate(clingo_propagate_control_t *control, const clin
                   
         }
     }
-
-    // if(to_propagate.empty()) return true ;
-
-    // bool result_propagate;
-    // clingo_propagate_control_propagate(control, &result_propagate) ;
-    
-    // if (!result_propagate){ 
-    //     // propagation must return immediately, a conflict has been raised 
-    //     for(auto split: to_propagate){
-    //         prop->to_be_propagated->set(split, false);
-    //     }
-    //     // debugf("conflict propagate");
-    // }   
 
     return true;
     
