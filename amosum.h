@@ -95,7 +95,8 @@ struct AmoSumPropagator
     int _mps;    // max/min possible sum
     int ub;      // upper bound
     int bound = SETTINGS::NONE ; // either lb or ub depending on ge
-    std::unique_ptr<PerfectHash<bool>> to_be_propagated ;
+    // std::unique_ptr<PerfectHash<bool>> to_be_propagated ;
+    std::unique_ptr<PerfectSet> to_be_propagated ;
 
     std::string solver; 
     static constexpr const char* CLINGO = "clingo";

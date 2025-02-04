@@ -224,7 +224,7 @@ void AmoSumPropagator::compute_minimal_reason(const std::vector<clingo_literal_t
 
 void AmoSumPropagator::onLiteralsUndefined(const std::vector<clingo_literal_t>& lits, bool wasp = true) {
     int start = wasp ? 1 : 0;
-
+    to_be_propagated->clear();
     for (size_t i = start; i < lits.size(); ++i) {
         clingo_literal_t l = lits[i];
 

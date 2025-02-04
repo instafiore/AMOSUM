@@ -189,10 +189,36 @@ public:
 
 class AggregateFunction: public PerfectHash<bool>{
 public:
-    AggregateFunction(size_t N): PerfectHash(N, false){}
+    AggregateFunction(int N): PerfectHash(N, false){}
+};
+
+class PerfectSet: public PerfectHash<int>{
+private:
+    int cont = 0 ;
+public:
+    PerfectSet(int N): PerfectHash(N, -1){}
+
+    int get(int key) const override{
+        int value = PerfectHash::get(key);
+        bool res = value == cont;
+        // debugf("value: ",value, " cont: ", cont);
+        // assert(!res);
+        return res;
+    }
+
+    void set(const int& key, const int& value) override{
+        // debugf("inserting with value ", value);
+        // assert(value != true);
+        if(value == true) PerfectHash::set(key, cont);
+        else if(value == false) PerfectHash::set(key, cont-1);
+        else assert(false) ;
+        // debugf("Inserted value: ",PerfectHash::get(key));
+    }
+
+    inline constexpr void clear(){ ++cont ; }
 };
 
 class GroupFunction: public PerfectHash<Group*>{
 public:
-    GroupFunction(size_t N): PerfectHash(N, nullptr){}
+    GroupFunction(int N): PerfectHash(N, nullptr){}
 };
