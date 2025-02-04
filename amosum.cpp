@@ -237,8 +237,8 @@ void AmoSumPropagator::onLiteralsUndefined(const std::vector<clingo_literal_t>& 
 
         // Update interpretation
         
-        to_be_propagated->set(l, false);
-        to_be_propagated->set(not_(l), false);
+        // to_be_propagated->set(l, false);
+        // to_be_propagated->set(not_(l), false);
 
         if (I->get(l) == SETTINGS::NONE) {
             continue;

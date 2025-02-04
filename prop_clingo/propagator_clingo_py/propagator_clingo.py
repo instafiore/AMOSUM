@@ -80,7 +80,15 @@ class PropagatorClingo(clingo.Propagator):
                 
                 if not control.add_clause(clause):
                     # propagation must return immediately, a conflict has been raised
-                    # print_clause(propagator=self, clause=clause, conflict=True, force_print=False)
+                    for sj in range(si, len(S_plit)):
+                        slit_not_prop = S_plit[sj]
+                        prop.to_be_propagated[slit_not_prop] = False
+                    return True
+                
+                if not control.propagate():
+                    for sj in range(si, len(S_plit)):
+                        slit_not_prop = S_plit[sj]
+                        prop.to_be_propagated[slit_not_prop] = False
                     return True
             except Exception as e:
                 raise e
@@ -94,7 +102,7 @@ class PropagatorClingo(clingo.Propagator):
             prop = self.propagators[td]
             
             # print_propagate(self, changes=changes, control=control, dl=dl, force_print=True)
-            to_propagate = []
+
             for ci in range(len(changes)):
                 slit = changes[ci]
                 plit_list = self.map_slit_plit_watched[slit]
@@ -103,16 +111,11 @@ class PropagatorClingo(clingo.Propagator):
                     S_plit = []
                     # propagating program literal
                     S_plit = prop.onLiteralTrue(plit, dl)
-                    to_propagate.extend(S_plit)
                     # adding clauses for propagated literals S_plit
                     if self.add_clauses_propagated_lits(control=control, S_plit=S_plit, dl = dl):
-                        for slit_not_prop in to_propagate:
-                            prop.to_be_propagated[slit_not_prop] = False
                         return 
             
-            if not control.propagate():
-                for slit_not_prop in to_propagate:
-                    prop.to_be_propagated[slit_not_prop] = False
+            
         except Exception as e:
             debug(e, force_print=True)
             tb = e.__traceback__

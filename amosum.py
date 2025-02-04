@@ -114,7 +114,8 @@ class AmoSumPropagator:
     S : List[int] = []
 
     # given a specific literal if it has been propagated but not already processed (onLiteralTrue called)
-    to_be_propagated : PerfectHash
+    # to_be_propagated : PerfectHash
+    to_be_propagated : PerfectSet
 
     # SUPPORTED SOLVERS
     WASP = 1
@@ -329,6 +330,7 @@ class AmoSumPropagator:
 
     def onLiteralsUndefined(self, *lits, wasp: bool = True) -> None:
         
+        self.to_be_propagated.clear()
         for i in range(1 if wasp else 0,len(lits)):
             l = lits[i]
             if not self.is_in_aggregate(l):
@@ -340,8 +342,8 @@ class AmoSumPropagator:
             
             # updating interpretation  
             self.reason[l] = []
-            self.to_be_propagated[l] = False
-            self.to_be_propagated[not_(l)] = False
+            # self.to_be_propagated[l] = False
+            # self.to_be_propagated[not_(l)] = False
             
 
             if self.I[l] is None:

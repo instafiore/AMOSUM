@@ -510,6 +510,26 @@ class PerfectHash:
 class AggregateFunction(PerfectHash):
     pass
 
+class PerfectSet(PerfectHash):
+    
+    def __init__(self, N):
+        super().__init__(N, -1)
+        self.count = 0
+
+
+    def __getitem__(self, lit: int) -> Any:
+        value = super().__getitem__(lit)
+        res = value == self.count
+        return res
+    
+    def __setitem__(self, lit, value) -> None:
+        if value == True: super().__setitem__(lit, self.count)
+        elif value == True: super().__setitem__(lit, self.count-1)
+        else: assert False
+
+    def clear(self): self.count+=1
+    
+
 class GroupFunction(PerfectHash):
     
     def __getitem__(self, lit: int) -> Group:
