@@ -46,7 +46,17 @@ bool PropagatorClingo::init(clingo_propagate_init_t *_init){
         return true; 
     }// inconsistent
 
+    to_propagate.clear();
     add_clauses_propagated_lits(_init, S_plit, 0, true);
+    if(to_propagate.empty()) return true ;
+
+    bool result_propagate;
+    clingo_propagate_init_propagate(_init, &result_propagate) ;
+    
+    if (!result_propagate){ // inconsistent
+    }
+
+    
     return true ;
 }
 
