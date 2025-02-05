@@ -86,10 +86,11 @@ struct AmoSumPropagator
 
     // whether is inconsistent or not at level 0
     bool inconsistent_at_level_0 ;
-
-  
     std::vector<clingo_literal_t> groups_literals ;
 
+    clingo_propagate_control_t *control = nullptr;
+    // inverse of map_slit_plit
+    std::unordered_map<clingo_literal_t, clingo_literal_t>* map_plit_slit ;
 
     int lb;      // lower bound
     int _mps;    // max/min possible sum

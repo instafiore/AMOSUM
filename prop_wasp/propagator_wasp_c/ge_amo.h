@@ -49,27 +49,34 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, Am
     }
 
     std::vector<clingo_literal_t> derived_true ;
+    const clingo_assignment_t *assignment = clingo_propagate_control_assignment(propagator->control);
     for (Group* g : propagator->groups) {
         if (g == G || propagator->true_group->get(g) != SETTINGS::NONE) continue;
         int ml_g = max_w(g);
         if (ml_g == SETTINGS::NONE) continue;
 
-        if(propagator->to_be_propagated->get(ml_g)) continue ;
+        bool istrue ;
+        if(propagator->solver == AmoSumPropagator::CLINGO){
+            clingo_literal_t slit = (*propagator->map_plit_slit)[ml_g];
+            clingo_assignment_is_true(assignment, slit, &istrue);
+        }else{
+            istrue = propagator->to_be_propagated->get(ml_g);
+        }
+
+        if(istrue) continue ;
 
         auto [mps_h, sml_g, ml_g_res] = propagator->mps(g, ml_g, false);
         
         bool propagate_to_true = false;
         if (mps_h < propagator->lb) {
             
-            if(!propagator->to_be_propagated->get(ml_g_res)) {
-                propagator->to_be_propagated->set(ml_g_res, true);
-                propagator->S.push_back(ml_g_res);
-                derived_true.push_back(ml_g_res);
-                auto R = get_perfect_hash_with_pointer(propagator->reason.get(), ml_g_res);
-                R->clear();
-                create_reason_true_ge(propagator, sml_g, ml_g, g);
-            }
-
+            propagator->to_be_propagated->set(ml_g_res, true);
+            propagator->S.push_back(ml_g_res);
+            derived_true.push_back(ml_g_res);
+            auto R = get_perfect_hash_with_pointer(propagator->reason.get(), ml_g_res);
+            R->clear();
+            create_reason_true_ge(propagator, sml_g, ml_g, g);
+            
             propagate_to_true = true;
             
         }
@@ -79,7 +86,15 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, Am
                 if (propagator->I->get(l) == SETTINGS::NONE) {
                     if (std::get<0>(propagator->mps(g, l, true)) < propagator->lb) {
                         
-                        if(!propagator->to_be_propagated->get(not_(l))) {
+                        bool istrue ;
+                        if(propagator->solver == AmoSumPropagator::CLINGO){
+                            clingo_literal_t slit = (*propagator->map_plit_slit)[not_(l)];
+                            clingo_assignment_is_true(assignment, slit, &istrue);
+                        }else{
+                            istrue = propagator->to_be_propagated->get(not_(l));
+                        }
+
+                        if(!istrue) {
                             propagator->to_be_propagated->set(not_(l), true);
                             propagator->S.push_back(not_(l));
                             auto R = get_perfect_hash_with_pointer(propagator->reason.get(), not_(l));

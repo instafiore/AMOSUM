@@ -25,6 +25,7 @@ public:
     bool ge;
     std::string choice_cons;
     std::string solver;
+    
 
     // This is a map for mapping each solver literal (slit) to its program literal(s) (plit).
     // Can happend that some solver literal has more than one program literal
@@ -34,7 +35,7 @@ public:
     std::unordered_map<clingo_literal_t, std::vector<clingo_literal_t>> map_slit_plit_watched ;
 
     // inverse of map_slit_plit
-    std::unordered_map<clingo_literal_t, clingo_literal_t>* map_plit_slit ;
+    std::unordered_map<clingo_literal_t, clingo_literal_t>* map_plit_slit = nullptr ;
 
     clingo_literal_t* clause_clingo ;
 

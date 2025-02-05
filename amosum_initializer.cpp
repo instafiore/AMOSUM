@@ -18,7 +18,6 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
 
 
         amosum_propagator->redundant_lits.reset(new PerfectHash<std::unordered_set<clingo_literal_t>*> (amosum_propagator->N, nullptr));
-        // amosum_propagator->to_be_propagated.reset(new PerfectHash<bool>(amosum_propagator->N, false));
         amosum_propagator->to_be_propagated.reset(new PerfectSet(amosum_propagator->N));
         amosum_propagator->_mps = 0;
         amosum_propagator->ID = get_map(amosum_propagator->params, std::string("id"), std::string("0"));

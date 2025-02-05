@@ -17,9 +17,11 @@ bool PropagatorClingo::init(clingo_propagate_init_t *_init){
 
     PropagatorClingoInitializer::get_instance()->init(_init, *this);
 
-    AmoSumPropagator* propagator = new AmoSumPropagator(atomNames, param, propagation_phase, ge, choice_cons, solver = AmoSumPropagator::CLINGO);
-    for (size_t i = 0; i < PropagatorClingoInitializer::get_instance()->nt; i++) this->propagators.push_back(propagator);
-
+    for (size_t i = 0; i < PropagatorClingoInitializer::get_instance()->nt; i++){
+        AmoSumPropagator* propagator = new AmoSumPropagator(atomNames, param, propagation_phase, ge, choice_cons, solver = AmoSumPropagator::CLINGO);
+        propagator->map_plit_slit = map_plit_slit ;        
+        this->propagators.push_back(propagator);
+    }
     std::vector<clingo_literal_t> to_watch_plit;
 
     for (size_t i = 0; i < PropagatorClingoInitializer::get_instance()->nt; i++) to_watch_plit = AmoSumInitializer::get_instance()->getLiterals(*PropagatorClingoInitializer::get_instance()->lits, this->propagators[i]) ;
@@ -101,12 +103,12 @@ bool PropagatorClingo::add_clauses_propagated_lits(void *control, const std::vec
 }   
 
 bool PropagatorClingo::propagate(clingo_propagate_control_t *control, const clingo_literal_t *changes, size_t size){
-
     const clingo_assignment_t *assignment = clingo_propagate_control_assignment(control);
     int dl = clingo_assignment_decision_level(assignment);
     int td; 
     dl == 0 ? td = 0 : td = clingo_propagate_control_thread_id(control) ; 
     AmoSumPropagator* prop = propagators[td];
+    prop->control = control ;
     print_propagate(this, changes, size, control, dl, false, false);
 
 

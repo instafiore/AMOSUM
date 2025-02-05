@@ -61,7 +61,6 @@ class AmoSumInitializer:
         amosum_propagator.group = GroupFunction(amosum_propagator.N)
         amosum_propagator.propagated = SymmetricFunction(amosum_propagator.N)
         amosum_propagator.aggregate = AggregateFunction(amosum_propagator.N, False)
-        # amosum_propagator.to_be_propagated = PerfectHash(amosum_propagator.N, False)
         amosum_propagator.to_be_propagated = PerfectSet(amosum_propagator.N)
         amosum_propagator.reason = PerfectHash(amosum_propagator.N, [])
         amosum_propagator.redundant_lits = PerfectHash(amosum_propagator.N, [])
