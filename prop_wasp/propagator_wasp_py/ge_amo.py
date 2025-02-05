@@ -55,19 +55,19 @@ def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
  
         if ml_g is None:
             continue
-
-        if propagator.to_be_propagated[ml_g]: continue 
+        
+        istrue = propagator.to_be_propagated[ml_g] if propagator.solver == AmoSumPropagator.WASP else propagator.is_true(ml_g)
+        if istrue: continue 
         
         mps, sml_g, ml_g = propagator.mps(g, ml_g, assumed=False, return_literals=True)
         propagate_to_true = False
         if mps < propagator.lb:
-            if not propagator.to_be_propagated[ml_g]:
-                propagator.to_be_propagated[ml_g] = True
-                propagator.S.append(ml_g)
-                derived_true.append(ml_g)
-                propagator.reason[ml_g] = [] if propagator.solver == AmoSumPropagator.CLINGO else [not_(propagator.current_literal)]
-                create_reason_true_ge(propagator, sml_g, ml_g, g)
-                propagator.propagated[ml_g] = True
+            propagator.to_be_propagated[ml_g] = True
+            propagator.S.append(ml_g)
+            derived_true.append(ml_g)
+            propagator.reason[ml_g] = [] if propagator.solver == AmoSumPropagator.CLINGO else [not_(propagator.current_literal)]
+            create_reason_true_ge(propagator, sml_g, ml_g, g)
+            propagator.propagated[ml_g] = True
             
             propagate_to_true = True
         
@@ -76,7 +76,8 @@ def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
             for l in g.ord_l:
                 if propagator.I[l] is None:
                     if propagator.mps(g, l, assumed=True) < propagator.lb:
-                        if not propagator.to_be_propagated[not_(l)]:
+                        istrue = propagator.to_be_propagated[not_(l)] if propagator.solver == AmoSumPropagator.WASP else propagator.is_true(not_(l))
+                        if not istrue:
                             propagator.to_be_propagated[not_(l)] = True
                             propagator.S.append(not_(l))
                             propagator.reason[not_(l)] = [] if propagator.solver == AmoSumPropagator.CLINGO else [not_(propagator.current_literal)]

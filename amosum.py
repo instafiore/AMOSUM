@@ -2,8 +2,7 @@ import json
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-from ast import Tuple
-from typing import Callable, List
+from typing import Callable, List, Optional, Dict
 from utility import *
 import prop_wasp.propagator_wasp_py.wasp as wasp
 import re
@@ -11,6 +10,7 @@ import settings
 from settings import *
 import time
 import traceback
+import clingo
 
 class AmoSumPropagator:
 
@@ -114,8 +114,11 @@ class AmoSumPropagator:
     S : List[int] = []
 
     # given a specific literal if it has been propagated but not already processed (onLiteralTrue called)
-    # to_be_propagated : PerfectHash
     to_be_propagated : PerfectSet
+
+    # Clingo 
+    control : clingo.PropagateControl
+    map_plit_slit : Optional[Dict[int, int]]
 
     # SUPPORTED SOLVERS
     WASP = 1
@@ -342,8 +345,8 @@ class AmoSumPropagator:
             
             # updating interpretation  
             self.reason[l] = []
-            # self.to_be_propagated[l] = False
-            # self.to_be_propagated[not_(l)] = False
+            self.to_be_propagated[l] = False
+            self.to_be_propagated[not_(l)] = False
             
 
             if self.I[l] is None:
@@ -475,3 +478,30 @@ class AmoSumPropagator:
 
     def is_in_aggregate(self, l):
         return self.aggregate[l] or self.aggregate[not_(l)]
+    
+    def is_true(self, l: int):
+        assignment = self.control.assignment
+
+        if self.solver == AmoSumPropagator.CLINGO:
+            slit = self.map_plit_slit[l]  
+            return assignment.is_true(slit)  
+        else:
+            raise NotImplementedError("Solver type not implemented")
+
+    def is_false(self, l: int):
+        assignment = self.control.assignment  
+
+        if self.solver == AmoSumPropagator.CLINGO:
+            slit = self.map_plit_slit[l] 
+            return assignment.is_false(slit) 
+        else:
+            raise NotImplementedError("Solver type not implemented")
+
+    def is_undef(self, l: int):
+        assignment = self.control.assignment  
+
+        if self.solver == AmoSumPropagator.CLINGO:
+            slit = self.map_plit_slit[l]  
+            return assignment.is_free(slit) 
+        else:
+            raise NotImplementedError("Solver type not implemented")

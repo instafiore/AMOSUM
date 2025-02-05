@@ -25,10 +25,8 @@ bool PropagatorClingo::init(clingo_propagate_init_t *_init){
     std::vector<clingo_literal_t> to_watch_plit;
 
     for (size_t i = 0; i < PropagatorClingoInitializer::get_instance()->nt; i++) to_watch_plit = AmoSumInitializer::get_instance()->getLiterals(*PropagatorClingoInitializer::get_instance()->lits, this->propagators[i]) ;
-    // for (size_t i = 0; i < PropagatorClingoInitializer::get_instance()->nt; i++) to_watch_plit = this->propagators[i]->getLiterals(*PropagatorClingoInitializer::get_instance()->lits) ;
-
+    
     size_t max_clause_size = this->propagators[0]->N;
-    // debugf("max_clause_size: ",max_clause_size);
     clause_clingo = new clingo_literal_t[max_clause_size];
 
     for(clingo_literal_t plit: to_watch_plit){
@@ -77,10 +75,6 @@ bool PropagatorClingo::add_clauses_propagated_lits(void *control, const std::vec
 
         // propagation must return immediately, there is a conflict
         if (not result_add_clause){
-            for (size_t sj = si; sj < S_plit.size(); ++sj){
-                clingo_literal_t plit = S_plit[sj];
-                prop->to_be_propagated->set(plit, false);
-            }
             // debugf("conflict add clause");
             return true ;
         }
@@ -92,10 +86,6 @@ bool PropagatorClingo::add_clauses_propagated_lits(void *control, const std::vec
         
         if (!result_propagate){ 
             // propagation must return immediately, a conflict has been raised 
-            for (size_t sj = si; sj < S_plit.size(); ++sj){
-                clingo_literal_t plit = S_plit[sj];
-                prop->to_be_propagated->set(plit, false);
-            }
             return true ;
         }   
     }

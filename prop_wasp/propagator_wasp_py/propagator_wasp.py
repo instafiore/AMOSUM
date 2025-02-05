@@ -60,8 +60,6 @@ def onLiteralTrue(lit, dl):
     
     global_S = []
     for propagator in propagators:
-        for l in propagator.S:
-            propagator.to_be_propagated[l] = False
         S = propagator.onLiteralTrue(lit, dl)
         if len(propagators) > 1:
             global_S.extend(S)
@@ -83,6 +81,4 @@ def onLiteralsUndefined(*lits) -> None:
     global propagators
     print_undo(propagators[0], lits, 0, wasp_b=True, force_print=False)
     for propagator in propagators:
-        for lit in propagator.S:
-            propagator.to_be_propagated[lit] = False
         propagator.onLiteralsUndefined(*lits)

@@ -96,9 +96,7 @@ struct AmoSumPropagator
     int _mps;    // max/min possible sum
     int ub;      // upper bound
     int bound = SETTINGS::NONE ; // either lb or ub depending on ge
-    // std::unique_ptr<PerfectHash<bool>> to_be_propagated ;
-    std::unique_ptr<PerfectSet> to_be_propagated ;
-
+    
     std::string solver; 
     static constexpr const char* CLINGO = "clingo";
     static constexpr const char* WASP = "wasp";
@@ -146,6 +144,9 @@ struct AmoSumPropagator
 
     void add_redundant_lits(clingo_literal_t l, std::vector<clingo_literal_t> redundant_lits_vec);
     void add_redundant_lit(clingo_literal_t l, clingo_literal_t redundant_l);
+    bool is_true(clingo_literal_t l);
+    bool is_false(clingo_literal_t l);
+    bool is_undef(clingo_literal_t l);
 };
 
 

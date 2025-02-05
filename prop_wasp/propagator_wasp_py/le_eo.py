@@ -53,7 +53,8 @@ def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
         for l in reversed(g.ord_l):
             if propagator.I[l] is None:
                 if propagator.mps(g, l, assumed=True) > propagator.ub:
-                    if not propagator.to_be_propagated[not_(l)]:
+                    istrue = propagator.to_be_propagated[not_(l)] if propagator.solver == AmoSumPropagator.WASP else propagator.is_true(not_(l))
+                    if not istrue:
                         propagator.to_be_propagated[not_(l)] = True
                         propagator.S.append(not_(l))
                         propagator.reason[not_(l)] = [] if propagator.solver == AmoSumPropagator.CLINGO else [not_(propagator.current_literal)]

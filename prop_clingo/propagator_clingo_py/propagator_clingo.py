@@ -32,12 +32,15 @@ class PropagatorClingo(clingo.Propagator):
     def init(self, _init: clingo.PropagateInit) -> None:
         PropagatorClingoInitializer.get_instance().init(_init, self)
 
-        self.propagators = [amosum.AmoSumPropagator(atomNames=self.atomNames, sys_parameters=self.sys_parameters,
-                                      propagation_phase=self.propagation_phase, ge=self.ge, choice_cons=self.choice_cons, solver=AmoSumPropagator.CLINGO) for i in range(PropagatorClingoInitializer.get_instance().nt)]
+        self.propagators = []
+        for i in range(PropagatorClingoInitializer.get_instance().nt):
+                propagator = amosum.AmoSumPropagator(atomNames=self.atomNames, sys_parameters=self.sys_parameters,
+                                      propagation_phase=self.propagation_phase, ge=self.ge, choice_cons=self.choice_cons, solver=AmoSumPropagator.CLINGO)
+                propagator.map_plit_slit = self.map_plit_slit
+                self.propagators.append(propagator)
 
         for i in range(PropagatorClingoInitializer.get_instance().nt): to_watch_plit = AmoSumInitializer.get_instance().getLiterals(PropagatorClingoInitializer.get_instance().lits, self.propagators[i])
-        # for i in range(PropagatorClingoInitializer.get_instance().nt): to_watch_plit = self.propagators[i].getLiterals(*PropagatorClingoInitializer.get_instance().lits)
-
+        
         # arrived here 
         map_slit_plit_watched = {}
         for plit in to_watch_plit:
@@ -80,15 +83,9 @@ class PropagatorClingo(clingo.Propagator):
                 
                 if not control.add_clause(clause):
                     # propagation must return immediately, a conflict has been raised
-                    for sj in range(si, len(S_plit)):
-                        slit_not_prop = S_plit[sj]
-                        prop.to_be_propagated[slit_not_prop] = False
                     return True
                 
                 if not control.propagate():
-                    for sj in range(si, len(S_plit)):
-                        slit_not_prop = S_plit[sj]
-                        prop.to_be_propagated[slit_not_prop] = False
                     return True
             except Exception as e:
                 raise e
@@ -100,7 +97,7 @@ class PropagatorClingo(clingo.Propagator):
             dl = control.assignment.decision_level
             td = 0 if dl == 0 else control.thread_id
             prop = self.propagators[td]
-            
+            prop.control = control
             # print_propagate(self, changes=changes, control=control, dl=dl, force_print=True)
 
             for ci in range(len(changes)):

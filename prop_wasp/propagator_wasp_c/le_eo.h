@@ -58,8 +58,7 @@ const std::vector<clingo_literal_t>* propagation_phase_le_eo(const Group* G, Amo
             if (propagator->I->get(l) == SETTINGS::NONE) {
                 if (std::get<0>(propagator->mps(g, l, true)) > propagator->ub) {
                     // Infer l as false
-                    if (!propagator->to_be_propagated->get(not_(l))) {
-                        propagator->to_be_propagated->set(not_(l), true);
+                    if (!propagator->is_true(not_(l))) {
                         propagator->S.push_back(not_(l));
                         auto R = get_perfect_hash_with_pointer(propagator->reason.get(), not_(l));
                         R->clear();

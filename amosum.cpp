@@ -91,7 +91,6 @@ std::pair<bool, Group*> AmoSumPropagator::update_phase(clingo_literal_t l, int d
         bool amo_condition = false;
      
         if (aggregate->get(l)) {
-            to_be_propagated->set(l, false);
             G = group->get(l);
             G->decrease_und();
             true_group->set(G,l);
@@ -100,7 +99,6 @@ std::pair<bool, Group*> AmoSumPropagator::update_phase(clingo_literal_t l, int d
             tg = true;
             current_sum += w_n;
         } else if (aggregate->get(not_(l))) {
-            to_be_propagated->set(not_(l), false);
             G = group->get(not_(l));
             G->decrease_und();
             auto [new_lit, prev] = G->update(I, ge, false, false, l);
@@ -224,7 +222,7 @@ void AmoSumPropagator::compute_minimal_reason(const std::vector<clingo_literal_t
 
 void AmoSumPropagator::onLiteralsUndefined(const std::vector<clingo_literal_t>& lits, bool wasp = true) {
     int start = wasp ? 1 : 0;
-    // to_be_propagated->clear();
+
     for (size_t i = start; i < lits.size(); ++i) {
         clingo_literal_t l = lits[i];
 
@@ -236,10 +234,6 @@ void AmoSumPropagator::onLiteralsUndefined(const std::vector<clingo_literal_t>& 
         // Handle early stop in propagation phase
 
         // Update interpretation
-        
-        // to_be_propagated->set(l, false);
-        // to_be_propagated->set(not_(l), false);
-
         if (I->get(l) == SETTINGS::NONE) {
             continue;
         }
@@ -333,4 +327,34 @@ void AmoSumPropagator::add_redundant_lits(clingo_literal_t l, std::vector<clingo
 void AmoSumPropagator::add_redundant_lit(clingo_literal_t l, clingo_literal_t redundant_l){
     auto rd = get_perfect_hash_with_pointer(redundant_lits.get(), l);
     rd->emplace(redundant_l);
+}
+
+bool AmoSumPropagator::is_true(clingo_literal_t l){
+    bool res ;
+    const clingo_assignment_t *assignment = clingo_propagate_control_assignment(control);
+    if(solver == AmoSumPropagator::CLINGO){
+        clingo_literal_t slit = (*map_plit_slit)[l];
+        clingo_assignment_is_true(assignment, slit, &res);
+    }else{
+        // NOT IMPLEMENTED
+        assert(false);
+    }
+    return res ;
+}
+
+bool AmoSumPropagator::is_false(clingo_literal_t l){
+    bool res ;
+    const clingo_assignment_t *assignment = clingo_propagate_control_assignment(control);
+    if(solver == AmoSumPropagator::CLINGO){
+        clingo_literal_t slit = (*map_plit_slit)[l];
+        clingo_assignment_is_false(assignment, slit, &res);
+    }else{
+        // NOT IMPLEMENTED
+        assert(false);
+    }
+    return res ;
+}
+
+bool AmoSumPropagator::is_undef(clingo_literal_t l){
+    return !is_false(l) && !is_true(l) ;
 }

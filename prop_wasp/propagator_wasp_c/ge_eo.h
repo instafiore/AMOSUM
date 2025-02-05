@@ -40,11 +40,11 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_eo(const Group* G, Amo
         }
 
         propagator->compute_minimal_reason(propagator->S);
-        print_derivation(propagator->atomNames, propagator->S, false);
+        // print_derivation(propagator->atomNames, propagator->S, false);
         return &propagator->S;
     }
 
-    std::vector<clingo_literal_t> derived_true ;
+    const clingo_assignment_t *assignment = clingo_propagate_control_assignment(propagator->control);
     for (Group* g : propagator->groups) {
         if (g == G || propagator->true_group->get(g) != SETTINGS::NONE) continue;
         int ml_g = max_w(g);
@@ -55,8 +55,7 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_eo(const Group* G, Amo
             if (propagator->I->get(l) == SETTINGS::NONE) {
                 if (std::get<0>(propagator->mps(g, l, true)) < propagator->lb) {
                     
-                    if(!propagator->to_be_propagated->get(not_(l))) {
-                        propagator->to_be_propagated->set(not_(l), true);
+                    if(!propagator->is_true(not_(l))) {
                         propagator->S.push_back(not_(l));
                         auto R = get_perfect_hash_with_pointer(propagator->reason.get(), not_(l));
                         R->clear();
@@ -76,7 +75,7 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_eo(const Group* G, Amo
         propagator->compute_minimal_reason(propagator->S);
     }
 
-    print_derivation(propagator->atomNames, propagator->S, false);
+    // print_derivation(propagator->atomNames, propagator->S, false);
     
     return &propagator->S;
 }
