@@ -307,6 +307,8 @@ class RunnerWasp:
                 encoding = self.enc if self.enc else encoding
                 answersets, time = self.run_instance(instance, encoding=encoding)
                 self.print_ans(answer_sets=answersets, time=time)
+                if(len(answersets) == 0): exit(20)
+                else: exit(10)
 
 
     def run_instance(self, instance, encoding = None):
