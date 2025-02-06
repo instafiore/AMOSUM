@@ -7,10 +7,9 @@ import os
 from os import system
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from check_correctness.experiments.check_correctness_sat import check_satisfability
+from experiments.check_correctness_sat import check_satisfability
 # from check_correctness.experiments.check_correctness_unsat import check_unsatcorrectness
-from check_correctness.experiments.setup import *
+from experiments.setup import *
 
 def init_run(argv):
     param = {}
@@ -67,8 +66,13 @@ def main():
     # checking for satisfability
     if(param.get("sat", False)):
         print("checking correctness for satisfability..")
-        res_sat = check_satisfability(file, output=output)
-        print(f"Success satisfability for {file} :)") if  res_sat else print(f"Unsuccess satisfability for {file} :(")
+        sat, encoding_checker_path, instance_checker_path = check_satisfability(file, output=output)
+        if not sat:
+            print(f"failed satness for {file} with encoding_checker_path: {encoding_checker_path} instance_checker_path: {instance_checker_path}")
+            exit(1)
+        else:
+            print(f"Success satisfability for {file} :)") 
+            exit(0)
 
 if __name__ == "__main__":
     main()
