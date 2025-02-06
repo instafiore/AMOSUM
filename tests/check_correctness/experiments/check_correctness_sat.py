@@ -44,4 +44,4 @@ def check_satisfability(instance, output):
         assert(len(answer_set) > 0)
         return run_check(answer_set, instance)
         
-    return res_sat
+    return res_sat, None, None
