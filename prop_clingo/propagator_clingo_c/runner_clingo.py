@@ -46,7 +46,7 @@ class RunnerClingoC(RunnerWasp):
         location_encoding = f"{self.location}/{encoding}.asp" if self.enc and not self.exp else location_encoding
         location_instance = f"{self.location_instance}/{instance}.asp" if not self.exp else instance
 
-        timeout_str = f"timeout {self.timeout_m}m" if not self.exp else ""
+        timeout_str = f"timeout {self.timeout_m}m time -p " if not self.exp else ""
 
         hidden_location_encoding= self.rewrite_file_without_amosum(location_encoding)
         hidden_location_instance= self.rewrite_file_without_amosum(location_instance)
@@ -56,7 +56,7 @@ class RunnerClingoC(RunnerWasp):
         
         grounded_program, run_command_ground = ground_program(hidden_location_encoding, hidden_location_instance, return_command=True)
         
-        run = f"{timeout_str} time -p {settings.PROPAGATOR_DIR_LOCATION_CLINGO_C_BIN}/./{RunnerClingoC.SOLVER_EXE} {self.n0}\
+        run = f"{timeout_str} {settings.PROPAGATOR_DIR_LOCATION_CLINGO_C_BIN}/./{RunnerClingoC.SOLVER_EXE} {self.n0}\
             -enc={hidden_location_encoding}\
             -i={hidden_location_instance}"
 
@@ -75,7 +75,7 @@ class RunnerClingoC(RunnerWasp):
         # running test
         self.maps_weights_list = []
         # compile propagator
-        self.compile()
+        if not self.param.get("exp",False) self.compile()
         run_process = subprocess.run(run, shell=True, capture_output=True, text=True)
 
         output = run_process.stdout
