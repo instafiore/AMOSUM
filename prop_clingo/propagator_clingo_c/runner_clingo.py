@@ -51,8 +51,8 @@ class RunnerClingoC(RunnerWasp):
         hidden_location_encoding= self.rewrite_file_without_amosum(location_encoding)
         hidden_location_instance= self.rewrite_file_without_amosum(location_instance)
 
-        print(f"encoding: {location_encoding}")
-        print(f"instance: {location_instance}")
+        print(f"encoding: {location_encoding}") if not self.exp else None
+        print(f"instance: {location_instance}") if not self.exp else None
         
         grounded_program, run_command_ground = ground_program(hidden_location_encoding, hidden_location_instance, return_command=True)
         
@@ -70,12 +70,12 @@ class RunnerClingoC(RunnerWasp):
             run += prop_run
 
         if self.PRINT_RUN:
-            print(f"run:\t {run}")
+            print(f"run:\t {run}") if not self.exp else None
 
         # running test
         self.maps_weights_list = []
         # compile propagator
-        if not self.exp self.compile()
+        if not self.exp: self.compile()
         run_process = subprocess.run(run, shell=True, capture_output=True, text=True)
 
         output = run_process.stdout
@@ -117,7 +117,7 @@ class RunnerClingoC(RunnerWasp):
             elif RunnerWasp.PRINT_OUTPUT_SOLVER:
                 print(line)
         
-        time = "error"
+        time = "error" if not self.exp else "experiment mode"
         for line in lines_error:
             if not re.search(regex_real, line) is None:
                 time = re.search(regex_real, line).group(1)
