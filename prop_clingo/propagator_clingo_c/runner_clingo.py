@@ -75,7 +75,7 @@ class RunnerClingoC(RunnerWasp):
         # running test
         self.maps_weights_list = []
         # compile propagator
-        if not self.param.get("exp",False) self.compile()
+        if not self.exp self.compile()
         run_process = subprocess.run(run, shell=True, capture_output=True, text=True)
 
         output = run_process.stdout
