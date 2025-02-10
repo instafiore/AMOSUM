@@ -44,7 +44,6 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_eo(const Group* G, Amo
         return &propagator->S;
     }
 
-    const clingo_assignment_t *assignment = clingo_propagate_control_assignment(propagator->control);
     for (Group* g : propagator->groups) {
         if (g == G || propagator->true_group->get(g) != SETTINGS::NONE) continue;
         int ml_g = max_w(g);
