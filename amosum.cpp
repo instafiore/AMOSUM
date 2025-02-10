@@ -330,6 +330,7 @@ void AmoSumPropagator::add_redundant_lit(clingo_literal_t l, clingo_literal_t re
 }
 
 bool AmoSumPropagator::is_true(clingo_literal_t l){
+    if(dl == 0) return false;
     bool res ;
     const clingo_assignment_t *assignment = clingo_propagate_control_assignment(control);
     if(solver == AmoSumPropagator::CLINGO){
@@ -343,6 +344,7 @@ bool AmoSumPropagator::is_true(clingo_literal_t l){
 }
 
 bool AmoSumPropagator::is_false(clingo_literal_t l){
+    if(dl == 0) return false;
     bool res ;
     const clingo_assignment_t *assignment = clingo_propagate_control_assignment(control);
     if(solver == AmoSumPropagator::CLINGO){

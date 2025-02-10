@@ -480,6 +480,7 @@ class AmoSumPropagator:
         return self.aggregate[l] or self.aggregate[not_(l)]
     
     def is_true(self, l: int):
+        if self.dl == 0: return False
         assignment = self.control.assignment
 
         if self.solver == AmoSumPropagator.CLINGO:
@@ -489,6 +490,7 @@ class AmoSumPropagator:
             raise NotImplementedError("Solver type not implemented")
 
     def is_false(self, l: int):
+        if self.dl == 0: return False
         assignment = self.control.assignment  
 
         if self.solver == AmoSumPropagator.CLINGO:
