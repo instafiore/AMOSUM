@@ -29,11 +29,12 @@ def run_check(answer_set: List[str], instance):
     error = run_clingo.stderr
     output_error = output + error
 
-    res = re.search(r"UNSATISFIABLE",output_error) is None
+    res = run_clingo.returncode == 30 
     if not res:
         print(output_error)
+  
     if instance_checker_path: os.remove(instance_checker_path)
-    return res, encoding_checker_path, path
+    return res, encoding_checker_path, instance
 
 
 def check_satisfability(instance, output):
