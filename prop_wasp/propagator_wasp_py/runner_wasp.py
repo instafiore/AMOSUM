@@ -80,6 +80,7 @@ class RunnerWasp:
 
         self.param = parameters
         self.maps_weights_list = [] 
+        self.tmp_files = []
 
         set_debug(self.param.get("d",""))
         
@@ -577,4 +578,10 @@ class RunnerWasp:
         hidden_file_without_amosum = f".{file_name}_without_amosum_{date_string}.asp"
         hidden_file_without_amosum_tmp_location= f"/tmp/{hidden_file_without_amosum}"
         write_file(hidden_file_without_amosum_tmp_location, non_ground_file_without_amosum)
+        self.tmp_files.append(hidden_file_without_amosum_tmp_location)
         return hidden_file_without_amosum_tmp_location
+    
+    def __del__(self):
+        for file in self.tmp_files:
+            debug(f"removing file {file}", force_print=True)
+            os.remove(file)

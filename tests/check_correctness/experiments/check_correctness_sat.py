@@ -1,4 +1,5 @@
 
+import os
 import re
 import subprocess
 from typing import List
@@ -31,7 +32,8 @@ def run_check(answer_set: List[str], instance):
     res = re.search(r"UNSATISFIABLE",output_error) is None
     if not res:
         print(output_error)
-    return res, encoding_checker_path, instance_checker_path
+    if instance_checker_path: os.remove(instance_checker_path)
+    return res, encoding_checker_path, path
 
 
 def check_satisfability(instance, output):

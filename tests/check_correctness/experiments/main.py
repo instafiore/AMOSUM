@@ -66,9 +66,9 @@ def main():
     # checking for satisfability
     if(param.get("sat", False)):
         print("checking correctness for satisfability..")
-        sat, encoding_checker_path, instance_checker_path = check_satisfability(file, output=output)
+        sat, encoding_checker_path, instance = check_satisfability(file, output=output)
         if not sat:
-            print(f"failed satness for {file} with encoding_checker_path: {encoding_checker_path} instance_checker_path: {instance_checker_path}")
+            print(f"failed satness for {file} with encoding: {encoding_checker_path} instance: {instance}")
             exit(1)
         else:
             print(f"Success satisfability for {file} :)") 
