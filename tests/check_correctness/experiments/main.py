@@ -5,10 +5,9 @@ import xml.etree.ElementTree as ET
 import sys
 import os
 from os import system
-
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from experiments.check_correctness_sat import check_satisfability
-# from check_correctness.experiments.check_correctness_unsat import check_unsatcorrectness
+from experiments.check_correctness_unsat import check_unsatisfability
 from experiments.setup import *
 
 def init_run(argv):
@@ -50,21 +49,11 @@ def main():
 
     param = init_run(sys.argv)
 
-    output = ""
     file = param.get("f")
-    output = cat(file.strip())
     
-    
-    # # checking for unsatness
-    # if(param.get("unsat", False)):
-    #     raise NotImplementedError()
-    #     print("checking correctness for unsatness..")
-    #     print(get_all_commands(file=merged_file)) 
-    #     res_unsat = check_unsatcorrectness(root=root, map_inconsistent_regex=map["map_inconsistent_regex"])
-    #     print("Success unsatness :)") if  res_unsat else print("Unsuccess unsatness :(")
-
     # checking for satisfability
     if(param.get("sat", False)):
+        output = cat(file.strip())
         print("checking correctness for satisfability..")
         sat, encoding_checker_path, instance = check_satisfability(file, output=output)
         if not sat:
@@ -72,6 +61,16 @@ def main():
             exit(1)
         else:
             print(f"Success satisfability for {file} :)") 
+            exit(0)
+
+    elif(param.get("unsat", False)):
+        print("checking correctness for unsatisfability..")
+        unsat = check_unsatisfability(file)
+        if not unsat:
+            print(f"failed unsatness for {file}")
+            exit(1)
+        else:
+            print(f"Success unsatness for {file} :)") 
             exit(0)
 
 if __name__ == "__main__":
