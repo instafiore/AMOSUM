@@ -582,7 +582,7 @@ class RunnerWasp:
         self.tmp_files.append(hidden_file_without_amosum_tmp_location)
         return hidden_file_without_amosum_tmp_location
     
-    # def __del__(self):
-    #     for file in self.tmp_files:
-    #         debug(f"removing file {file}", force_print=True)
-    #         os.remove(file)
+    def __del__(self):
+        for file in self.tmp_files:
+            debug(f"removing file {file}", force_print=True)
+            os.remove(file)
