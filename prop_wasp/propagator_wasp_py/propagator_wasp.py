@@ -1,10 +1,9 @@
-#!/home/s.fiorentino/miniconda3/bin/python3
 import sys
 import os
 
-from amosum_initializer import AmoSumInitializer
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+from amosum_initializer import AmoSumInitializer
 from ast import Tuple
 from typing import Callable, List
 import re
