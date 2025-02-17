@@ -59,7 +59,6 @@ class AmoSumInitializer:
         amosum_propagator.strategy = amosum_propagator.param.get("strategy",self.strategy)
         amosum_propagator.I = SymmetricFunction(amosum_propagator.N)
         amosum_propagator.group = GroupFunction(amosum_propagator.N)
-        amosum_propagator.propagated = SymmetricFunction(amosum_propagator.N)
         amosum_propagator.aggregate = AggregateFunction(amosum_propagator.N, False)
         amosum_propagator.to_be_propagated = PerfectSet(amosum_propagator.N)
         amosum_propagator.reason = PerfectHash(amosum_propagator.N, [])

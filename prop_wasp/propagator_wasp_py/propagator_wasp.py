@@ -17,6 +17,8 @@ atomNames = {}
 sys_parameters = []
 
 propagators: List[AmoSumPropagator] = []
+waspInterpretation: Dict[str, bool] = {}
+intepretation: Dict[str, bool] = {}
 
 def checkAnswerSet(*answer_set):
     global propagators
@@ -71,7 +73,7 @@ def getReasonForLiteral(lit):
     reason = None
     for propagator in propagators:
         if propagator.is_in_aggregate(lit):
-            if propagator.propagated[lit]:
+            if propagator.to_be_propagated[lit]:
                 reason = propagator.getReasonForLiteral(lit)
                 break
     return reason

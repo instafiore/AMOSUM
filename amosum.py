@@ -339,8 +339,6 @@ class AmoSumPropagator:
             l = lits[i]
             if not self.is_in_aggregate(l):
                 continue
-
-            self.propagated[l] = False
             
             # This has been added to handle early stop in propagation phase (clingo propagation)
             

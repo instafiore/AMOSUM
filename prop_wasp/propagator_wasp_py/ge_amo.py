@@ -43,7 +43,7 @@ def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
 
 
         print_derivation(propagator.atomNames, propagator.S, force_print=False)  
-        propagator.propagated[not_(l)] = True
+        propagator.to_be_propagated[not_(l)] = True
         return propagator.S
     
     derived_true = []
@@ -63,12 +63,11 @@ def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
         mps, sml_g, ml_g = propagator.mps(g, ml_g, assumed=False, return_literals=True)
         propagate_to_true = False
         if mps < propagator.lb:
-            propagator.to_be_propagated[ml_g] = True
             propagator.S.append(ml_g)
             derived_true.append(ml_g)
             propagator.reason[ml_g] = [] if propagator.solver == AmoSumPropagator.CLINGO or propagator.dl == 0 else [not_(propagator.current_literal)]
             create_reason_true_ge(propagator, sml_g, ml_g, g)
-            propagator.propagated[ml_g] = True
+            propagator.to_be_propagated[ml_g] = True
             
             propagate_to_true = True
         
@@ -79,10 +78,9 @@ def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
                     if propagator.mps(g, l, assumed=True) < propagator.lb:
                         istrue = propagator.to_be_propagated[not_(l)] if propagator.solver == AmoSumPropagator.WASP else propagator.is_true(not_(l))
                         if not istrue:
-                            propagator.to_be_propagated[not_(l)] = True
                             propagator.S.append(not_(l))
                             propagator.reason[not_(l)] = [] if propagator.solver == AmoSumPropagator.CLINGO or propagator.dl == 0 else [not_(propagator.current_literal)]
-                            propagator.propagated[not_(l)] = True
+                            propagator.to_be_propagated[not_(l)] = True
                     else:
                         break
 
