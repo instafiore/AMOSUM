@@ -1,4 +1,4 @@
-#!/Users/instafiore/instafiore_env/bin/python
+#!/home/mazzotta/Experiments/solvers/bin_fiorentino/amosum_env/bin/python
 import sys
 import os
 import re

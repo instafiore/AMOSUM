@@ -331,14 +331,14 @@ class RunnerWasp:
         print(f"encoding: {location_encoding}")
         print(f"instance: {location_instance}")
 
-        timeout_str = f"timeout {self.timeout_m}m" if not self.exp else ""
+        timeout_str = f"timeout {self.timeout_m}m time -p " if not self.exp else ""
 
         hidden_location_encoding= self.rewrite_file_without_amosum(location_encoding)
         hidden_location_instance= self.rewrite_file_without_amosum(location_instance)
         
         grounded_program, run_command_ground = ground_program(hidden_location_encoding, hidden_location_instance, self.str_weights, self.str_lb, self.str_ub, return_command=True)
         
-        run = f"{timeout_str} time -p {RunnerWasp.SOLVER} {RunnerWasp.SILENT} {self.n0}"
+        run = f"{timeout_str} {RunnerWasp.SOLVER} {RunnerWasp.SILENT} {self.n0}"
         
         id_param = f"-id {self.id}"
         ass_param = f" -ass {self.ass}" if self.ass != "" else ""
@@ -371,7 +371,7 @@ class RunnerWasp:
 
         # running test
         self.maps_weights_list = []
-        run_process = subprocess.run(run, input=grounded_program ,shell=True, capture_output=True, text=True)
+        run_process = subprocess.run(run, input=grounded_program ,shell=True, executable="/bin/bash", capture_output=True, text=True)
 
         output = run_process.stdout
         error = run_process.stderr
@@ -413,6 +413,7 @@ class RunnerWasp:
             elif RunnerWasp.PRINT_OUTPUT_SOLVER:
                 print(line)
         
+        time = "error" if not self.exp else "experiment mode"
         for line in lines_error:
             if not re.search(regex_real, line) is None:
                 time = re.search(regex_real, line).group(1)

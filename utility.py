@@ -1,4 +1,3 @@
-#!/home/s.fiorentino/miniconda3/bin/python3
 # utility module
 from enum import Enum
 import re
@@ -610,21 +609,20 @@ def get_increment_name(increment: dict, atomNames: dict):
     return increment_name
 
 def get_propagator_variables(prop_type):
-    match prop_type:
-        case "ge_amo":
-            ge = True
-            choice_cons = "AMO"
-            from prop_wasp.propagator_wasp_py.ge_amo import propagate_phase
-        case "le_eo":
-            ge = False
-            choice_cons = "AMO"
-            from prop_wasp.propagator_wasp_py.le_eo import propagate_phase
-        case "ge_eo":
-            ge = True
-            choice_cons = "EO"
-            from prop_wasp.propagator_wasp_py.ge_eo import propagate_phase
-        case _:
-            assert False
+    if prop_type == "ge_amo":
+        ge = True
+        choice_cons = "AMO"
+        from prop_wasp.propagator_wasp_py.ge_amo import propagate_phase
+    elif prop_type == "le_eo":    
+        ge = False
+        choice_cons = "EO"
+        from prop_wasp.propagator_wasp_py.le_eo import propagate_phase
+    elif prop_type == "ge_eo":       
+        ge = True
+        choice_cons = "EO"
+        from prop_wasp.propagator_wasp_py.ge_eo import propagate_phase
+    else: 
+        assert False
     return ge, propagate_phase, choice_cons
 
 def create_reason_falses(propagator, ge):

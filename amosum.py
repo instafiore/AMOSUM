@@ -2,7 +2,7 @@ import json
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-from typing import Callable, List, Optional, Dict
+from typing import Callable, List, Optional, Dict, Tuple
 from utility import *
 import prop_wasp.propagator_wasp_py.wasp as wasp
 import re
@@ -14,10 +14,10 @@ import clingo
 
 class AmoSumPropagator:
 
-    atomNames : dict[str: int]
+    atomNames : Dict[str, int]
 
     # input parameters
-    param : dict[str]
+    param : Dict[str, any]
 
     # self.aggregate id
     ID : int
@@ -89,7 +89,7 @@ class AmoSumPropagator:
     ge : bool
 
     # propagate function to implement in propagator file
-    propagate_phase : Callable[[Group, 'AmoSumPropagator', dict],List[int]]
+    propagate_phase : Callable[[Group, 'AmoSumPropagator', Dict],List[int]]
 
 
     # >= (ge) constraint
@@ -124,7 +124,7 @@ class AmoSumPropagator:
     WASP = 1
     CLINGO = 2
 
-    def __init__(self, atomNames: dict[str: int], sys_parameters: List[str], propagation_phase: Callable[[Group, 'AmoSumPropagator'],  List[int]] = None, ge: bool = True, choice_cons: str = "AMO", solver = WASP) -> None:
+    def __init__(self, atomNames: Dict[str, int], sys_parameters: List[str], propagation_phase: Callable[[Group, 'AmoSumPropagator'],  List[int]] = None, ge: bool = True, choice_cons: str = "AMO", solver = WASP) -> None:
         self.atomNames = atomNames
         self.param = sys_parameters
         self.facts : List[int] = []
@@ -213,7 +213,7 @@ class AmoSumPropagator:
         if self.mps_violated:
             self.lazy_condition = True
 
-    def update_phase(self, l: int) -> tuple[bool, Group]:
+    def update_phase(self, l: int) -> Tuple[bool, Group]:
     
         w_p : int = 0
         w_n : int = 0
@@ -322,7 +322,7 @@ class AmoSumPropagator:
             mps = self.mps(g, l, assumed = not derived_true)
             s = self.lb - mps - 1 
             
-            literals= self.reason[l] - [self.current_literal] if self.solver == AmoSumPropagator.WASP else self.reason[l]
+            literals= [l for l in self.reason[l] if not equals(l,self.current_literal)] if self.solver == AmoSumPropagator.WASP else self.reason[l]
             if self.minimization == Minimize.MINIMAL.value:
                 self.redundant_lits[l] = maximal_subset_sum_less_than_s_with_groups(derived_true=derived_true, literals = literals, s = s, weight= self.weight, group=self.group, head_reason=l, I=self.I, max=self.ge)
             elif self.minimization == Minimize.CARDINALITY_MINIMAL.value:
