@@ -21,9 +21,10 @@ def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
        
     propagator.S = []
     
+    # debug(f"Propagate Phase decision level {propagator.dl}", force_print=True)
     if propagator.mps_violated:
 
-        assert propagator.lazy_prop_activated
+        assert propagator.lazy_prop_activated or propagator.dl == 0
         l = propagator.current_literal
         propagator.reason[not_(l)] = [] if propagator.solver == AmoSumPropagator.CLINGO or propagator.dl == 0 else [not_(propagator.current_literal)]
         propagator.S = [not_(l)]
