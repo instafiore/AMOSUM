@@ -25,7 +25,7 @@ def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
 
         assert propagator.lazy_prop_activated
         l = propagator.current_literal
-        propagator.reason[not_(l)] = [] if propagator.solver == AmoSumPropagator.CLINGO else [not_(propagator.current_literal)]
+        propagator.reason[not_(l)] = [] if propagator.solver == AmoSumPropagator.CLINGO or propagator.dl == 0 else [not_(propagator.current_literal)]
         propagator.S = [not_(l)]
 
         derived_true = False
@@ -65,7 +65,7 @@ def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
             propagator.to_be_propagated[ml_g] = True
             propagator.S.append(ml_g)
             derived_true.append(ml_g)
-            propagator.reason[ml_g] = [] if propagator.solver == AmoSumPropagator.CLINGO else [not_(propagator.current_literal)]
+            propagator.reason[ml_g] = [] if propagator.solver == AmoSumPropagator.CLINGO or propagator.dl == 0 else [not_(propagator.current_literal)]
             create_reason_true_ge(propagator, sml_g, ml_g, g)
             propagator.propagated[ml_g] = True
             
@@ -80,7 +80,7 @@ def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
                         if not istrue:
                             propagator.to_be_propagated[not_(l)] = True
                             propagator.S.append(not_(l))
-                            propagator.reason[not_(l)] = [] if propagator.solver == AmoSumPropagator.CLINGO else [not_(propagator.current_literal)]
+                            propagator.reason[not_(l)] = [] if propagator.solver == AmoSumPropagator.CLINGO or propagator.dl == 0 else [not_(propagator.current_literal)]
                             propagator.propagated[not_(l)] = True
                     else:
                         break

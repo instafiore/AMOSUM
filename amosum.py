@@ -321,9 +321,10 @@ class AmoSumPropagator:
     
             mps = self.mps(g, l, assumed = not derived_true)
             s = self.lb - mps - 1 
-    
+            
+            literals= [l for l in self.reason[l] if l != self.current_literal] if self.solver == AmoSumPropagator.WASP else self.reason[l]
             if self.minimization == Minimize.MINIMAL.value:
-                self.redundant_lits[l] = maximal_subset_sum_less_than_s_with_groups(derived_true=derived_true, literals= self.reason[l], s = s, weight= self.weight, group=self.group, head_reason=l, I=self.I, max=self.ge)
+                self.redundant_lits[l] = maximal_subset_sum_less_than_s_with_groups(derived_true=derived_true, literals = literals, s = s, weight= self.weight, group=self.group, head_reason=l, I=self.I, max=self.ge)
             elif self.minimization == Minimize.CARDINALITY_MINIMAL.value:
                 # outdated
                 increment = compute_increment_literals(literals=self.reason[l], group=self.group, weight=self.weight)
