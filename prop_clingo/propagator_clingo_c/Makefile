@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS = -Wall -Wextra -std=c++17 -I/opt/homebrew/include   -I/home/mazzotta/Experiments/solvers/bin_fiorentino/clingo-5.7.1/libclingo $(DEBUG) $(CHECK_MPS) $(SANITIZE_ADDRESS)  -O3
+CFLAGS = -Wall -Wextra -std=c++17 -I/opt/homebrew/include -I/home/mazzotta/Experiments/solvers/bin_fiorentino/clingo-5.7.1/libclingo $(DEBUG) $(CHECK_MPS) $(SANITIZE_ADDRESS)  -O3
 LDFLAGS = -L/opt/homebrew/lib -L/home/mazzotta/Experiments/solvers/bin_fiorentino/clingo-5.7.1/manual_build/bin -lclingo $(SANITIZE_ADDRESS)
 BUILD_DIR = build
 BIN_DIR = bin
@@ -21,22 +21,22 @@ test:
 $(TARGET): $(OBJS)
 	@echo "Linking $@"
 	@mkdir -p $(BIN_DIR)
-	$(CC) -o $(BIN_DIR)/$@ $^ $(LDFLAGS)
+	$(CC) $^ $(LDFLAGS) -o $(BIN_DIR)/$@
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.$(C)
 	@mkdir -p $(BUILD_DIR) # Create build directory if not exists
 	@echo "Compiling $< -> $@"
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(LDFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/%.o: $(PROP_WASP)/%.$(C)
 	@mkdir -p $(BUILD_DIR) # Create build directory if not exists
 	@echo "Compiling $< -> $@"
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(LDFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/%.o: ./%.$(C)
 	@mkdir -p $(BUILD_DIR) # Create build directory if not exists
 	@echo "Compiling $< -> $@"
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(LDFLAGS) -c $< -o $@
 
 clean:
 	@echo "Cleaning up..."

@@ -12,7 +12,6 @@
 #include <limits>
 #include "propagator_clingo.h"
 
-
 bool PropagatorClingo::init(clingo_propagate_init_t *_init){
 
     PropagatorClingoInitializer::get_instance()->init(_init, *this);
