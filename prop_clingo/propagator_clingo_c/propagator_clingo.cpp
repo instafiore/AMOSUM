@@ -46,7 +46,7 @@ bool PropagatorClingo::init(clingo_propagate_init_t *_init){
     }// inconsistent
 
     add_clauses_propagated_lits(_init, S_plit, 0, true);
-   
+    
     bool result_propagate;
     clingo_propagate_init_propagate(_init, &result_propagate) ;
     
