@@ -35,7 +35,6 @@ void print(const Args&... args) {
     std::cout << oss.str() << std::endl;
 }
 
-
 #ifdef DEBUG
     #define debug(...) \
         if ((DEBUG)) { \

@@ -17,7 +17,9 @@ workshift(6,"6-holiday",0).
 
 % Each nurse works from 1687 to 1692 hours per year.
 
+% aux(N,H,D) :- assign(N,T,D), workshift(T,_,H).
 % :- nurse(N), maxHoursPerYear(MAX), #sum{H,D : assign(N,T,D), workshift(T,_,H)} > MAX.
+% #eosum{ H : aux(N,H,D) [(D,N)] } <= MAX : nurse(N), maxHoursPerYear(MAX).
 #eosum{ H : assign(N,T,D), workshift(T,_,H) [(D,N)] } <= MAX : nurse(N), maxHoursPerYear(MAX).
 
 % :- nurse(N), minHoursPerYear(MIN), #sum{H,D : assign(N,T,D), workshift(T,_,H)} < MIN.
