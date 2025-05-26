@@ -59,7 +59,8 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, Am
         auto [mps_h, sml_g, ml_g_res] = propagator->mps(g, ml_g, false);
         
         bool propagate_to_true = false;
-        if (mps_h < propagator->lb) {
+        // (IJCAI) added && g->count_undef == 1 to ensure that all literals are falses
+        if (mps_h < propagator->lb && g->count_undef == 1) {
             propagator->S.push_back(ml_g_res);
             auto R = get_perfect_hash_with_pointer(propagator->reason.get(), ml_g_res);
             R->clear();
