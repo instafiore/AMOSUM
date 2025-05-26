@@ -62,7 +62,8 @@ def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
         
         mps, sml_g, ml_g = propagator.mps(g, ml_g, assumed=False, return_literals=True)
         propagate_to_true = False
-        if mps < propagator.lb:
+        # (IJCAI) added and g.count_undef == 1 to ensure that all literals are falses
+        if mps < propagator.lb and g.count_undef == 1:
             propagator.S.append(ml_g)
             derived_true.append(ml_g)
             propagator.reason[ml_g] = [] if propagator.solver == AmoSumPropagator.CLINGO or propagator.dl == 0 else [not_(propagator.current_literal)]

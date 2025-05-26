@@ -689,7 +689,8 @@ def create_reason_falses_le(propagator, flipped=None):
 def create_reason_true_ge(propagator, sml_g, derived, g):
     if propagator.dl == 0: return 
 
-    i = g.ord_i[sml_g] if sml_g is not None else 0
+    # i = g.ord_i[sml_g] if sml_g is not None else 0
+    i = 0 # (IJCAI) to set all literals that are falses
     j = len(g.ord_l)
 
  
