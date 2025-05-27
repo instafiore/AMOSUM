@@ -19,8 +19,8 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, Am
 
     if (propagator->mps_violated) {
         clingo_literal_t l = propagator->current_literal ;
-        
-        assert(propagator->lazy_prop_activated);
+        // (IJCAI) removing asserting, it can happen in IJCAI version
+        // assert(propagator->lazy_prop_activated);
 
         
         propagator->S.push_back(not_(l));
@@ -61,6 +61,7 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, Am
         bool propagate_to_true = false;
         // (IJCAI) added && g->count_undef == 1 to ensure that all literals are falses
         if (mps_h < propagator->lb && g->count_undef == 1) {
+        // if (mps_h < propagator->lb) {
             propagator->S.push_back(ml_g_res);
             auto R = get_perfect_hash_with_pointer(propagator->reason.get(), ml_g_res);
             R->clear();
