@@ -13,6 +13,7 @@
 
 const std::vector<clingo_literal_t>* propagation_phase_ge_eo(const Group* G, AmoSumPropagator* propagator) {
     propagator->S.clear();
+    std::unordered_map<clingo_literal_t, int> sum_removed_weights;
 
     if (propagator->mps_violated) {
         
@@ -32,11 +33,11 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_eo(const Group* G, Amo
             g = propagator->group->get(not_(l));
         }
         
-        create_reason_falses_ge(propagator, not_(l));
+        create_reason_falses_ge(propagator, sum_removed_weights, not_(l));
         
         if(derived_true){
             clingo_literal_t sml_g = max_w(g) ;
-            create_reason_true_ge(propagator, sml_g, not_(l), g);
+            create_reason_true_ge(propagator, sml_g, not_(l), g, sum_removed_weights);
         }
 
         propagator->compute_minimal_reason(propagator->S);
@@ -70,7 +71,7 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_eo(const Group* G, Amo
 
     
     if (!propagator->S.empty() && propagator->dl != 0) {
-        create_reason_falses_ge(propagator, SETTINGS::NONE);
+        create_reason_falses_ge(propagator, sum_removed_weights, SETTINGS::NONE);
         propagator->compute_minimal_reason(propagator->S);
     }
 

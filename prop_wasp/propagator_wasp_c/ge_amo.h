@@ -16,6 +16,7 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, Am
 
     
     propagator->S.clear();
+    std::unordered_map<clingo_literal_t, int> sum_removed_weights;
 
     if (propagator->mps_violated) {
         clingo_literal_t l = propagator->current_literal ;
@@ -35,11 +36,11 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, Am
             g = propagator->group->get(not_(l));
         }
         
-        create_reason_falses_ge(propagator, not_(l));
+        create_reason_falses_ge(propagator, sum_removed_weights, not_(l));
         
         if(derived_true){
             clingo_literal_t sml_g = max_w(g) ;
-            create_reason_true_ge(propagator, sml_g, not_(l), g);
+            create_reason_true_ge(propagator, sml_g, not_(l), g, sum_removed_weights);
         }
 
         
@@ -63,7 +64,7 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, Am
             propagator->S.push_back(ml_g_res);
             auto R = get_perfect_hash_with_pointer(propagator->reason.get(), ml_g_res);
             R->clear();
-            create_reason_true_ge(propagator, sml_g, ml_g, g);
+            create_reason_true_ge(propagator, sml_g, ml_g, g, sum_removed_weights);
             
             propagate_to_true = true;
             
@@ -91,7 +92,7 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, Am
     print_derivation(propagator->atomNames, propagator->S, false);
     
     if (!propagator->S.empty() && propagator->dl != 0) {
-        create_reason_falses_ge(propagator, SETTINGS::NONE);
+        create_reason_falses_ge(propagator, sum_removed_weights, SETTINGS::NONE);
         
         propagator->compute_minimal_reason(propagator->S);
     }
