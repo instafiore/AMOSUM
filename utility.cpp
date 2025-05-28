@@ -421,15 +421,15 @@ void create_reason_falses_ge(AmoSumPropagator* propagator, std::unordered_map<cl
                         auto mps_h = propagator->mps_violated ? propagator->_mps : std::get<0>(propagator->mps(G, derived, !derived_true));
                         int s = propagator->lb - mps_h - 1;
                         int weight = propagator->weight->get(l);
-                        int i = weight - mw_g;
+                        int inc = weight - mw_g;
                         // 
 
                         auto R = get_perfect_hash_with_pointer(propagator->reason.get(), derived);
          
                         if(g == G) continue; 
                         get_map(sum_removed_weights, derived, 0, true);
-                        if(sum_removed_weights[derived] + i <= s){
-                            sum_removed_weights[derived] += i ;
+                        if(sum_removed_weights[derived] + inc <= s){
+                            sum_removed_weights[derived] += inc ;
                             breaks[derived] = true ;
                         }else{
                             R->push_back(l);
@@ -458,12 +458,12 @@ void create_reason_falses_ge(AmoSumPropagator* propagator, std::unordered_map<cl
                 int s = propagator->lb - mps_h - 1;
                 int w_mw_g = propagator->weight->get(g->ord_l.back()); 
                 int w = propagator->weight->get(tr); 
-                int i = w_mw_g - w ;
+                int inc = w_mw_g - w ;
                 
                 R->push_back(not_(tr));
                 get_map(sum_removed_weights, derived, 0, true);
-                if(sum_removed_weights[derived] + i <= s){
-                    sum_removed_weights[derived] += i ;
+                if(sum_removed_weights[derived] + inc <= s){
+                    sum_removed_weights[derived] += inc ;
                 }else{
                     R->push_back(tr);
                 }
@@ -538,11 +538,11 @@ void create_reason_true_ge(AmoSumPropagator* propagator, clingo_literal_t sml_g,
         clingo_literal_t lit = g->ord_l[k];
         int weight = propagator->weight->get(lit);
         int w_sml = propagator->weight->get(sml_g);
-        int i = weight - w_sml ;
+        int inc = weight - w_sml ;
         if (!propagator->I->get(lit) && !equals(derived, lit)) {
             get_map(sum_removed_weights, derived, 0, true);
-            if(sum_removed_weights[derived] + i <= s){
-                sum_removed_weights[derived] += i;
+            if(sum_removed_weights[derived] + inc <= s){
+                sum_removed_weights[derived] += inc;
                 break;
             }else
                 R->push_back(lit);
