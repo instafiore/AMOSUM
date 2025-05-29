@@ -428,7 +428,7 @@ void create_reason_falses_ge(AmoSumPropagator* propagator, std::unordered_map<cl
          
                         if(g == G) continue; 
                         get_map(sum_removed_weights, derived, 0, true);
-                        if(sum_removed_weights[derived] + inc <= s){
+                        if(sum_removed_weights[derived] + inc <= s && false){
                             sum_removed_weights[derived] += inc ;
                             breaks[derived] = true ;
                         }else{
@@ -462,7 +462,7 @@ void create_reason_falses_ge(AmoSumPropagator* propagator, std::unordered_map<cl
                 
                 R->push_back(not_(tr));
                 get_map(sum_removed_weights, derived, 0, true);
-                if(sum_removed_weights[derived] + inc <= s){
+                if(sum_removed_weights[derived] + inc <= s && false){
                     sum_removed_weights[derived] += inc ;
                 }else{
                     R->push_back(tr);
@@ -541,7 +541,7 @@ void create_reason_true_ge(AmoSumPropagator* propagator, clingo_literal_t sml_g,
         int inc = weight - w_sml ;
         if (!propagator->I->get(lit) && !equals(derived, lit)) {
             get_map(sum_removed_weights, derived, 0, true);
-            if(sum_removed_weights[derived] + inc <= s){
+            if(sum_removed_weights[derived] + inc <= s && false){
                 sum_removed_weights[derived] += inc;
                 break;
             }else
