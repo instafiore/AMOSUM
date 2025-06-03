@@ -3,7 +3,7 @@ from enum import Enum
 import re
 import subprocess
 import sys
-from typing import Any, List
+from typing import Any, Dict, List
 import sys
 from settings import *
 import time
@@ -631,9 +631,10 @@ def create_reason_falses(propagator, ge):
     else:
         return create_reason_falses_le(propagator=propagator)
 
-def create_reason_falses_ge(propagator, flipped = None):
+def create_reason_falses_ge(propagator, sum_removed_weights: Dict, flipped = None):
+
     if propagator.dl == 0: return 
-    
+    breaks = {}
     for g in propagator.groups:
         ord_l = g.ord_l
         if propagator.true_group[g] is None:
@@ -643,21 +644,80 @@ def create_reason_falses_ge(propagator, flipped = None):
                 if propagator.weight[l] < mw_g:
                     break
                 if propagator.I[l] == False and not equals(l, flipped):
-                    for s_lit in propagator.S:
-                        G = propagator.group[s_lit]
+                    for derived in propagator.S:
+                        # ADDED
+                        if breaks.get(derived, False): continue
+                        derived_true = True
+                        G = propagator.group[derived]
                         if G is None:
-                            G = propagator.group[not_(s_lit)]
+                            G = propagator.group[not_(derived)]
+                            derived_true = False
+                        assert not G is None
                         if(g == G):
                             continue
-                        propagator.reason[s_lit].append(l) 
+
+                        mps_h = propagator._mps if propagator.mps_violated else propagator.mps(G, derived, not derived_true)
+                        s = propagator.lb - mps_h - 1
+                        weight = propagator.weight[l]
+                        inc = weight - mw_g
+
+                        sum_removed_weights.setdefault(derived, 0)
+                        if(sum_removed_weights[derived] + inc <= s):
+                            sum_removed_weights[derived] += inc 
+                            breaks[derived] = True
+                        else:
+                            propagator.reason[derived].append(l) 
         elif not equals(propagator.true_group[g], flipped):
-            for s_lit in propagator.S:
-                G = propagator.group[s_lit]
+            tr = propagator.true_group[g]
+            for derived in propagator.S:
+                G = propagator.group[derived]
+                derived_true = True
                 if G is None:
-                    G = propagator.group[not_(s_lit)]
+                    G = propagator.group[not_(derived)]
+                    derived_true = False
                 if(g == G):
                     continue
-                propagator.reason[s_lit].append(not_(propagator.true_group[g])) 
+
+                mps_h = propagator._mps if propagator.mps_violated else propagator.mps(G, derived, not derived_true)
+                s = propagator.lb - mps_h - 1
+                w_mw_g = propagator.weight[g.ord_l[-1]]; 
+                w = propagator.weight[tr]
+                inc = w_mw_g - w
+                assert inc >= 0 
+
+                sum_removed_weights.setdefault(derived, 0)
+                if(sum_removed_weights[derived] + inc <= s):
+                    sum_removed_weights[derived] += inc 
+                else:
+                    propagator.reason[derived].append(not_(tr)) 
+
+
+    # if propagator.dl == 0: return 
+    
+    # for g in propagator.groups:
+    #     ord_l = g.ord_l
+    #     if propagator.true_group[g] is None:
+    #         mw_g = propagator.weight[max_w(g)]
+    #         for i in range(len(ord_l) - 1, -1, -1):
+    #             l = ord_l[i]
+    #             if propagator.weight[l] < mw_g:
+    #                 break
+    #             if propagator.I[l] == False and not equals(l, flipped):
+    #                 for s_lit in propagator.S:
+    #                     G = propagator.group[s_lit]
+    #                     if G is None:
+    #                         G = propagator.group[not_(s_lit)]
+    #                     if(g == G):
+    #                         continue
+    #                     propagator.reason[s_lit].append(l) 
+    #     elif not equals(propagator.true_group[g], flipped):
+    #         for s_lit in propagator.S:
+    #             G = propagator.group[s_lit]
+    #             if G is None:
+    #                 G = propagator.group[not_(s_lit)]
+    #             if(g == G):
+    #                 continue
+    #             propagator.reason[s_lit].append(not_(propagator.true_group[g])) 
 
 def create_reason_falses_le(propagator, flipped=None):
     if propagator.dl == 0: return 
@@ -686,21 +746,46 @@ def create_reason_falses_le(propagator, flipped=None):
                     continue
                 propagator.reason[s_lit].append(not_(propagator.true_group[g])) 
 
-def create_reason_true_ge(propagator, sml_g, derived, g):
+def create_reason_true_ge(propagator, sml_g, derived, g, sum_removed_weights):
     if propagator.dl == 0: return 
 
     i = g.ord_i[sml_g] if sml_g is not None else 0
-    j = len(g.ord_l)
+    j = len(g.ord_l) - 1
+    # j = len(g.ord_l)
 
  
     assert i <= j, "Index i must be less than or equal to j"
     assert derived is not None, "Derived literal must not be None"
 
-    for k in range(i, j):
+    mps_h = propagator._mps if propagator.mps_violated else propagator.mps(g, derived, False)
+    s = propagator.lb - mps_h - 1
+    
+    # for k in range(i, j):
+    for k in range(j, i-1, -1):
         lit = g.ord_l[k]
+        weight = propagator.weight[lit]
+        w_sml = propagator.weight[sml_g]
+        inc = weight - w_sml
         if propagator.I[lit] == False and not equals(derived, lit):
-            propagator.reason[derived].append(lit)
+            sum_removed_weights.setdefault(derived, 0)
+            if(sum_removed_weights[derived] + inc <= s):
+                sum_removed_weights[derived] += inc 
+            else:
+                propagator.reason[derived].append(lit) 
 
+    # if propagator.dl == 0: return 
+
+    # i = g.ord_i[sml_g] if sml_g is not None else 0
+    # j = len(g.ord_l)
+
+ 
+    # assert i <= j, "Index i must be less than or equal to j"
+    # assert derived is not None, "Derived literal must not be None"
+
+    # for k in range(i, j):
+    #     lit = g.ord_l[k]
+    #     if propagator.I[lit] == False and not equals(derived, lit):
+    #         propagator.reason[derived].append(lit)
 
 def create_reason_true_le(propagator, sml_g, derived, g):
     if propagator.dl == 0: return 

@@ -419,6 +419,8 @@ void create_reason_falses_ge(AmoSumPropagator* propagator, std::unordered_map<cl
                             derived_true = false;
                         }
                         assert(G != nullptr);
+                        if(g == G) continue; 
+
                         auto mps_h = propagator->mps_violated ? propagator->_mps : std::get<0>(propagator->mps(G, derived, !derived_true));
                         int s = propagator->lb - mps_h - 1;
                         int weight = propagator->weight->get(l);
@@ -427,8 +429,6 @@ void create_reason_falses_ge(AmoSumPropagator* propagator, std::unordered_map<cl
 
                         auto R = get_perfect_hash_with_pointer(propagator->reason.get(), derived);
         
-                        if(g == G) continue; 
-
                         get_map(sum_removed_weights, derived, 0, true);
                         if(sum_removed_weights[derived] + inc <= s){
                             sum_removed_weights[derived] += inc ;
