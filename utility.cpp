@@ -464,8 +464,8 @@ void create_reason_falses_ge(AmoSumPropagator* propagator, std::unordered_map<cl
                 auto mps_h = propagator->mps_violated ? propagator->_mps : std::get<0>(propagator->mps(G, derived, !derived_true));
 
                 int s = propagator->lb - mps_h - 1;
-                int w_mw_g = propagator->weight->get(g->ord_l.back()); 
                 int w = propagator->weight->get(tr); 
+                int w_mw_g = g->ord_l.size() > 0 ? propagator->weight->get(g->ord_l.back()) : s + 1 + w; 
                 int inc = w_mw_g - w;
                 assert(inc >= 0);
 

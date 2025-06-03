@@ -680,8 +680,8 @@ def create_reason_falses_ge(propagator, sum_removed_weights: Dict, flipped = Non
 
                 mps_h = propagator._mps if propagator.mps_violated else propagator.mps(G, derived, not derived_true)
                 s = propagator.lb - mps_h - 1
-                w_mw_g = propagator.weight[g.ord_l[-1]]; 
                 w = propagator.weight[tr]
+                w_mw_g =  propagator.weight[g.ord_l[-1]] if len(g.ord_l) > 0 else s + 1 + w 
                 inc = w_mw_g - w
                 assert inc >= 0 
 
