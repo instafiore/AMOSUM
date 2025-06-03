@@ -477,8 +477,8 @@ void create_reason_true_ge(AmoSumPropagator* propagator, clingo_literal_t sml_g,
     if(propagator->dl == 0) return ;
     
     int i = sml_g != SETTINGS::NONE ? g->ord_i[sml_g] : 0;
-    int j = g->ord_l.size() -1;
-    // int j = g->ord_l.size(); 
+    // int j = g->ord_l.size() -1;
+    int j = g->ord_l.size(); 
 
     auto R = get_perfect_hash_with_pointer(propagator->reason.get(), derived);
 
@@ -487,19 +487,20 @@ void create_reason_true_ge(AmoSumPropagator* propagator, clingo_literal_t sml_g,
 
     auto mps_h = propagator->mps_violated ? propagator->_mps : std::get<0>(propagator->mps(g, derived, false));
     int s = propagator->lb - mps_h - 1 ;
-    // for (int k = i; k < j; ++k) {
-    for (int k = j; k >= i; --k) {
+    for (int k = i; k < j; ++k) {
+    // for (int k = j; k >= i; --k) {
         clingo_literal_t lit = g->ord_l[k];
         int weight = propagator->weight->get(lit);
         int w_sml = propagator->weight->get(sml_g);
         int inc = weight - w_sml ;
         if (!propagator->I->get(lit) && !equals(derived, lit)) {
-            get_map(sum_removed_weights, derived, 0, true);
-            if(sum_removed_weights[derived] + inc <= s){
-                sum_removed_weights[derived] += inc;
-                break;
-            }else
-                R->push_back(lit);
+            // get_map(sum_removed_weights, derived, 0, true);
+            // if(sum_removed_weights[derived] + inc <= s){
+            //     sum_removed_weights[derived] += inc;
+            //     break;
+            // }else
+            //     R->push_back(lit);
+            R->push_back(lit);
         }
     }
 }
