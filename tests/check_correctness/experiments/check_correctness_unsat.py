@@ -11,8 +11,9 @@ from pathlib import Path
 import pandas as pd
 
 def check_unsatisfability(file):
-    df = pd.read_csv(file, delimiter='\t', names=["instance", "solver", "type", "version", "lang", "lazy", "min", "full_instance", "bho1", "bho2", "status", "exit_code", "real", "time", "user", "bho3", "memory"])
-    
+    names = ["problem", "instance", "executable", "solver", "type", "version", "lang", "lazy", "minimality", "full_instance", "status_1", "status_2", "status", "exit_code", "real", "time", "user", "system", "memory"]
+    df = pd.read_csv(file, delimiter='\t', names=names, header=None)
+    success = True
     for version in ["amo", "eo"]:
         print(f"checking correctness for unsatisfability for version: {version}..")
         df_amosum_unsat = df[ (df["type"] == "amosum") & (df["exit_code"] ==  20) & (df["version"] == f"{version}")] 
@@ -26,9 +27,12 @@ def check_unsatisfability(file):
 
         if common_instances:
             print(f"Error: Some instances appear in both df_amosum_unsat and df_plain_sat! for version: {version}")
-            print(common_instances) 
-            return False 
+            for instance in common_instances:
+                executables = set(df[(df["instance"] == instance) & (df["exit_code"] == 20)]["executable"])
+                print(f"For instance {instance} those executable are incorrect:")
+                print(f"\t{executables}")
+            success =  False 
     
-    return True  
+    return success  
 
     
