@@ -108,6 +108,7 @@ V get_map(std::unordered_map<K, V>& umap, K key, V default_value, bool insert = 
     return umap[key];
 }
 
+
 template< typename T>
 void extend_vector(std::vector<T>& to_extend, const std::vector<T>& input, int i = 0, int j = -1){
 

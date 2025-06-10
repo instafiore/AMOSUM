@@ -17,6 +17,7 @@ Invariants:
 
 def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
     propagator.S = []
+    sum_removed_weights = {}
     
     if propagator.mps_violated:
         
@@ -34,11 +35,11 @@ def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
             derived_true = True
             g = propagator.group[not_(l)]
 
-        create_reason_falses_ge(propagator, not_(l))
+        create_reason_falses_ge(propagator, sum_removed_weights, not_(l))
 
         if derived_true:
             sml_g = max_w(g)
-            create_reason_true_ge(propagator, sml_g, not_(l), g)
+            create_reason_true_ge(propagator, sml_g, not_(l), g, sum_removed_weights)
         propagator.to_be_propagated[not_(l)] = True
         return propagator.S
 
@@ -65,7 +66,7 @@ def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
                     break
 
     if propagator.S and propagator.dl != 0:
-        create_reason_falses_ge(propagator=propagator)
+        create_reason_falses_ge(propagator=propagator, sum_removed_weights=sum_removed_weights)
         propagator.compute_minimal_reason(to_minimize=propagator.S)
 
     print_derivation(propagator.atomNames, propagator.S)

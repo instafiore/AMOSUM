@@ -369,10 +369,10 @@ std::tuple<bool, const std::vector<clingo_literal_t>* (*)(const Group*, AmoSumPr
     return std::make_tuple(ge, propagation_phase, choice_cons);
 }
 
-void create_reason_falses(AmoSumPropagator* propagator, bool ge, clingo_literal_t flipped = SETTINGS::NONE) {
+void create_reason_falses(AmoSumPropagator* propagator, bool ge, std::unordered_map<clingo_literal_t, int> &sum_removed_weights, clingo_literal_t flipped = SETTINGS::NONE) {
     // TODO: modify propagator->reason
     if (ge) {
-        create_reason_falses_ge(propagator, flipped);
+        create_reason_falses_ge(propagator, sum_removed_weights, flipped);
     } else {
         create_reason_falses_le(propagator, flipped);
     }
@@ -391,40 +391,176 @@ void weights_names_log(const std::string& ID, const std::unordered_map<std::stri
 }
 #endif
 
-void create_reason_falses_ge(AmoSumPropagator* propagator, clingo_literal_t flipped = SETTINGS::NONE) {
+void create_reason_falses_ge(AmoSumPropagator* propagator, std::unordered_map<clingo_literal_t, int> &sum_removed_weights, clingo_literal_t flipped = SETTINGS::NONE) {
 
     if(propagator->dl == 0) return ;
+
+    std::unordered_map<int, bool> breaks;
     
     for (auto* g : propagator->groups) {
         if (propagator->true_group->get(g) == SETTINGS::NONE) {
             clingo_literal_t ml_g = m_w(g, propagator->ge);
+
             int mw_g = propagator->weight->get(ml_g);
 
             for (int i = static_cast<int>(g->ord_l.size()) - 1; i >= 0; --i) {
                 clingo_literal_t l = g->ord_l[i];
+                
                 if (propagator->weight->get(l) < mw_g) break;
                 if (!propagator->I->get(l) && !equals(l, flipped)) {
-                    for(auto lit : propagator->S){
-                        auto R = get_perfect_hash_with_pointer(propagator->reason.get(), lit);
-                        Group* G = propagator->group->get(lit);
-                        if (G == nullptr) G = propagator->group->get(not_(lit));
+                    for(auto derived : propagator->S){
+                        // ADDED
+                        if(breaks.find(derived) != breaks.end() && breaks[derived]) continue;
+                        
+                        Group* G = propagator->group->get(derived);
+                        bool derived_true = true;
+                        if (!G) {
+                            G = propagator->group->get(not_(derived));
+                            derived_true = false;
+                        }
+                        assert(G != nullptr);
                         if(g == G) continue; 
-                        R->push_back(l);
+
+                        auto mps_h = propagator->mps_violated ? propagator->_mps : std::get<0>(propagator->mps(G, derived, !derived_true));
+                        int s = propagator->lb - mps_h - 1;
+                        int weight = propagator->weight->get(l);
+                        int inc = weight - mw_g;
+                        // 
+
+                        auto R = get_perfect_hash_with_pointer(propagator->reason.get(), derived);
+        
+                        get_map(sum_removed_weights, derived, 0, true);
+                        if(sum_removed_weights[derived] + inc <= s){
+                            sum_removed_weights[derived] += inc ;
+                            breaks[derived] = true ;
+                        }else{
+                            R->push_back(l);
+                        }
+                        
                     }
                 }
             }
         } 
         else if(!equals(propagator->true_group->get(g), flipped)) {
-            for(auto lit : propagator->S){
-                auto R = get_perfect_hash_with_pointer(propagator->reason.get(), lit);
-                Group* G = propagator->group->get(lit);
-                if (G == nullptr) G = propagator->group->get(not_(lit));
+            int tr = propagator->true_group->get(g) ;
+    
+            for(auto derived : propagator->S){
+                auto R = get_perfect_hash_with_pointer(propagator->reason.get(), derived);
+                // ADDED
+                Group* G = propagator->group->get(derived);
+                bool derived_true = true;
+                if (!G) {
+                    G = propagator->group->get(not_(derived));
+                    derived_true = false;
+                }
+                //
                 if(g == G) continue; 
-                R->push_back(not_(propagator->true_group->get(g)));
-            }
+
+                
+
+                // ADDED
+                assert(G != nullptr);
+
+                auto mps_h = propagator->mps_violated ? propagator->_mps : std::get<0>(propagator->mps(G, derived, !derived_true));
+
+                int s = propagator->lb - mps_h - 1;
+                int w = propagator->weight->get(tr); 
+                int w_mw_g = g->ord_l.size() > 0 ? propagator->weight->get(g->ord_l.back()) : s + 1 + w; 
+                int inc = w_mw_g - w;
+                assert(inc >= 0);
+
+                get_map(sum_removed_weights, derived, 0, true);
+                if(sum_removed_weights[derived] + inc <= s){
+                    sum_removed_weights[derived] += inc ;
+                }else{
+                    R->push_back(not_(tr));
+                }
+            }    
+        }
+    }
+    
+
+    // if(propagator->dl == 0) return ;
+    
+    // for (auto* g : propagator->groups) {
+    //     if (propagator->true_group->get(g) == SETTINGS::NONE) {
+    //         clingo_literal_t ml_g = m_w(g, propagator->ge);
+    //         int mw_g = propagator->weight->get(ml_g);
+
+    //         for (int i = static_cast<int>(g->ord_l.size()) - 1; i >= 0; --i) {
+    //             clingo_literal_t l = g->ord_l[i];
+    //             if (propagator->weight->get(l) < mw_g) break;
+    //             if (!propagator->I->get(l) && !equals(l, flipped)) {
+    //                 for(auto lit : propagator->S){
+    //                     auto R = get_perfect_hash_with_pointer(propagator->reason.get(), lit);
+    //                     Group* G = propagator->group->get(lit);
+    //                     if (G == nullptr) G = propagator->group->get(not_(lit));
+    //                     if(g == G) continue; 
+    //                     R->push_back(l);
+    //                 }
+    //             }
+    //         }
+    //     } 
+    //     else if(!equals(propagator->true_group->get(g), flipped)) {
+    //         for(auto lit : propagator->S){
+    //             auto R = get_perfect_hash_with_pointer(propagator->reason.get(), lit);
+    //             Group* G = propagator->group->get(lit);
+    //             if (G == nullptr) G = propagator->group->get(not_(lit));
+    //             if(g == G) continue; 
+    //             R->push_back(not_(propagator->true_group->get(g)));
+    //         }
+    //     }
+    // }
+
+}
+
+void create_reason_true_ge(AmoSumPropagator* propagator, clingo_literal_t sml_g, clingo_literal_t derived, Group* g, std::unordered_map<clingo_literal_t, int> &sum_removed_weights){
+    if(propagator->dl == 0) return ;
+    
+    int i = sml_g != SETTINGS::NONE ? g->ord_i[sml_g] : 0;
+    int j = g->ord_l.size() -1;
+    // int j = g->ord_l.size(); 
+
+    auto R = get_perfect_hash_with_pointer(propagator->reason.get(), derived);
+
+    assert(i <= j);
+    assert(derived != SETTINGS::NONE);
+
+    auto mps_h = propagator->mps_violated ? propagator->_mps : std::get<0>(propagator->mps(g, derived, false));
+    int s = propagator->lb - mps_h - 1 ;
+    // for (int k = i; k < j; ++k) {
+    for (int k = j; k >= i; --k) {
+        clingo_literal_t lit = g->ord_l[k];
+        int weight = propagator->weight->get(lit);
+        int w_sml = propagator->weight->get(sml_g);
+        int inc = weight - w_sml ;
+        if (!propagator->I->get(lit) && !equals(derived, lit)) {
+            get_map(sum_removed_weights, derived, 0, true);
+            if(sum_removed_weights[derived] + inc <= s){
+                sum_removed_weights[derived] += inc;
+                break;
+            }else
+                R->push_back(lit);
+            // R->push_back(lit);
         }
     }
 
+    //     if(propagator->dl == 0) return ;
+    
+    // int i = sml_g != SETTINGS::NONE ? g->ord_i[sml_g] : 0;
+    // int j = g->ord_l.size();
+
+    // auto R = get_perfect_hash_with_pointer(propagator->reason.get(), derived);
+
+    // assert(i <= j);
+    // assert(derived != SETTINGS::NONE);
+    
+    // for (int k = i; k < j; ++k) {
+    //     clingo_literal_t lit = g->ord_l[k];
+    //     if (!propagator->I->get(lit) && !equals(derived, lit)) {
+    //         R->push_back(lit);
+    //     }
+    // }
 }
 
 
@@ -472,24 +608,7 @@ std::string vector_lit_to_string(const std::unordered_map<clingo_symbol_t, cling
     return oss.str();
 }
 
-void create_reason_true_ge(AmoSumPropagator* propagator, clingo_literal_t sml_g, clingo_literal_t derived, Group* g){
-    if(propagator->dl == 0) return ;
-    
-    int i = sml_g != SETTINGS::NONE ? g->ord_i[sml_g] : 0;
-    int j = g->ord_l.size();
 
-    auto R = get_perfect_hash_with_pointer(propagator->reason.get(), derived);
-
-    assert(i <= j);
-    assert(derived != SETTINGS::NONE);
-    
-    for (int k = i; k < j; ++k) {
-        clingo_literal_t lit = g->ord_l[k];
-        if (!propagator->I->get(lit) && !equals(derived, lit)) {
-            R->push_back(lit);
-        }
-    }
-}
 
 void create_reason_true_le(AmoSumPropagator* propagator, clingo_literal_t sml_g, clingo_literal_t derived, Group* g){
     if(propagator->dl == 0) return ;
@@ -614,7 +733,7 @@ void print_propagate(PropagatorClingo* prop, const clingo_literal_t *changes, si
         decision_slit != 1 ? decision_literal_name = get_name(prop->atomNames, plit) : decision_literal_name = "from facts" ;
     else
         decision_literal_name = "non lo so";
-    debugf("[", decision_literal_name,", ",dl,"] propagate ", changes_str," td: ", td);
+    debugf("[", decision_literal_name,", ",dl,"] propagate ", changes_str, " mps: ", prop->propagators[td]->_mps, " bound: ",prop->propagators[td]->bound," td: ", td);
 }
 
 void print_undo(PropagatorClingo* prop, const clingo_literal_t *changes, size_t size, clingo_propagate_control_t *control, int dl, int td, bool force_print = false, bool wasp_b = false){
@@ -814,8 +933,13 @@ int increment_f(bool derived_true, clingo_literal_t l, const std::unordered_set<
         assert(!g->ord_l.empty());
         int w_mw_g = weight->get(g->ord_l.back());
         assert(g != head_group);
-        // return 999999;
-        if(!derived_true) return 999999;
+
+        // TODO: fix reason for this case
+        // assert(false);
+        // if(derived_true){
+        //     return 999999 ;
+        // }
+
         assert(w_mw_g >= w);
         return w_mw_g - w;
     } else {

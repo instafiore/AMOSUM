@@ -1,0 +1,1 @@
+results/Knapsack/0092-knapsack-55-116950-829874-type1.asp.out

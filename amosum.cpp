@@ -206,9 +206,7 @@ void AmoSumPropagator::compute_minimal_reason(const std::vector<clingo_literal_t
         if(R == nullptr) continue ;
         
         if (minimization == Minimize::MINIMAL) {
-            
             maximal_subset_sum_less_than_s_with_groups(derived_true, *R, s, weight, group.get(), l, I, ge, *rd);
-            // debugf("rd size: ", rd->size());
         } else if (minimization == Minimize::CARDINALITY_MINIMAL) {
             // NOT IMPLEMENTED
         } else {
