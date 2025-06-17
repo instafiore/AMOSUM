@@ -1,0 +1,6 @@
+\midrule
+\multirow{2}{*}{\rotatebox{90}{amo}} & D-wasp-amosum-amo-py & 126 & 189 & 94 & 148 & 72 & 77 & 0 & 0 & 292 & 414\\
+ & D-clingo-amosum-amo-c & 184 & 228 & 328 & 323 & 86 & 88 & 3 & 4 & 601 & 643\\
+\midrule
+\multirow{2}{*}{\rotatebox{90}{eo}} & D-wasp-amosum-eo-py & 86 & 86 & 132 & 164 & 73 & 75 & 0 & 0 & 291 & 325\\
+ & D-clingo-amosum-eo-c & 160 & 188 & 303 & 316 & 82 & 87 & 0 & 1 & 545 & 592\\
