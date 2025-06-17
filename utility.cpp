@@ -933,13 +933,6 @@ int increment_f(bool derived_true, clingo_literal_t l, const std::unordered_set<
         assert(!g->ord_l.empty());
         int w_mw_g = weight->get(g->ord_l.back());
         assert(g != head_group);
-
-        // TODO: fix reason for this case
-        // assert(false);
-        // if(derived_true){
-        //     return 999999 ;
-        // }
-
         assert(w_mw_g >= w);
         return w_mw_g - w;
     } else {
@@ -966,8 +959,7 @@ int increment_f(bool derived_true, clingo_literal_t l, const std::unordered_set<
             if (--i <= 0) break;
             current_l = g->ord_l[i];
         }
-        // return 999999;
-        // if(!derived_true) return 999999;
+
         return increment;
     }
 }
