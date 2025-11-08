@@ -48,11 +48,13 @@ class RunnerClingoC(RunnerWasp):
 
         timeout_str = f"timeout {self.timeout_m}m time -p " if not self.exp else ""
 
+        print(f"encoding: {location_encoding}") if not self.exp or True else None
+        print(f"instance: {location_instance}") if not self.exp or True else None
+        
+
         hidden_location_encoding= self.rewrite_file_without_amosum(location_encoding)
         hidden_location_instance= self.rewrite_file_without_amosum(location_instance)
 
-        print(f"encoding: {location_encoding}") if not self.exp else None
-        print(f"instance: {location_instance}") if not self.exp else None
         
         grounded_program, run_command_ground = ground_program(hidden_location_encoding, hidden_location_instance, return_command=True)
         
