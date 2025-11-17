@@ -2,7 +2,7 @@
 #include <iostream>
 #include <utility>
 #include <cassert>
-#include "prop_clingo/propagator_clingo_c/propagator_clingo.h"
+#include "amoclingo/propagator_clingo_c/propagator_clingo.h"
 
 
 

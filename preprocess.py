@@ -1,5 +1,5 @@
 import sys
-from prop_wasp.propagator_wasp_py.wasp import *
+from amowasp.propagator_wasp_py.wasp import *
 from settings import *
 
 class amosum_aggregate:
@@ -26,6 +26,7 @@ def preprocess_ground_program(file: str) -> dict:
     ignore_all = False
 
     result_map = dict()
+    result_map["amosum_mapweights"] = dict()
     amosum_set = [] 
     for line in file.splitlines():
         if ignore_all:
@@ -45,7 +46,17 @@ def preprocess_ground_program(file: str) -> dict:
                     id = terms[0]
                     prop_type = terms[1]
                     amosum_set.append(amosum_aggregate(id=id, prop_type=prop_type))
+                elif l[1].startswith(PREDICATE_GROUP):
+                    terms = getTerms(PREDICATE_GROUP, l[1])
+                    name = terms[0]
+                    sign = terms[1].replace("\"","")
+                    weight = terms[2]
+                    id = terms[3]
+                    aggrid = terms[4]
+                    result_map["amosum_mapweights"].setdefault(aggrid, dict())
+                    result_map["amosum_mapweights"][name] = {"sign": sign, "weight": weight, "id": id}
 
 
     result_map["amosum_set"] = amosum_set
+    
     return result_map

@@ -11,10 +11,10 @@
 #include <fstream>
 #include <cassert>
 #include "amosum.h"
-#include "prop_wasp/propagator_wasp_c/ge_amo.h" 
-#include "prop_wasp/propagator_wasp_c/ge_eo.h" 
-#include "prop_wasp/propagator_wasp_c/le_eo.h" 
-#include "prop_clingo/propagator_clingo_c/propagator_clingo.h"
+#include "amowasp/propagator_wasp_c/ge_amo.h" 
+#include "amowasp/propagator_wasp_c/ge_eo.h" 
+#include "amowasp/propagator_wasp_c/le_eo.h" 
+#include "amoclingo/propagator_clingo_c/propagator_clingo.h"
 #include "utility.tpp"
 #include <chrono>
 

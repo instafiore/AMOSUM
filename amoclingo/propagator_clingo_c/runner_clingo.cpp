@@ -37,7 +37,7 @@ int main(int argc, char const *argv[])
 
     int major, minor, revision;
     clingo_version(&major, &minor, &revision);
-    printf("Clingo version: %d.%d.%d\n", major, minor, revision);
+    // printf("Clingo version: %d.%d.%d\n", major, minor, revision);
 
     std::string encoding = cat(encoding_path);
     std::string instance = cat(instance_path);

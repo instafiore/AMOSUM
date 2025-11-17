@@ -7,7 +7,7 @@ INCLUDES =
 SRC_DIR = ../..
 TARGET = runner_clingo
 C=cpp
-PROP_WASP = $(SRC_DIR)/prop_wasp/propagator_wasp_c
+amowasp = $(SRC_DIR)/amowasp/propagator_wasp_c
 
 SRCS = $(shell find $(SRC_DIR) -name '*.$(C)')
 OBJS = $(addprefix $(BUILD_DIR)/, $(notdir $(SRCS:.$(C)=.o)))
@@ -28,7 +28,7 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.$(C)
 	@echo "Compiling $< -> $@"
 	$(CC) $(CFLAGS) $(LDFLAGS) -c $< -o $@
 
-$(BUILD_DIR)/%.o: $(PROP_WASP)/%.$(C)
+$(BUILD_DIR)/%.o: $(amowasp)/%.$(C)
 	@mkdir -p $(BUILD_DIR) # Create build directory if not exists
 	@echo "Compiling $< -> $@"
 	$(CC) $(CFLAGS) $(LDFLAGS) -c $< -o $@

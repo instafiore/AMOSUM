@@ -14,7 +14,7 @@ from amosum import *
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import ast
-from prop_wasp.propagator_wasp_py.runner_wasp import RunnerWasp
+from amowasp.propagator_wasp_py.runner_wasp import RunnerWasp
 from  utility import *
 import utility
 import settings
@@ -48,8 +48,11 @@ class RunnerClingoC(RunnerWasp):
 
         timeout_str = f"timeout {self.timeout_m}m time -p " if not self.exp else ""
 
-        print(f"encoding: {location_encoding}") if not self.exp or True else None
-        print(f"instance: {location_instance}") if not self.exp or True else None
+        print(f"encoding: {location_encoding}") if not self.exp  else None
+        print(f"instance: {location_instance}") if not self.exp  else None
+
+        self.create_bound(instance=instance, ub=False)
+        self.create_bound(instance=instance, ub=True)
         
 
         hidden_location_encoding= self.rewrite_file_without_amosum(location_encoding)
@@ -128,7 +131,10 @@ class RunnerClingoC(RunnerWasp):
 
             self.update_maps_weights_list(input = line)
 
-        return answer_sets, time
+        self.comment_bound(instance=instance, ub=False, restore=True)
+        self.comment_bound(instance=instance, ub=True,  restore=True)
+
+        return answer_sets, time, preprocess_map["amosum_mapweights"]
     
 
     def compile(self):

@@ -290,6 +290,21 @@ class RunnerWasp:
             mps_str += f" [mps_{id}]: {mps}"
 
         return mps_str    
+    
+    def cost(self, answerset, mapweights):
+        sum = 0 
+        for key, value in mapweights.items():
+            if len(value) == 0:
+                continue
+            weight = int(value["weight"])
+            sign = value["sign"]
+            if key in answerset:
+                # print(f"key: {key}, key in answerset: {key in answerset} sign: {sign} boolSign: {sign == "+"}")
+                sum += weight if sign == "+" else 0
+            else:
+                sum += weight if sign == "-" else 0
+        # print(sum)
+        return int(sum)
         
 
     def get_regex_query_atom_answerset(self):
@@ -306,8 +321,25 @@ class RunnerWasp:
                 encoding = settings.MAP_ENC_ENCODING_FILES[self.enc_type][0 if enc_aggr else 1] \
                     if self.enc_type else None
                 encoding = self.enc if self.enc else encoding
-                answersets, time = self.run_instance(instance, encoding=encoding)
-                self.print_ans(answer_sets=answersets, time=time)
+                sat = True
+                lowerBound = 0
+                optimumAnswersets = None
+                while sat:
+                    self.propagators = []
+                    self.lb = f"[({lowerBound},0)]"
+                    answersets, tim, mapweights = self.run_instance(instance, encoding=encoding)
+                    sat = len(answersets) > 0
+                    if not sat:
+                        break
+                    optimumAnswersets = answersets
+                    answerset = optimumAnswersets[0]
+                    self.print_ans(answer_sets=optimumAnswersets, time=time)
+                    lowerBound = self.cost(answerset, mapweights)
+                    lowerBound += 1
+                    print(f"Lower bound: {lowerBound}")
+                optimalCost = lowerBound - 1
+                self.print_ans(answer_sets=optimumAnswersets, time=time)
+                print(f"optimum cost: {optimalCost}")
                 if(len(answersets) == 0): exit(20)
                 else: exit(10)
 
@@ -328,8 +360,8 @@ class RunnerWasp:
         # instance
         location_instance = f"{self.location_instance}/{instance}.asp" if not self.exp else instance
 
-        print(f"encoding: {location_encoding}")
-        print(f"instance: {location_instance}")
+        # print(f"encoding: {location_encoding}")
+        # print(f"instance: {location_instance}")
 
         timeout_str = f"timeout {self.timeout_m}m time -p " if not self.exp else ""
 
@@ -534,6 +566,8 @@ class RunnerWasp:
     def comment_bound(self, instance, ub = False, restore=False):
         b_str = "ub" if ub else "lb" 
         b = self.ub if ub else self.lb
+        # print(f"ub: {ub}, self.lb: {self.lb} self.ub: {self.ub}")
+        if not ((not ub or self.ub) and (ub or self.lb)): return
 
         comment_r = "%" if restore else ""
         comment_w = "" if restore else "%"
@@ -545,24 +579,29 @@ class RunnerWasp:
             lines = file.readlines()
 
         with open(instace_path, "w") as file:
-            for line in lines:
+            for lineId in range(len(lines)):
+                line = lines[lineId].strip()
                 match = re.match(pattern, line)
-                if match:
+                if not line:
+                    continue
+                line += "\n"
+                if match and lineId < len(lines) -1:
                     file.write(f"{comment_w}{match.group(1)}.\n")
-                else:
+                elif (not restore or lineId < len(lines) -1):
                     file.write(line)
 
     def create_bound(self, instance, ub = False):
         b = self.ub if ub else self.lb
         b_str = "ub" if ub else "lb" 
+        file = f"{settings.BENCHMARKS_LOCATION}/{self.problem}/{b_str}" if not self.exp else instance
         if b:
             if re.match(r"\[\((\d+),(\d+)\)(,\((\d+),(\d+)\))*\]",b):
                 b_list = ast.literal_eval(b)
-                subprocess.run(f"echo '' > {settings.BENCHMARKS_LOCATION}/{self.problem}/{b_str}.asp", shell=True)
+                subprocess.run(f"echo '' > {file}", shell=True) if not self.exp else None
                 for b, bi in b_list:
-                    subprocess.run(f"echo '{b_str}({b},{bi}).' >> {settings.BENCHMARKS_LOCATION}/{self.problem}/{b_str}.asp", shell=True)
+                    subprocess.run(f"echo '\n{b_str}({b},{bi}).' >> {file}", shell=True)
             elif re.match(r"\d+", b):
-                subprocess.run(f"echo '{b_str}({b},{self.id}).' > {settings.BENCHMARKS_LOCATION}/{self.problem}/{b_str}.asp", shell=True)
+                subprocess.run(f"echo '\n{b_str}({b},{self.id}).' > {file}", shell=True)
             else:
                 raise Exception(f"invalid {b_str} insert, it has to be two integers: value id ; or a list of pairs of integers(json like)") 
             

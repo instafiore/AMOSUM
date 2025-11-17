@@ -3,17 +3,24 @@ import sys
 import os
 # adding the root path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from prop_clingo.propagator_clingo_py.runner_clingo import RunnerClingoPython
-from prop_clingo.propagator_clingo_c.runner_clingo import RunnerClingoC
+from amoclingo.propagator_clingo_py.runner_clingo import RunnerClingoPython
+from amoclingo.propagator_clingo_c.runner_clingo import RunnerClingoC
 from utility import *
 
 '''
 This is the entry file to run the AMO SUM propagator(s) CLINGO
 '''
+def optimized_run():
+    """
+    Wrapper that re-runs the module with -O optimization flag.
+    """
+    # Build the command: [python, -O, -m, weaksatbasedls, ...args...]
+    os.execvp(sys.executable, [sys.executable, "-O", "-m", "amoclingo", *sys.argv[1:]])
 
-def main():
+
+def run():
     
-    DEFAULT_LANG = "py"
+    DEFAULT_LANG = "c"
     param = init_param(sys.argv)
     
     language = param.get("lang", DEFAULT_LANG)
@@ -27,4 +34,4 @@ def main():
     runner.run()
 
 if __name__ == '__main__':
-    main()
+    run()

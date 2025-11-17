@@ -17,7 +17,7 @@ import amosum
     Invariants: 
 '''
 import time 
-from prop_clingo.propagator_clingo_py.propagator_clingo_initializer import *
+from amoclingo.propagator_clingo_py.propagator_clingo_initializer import *
 
 class PropagatorClingo(clingo.Propagator):
 
