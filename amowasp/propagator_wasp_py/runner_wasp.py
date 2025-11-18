@@ -327,7 +327,7 @@ class RunnerWasp:
                 while sat:
                     self.propagators = []
                     self.lb = f"[({lowerBound},0)]"
-                    answersets, tim, mapweights = self.run_instance(instance, encoding=encoding)
+                    answersets, time, mapweights = self.run_instance(instance, encoding=encoding)
                     sat = len(answersets) > 0
                     if not sat:
                         break
@@ -615,7 +615,8 @@ class RunnerWasp:
         # print(f"file_name: {file_name}")
         file_name = re.search(r"(.*)\.asp", file_name).group(1)
         non_ground_file_without_amosum = run_rewriter(input=file)
-        # print(f"non_ground_encoding_without_amosum: {non_ground_file_without_amosum}")
+        print(f"non_ground_encoding_without_amosum\n{non_ground_file_without_amosum}")
+        exit(0)
         hidden_file_without_amosum = f".{file_name}_without_amosum_{date_string}.asp"
         hidden_file_without_amosum_tmp_location= f"/tmp/{hidden_file_without_amosum}"
         write_file(hidden_file_without_amosum_tmp_location, non_ground_file_without_amosum)
