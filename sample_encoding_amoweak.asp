@@ -6,7 +6,7 @@
 % Amoweak
 {col(X,C) : colour(C)} <= 1 :- node(X).
 :- col(X1,C), col(X2,C), link(X1,X2).
-#maximize{ W: col(X,C), colour_weight(C,W) [X]}.
+#amomaximize{ W: col(X,C), colour_weight(C,W) [X]}.
 
 % metadata
 {col(X, C):colour(C)}<=1:-node(X).
