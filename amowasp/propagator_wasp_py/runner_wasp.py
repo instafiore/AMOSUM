@@ -624,5 +624,5 @@ class RunnerWasp:
     
     def __del__(self):
         for file in self.tmp_files:
-            debug(f"removing file {file}", force_print=True)
+            # debug(f"removing file {file}", force_print=True)
             os.remove(file)

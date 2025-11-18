@@ -81,7 +81,13 @@ class RunnerClingoC(RunnerWasp):
         self.maps_weights_list = []
         # compile propagator
         if not self.exp or self.param.get("clean",False) : self.compile()
-        run_process = subprocess.run(run, shell=True, capture_output=True, text=True)
+
+
+        try:
+            run_process = subprocess.run(run, shell=True, capture_output=True, text=True)
+        except KeyboardInterrupt as e:
+            print("Interrupted")
+            return [], -1, preprocess_map["amosum_mapweights"]
 
         output = run_process.stdout
         error = run_process.stderr
