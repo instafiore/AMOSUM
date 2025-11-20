@@ -74,6 +74,10 @@ class RunnerClingoC(RunnerWasp):
             prop_run = f" -amosum_propagator=\"{' '.join(self.propagators)}\" "
             run += prop_run
 
+        print(f"weights: {str(preprocess_map["amosum_mapweights"])}")
+
+        print(f"run:\t {run}")
+
         if self.PRINT_RUN:
             print(f"run:\t {run}") if not self.exp else None
 
@@ -88,6 +92,8 @@ class RunnerClingoC(RunnerWasp):
         except KeyboardInterrupt as e:
             print("Interrupted")
             return [], -1, preprocess_map["amosum_mapweights"]
+        
+        
 
         output = run_process.stdout
         error = run_process.stderr

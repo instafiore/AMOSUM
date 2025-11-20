@@ -10,6 +10,8 @@ void PropagatorClingoInitializer::init(clingo_propagate_init* _init, PropagatorC
         propagator.map_plit_slit = map_plit_slit.get();
         return ;
     }
+
+
     first = false ;
 
     atomNames = new std::unordered_map<clingo_symbol_t, clingo_literal_t>();

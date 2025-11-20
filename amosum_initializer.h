@@ -37,6 +37,8 @@ public:
         }
     }
 
+    WeightFunction* weightFunction();
+
     static void cleanup(){
         delete instance ;
     }

@@ -12,7 +12,7 @@
 #include "propagator_clingo.h"
 #include <chrono>
 
-void register_propagator(clingo_control_t *ctl, clingo_propagator_t prop, std::string prop_type, const ParameterMap& param, std::vector<PropagatorClingo*> &propagators);
+PropagatorClingo* register_propagator(clingo_control_t *ctl, clingo_propagator_t prop, std::string prop_type, const ParameterMap& param, std::vector<PropagatorClingo*> &propagators);
 bool init(clingo_propagate_init_t *_init, PropagatorClingo *propagator){
     bool res =  propagator->init(_init);
     return res;
@@ -28,6 +28,8 @@ void undo(clingo_propagate_control_t *control, const clingo_literal_t *changes, 
 int main(int argc, char const *argv[])
 {
 
+
+    
     ParameterMap params =  init_param(argc, argv);
 
     std::string encoding_path = "" ;
@@ -76,8 +78,14 @@ int main(int argc, char const *argv[])
     std::vector<std::pair<std::string, ParameterMap>> prop_type_params = process_sys_parameters(sys_parameters) ;
 
     std::vector<PropagatorClingo*> propagators ;
+    PropagatorClingo* propagatorMaximize = nullptr ;
     for(auto& [prop_type, param]: prop_type_params){
-        register_propagator(ctl, prop, prop_type, param, propagators);
+        if (prop_type == "amomaximize"){
+            propagatorMaximize = register_propagator(ctl, prop, "ge_amo", param, propagators);
+            propagatorMaximize->maximizer = true;
+        }else{
+            register_propagator(ctl, prop, prop_type, param, propagators);
+        }
     }
     
     // Loading the program to the control
@@ -86,30 +94,51 @@ int main(int argc, char const *argv[])
     
 
     handle_error((clingo_control_ground(ctl, parts, 1, NULL, NULL)));
-    handle_error(solve(ctl, &solve_ret));
 
-    size_t iterations = 0 ;
-    for(auto prop: propagators){
-        auto amosum_prop = prop->propagators[0];
-        iterations += amosum_prop->count ;
-    }
-    debugf("Iterations: ", iterations);
+    int countMaximize = 0;
+    int nMaximize = 10;
 
-    // Interpret the result
-    if (solve_ret & clingo_solve_result_satisfiable) {
-        debugf("result: SAT\n");
-    } 
-    else if (solve_ret & clingo_solve_result_unsatisfiable) {
-        debugf("result: UNSAT\n");
-    } 
-    else if (solve_ret & clingo_solve_result_exhausted) {
-        debugf("ERROR: Search space exhausted.\n");
+    int bound = 0 ;
+    
+    while(true){
+        int cost  ;
+
+        Model* answerset;
+        handle_error(solve(ctl, &solve_ret, answerset, propagatorMaximize));
+    
+        printf("%s\n",answerset->toString().c_str());
+       
+        size_t iterations = 0 ;
+        for(auto prop: propagators){
+            auto amosum_prop = prop->propagators[0];
+            iterations += amosum_prop->count ;
+        }
+        debugf("Iterations: ", iterations);
+
+        // Interpret the result
+        if (solve_ret & clingo_solve_result_satisfiable) {
+            debugf("result: SAT\n");
+        } 
+        else if (solve_ret & clingo_solve_result_unsatisfiable) {
+            debugf("result: UNSAT\n");
+        } 
+        else if (solve_ret & clingo_solve_result_exhausted) {
+            debugf("ERROR: Search space exhausted.\n");
+        }
+        else if (solve_ret & clingo_solve_result_interrupted) {
+            debugf("timeout: Solving was interrupted.\n");
+        }else {
+            debugf("ERROR: Unexpected solve result\n");
+        }
+        bound = answerset->cost + 1;
+        propagatorMaximize->updateBound(bound);
+        countMaximize += 1;
+
+        delete answerset;
+        // if(countMaximize >= nMaximize) break;
+        
     }
-    else if (solve_ret & clingo_solve_result_interrupted) {
-        debugf("timeout: Solving was interrupted.\n");
-    }else {
-        debugf("ERROR: Unexpected solve result\n");
-    }
+    
     
     // FREE
     for(auto& propagator: propagators){
@@ -125,7 +154,7 @@ int main(int argc, char const *argv[])
     
 }
 
-void register_propagator(clingo_control_t *ctl, clingo_propagator_t prop, 
+PropagatorClingo* register_propagator(clingo_control_t *ctl, clingo_propagator_t prop, 
     std::string prop_type, const ParameterMap& param,
     std::vector<PropagatorClingo*> &propagators){
 
@@ -134,9 +163,11 @@ void register_propagator(clingo_control_t *ctl, clingo_propagator_t prop,
     bool ge = std::get<0>(result);
     const std::vector<clingo_literal_t>* (*propagation_phase)(const Group*, AmoSumPropagator*) = std::get<1>(result);
     std::string choice_cons = std::get<2>(result);
+    
 
     PropagatorClingo* propagator_clingo = new PropagatorClingo(param, propagation_phase, ge, choice_cons);
 
     handle_error(clingo_control_register_propagator(ctl, &prop, propagator_clingo, false));
     propagators.push_back(propagator_clingo);
+    return propagator_clingo;
 }

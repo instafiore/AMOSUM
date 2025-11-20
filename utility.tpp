@@ -40,17 +40,18 @@ void PerfectHash<V>::set(const int& key, const V& value){
 
 
 template <typename T>
-std::string vector_to_string(const std::vector<T>& vec, std::string name = ""){
+std::string vector_to_string(const std::vector<T>& vec, std::string name = "", std::string parentesis = "[]"){
     std::ostringstream oss;
     int n = vec.size() ;
     
-    oss<<name<<"[";
+    oss<<name<<parentesis[0];
     for (int i = 0; i < n-1; i++)  oss<<"'"<<vec[i]<<"'"<<"," ;
     if (n > 0) oss<<"'"<<vec[n-1]<<"'";
 
-    oss<<"]";
+    oss<<parentesis[1];
     return oss.str();
 }
+
 
 
 template <typename Key, typename Value>

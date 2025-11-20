@@ -321,27 +321,35 @@ class RunnerWasp:
                 encoding = settings.MAP_ENC_ENCODING_FILES[self.enc_type][0 if enc_aggr else 1] \
                     if self.enc_type else None
                 encoding = self.enc if self.enc else encoding
-                sat = True
-                lowerBound = 0
+                sat = False
+                lowerBound = 1000
                 optimumAnswersets = None
-                while sat:
+                improve = True
+                while True:
+                    
                     self.propagators = []
                     self.lb = f"[({lowerBound},0)]"
                     answersets, time, mapweights = self.run_instance(instance, encoding=encoding)
-                    sat = len(answersets) > 0
-                    if not sat:
+                    improve = len(answersets) > 0
+                    if not improve:
                         break
+                    sat = True
                     optimumAnswersets = answersets
                     answerset = optimumAnswersets[0]
                     self.print_ans(answer_sets=optimumAnswersets, time=time)
                     lowerBound = self.cost(answerset, mapweights)
                     lowerBound += 1
                     print(f"Lower bound: {lowerBound}")
-                optimalCost = lowerBound - 1
-                self.print_ans(answer_sets=optimumAnswersets, time=time)
-                print(f"optimum cost: {optimalCost}")
-                if(len(answersets) == 0): exit(20)
-                else: exit(10)
+                    break
+                    
+                if sat:
+                    optimalCost = lowerBound - 1
+                    self.print_ans(answer_sets=optimumAnswersets, time=time)
+                    print(f"optimum cost: {optimalCost}")
+                    exit(10)
+                else:
+                    print("UNSAT")
+                    exit(20)
 
 
     def run_instance(self, instance, encoding = None):
@@ -616,7 +624,6 @@ class RunnerWasp:
         file_name = re.search(r"(.*)\.asp", file_name).group(1)
         non_ground_file_without_amosum = run_rewriter(input=file)
         print(f"non_ground_encoding_without_amosum\n{non_ground_file_without_amosum}")
-        exit(0)
         hidden_file_without_amosum = f".{file_name}_without_amosum_{date_string}.asp"
         hidden_file_without_amosum_tmp_location= f"/tmp/{hidden_file_without_amosum}"
         write_file(hidden_file_without_amosum_tmp_location, non_ground_file_without_amosum)
@@ -626,4 +633,5 @@ class RunnerWasp:
     def __del__(self):
         for file in self.tmp_files:
             # debug(f"removing file {file}", force_print=True)
-            os.remove(file)
+            # os.remove(file)
+            pass

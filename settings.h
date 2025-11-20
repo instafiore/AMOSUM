@@ -8,7 +8,7 @@
 #include <limits>
 
 namespace SETTINGS {
-const std::vector<std::string> PROPAGATORS_NAMES = {"ge_amo", "ge_eo", "le_eo"}; 
+const std::vector<std::string> PROPAGATORS_NAMES = {"ge_amo", "ge_eo", "le_eo","amomaximize"}; 
 const int NONE = std::numeric_limits<int>::max() ;
 const std::string TRUE_STR = "true" ;
 const std::string FALSE_STR = "false" ;

@@ -12,6 +12,7 @@
 #include <limits>
 
 const std::vector<clingo_literal_t>* propagation_phase_ge_eo(const Group* G, AmoSumPropagator* propagator) {
+
     propagator->S.clear();
     std::unordered_map<clingo_literal_t, int> sum_removed_weights;
 

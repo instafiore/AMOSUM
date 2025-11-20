@@ -92,17 +92,21 @@ struct AmoSumPropagator
     // inverse of map_slit_plit
     std::unordered_map<clingo_literal_t, clingo_literal_t>* map_plit_slit ;
 
-    int lb;      // lower bound
+    int lb = SETTINGS::NONE;      // lower bound
     int _mps;    // max/min possible sum
-    int ub;      // upper bound
+    int ub = SETTINGS::NONE;      // upper bound
     int bound = SETTINGS::NONE ; // either lb or ub depending on ge
     
     std::string solver; 
     static constexpr const char* CLINGO = "clingo";
     static constexpr const char* WASP = "wasp";
 
+    std::unordered_map<std::string,int> weights_names ;
+
     unsigned long count = 0 ;
     clingo_literal_t current_literal;
+
+    void updateBound(int bound);
 
     AmoSumPropagator(){}
     AmoSumPropagator(
@@ -118,6 +122,7 @@ struct AmoSumPropagator
           ge(ge),
           choice_cons(std::move(choice_cons)),
           solver(std::move(solver)) {}
+
     ~AmoSumPropagator(){
         for(const Group* group : groups)   delete group ;
         for(int i=0; i< redundant_lits->N; ++i){
@@ -126,6 +131,11 @@ struct AmoSumPropagator
             auto ptr_vec = reason->get(i);
             if (ptr_vec != nullptr) delete ptr_vec ;
         }
+    }
+
+    void resetPropagator(){
+        this->last_decision_lit = 1;
+        this->dl = 0;
     }
 
     const std::vector<clingo_literal_t> getLiterals(const std::vector<clingo_literal_t>& lits);

@@ -5,17 +5,30 @@
 #include "amoclingo/propagator_clingo_c/propagator_clingo.h"
 
 
+void AmoSumPropagator::updateBound(int bound){
+    this->bound = bound;
+    
+    printf("Updating bound AmoSumPropagator with %d\n", this->bound);
+    this->ge ? this->lb = bound : this->ub = bound ;
+    
+}
 
 
 const std::vector<clingo_literal_t> AmoSumPropagator::simplifyAtLevelZero(const bool& delete_lits=false){ 
 
+
+        
         std::string error_string = ge ? (std::to_string(_mps) + " < " + std::to_string(lb) + " !!!") : (std::to_string(_mps) + " > " + std::to_string(ub) + " !!!");
         if ((ge && _mps < lb) || (!ge && _mps > ub)) {
                 debugf(error_string)
                 return {PropagatorClingo::BOTTOM};
         }
+        
+        
 
         assert(!mps_violated);
+
+        
 
         update_lazy_propagation();
         const std::vector<clingo_literal_t>* prop_from_facts = lazy_condition ? propagation_phase(nullptr, this) : nullptr;
@@ -329,6 +342,7 @@ void AmoSumPropagator::add_redundant_lit(clingo_literal_t l, clingo_literal_t re
 
 bool AmoSumPropagator::is_true(clingo_literal_t l){
     if(dl == 0) return false;
+    
     bool res ;
     const clingo_assignment_t *assignment = clingo_propagate_control_assignment(control);
     if(solver == AmoSumPropagator::CLINGO){

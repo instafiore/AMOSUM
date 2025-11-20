@@ -25,6 +25,9 @@ public:
     bool ge;
     std::string choice_cons;
     std::string solver;
+    int bound ;
+    bool first = true;
+    bool maximizer = false ;
     
 
     // This is a map for mapping each solver literal (slit) to its program literal(s) (plit).
@@ -43,14 +46,20 @@ public:
             const std::unordered_map<std::string, std::string>& param,
             const std::vector<clingo_literal_t>* (*propagation_phase)(const Group*, AmoSumPropagator*),
             bool ge,
-            const std::string& choice_cons
+            const std::string& choice_cons,
+            bool maximizer = false
         )
             : param(param),
             propagation_phase(propagation_phase),
             ge(ge),
             choice_cons(choice_cons),
-            solver(AmoSumPropagator::CLINGO) {}
+            solver(AmoSumPropagator::CLINGO),
+            maximizer(maximizer)
+            {}
 
+
+    void updateBound(int bound);
+    
     bool init(clingo_propagate_init_t *_init);
     bool propagate(clingo_propagate_control_t *control, const clingo_literal_t *changes, size_t size);
     void undo(clingo_propagate_control_t *control, const clingo_literal_t *changes, size_t size);
@@ -58,6 +67,7 @@ public:
     bool add_clauses_propagated_lits(void *control, const std::vector<clingo_literal_t>& S_plit, int dl, bool init);
     std::string compute_changes_str(const clingo_literal_t *changes, size_t size, int td);
 
+    std::unordered_map<std::string,int>&  weights_names();
 
     std::vector<AmoSumPropagator*> propagators ; 
     ~PropagatorClingo(){

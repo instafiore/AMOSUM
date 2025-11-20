@@ -48,13 +48,18 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, Am
         return &propagator->S;
     }
 
-  
+    
     for (Group* g : propagator->groups) {
+
+        
         if (g == G || propagator->true_group->get(g) != SETTINGS::NONE) continue;
         int ml_g = max_w(g);
         if (ml_g == SETTINGS::NONE) continue;
         
         if(propagator->is_true(ml_g)) continue ;
+        
+        
+        
 
         auto [mps_h, sml_g, ml_g_res] = propagator->mps(g, ml_g, false);
         
@@ -68,7 +73,8 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, Am
             propagate_to_true = true;
             
         }
-
+        
+        
         if (!propagate_to_true) {
             for (int l : g->ord_l) {
                 if (propagator->I->get(l) == SETTINGS::NONE) {
@@ -89,6 +95,8 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, Am
     }
 
     print_derivation(propagator->atomNames, propagator->S, false);
+
+    
     
     if (!propagator->S.empty() && propagator->dl != 0) {
         create_reason_falses_ge(propagator, sum_removed_weights, SETTINGS::NONE);
