@@ -21,6 +21,9 @@ import settings
 from preprocess import *
 from datetime import datetime
 
+
+        
+
 class RunnerClingoC(RunnerWasp):
     '''
     This class is meant to run experiments on the AMO sum propagator(s) Clingo using C API
@@ -51,10 +54,9 @@ class RunnerClingoC(RunnerWasp):
         print(f"encoding: {location_encoding}") if not self.exp  else None
         print(f"instance: {location_instance}") if not self.exp  else None
 
-        self.create_bound(instance=instance, ub=False)
-        self.create_bound(instance=instance, ub=True)
+        # self.create_bound(instance=instance, ub=False)
+        # self.create_bound(instance=instance, ub=True)
         
-
         hidden_location_encoding= self.rewrite_file_without_amosum(location_encoding)
         hidden_location_instance= self.rewrite_file_without_amosum(location_instance)
 
@@ -63,7 +65,8 @@ class RunnerClingoC(RunnerWasp):
         
         run = f"{timeout_str} {settings.PROPAGATOR_DIR_LOCATION_CLINGO_C_BIN}/./{RunnerClingoC.SOLVER_EXE} {self.n0}\
             -enc={hidden_location_encoding}\
-            -i={hidden_location_instance}"
+            -i={hidden_location_instance} \
+            -serialize"
 
         preprocess_map =  preprocess_ground_program(grounded_program)
         for amosum in preprocess_map["amosum_set"]:
@@ -74,79 +77,86 @@ class RunnerClingoC(RunnerWasp):
             prop_run = f" -amosum_propagator=\"{' '.join(self.propagators)}\" "
             run += prop_run
 
-        print(f"weights: {str(preprocess_map["amosum_mapweights"])}")
+        # print(f"weights: {str(preprocess_map["amosum_mapweights"])}")
 
-        print(f"run:\t {run}")
 
         if self.PRINT_RUN:
-            print(f"run:\t {run}") if not self.exp else None
+            print(f"run:\t {run}")
 
         # running test
-        self.maps_weights_list = []
+        # self.maps_weights_list = []
         # compile propagator
         if not self.exp or self.param.get("clean",False) : self.compile()
 
+        # try:
+        #     run_process = subprocess.run(run, shell=True, capture_output=True, text=True)
+        # except KeyboardInterrupt as e:
+        #     print(f"Killed {run_process}")
 
-        try:
-            run_process = subprocess.run(run, shell=True, capture_output=True, text=True)
-        except KeyboardInterrupt as e:
-            print("Interrupted")
-            return [], -1, preprocess_map["amosum_mapweights"]
+        totalTime = time.time()
+        eachModelTime = totalTime
+        for line in run_and_stream(run):
+            if not line.strip(): continue
+            result = Result.parse(line)
+            endCurrentModelTime = time.time()
+            result.cumulativeTime = round(endCurrentModelTime - totalTime,3)
+            result.timeModel = round(endCurrentModelTime - eachModelTime, 3)
+            print(result)
+            eachModelTime = endCurrentModelTime
         
-        
-
-        output = run_process.stdout
-        error = run_process.stderr
-        output_error = output + error
+        # output = run_process.stdout
+        # error = run_process.stderr
+        # output_error = output + error
     
-        lines_output = output.splitlines() 
-        lines_error = error.splitlines() 
+        # lines_output = output.splitlines() 
+        # lines_error = error.splitlines() 
         
-        output = output.strip()
+        # output = output.strip()
         
-        # if RunnerWasp.PRINT_OUTPUT_SOLVER and output != "" :
-        #     print(f"{output}")
+        # # if RunnerWasp.PRINT_OUTPUT_SOLVER and output != "" :
+        # #     print(f"{output}")
 
-        avoiding_time_information_regex = r"(real \d+\.\d+|user \d+\.\d+|sys \d+\.\d+)"
-        error = re.sub(avoiding_time_information_regex, "", error, count=0, flags=0).strip()
-        if RunnerWasp.PRINT_ERROR_SOLVER and error != "":
-            print(error, file=sys.stderr)
+        # avoiding_time_information_regex = r"(real \d+\.\d+|user \d+\.\d+|sys \d+\.\d+)"
+        # error = re.sub(avoiding_time_information_regex, "", error, count=0, flags=0).strip()
+        # if RunnerWasp.PRINT_ERROR_SOLVER and error != "":
+        #     print(error, file=sys.stderr)
 
-        regex_real = r"^real\s(\d+\.\d+)"
-        # regex for the answer set of a given problem
-        regex_answer_set = r"^Answer set \{(.+)\}"
+        # regex_real = r"^real\s(\d+\.\d+)"
+        # # regex for the answer set of a given problem
+        # regex_answer_set = r"^Answer set \{(.+)\}"
         
-        # regex for the interested atoms of a given problem
-        regex_query = self.get_regex_query_atom_answerset()
+        # # regex for the interested atoms of a given problem
+        # regex_query = self.get_regex_query_atom_answerset()
 
-        answer_sets = []
+        # answer_sets = []
 
-        # if RunnerWasp.PRINT_OUTPUT_SOLVER:
-        #         print(output)
+        # # if RunnerWasp.PRINT_OUTPUT_SOLVER:
+        # #         print(output)
 
-        for line in lines_output:
-            if not re.search(regex_answer_set, line) is None:
-                answer_set_str = re.search(regex_answer_set, line).group(1)
-                # print(f"find all: {re.findall(regex_query, answer_set_str)}")
-                answer_set = set([match[0] for match in re.findall(regex_query, answer_set_str)]) if self.problem != RunnerWasp.NPD else answer_set_str.split(", ")
-                # print(f"line:{line} regex_query: {regex_query} answer_set:{answer_set}")
-                answer_sets.append(set(answer_set))
-            elif RunnerWasp.PRINT_OUTPUT_SOLVER:
-                print(line)
+        # for line in lines_output:
+        #     if not re.search(regex_answer_set, line) is None:
+        #         answer_set_str = re.search(regex_answer_set, line).group(1)
+        #         # print(f"find all: {re.findall(regex_query, answer_set_str)}")
+        #         answer_set = set([match[0] for match in re.findall(regex_query, answer_set_str)]) if self.problem != RunnerWasp.NPD else answer_set_str.split(", ")
+        #         # print(f"line:{line} regex_query: {regex_query} answer_set:{answer_set}")
+        #         answer_sets.append(set(answer_set))
+        #     elif RunnerWasp.PRINT_OUTPUT_SOLVER:
+        #         print(line)
         
-        time = "error" if not self.exp else "experiment mode"
-        for line in lines_error:
-            if not re.search(regex_real, line) is None:
-                time = re.search(regex_real, line).group(1)
-            elif not re.search(r"Killed: Bye!", line) is None:
-                time = "timeout"
+        # time = "error" if not self.exp else "experiment mode"
+        # for line in lines_error:
+        #     if not re.search(regex_real, line) is None:
+        #         time = re.search(regex_real, line).group(1)
+        #     elif not re.search(r"Killed: Bye!", line) is None:
+        #         time = "timeout"
 
-            self.update_maps_weights_list(input = line)
+        #     self.update_maps_weights_list(input = line)
 
-        self.comment_bound(instance=instance, ub=False, restore=True)
-        self.comment_bound(instance=instance, ub=True,  restore=True)
+        # self.comment_bound(instance=instance, ub=False, restore=True)
+        # self.comment_bound(instance=instance, ub=True,  restore=True)
 
-        return answer_sets, time, preprocess_map["amosum_mapweights"]
+        # print(f"Returning {results}, {errorcode}")
+        return result.exitCode if result else 40
     
 
     def compile(self):

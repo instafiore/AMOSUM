@@ -31,7 +31,8 @@ def run():
         runner = RunnerClingoC(parameters=param)
     else:
         assert False
-    runner.run()
+    exitCode = runner.run()
+    exit(exitCode)
 
 if __name__ == '__main__':
     run()

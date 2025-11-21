@@ -354,19 +354,19 @@ Model::Model(const clingo_model* model, std::unordered_map<std::string,int>* wei
             str_n = n;
             }
 
+            // retrieve the symbol's string
+            if (!clingo_symbol_to_string(*it, str, n)) { goto error; }
+
             assignment.push_back(str);
 
-            // printf("atom: %s\n", str);
+            // printf("atom: *%s*\n", str);
 
             if(weights_names != nullptr){
                 int newCost = get_map(*weights_names,std::string(str), 0) ;
                 cost += newCost != SETTINGS::NONE ? newCost : 0;
                 // printf("new cost: %d\n", cost);
             }
-        
-            // retrieve the symbol's string
-            if (!clingo_symbol_to_string(*it, str, n)) { goto error; }
-        
+    
         }
         
         
@@ -387,6 +387,74 @@ std::string Model::toString(){
     std::string res = cost + vector_to_string(assignment, "Answer Set ", std::string("{}"));
     return res;
 }
+
+
+
+Result::Result(const clingo_model* model, std::unordered_map<std::string,int>* weights_names, clingo_solve_result_bitset_t &solve_ret){
+    if(model != nullptr) this->model = new Model(model, weights_names);
+    if (solve_ret & clingo_solve_result_satisfiable) {
+        exitCode = 10;
+    } 
+    else if (solve_ret & clingo_solve_result_unsatisfiable) {
+        exitCode = 20;
+    } 
+    else {
+        if (solve_ret & clingo_solve_result_exhausted) {
+            exitCode = 40;
+            debugf("ERROR: Search space exhausted.\n");
+        }
+        else if (solve_ret & clingo_solve_result_interrupted) {
+            exitCode = 60;
+            debugf("timeout: Solving was interrupted.\n");
+        }else {
+            exitCode = 70;
+            debugf("ERROR: Unexpected solve result\n");
+        }
+        exit(exitCode);
+    }
+}
+
+void Result::setOptimum(){
+    exitCode = 30;
+}
+
+Result::~Result(){
+    if(model != nullptr) delete model;
+}
+
+
+std::string Model::serialize(){
+    std::string cost = this->cost != SETTINGS::NONE ? ","+std::to_string(this->cost)+"" : "";
+    std::string res = "["+ vector_to_string(assignment, "", std::string("[]")) + cost +"]";
+    return res;
+}
+
+std::string Result::toString(){
+    // Interpret the result
+    std::string result = "";
+    if (exitCode == 10 || exitCode == 30) {
+        result = model->toString();
+        if(exitCode == 30){
+            result = "[Optimum] " + result ;
+        }
+    } 
+    else if (exitCode == 20) {
+        result = "UNSAT";
+    }else{
+        return "ERROR";
+    }
+    return result;
+}
+
+std::string Result::serialize(){
+    std::string modelSerialized = "[]";
+    if (exitCode == 10 || exitCode == 30) {
+        modelSerialized = model->serialize();
+    } 
+    std::vector<int> others = {exitCode};
+    return "[" + modelSerialized + ", "+vector_to_string(others)+"]";
+}
+
 
 int cost_model(clingo_model_t const *model, std::unordered_map<std::string,int>& weights_names) {
   bool ret = true;
@@ -446,35 +514,30 @@ out:
 }
 
 
-bool solve(clingo_control_t *ctl, clingo_solve_result_bitset_t *result, Model* &answerset, PropagatorClingo* maximizer = nullptr) {
+bool solve(clingo_control_t *ctl, Result* &result, PropagatorClingo* maximizer = nullptr) {
     
     bool ret = true;
     clingo_solve_handle_t *handle;
     clingo_model_t const *model;
+    clingo_solve_result_bitset_t solve_ret;
 
     // get a solve handle
 
     handle_error(clingo_control_solve(ctl, clingo_solve_mode_yield, NULL, 0, NULL, NULL, &handle));
     // loop over all models
 
-    while (true) {
-        handle_error(clingo_solve_handle_resume(handle));
-        handle_error(clingo_solve_handle_model(handle, &model));
+    handle_error(clingo_solve_handle_resume(handle));
+    handle_error(clingo_solve_handle_model(handle, &model));
         // print the model
-        if (model) {          
-            answerset = new Model(model, maximizer != nullptr ? &maximizer->weights_names(): nullptr);
-            answerset->toString();
-        }
-        // stop if there are no more models
-        else       { 
-        break;
-        }
 
-        break;
+    handle_error(clingo_solve_handle_get(handle, &solve_ret));
+
+    if (model) {          
+        result = new Result(model, maximizer != nullptr ? &maximizer->weights_names(): nullptr, solve_ret);
+    }else{
+        result = new Result(nullptr, nullptr, solve_ret);
     }
 
-    handle_error(clingo_solve_handle_get(handle, result));
-   
     return clingo_solve_handle_close(handle) && ret;
 }
 

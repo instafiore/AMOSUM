@@ -136,6 +136,9 @@ struct AmoSumPropagator
     void resetPropagator(){
         this->last_decision_lit = 1;
         this->dl = 0;
+        this->true_group->reset();
+        this->I->reset();
+        this->current_sum = 0 ;
     }
 
     const std::vector<clingo_literal_t> getLiterals(const std::vector<clingo_literal_t>& lits);

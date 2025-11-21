@@ -92,6 +92,7 @@
         "json.hpp": "c",
         "__availability": "cpp",
         "any": "cpp",
-        "clocale": "cpp"
+        "clocale": "cpp",
+        "csignal": "cpp"
     }
 }

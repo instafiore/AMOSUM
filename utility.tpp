@@ -45,8 +45,8 @@ std::string vector_to_string(const std::vector<T>& vec, std::string name = "", s
     int n = vec.size() ;
     
     oss<<name<<parentesis[0];
-    for (int i = 0; i < n-1; i++)  oss<<"'"<<vec[i]<<"'"<<"," ;
-    if (n > 0) oss<<"'"<<vec[n-1]<<"'";
+    for (int i = 0; i < n-1; i++)  oss<<"\""<<vec[i]<<"\""<<"," ;
+    if (n > 0) oss<<"\""<<vec[n-1]<<"\"";
 
     oss<<parentesis[1];
     return oss.str();
@@ -136,12 +136,20 @@ private:
     std::vector<T> data_structure;
 
 protected:
-    T NONE  ;   
+    T NONE ;   
+     
+public:
+
+    void reset(){
+        for(int i = 0; i < data_structure.size(); ++i){
+            data_structure[i] = NONE ; 
+        }
+    }
+
+
     virtual T function_negative_lit(T value) const  {
         return value ;
-    } 
-
-public:
+    }
 
     // Constructor
     explicit SymmetricFunction(size_t N, T NONE = SETTINGS::NONE) : 

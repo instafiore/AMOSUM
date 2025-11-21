@@ -15,7 +15,7 @@
 
 void PropagatorClingo::updateBound(int bound){
     this->bound = bound;
-    printf("Updating bound PropagatorClingo with %d\n", this->bound);
+    // printf("Updating bound PropagatorClingo with %d\n", this->bound);
 }
 
 bool PropagatorClingo::init(clingo_propagate_init_t *_init){
@@ -63,8 +63,6 @@ bool PropagatorClingo::init(clingo_propagate_init_t *_init){
    
     for (size_t i = 0; i < PropagatorClingoInitializer::get_instance()->nt; i++) S_plit = propagators[i]->simplifyAtLevelZero(true);
     
-    
-
     if (S_plit.size() == 1 and S_plit[0] == BOTTOM){ 
         bool result ; 
         handle_error(clingo_propagate_init_add_clause((clingo_propagate_init*) _init, NULL, 0, &result));

@@ -7,7 +7,7 @@ from typing import Any, Dict, List
 import sys
 from settings import *
 import time
-# import clingo 
+import clingo 
 
 # Debug mode
 DEBUG = False
@@ -253,6 +253,81 @@ class SymmetricFunction:
             else:
                 value = None
         self.intepretation[i] = value
+
+def run_and_stream(cmd):
+    proc = subprocess.Popen(
+        cmd,
+        shell=True,
+        stdout=subprocess.PIPE,
+        # stderr=subprocess.STDOUT,
+        text=True,
+        bufsize=1,              
+    )
+
+    try:
+        for line in proc.stdout: 
+            line = line.rstrip("\n")
+            yield line           
+    except KeyboardInterrupt:
+        proc.kill()
+        proc.wait()
+        return 
+
+import json
+class Model:
+
+    def __init__(self, cost: int,  assignment : List):
+        self.cost = cost 
+        self.assigment : List = assignment
+
+    def __str__(self):
+        costStr = f"cost: {self.cost} " if not self.cost is None else ""
+        return f"{costStr}{self.assigment}"
+
+    @staticmethod
+    def parse(serialized: str) -> "Result":
+        print(f"serialized: {serialized}")
+        modelJson = json.loads(serialized)
+        assigmnet = modelJson[0]
+        cost = modelJson[1] if len(modelJson) > 1 else None
+
+        model = Model(cost, assigmnet)
+        return model
+
+class Result:
+
+    model : Model
+    exitCode : int 
+    isOptimum: bool
+    timeModel: float
+    cumulativeTime: float
+
+    def __init__(self, model: Model, exitCode: int):
+        self.model : Model = model
+        self.exitCode : int = exitCode
+        self.isOptimum: bool = exitCode == 30
+        self.timeModel: float = None
+        self.cumulativeTime: float = None
+
+    def __str__(self):
+        isOptimumString = "Optimum " if self.isOptimum else ""
+        timeModelString = f"Time {self.timeModel}s " if not self.timeModel is None else ""
+        cumulativeTimeString = f"Comulative Time {self.cumulativeTime}s " if not self.cumulativeTime is None else ""
+        return f"{cumulativeTimeString}{timeModelString}{isOptimumString}{str(self.model)}"
+
+    @staticmethod
+    def parse(serialized: str) -> "Result":
+        # print(f"serialized: {serialized}")
+        resultJson = json.loads(serialized)
+        modelJson = resultJson[0]
+
+        assigment  = modelJson[0]
+        cost  = modelJson[1] if len(modelJson) > 1 else None
+        model = Model(cost, assigment)
+        
+        otherString = resultJson[1]
+        exitCode = int(otherString[0])
+        return Result(model, exitCode)
 
 class WeightFunction(SymmetricFunction):
     

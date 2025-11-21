@@ -13,7 +13,10 @@ def main():
     
     param = init_param(sys.argv)
     runner = RunnerWasp(parameters=param)
-    runner.run()
+    exitCode = runner.run()
+    # print(f"exit code: {exitCode}")
+    exit(exitCode)
+
 
 if __name__ == '__main__':
     main()

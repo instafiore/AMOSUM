@@ -7,8 +7,7 @@
 
 void AmoSumPropagator::updateBound(int bound){
     this->bound = bound;
-    
-    printf("Updating bound AmoSumPropagator with %d\n", this->bound);
+    // printf("Updating bound AmoSumPropagator with %d\n", this->bound);
     this->ge ? this->lb = bound : this->ub = bound ;
     
 }

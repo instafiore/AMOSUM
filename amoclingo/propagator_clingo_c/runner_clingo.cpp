@@ -11,6 +11,13 @@
 #include <limits>
 #include "propagator_clingo.h"
 #include <chrono>
+#include <csignal>
+#include <sys/signal.h>
+
+// void signalHandler(int signum) {
+//     print("Received SIGINT (Ctrl+C)");
+//     exit(signum);
+// }
 
 PropagatorClingo* register_propagator(clingo_control_t *ctl, clingo_propagator_t prop, std::string prop_type, const ParameterMap& param, std::vector<PropagatorClingo*> &propagators);
 bool init(clingo_propagate_init_t *_init, PropagatorClingo *propagator){
@@ -29,7 +36,7 @@ int main(int argc, char const *argv[])
 {
 
 
-    
+    // signal(SIGINT, signalHandler);
     ParameterMap params =  init_param(argc, argv);
 
     std::string encoding_path = "" ;
@@ -96,49 +103,42 @@ int main(int argc, char const *argv[])
     handle_error((clingo_control_ground(ctl, parts, 1, NULL, NULL)));
 
     int countMaximize = 0;
-    int nMaximize = 10;
+    int nMaximize = 100;
 
-    int bound = 0 ;
-    
+    Result* resultOpt = nullptr ;
+    Result* previous = nullptr ;
+
+    // params["serialize"] = "True";
     while(true){
-        int cost  ;
 
-        Model* answerset;
-        handle_error(solve(ctl, &solve_ret, answerset, propagatorMaximize));
-    
-        printf("%s\n",answerset->toString().c_str());
-       
-        size_t iterations = 0 ;
-        for(auto prop: propagators){
-            auto amosum_prop = prop->propagators[0];
-            iterations += amosum_prop->count ;
-        }
-        debugf("Iterations: ", iterations);
-
-        // Interpret the result
-        if (solve_ret & clingo_solve_result_satisfiable) {
-            debugf("result: SAT\n");
-        } 
-        else if (solve_ret & clingo_solve_result_unsatisfiable) {
-            debugf("result: UNSAT\n");
-        } 
-        else if (solve_ret & clingo_solve_result_exhausted) {
-            debugf("ERROR: Search space exhausted.\n");
-        }
-        else if (solve_ret & clingo_solve_result_interrupted) {
-            debugf("timeout: Solving was interrupted.\n");
-        }else {
-            debugf("ERROR: Unexpected solve result\n");
-        }
-        bound = answerset->cost + 1;
-        propagatorMaximize->updateBound(bound);
-        countMaximize += 1;
-
-        delete answerset;
-        // if(countMaximize >= nMaximize) break;
+        Result* result;
         
+        handle_error(solve(ctl, result, propagatorMaximize));
+        
+        
+        if(params.find("serialize") == params.end())  printf("%s\n",result->toString().c_str());
+        else  printf("%s\n",result->serialize().c_str());
+        
+        if(propagatorMaximize == nullptr){
+            resultOpt = result; 
+            break;
+        }
+
+        if(result->exitCode != 10) break;
+        if(resultOpt != nullptr) previous = resultOpt;
+        resultOpt = result; 
+
+
+        propagatorMaximize->updateBound(result->model->cost + 1);
+        if(previous != nullptr) delete previous;   
+        
+        // ++countMaximize;
+        // if(countMaximize >= nMaximize) break;
     }
-    
+
+    if(propagatorMaximize != nullptr) resultOpt->setOptimum();
+    if(params.find("serialize") == params.end())  printf("%s\n",resultOpt->toString().c_str());
+    else  printf("%s\n",resultOpt->serialize().c_str());;
     
     // FREE
     for(auto& propagator: propagators){
@@ -149,9 +149,8 @@ int main(int argc, char const *argv[])
 
     AmoSumInitializer::cleanup();
     PropagatorClingoInitializer::cleanup();
-    return ret;
-
-    
+    // printf("returning exit code: %d", resultOpt->exitCode);
+    return resultOpt->exitCode;
 }
 
 PropagatorClingo* register_propagator(clingo_control_t *ctl, clingo_propagator_t prop, 
