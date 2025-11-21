@@ -312,7 +312,7 @@ class Result:
     def __str__(self):
         isOptimumString = "Optimum " if self.isOptimum else ""
         timeModelString = f"Time {self.timeModel}s " if not self.timeModel is None else ""
-        cumulativeTimeString = f"Comulative Time {self.cumulativeTime}s " if not self.cumulativeTime is None else ""
+        cumulativeTimeString = f"Cumulative Time {self.cumulativeTime}s " if not self.cumulativeTime is None else ""
         return f"{cumulativeTimeString}{timeModelString}{isOptimumString}{str(self.model)}"
 
     @staticmethod
