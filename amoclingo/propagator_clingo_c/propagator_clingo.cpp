@@ -15,15 +15,21 @@
 
 void PropagatorClingo::updateBound(int bound){
     this->bound = bound;
-    // printf("Updating bound PropagatorClingo with %d\n", this->bound);
+    printf("Updating bound PropagatorClingo with %d\n", this->bound);
+}
+
+void PropagatorClingo::reset(){
+    first = true ;
+    this->~PropagatorClingo();
 }
 
 bool PropagatorClingo::init(clingo_propagate_init_t *_init){
 
     if(!maximizer || first){
         first = false ;
+        
         PropagatorClingoInitializer::get_instance()->init(_init, *this);
-
+        
         for (size_t i = 0; i < PropagatorClingoInitializer::get_instance()->nt; i++){
             AmoSumPropagator* propagator = new AmoSumPropagator(atomNames, param, propagation_phase, ge, choice_cons, solver = AmoSumPropagator::CLINGO);
             propagator->map_plit_slit = map_plit_slit ;    
@@ -34,6 +40,7 @@ bool PropagatorClingo::init(clingo_propagate_init_t *_init){
 
         for (size_t i = 0; i < PropagatorClingoInitializer::get_instance()->nt; i++) to_watch_plit = AmoSumInitializer::get_instance()->getLiterals(*PropagatorClingoInitializer::get_instance()->lits, this->propagators[i]) ;
         
+        
         size_t max_clause_size = this->propagators[0]->N;
         clause_clingo = new clingo_literal_t[max_clause_size];
 
@@ -42,6 +49,7 @@ bool PropagatorClingo::init(clingo_propagate_init_t *_init){
             update_map_value_vector(map_slit_plit_watched, slit, plit);
             handle_error(clingo_propagate_init_add_watch(_init, slit));
         }
+
     }else{
         
         
@@ -54,13 +62,12 @@ bool PropagatorClingo::init(clingo_propagate_init_t *_init){
     }
 
    
-    
+    debug("Starting propagator ",unordered_map_to_string(param))
      
     // TO redo each time init is invoked
     std::vector<clingo_literal_t> S_plit ;
 
     
-   
     for (size_t i = 0; i < PropagatorClingoInitializer::get_instance()->nt; i++) S_plit = propagators[i]->simplifyAtLevelZero(true);
     
     if (S_plit.size() == 1 and S_plit[0] == BOTTOM){ 
@@ -75,7 +82,7 @@ bool PropagatorClingo::init(clingo_propagate_init_t *_init){
     bool result_propagate;
     clingo_propagate_init_propagate(_init, &result_propagate) ;
     
-    if (!result_propagate){ // inconsistent
+    if (!result_propagate){ // inconsistent 
     }
 
     

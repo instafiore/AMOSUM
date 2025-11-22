@@ -28,6 +28,8 @@ public:
     clingo_literal_t max_plit = 0 ;
     std::vector<clingo_literal_t>* lits;
 
+    void reset();
+
 
     static PropagatorClingoInitializer* get_instance(){
         if(instance == nullptr) instance = new PropagatorClingoInitializer() ;

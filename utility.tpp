@@ -6,7 +6,9 @@
 template <typename V>
 V PerfectHash<V>::get(int lit) const{
     // Determine the index for positive or negative literals
+    
     int i = (lit > 0) ? lit : (abs(lit) + N);
+    
     return values[i];
 }
 

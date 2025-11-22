@@ -313,17 +313,32 @@ class Result:
         isOptimumString = "Optimum " if self.isOptimum else ""
         timeModelString = f"Time {self.timeModel}s " if not self.timeModel is None else ""
         cumulativeTimeString = f"Cumulative Time {self.cumulativeTime}s " if not self.cumulativeTime is None else ""
-        return f"{cumulativeTimeString}{timeModelString}{isOptimumString}{str(self.model)}"
+        if self.model:
+            strModel = str(self.model)
+        else:
+            if self.exitCode == 20:
+                strModel = "UNSAT"
+            else:
+                strModel = str(self.exitCode)
+
+        return f"{cumulativeTimeString}{timeModelString}{isOptimumString}{strModel}"
 
     @staticmethod
     def parse(serialized: str) -> "Result":
         # print(f"serialized: {serialized}")
-        resultJson = json.loads(serialized)
+        try:
+            resultJson = json.loads(serialized)
+        except Exception as e:
+            print(serialized)
+            return None
         modelJson = resultJson[0]
 
-        assigment  = modelJson[0]
-        cost  = modelJson[1] if len(modelJson) > 1 else None
-        model = Model(cost, assigment)
+        if modelJson:
+            assigment  = modelJson[0]
+            cost  = modelJson[1] if len(modelJson) > 1 else None
+            model = Model(cost, assigment)
+        else:
+            model = None
         
         otherString = resultJson[1]
         exitCode = int(otherString[0])

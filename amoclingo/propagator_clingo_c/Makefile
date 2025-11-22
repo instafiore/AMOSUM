@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS = -Wall -Wextra -std=c++17 -I/opt/homebrew/include -I/home/mazzotta/Experiments/solvers/bin_fiorentino/clingo-5.7.1/libclingo $(DEBUG) $(CHECK_MPS) $(SANITIZE_ADDRESS)  -O3
+CFLAGS = -g -Wall -Wextra -std=c++17 -I/opt/homebrew/include -I/home/mazzotta/Experiments/solvers/bin_fiorentino/clingo-5.7.1/libclingo $(DEBUG) $(CHECK_MPS) $(SANITIZE_ADDRESS)  -O3
 LDFLAGS = -L/opt/homebrew/lib -L/home/mazzotta/Experiments/solvers/bin_fiorentino/clingo-5.7.1/manual_build/bin -lclingo $(SANITIZE_ADDRESS)
 BUILD_DIR = build
 BIN_DIR = bin

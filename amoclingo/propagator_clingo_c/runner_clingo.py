@@ -86,7 +86,7 @@ class RunnerClingoC(RunnerWasp):
         # running test
         # self.maps_weights_list = []
         # compile propagator
-        if not self.exp or self.param.get("clean",False) : self.compile()
+        if not self.exp or self.param.get("clean",False) or self.param.get("make",False)  : self.compile()
 
         # try:
         #     run_process = subprocess.run(run, shell=True, capture_output=True, text=True)
@@ -98,6 +98,8 @@ class RunnerClingoC(RunnerWasp):
         for line in run_and_stream(run):
             if not line.strip(): continue
             result = Result.parse(line)
+            if result is None:
+                continue
             endCurrentModelTime = time.time()
             result.cumulativeTime = round(endCurrentModelTime - totalTime,3)
             result.timeModel = round(endCurrentModelTime - eachModelTime, 3)
@@ -160,6 +162,7 @@ class RunnerClingoC(RunnerWasp):
     
 
     def compile(self):
+        make = self.param.get("make",False) 
         clean = self.param.get("clean",False) 
         clean = clean or self.param.get("d",False) or self.param.get("check_mps",False) or self.param.get("sanitize",False)
         compile_with_debug = "DEBUG=-DDEBUG" if self.param.get("d",False) else ""

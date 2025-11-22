@@ -5,16 +5,24 @@
 #include "amoclingo/propagator_clingo_c/propagator_clingo.h"
 
 
+void AmoSumPropagator::resetPropagator(){
+        this->last_decision_lit = 1;
+        this->dl = 0;
+        this->true_group->reset();
+        this->I->reset();
+        this->current_sum = 0 ;
+    }
+
 void AmoSumPropagator::updateBound(int bound){
     this->bound = bound;
-    // printf("Updating bound AmoSumPropagator with %d\n", this->bound);
+    printf("Updating bound AmoSumPropagator with %d\n", this->bound);
     this->ge ? this->lb = bound : this->ub = bound ;
     
 }
 
-
 const std::vector<clingo_literal_t> AmoSumPropagator::simplifyAtLevelZero(const bool& delete_lits=false){ 
 
+        debug("simplifyAtLevelZero for ", unordered_map_to_string(params), " with mps: ",_mps);
 
         
         std::string error_string = ge ? (std::to_string(_mps) + " < " + std::to_string(lb) + " !!!") : (std::to_string(_mps) + " > " + std::to_string(ub) + " !!!");
@@ -101,8 +109,11 @@ std::pair<bool, Group*> AmoSumPropagator::update_phase(clingo_literal_t l, int d
         ++count;
 
         bool amo_condition = false;
-     
-        if (aggregate->get(l)) {
+
+        bool insideAggr = aggregate->get(l) ;
+
+        if (insideAggr) {
+            
             G = group->get(l);
             G->decrease_und();
             true_group->set(G,l);
@@ -110,6 +121,7 @@ std::pair<bool, Group*> AmoSumPropagator::update_phase(clingo_literal_t l, int d
             w_n = weight->get(l);
             tg = true;
             current_sum += w_n;
+            
         } else if (aggregate->get(not_(l))) {
             G = group->get(not_(l));
             G->decrease_und();
@@ -135,6 +147,7 @@ std::pair<bool, Group*> AmoSumPropagator::update_phase(clingo_literal_t l, int d
         }
 
         _mps = _mps - w_p + w_n;
+        
         update_lazy_propagation();
 
     

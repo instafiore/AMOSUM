@@ -2,7 +2,15 @@
 #include "amosum_initializer.h"
 #include <regex>
 
+
+
 const std::string AmoSumInitializer::DEFAULT_LAZY = SETTINGS::FALSE_STR;
+
+void AmoSumInitializer::reset(){
+    first = true;
+    
+    this->~AmoSumInitializer();
+}
 
 const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::vector<clingo_literal_t>& lits, AmoSumPropagator* amosum_propagator){
 
@@ -28,13 +36,15 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
         amosum_propagator->lb = SETTINGS::NONE;
         amosum_propagator->ub = SETTINGS::NONE;
 
-
+        
         if(first){
             weight.reset(new WeightFunction(amosum_propagator->N));
             first = false ;
             common_phase(amosum_propagator);
         }
+       
         assign(amosum_propagator);
+        
         specific_phase(lits, amosum_propagator);
         
         generic_data* gd = nullptr ;
@@ -124,9 +134,9 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
                         gd = new generic_data();
                         generic_data_map[id_str] = gd ;
                     }
-                    if(gd->bound != SETTINGS::NONE) assert(false) ;
                     int bound = SETTINGS::NONE;
                     amosum_propagator->bound == SETTINGS::NONE ? bound = std::stoi(from_symbol_to_string(terms[0])) : bound = amosum_propagator->bound;
+                    if(bound == SETTINGS::NONE) assert(false) ;
                     gd->bound = bound;
                     
             }
@@ -143,8 +153,8 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
         amosum_propagator->ge ? amosum_propagator->lb = generic_data_map[ID]->bound : amosum_propagator->ub = generic_data_map[ID]->bound ;
         amosum_propagator->bound = generic_data_map[ID]->bound ;
         
-        // amosum_propagator->weights_names = std::move(generic_data_map[ID]->weights_names);
-        amosum_propagator->weights_names = generic_data_map[ID]->weights_names;
+        amosum_propagator->weights_names = std::move(generic_data_map[ID]->weights_names);
+        // amosum_propagator->weights_names = generic_data_map[ID]->weights_names;
     }
 
 
@@ -192,21 +202,28 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
                 for(const clingo_literal_t& lit: lits_group)  amosum_propagator->group->set(lit, G);
         }
 
+       
+
         size_t nGroup = Group::autoincrement ;
         amosum_propagator->true_group.reset(new TrueGroupFunction(nGroup)) ;
         
+        
         for (size_t i = 1; i < lits.size(); ++i) { // Start from index 1
+            
             clingo_literal_t l = lits[i];
+ 
             try {
+                
                 amosum_propagator->update_phase(l, 0); 
                 amosum_propagator->inconsistent_at_level_0 = false;
             } catch (const std::exception& e) {
                 amosum_propagator->inconsistent_at_level_0 = true;
             }
         }
+  
 
         // debugf("max_diff: ", max_diff); 
-
+        
         amosum_propagator->lazy_perc = amosum_propagator->lazy_prop_activated && lazy_param != SETTINGS::TRUE_STR && !lazy_hybrid ? std::stof(lazy_param) : amosum_propagator->lazy_perc ;
         amosum_propagator->lazy_condition = !amosum_propagator->lazy_prop_activated;
         if(lazy_param == SETTINGS::TRUE_STR) amosum_propagator->lazy_perc = 1 ;

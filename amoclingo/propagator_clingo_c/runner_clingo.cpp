@@ -131,6 +131,10 @@ int main(int argc, char const *argv[])
 
         propagatorMaximize->updateBound(result->model->cost + 1);
         if(previous != nullptr) delete previous;   
+
+        // AmoSumInitializer::get_instance()->reset();
+        // PropagatorClingoInitializer::get_instance()->reset();
+        // propagatorMaximize->reset();
         
         // ++countMaximize;
         // if(countMaximize >= nMaximize) break;

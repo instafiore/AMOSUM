@@ -2,6 +2,11 @@
 #include "propagator_clingo_initializer.h"
 
 
+void PropagatorClingoInitializer::reset(){
+    first = true ;
+    this->~PropagatorClingoInitializer();
+}
+
 void PropagatorClingoInitializer::init(clingo_propagate_init* _init, PropagatorClingo& propagator){
 
     if(!first){

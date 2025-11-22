@@ -59,6 +59,7 @@ public:
 
 
     void updateBound(int bound);
+    void reset();
     
     bool init(clingo_propagate_init_t *_init);
     bool propagate(clingo_propagate_control_t *control, const clingo_literal_t *changes, size_t size);

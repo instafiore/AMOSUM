@@ -31,7 +31,11 @@ public:
     void assign(AmoSumPropagator* amosum_propagator);
     void specific_phase(const std::vector<clingo_literal_t>& lits, AmoSumPropagator* amosum_propagator);
 
+
+    void reset();
+    
     ~AmoSumInitializer(){
+        aggregate_map.clear();
         for(auto& [key, value]: generic_data_map){
             if(value) delete value;
         }
