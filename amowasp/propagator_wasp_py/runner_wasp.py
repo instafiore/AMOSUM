@@ -326,7 +326,7 @@ class RunnerWasp:
                 optimumAnswersets = None
                 while sat:
                     self.propagators = []
-                    self.lb = f"[({lowerBound},0)]"
+                    self.lb = f"{lowerBound}"
                     answersets, tim, mapweights = self.run_instance(instance, encoding=encoding)
                     sat = len(answersets) > 0
                     if not sat:
@@ -564,7 +564,7 @@ class RunnerWasp:
         self.maps_weights_list.append((id, maps_weights))
 
     def comment_bound(self, instance, ub = False, restore=False):
-        b_str = "ub" if ub else "lb" 
+        b_str = "__ub__" if ub else "__lb__" 
         b = self.ub if ub else self.lb
         # print(f"ub: {ub}, self.lb: {self.lb} self.ub: {self.ub}")
         if not ((not ub or self.ub) and (ub or self.lb)): return
@@ -592,19 +592,19 @@ class RunnerWasp:
 
     def create_bound(self, instance, ub = False):
         b = self.ub if ub else self.lb
-        b_str = "ub" if ub else "lb" 
+        b_str = "__ub__" if ub else "__lb__" 
         file = f"{settings.BENCHMARKS_LOCATION}/{self.problem}/{b_str}" if not self.exp else instance
         if b:
-            if re.match(r"\[\((\d+),(\d+)\)(,\((\d+),(\d+)\))*\]",b):
+            if re.match(r"\[\((\d+),(\w+)\)(,\((\d+),(\w+)\))*\]",b):
                 b_list = ast.literal_eval(b)
                 subprocess.run(f"echo '' > {file}", shell=True) if not self.exp else None
                 for b, bi in b_list:
                     subprocess.run(f"echo '\n{b_str}({b},{bi}).' >> {file}", shell=True)
             elif re.match(r"\d+", b):
-                subprocess.run(f"echo '\n{b_str}({b},{self.id}).' > {file}", shell=True)
+                subprocess.run(f"echo '\n{b_str}({b},(__amomaximizeid__)).' >> {file}", shell=True)
             else:
                 raise Exception(f"invalid {b_str} insert, it has to be two integers: value id ; or a list of pairs of integers(json like)") 
-            
+            # exit(0)
             self.comment_bound(instance=instance, ub=ub, restore=False)
        
 
