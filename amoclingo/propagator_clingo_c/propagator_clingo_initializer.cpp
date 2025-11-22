@@ -4,7 +4,11 @@
 
 void PropagatorClingoInitializer::reset(){
     first = true ;
-    this->~PropagatorClingoInitializer();
+    // this->~PropagatorClingoInitializer();
+    if(lits != nullptr) delete lits ;
+    lits = nullptr;
+    if(atomNames != nullptr) delete atomNames;
+    atomNames = nullptr ;
 }
 
 void PropagatorClingoInitializer::init(clingo_propagate_init* _init, PropagatorClingo& propagator){
@@ -15,7 +19,6 @@ void PropagatorClingoInitializer::init(clingo_propagate_init* _init, PropagatorC
         propagator.map_plit_slit = map_plit_slit.get();
         return ;
     }
-
 
     first = false ;
 

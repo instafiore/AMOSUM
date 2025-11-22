@@ -95,6 +95,7 @@ class RunnerClingoC(RunnerWasp):
 
         totalTime = time.time()
         eachModelTime = totalTime
+        result = None
         for line in run_and_stream(run):
             if not line.strip(): continue
             result = Result.parse(line)

@@ -103,12 +103,13 @@ int main(int argc, char const *argv[])
     handle_error((clingo_control_ground(ctl, parts, 1, NULL, NULL)));
 
     int countMaximize = 0;
-    int nMaximize = 100;
+    int nMaximize = 10000;
 
     Result* resultOpt = nullptr ;
     Result* previous = nullptr ;
 
     // params["serialize"] = "True";
+    int bound = 0;
     while(true){
 
         Result* result;
@@ -118,7 +119,12 @@ int main(int argc, char const *argv[])
         
         if(params.find("serialize") == params.end())  printf("%s\n",result->toString().c_str());
         else  printf("%s\n",result->serialize().c_str());
-        
+
+        // if(bound == 213628){
+        //     printf("OH WOW\n");
+        //     exit(0);
+        // }
+
         if(propagatorMaximize == nullptr){
             resultOpt = result; 
             break;
@@ -129,20 +135,29 @@ int main(int argc, char const *argv[])
         resultOpt = result; 
 
 
-        propagatorMaximize->updateBound(result->model->cost + 1);
+        bound = result->model->cost + 1;
+        propagatorMaximize->updateBound(bound);
+
         if(previous != nullptr) delete previous;   
 
-        // AmoSumInitializer::get_instance()->reset();
-        // PropagatorClingoInitializer::get_instance()->reset();
-        // propagatorMaximize->reset();
+        AmoSumInitializer::get_instance()->reset();
+        PropagatorClingoInitializer::get_instance()->reset();
+        propagatorMaximize->reset();
+
+        propagatorMaximize->enabled = false;
+        propagatorMaximize = new PropagatorClingo(*propagatorMaximize);
+        propagatorMaximize->enabled = true;
+        handle_error(clingo_control_register_propagator(ctl, &prop, propagatorMaximize, false));
         
         // ++countMaximize;
         // if(countMaximize >= nMaximize) break;
     }
 
-    if(propagatorMaximize != nullptr) resultOpt->setOptimum();
-    if(params.find("serialize") == params.end())  printf("%s\n",resultOpt->toString().c_str());
-    else  printf("%s\n",resultOpt->serialize().c_str());;
+    if(propagatorMaximize != nullptr) {
+        resultOpt->setOptimum();
+        if(params.find("serialize") == params.end())  printf("%s\n",resultOpt->toString().c_str());
+        else  printf("%s\n",resultOpt->serialize().c_str());
+    }
     
     // FREE
     for(auto& propagator: propagators){
@@ -154,6 +169,9 @@ int main(int argc, char const *argv[])
     AmoSumInitializer::cleanup();
     PropagatorClingoInitializer::cleanup();
     // printf("returning exit code: %d", resultOpt->exitCode);
+
+    
+
     return resultOpt->exitCode;
 }
 

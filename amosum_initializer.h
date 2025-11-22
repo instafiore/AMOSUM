@@ -35,10 +35,10 @@ public:
     void reset();
     
     ~AmoSumInitializer(){
-        aggregate_map.clear();
         for(auto& [key, value]: generic_data_map){
             if(value) delete value;
         }
+        generic_data_map.clear();
     }
 
     WeightFunction* weightFunction();

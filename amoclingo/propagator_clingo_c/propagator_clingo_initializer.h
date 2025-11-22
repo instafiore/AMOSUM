@@ -40,7 +40,7 @@ public:
     void init(clingo_propagate_init* _init, PropagatorClingo& propagator);
 
     ~PropagatorClingoInitializer(){
-        if(lits) delete lits ;
+        if(lits != nullptr) delete lits ;
         if(atomNames) delete atomNames;
     }
 

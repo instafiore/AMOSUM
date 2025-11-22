@@ -10,19 +10,25 @@ void AmoSumPropagator::resetPropagator(){
         this->dl = 0;
         this->true_group->reset();
         this->I->reset();
+        this->reason->reset();
+        this->redundant_lits->reset();
         this->current_sum = 0 ;
     }
 
 void AmoSumPropagator::updateBound(int bound){
     this->bound = bound;
-    printf("Updating bound AmoSumPropagator with %d\n", this->bound);
+    // printf("Updating bound AmoSumPropagator with %d\n", this->bound);
+    if(this->bound == 151066){
+        printf("O MIO DIO\n");
+        exit(0);
+    }
     this->ge ? this->lb = bound : this->ub = bound ;
     
 }
 
 const std::vector<clingo_literal_t> AmoSumPropagator::simplifyAtLevelZero(const bool& delete_lits=false){ 
 
-        debug("simplifyAtLevelZero for ", unordered_map_to_string(params), " with mps: ",_mps);
+        // debugf("simplifyAtLevelZero for ", unordered_map_to_string(params), " with mps: ",_mps," and bound: ",bound);
 
         
         std::string error_string = ge ? (std::to_string(_mps) + " < " + std::to_string(lb) + " !!!") : (std::to_string(_mps) + " > " + std::to_string(ub) + " !!!");
@@ -32,11 +38,9 @@ const std::vector<clingo_literal_t> AmoSumPropagator::simplifyAtLevelZero(const 
         }
         
         
-
         assert(!mps_violated);
 
         
-
         update_lazy_propagation();
         const std::vector<clingo_literal_t>* prop_from_facts = lazy_condition ? propagation_phase(nullptr, this) : nullptr;
         

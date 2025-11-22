@@ -8,8 +8,12 @@ const std::string AmoSumInitializer::DEFAULT_LAZY = SETTINGS::FALSE_STR;
 
 void AmoSumInitializer::reset(){
     first = true;
-    
-    this->~AmoSumInitializer();
+    aggregate_map.clear();
+    for(auto& [key, value]: generic_data_map){
+        if(value != nullptr) delete value;
+        value = nullptr ;
+    }
+    generic_data_map.clear();
 }
 
 const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::vector<clingo_literal_t>& lits, AmoSumPropagator* amosum_propagator){
@@ -148,13 +152,15 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
     void AmoSumInitializer::assign(AmoSumPropagator* amosum_propagator){
       
         std::string ID = amosum_propagator->ID ;
+        AggregateFunction* currentAggregate = amosum_propagator->aggregate.get();
+        // if(currentAggregate != aggregate_map[ID]) 
         amosum_propagator->aggregate.reset(aggregate_map[ID]) ;
         amosum_propagator->weight = weight.get() ;
-        amosum_propagator->ge ? amosum_propagator->lb = generic_data_map[ID]->bound : amosum_propagator->ub = generic_data_map[ID]->bound ;
-        amosum_propagator->bound = generic_data_map[ID]->bound ;
-        
-        amosum_propagator->weights_names = std::move(generic_data_map[ID]->weights_names);
-        // amosum_propagator->weights_names = generic_data_map[ID]->weights_names;
+        if(amosum_propagator->bound == SETTINGS::NONE)  amosum_propagator->bound = generic_data_map[ID]->bound;
+        amosum_propagator->ge ? amosum_propagator->lb = amosum_propagator->bound : amosum_propagator->ub = amosum_propagator->bound ;
+
+        // amosum_propagator->weights_names = std::move(generic_data_map[ID]->weights_names);
+        amosum_propagator->weights_names = generic_data_map[ID]->weights_names;
     }
 
 
@@ -229,7 +235,7 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
         if(lazy_param == SETTINGS::TRUE_STR) amosum_propagator->lazy_perc = 1 ;
         else if (lazy_hybrid || !amosum_propagator->lazy_prop_activated) amosum_propagator->lazy_perc = amosum_propagator->ge ? amosum_propagator->lb / static_cast<float>(amosum_propagator->lb + max_diff) :  (amosum_propagator->ub - max_diff) / static_cast<float>(amosum_propagator->ub);
         std::string lazy_perc_str = amosum_propagator->lazy_prop_activated ? " lazy threshold " + std::to_string(amosum_propagator->lazy_perc) : SETTINGS::NONE_STR;
-        debugf("Starting c propagator with param ",unordered_map_to_string(amosum_propagator->params), lazy_perc_str);
+        // debugf("Starting c propagator with param ",unordered_map_to_string(amosum_propagator->params), lazy_perc_str);
 
         // Set facts to literals starting from index 1
         amosum_propagator->facts.assign(lits.begin() + 1, lits.end());

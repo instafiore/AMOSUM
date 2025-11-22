@@ -148,6 +148,17 @@ public:
         }
     }
 
+    // std::vector<std::string> trueString(){
+    //     std::vector<std::string> trues ; 
+    //     for(int i = 0; i < data_structure.size(); ++i){
+    //         if(data_structure[i] == SETTINGS::); 
+    //     }
+    // }
+
+
+    const std::vector<T>& data(){
+        return data_structure ; 
+    }
 
     virtual T function_negative_lit(T value) const  {
         return value ;

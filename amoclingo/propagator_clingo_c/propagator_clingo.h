@@ -28,6 +28,10 @@ public:
     int bound ;
     bool first = true;
     bool maximizer = false ;
+    std::vector<clingo_literal_t> to_watch_plit;
+    std::vector<clingo_literal_t> to_watch_slit;
+
+    // void removeWatches(clingo_control_t *ctl);
     
 
     // This is a map for mapping each solver literal (slit) to its program literal(s) (plit).
@@ -42,6 +46,8 @@ public:
 
     clingo_literal_t* clause_clingo ;
 
+    bool enabled;
+
     PropagatorClingo(
             const std::unordered_map<std::string, std::string>& param,
             const std::vector<clingo_literal_t>* (*propagation_phase)(const Group*, AmoSumPropagator*),
@@ -54,10 +60,13 @@ public:
             ge(ge),
             choice_cons(choice_cons),
             solver(AmoSumPropagator::CLINGO),
-            maximizer(maximizer)
+            maximizer(maximizer),
+            bound(SETTINGS::NONE),
+            enabled(true)
             {}
 
-
+    
+    
     void updateBound(int bound);
     void reset();
     
@@ -75,6 +84,7 @@ public:
         for(auto& prop: propagators){
             if(prop) delete prop;
         }
-        if(clause_clingo) delete[] clause_clingo ;
+        propagators.clear();
+        if(clause_clingo != nullptr) delete[] clause_clingo ;
     }
 };

@@ -39,8 +39,8 @@ std::string get_name(const std::unordered_map<clingo_symbol_t, clingo_literal_t>
         }
     }
 
-    debug(lit, " is not present in atomNames ", atomNames_to_string(atomNames));
-    assert(false);
+    // debug(lit, " is not present in atomNames ", atomNames_to_string(atomNames));
+    // assert(false);
     return SETTINGS::NONE_STR; 
 }
 
@@ -324,7 +324,7 @@ Model::Model(const clingo_model* model, std::unordered_map<std::string,int>* wei
         size_t str_n = 0;
         cost = 0;
         // determine the number of (shown) symbols in the model
-        if (!clingo_model_symbols_size(model, clingo_show_type_shown, &atoms_n)) { goto error; }
+        if (!clingo_model_symbols_size(model, clingo_show_type_atoms, &atoms_n)) { goto error; }
         
         // allocate required memory to hold all the symbols
         if (!(atoms = (clingo_symbol_t*)malloc(sizeof(*atoms) * atoms_n))) {
@@ -333,9 +333,9 @@ Model::Model(const clingo_model* model, std::unordered_map<std::string,int>* wei
         }
         
         // retrieve the symbols in the model
-        if (!clingo_model_symbols(model, clingo_show_type_shown, atoms, atoms_n)) { goto error; }
-        
-        
+        if (!clingo_model_symbols(model, clingo_show_type_atoms, atoms, atoms_n)) { goto error; }
+
+         
         for (it = atoms, ie = atoms + atoms_n; it != ie; ++it) {
             size_t n;
             char *str_new;
@@ -412,6 +412,7 @@ Result::Result(const clingo_model* model, std::unordered_map<std::string,int>* w
         }
         exit(exitCode);
     }
+    debug("exit code: ", exitCode);
 }
 
 void Result::setOptimum(){
@@ -930,6 +931,26 @@ void print_propagate(PropagatorClingo* prop, const clingo_literal_t *changes, si
         decision_slit != 1 ? decision_literal_name = get_name(prop->atomNames, plit) : decision_literal_name = "from facts" ;
     else
         decision_literal_name = "non lo so";
+
+
+    // std::vector<std::string> trues;
+    // if(prop->propagators[td]->_mps == 179767){
+        
+    //     for(int i = 0; i < prop->propagators[td]->I->data().size(); ++i){
+    //         if(prop->propagators[td]->I->data()[i] != false){
+    //             trues.push_back(get_name(prop->atomNames, i));
+    //         }
+    //     }
+    //     debugf(vector_to_string(trues, "undef plit"));
+    //     printf("has watch %d\n",clingo_propagate_control_has_watch(control, 32));
+    //     printf("has watch - %d\n",clingo_propagate_control_has_watch(control, -32));
+    //     const clingo_assignment* ass = clingo_propagate_control_assignment(control);
+    //     bool res ;
+    //     clingo_assignment_is_true(ass, 32, &res);
+    //     printf("is true %d\n",res);
+    //     printf("is false %d\n",res);
+    // }
+
     debugf("[", decision_literal_name,", ",dl,"] propagate ", changes_str, " mps: ", prop->propagators[td]->_mps, " bound: ",prop->propagators[td]->bound," td: ", td);
 }
 
@@ -946,6 +967,8 @@ void print_undo(PropagatorClingo* prop, const clingo_literal_t *changes, size_t 
     if (wasp_b)  raise_wasp_not_implemented_exception() ;
     else  changes_str = prop->compute_changes_str(changes, size, td) ;
 
+    
+    
 
     debugf("dl: ",dl," undo ", changes_str," thread_id: ", td);
 }
