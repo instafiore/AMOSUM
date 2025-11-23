@@ -271,12 +271,15 @@ class RunnerWasp:
 
         return correct
 
-    def print_ans(self,answer_sets, time):
+    def print_ans(self,answer_sets, time = None, startI = 0, cost = None, optimumProved = None):
 
-        print(f"Time: {time}, found {len(answer_sets)} models:")
+        # print(f"Time: {time}, found {len(answer_sets)} models:")
         for i, model in enumerate(answer_sets):
             mps_str = self.compute_mps(model)
-            print(f"Model {i+1}: {model} {mps_str}")
+            timeStr = f"Time: {time} " if time else ""
+            costStr = f"Cost: {cost} " if cost else ""
+            opt = f"Optimum " if optimumProved else "Unknown " if optimumProved == False else ""
+            print(f"{timeStr}{costStr}{opt}Model {startI + i+1}: {model} {mps_str}")
             
     def compute_mps(self, ans):
 
@@ -308,7 +311,6 @@ class RunnerWasp:
         
 
     def get_regex_query_atom_answerset(self):
-        
         return rf"(?<=[\s,{{])(({self.atom_answerset_regex}))"
     
     def run(self):
@@ -324,22 +326,30 @@ class RunnerWasp:
                 sat = True
                 lowerBound = 0
                 optimumAnswersets = None
+                i = 0
+                duration: float
+                
                 while sat:
                     self.propagators = []
                     self.lb = f"{lowerBound}"
-                    answersets, tim, mapweights = self.run_instance(instance, encoding=encoding)
+                    start = time.time()
+                    answersets, opt , mapweights = self.run_instance(instance, encoding=encoding)
+                    end = time.time()
                     sat = len(answersets) > 0
                     if not sat:
                         break
+                    duration = round(end-start,2)
                     optimumAnswersets = answersets
                     answerset = optimumAnswersets[0]
-                    self.print_ans(answer_sets=optimumAnswersets, time=time)
-                    lowerBound = self.cost(answerset, mapweights)
-                    lowerBound += 1
-                    print(f"Lower bound: {lowerBound}")
+                    cost = self.cost(answerset, mapweights)
+                    self.print_ans(answer_sets=optimumAnswersets, cost=cost, time=duration, startI=i)
+                    lowerBound = cost + 1
+                    i += 1
                 optimalCost = lowerBound - 1
-                self.print_ans(answer_sets=optimumAnswersets, time=time)
-                print(f"optimum cost: {optimalCost}")
+                if optimumAnswersets:
+                    self.print_ans(answer_sets=optimumAnswersets, cost=optimalCost, time=duration, startI=i-1, optimumProved=opt)
+                else:
+                    print(f"optimumAnswersets is None")
                 if(len(answersets) == 0): exit(20)
                 else: exit(10)
 

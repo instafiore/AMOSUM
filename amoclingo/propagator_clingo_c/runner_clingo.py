@@ -87,7 +87,9 @@ class RunnerClingoC(RunnerWasp):
             run_process = subprocess.run(run, shell=True, capture_output=True, text=True)
         except KeyboardInterrupt as e:
             print("Interrupted")
-            return [], -1, preprocess_map["amosum_mapweights"]
+            self.comment_bound(instance=instance, ub=False, restore=True)
+            self.comment_bound(instance=instance, ub=True,  restore=True)
+            return [], False, preprocess_map["amosum_mapweights"]
 
         output = run_process.stdout
         error = run_process.stderr
@@ -140,7 +142,7 @@ class RunnerClingoC(RunnerWasp):
         self.comment_bound(instance=instance, ub=False, restore=True)
         self.comment_bound(instance=instance, ub=True,  restore=True)
 
-        return answer_sets, time, preprocess_map["amosum_mapweights"]
+        return answer_sets, True, preprocess_map["amosum_mapweights"]
     
 
     def compile(self):
