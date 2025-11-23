@@ -539,7 +539,7 @@ bool solve(clingo_control_t *ctl, Result* &result, PropagatorClingo* maximizer =
         result = new Result(nullptr, nullptr, solve_ret);
     }
 
-    return clingo_solve_handle_close(handle) && ret;
+    return clingo_solve_handle_close(handle) & ret;
 }
 
 std::tuple<bool, const std::vector<clingo_literal_t>* (*)(const Group*, AmoSumPropagator*), std::string>  get_propagator_variables(std::string prop_type){

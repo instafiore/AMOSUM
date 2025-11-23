@@ -108,7 +108,7 @@ int main(int argc, char const *argv[])
     Result* resultOpt = nullptr ;
     Result* previous = nullptr ;
 
-    // params["serialize"] = "True";
+
     int bound = 0;
     while(true){
 
@@ -119,11 +119,6 @@ int main(int argc, char const *argv[])
         
         if(params.find("serialize") == params.end())  printf("%s\n",result->toString().c_str());
         else  printf("%s\n",result->serialize().c_str());
-
-        // if(bound == 213628){
-        //     printf("OH WOW\n");
-        //     exit(0);
-        // }
 
         if(propagatorMaximize == nullptr){
             resultOpt = result; 
@@ -140,14 +135,14 @@ int main(int argc, char const *argv[])
 
         if(previous != nullptr) delete previous;   
 
-        AmoSumInitializer::get_instance()->reset();
-        PropagatorClingoInitializer::get_instance()->reset();
+        // AmoSumInitializer::get_instance()->reset();
+        // PropagatorClingoInitializer::get_instance()->reset();
         propagatorMaximize->reset();
 
-        propagatorMaximize->enabled = false;
-        propagatorMaximize = new PropagatorClingo(*propagatorMaximize);
-        propagatorMaximize->enabled = true;
-        handle_error(clingo_control_register_propagator(ctl, &prop, propagatorMaximize, false));
+        // propagatorMaximize->enabled = false;
+        // propagatorMaximize = new PropagatorClingo(*propagatorMaximize);
+        // propagatorMaximize->enabled = true;
+        // handle_error(clingo_control_register_propagator(ctl, &prop, propagatorMaximize, false));
         
         // ++countMaximize;
         // if(countMaximize >= nMaximize) break;
@@ -165,6 +160,7 @@ int main(int argc, char const *argv[])
     }
     if (ctl) { clingo_control_free(ctl); }
 
+    
 
     AmoSumInitializer::cleanup();
     PropagatorClingoInitializer::cleanup();

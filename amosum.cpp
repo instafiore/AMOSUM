@@ -10,8 +10,8 @@ void AmoSumPropagator::resetPropagator(){
         this->dl = 0;
         this->true_group->reset();
         this->I->reset();
-        this->reason->reset();
-        this->redundant_lits->reset();
+        // this->reason->reset();
+        // this->redundant_lits->reset();
         this->current_sum = 0 ;
     }
 
@@ -28,7 +28,7 @@ void AmoSumPropagator::updateBound(int bound){
 
 const std::vector<clingo_literal_t> AmoSumPropagator::simplifyAtLevelZero(const bool& delete_lits=false){ 
 
-        // debugf("simplifyAtLevelZero for ", unordered_map_to_string(params), " with mps: ",_mps," and bound: ",bound);
+        debug("simplifyAtLevelZero for ", unordered_map_to_string(params), " with mps: ",_mps," and bound: ",bound);
 
         
         std::string error_string = ge ? (std::to_string(_mps) + " < " + std::to_string(lb) + " !!!") : (std::to_string(_mps) + " > " + std::to_string(ub) + " !!!");

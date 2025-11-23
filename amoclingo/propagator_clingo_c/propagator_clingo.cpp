@@ -27,13 +27,14 @@ void PropagatorClingo::updateBound(int bound){
 }
 
 void PropagatorClingo::reset(){
-    first = true ;
-    for(auto& prop: propagators){
-            if(prop) delete prop;
-        }
-    propagators.clear();
-    if(clause_clingo != nullptr) delete[] clause_clingo ;
-    clause_clingo = nullptr;
+    // first = true ;
+    // for(auto& prop: propagators){
+    //         if(prop) delete prop;
+    //     }
+    // propagators.clear();
+    // if(clause_clingo != nullptr) delete[] clause_clingo ;
+    // clause_clingo = nullptr;
+    firstPropagate = true ; 
 }
 
 bool PropagatorClingo::init(clingo_propagate_init_t *_init){
@@ -57,21 +58,23 @@ bool PropagatorClingo::init(clingo_propagate_init_t *_init){
         size_t max_clause_size = this->propagators[0]->N;
         clause_clingo = new clingo_literal_t[max_clause_size];
 
+
+        for(clingo_literal_t plit: to_watch_plit){
+            clingo_literal_t slit = (*map_plit_slit)[plit];
+            update_map_value_vector(map_slit_plit_watched, slit, plit);
+            handle_error(clingo_propagate_init_add_watch(_init, slit));
+            handle_error(clingo_propagate_init_freeze_literal(_init, slit));
+            to_watch_slit.push_back(slit);
+        }
+
     }else{
         for (size_t i = 0; i < PropagatorClingoInitializer::get_instance()->nt; i++){
             AmoSumPropagator* propagator = this->propagators[i];
             if(this->bound != SETTINGS::NONE) propagator->updateBound(bound); 
+            propagator->resetPropagator();
         }
     }
  
-    for(clingo_literal_t plit: to_watch_plit){
-        clingo_literal_t slit = (*map_plit_slit)[plit];
-        update_map_value_vector(map_slit_plit_watched, slit, plit);
-        handle_error(clingo_propagate_init_add_watch(_init, slit));
-        handle_error(clingo_propagate_init_freeze_literal(_init, slit));
-    }
-
-   
     // debug("Starting propagator ",unordered_map_to_string(param))
      
     // TO redo each time init is invoked
@@ -123,10 +126,11 @@ bool PropagatorClingo::add_clauses_propagated_lits(void *control, const std::vec
         bool result_add_clause;
         init ? handle_error(clingo_propagate_init_add_clause((clingo_propagate_init*) control, clause, clause_size, &result_add_clause)) :
         handle_error(clingo_propagate_control_add_clause((clingo_propagate_control*) control, clause, clause_size, clingo_clause_type_learnt, &result_add_clause)) ;
+        // handle_error(clingo_propagate_control_add_clause((clingo_propagate_control*) control, clause, clause_size, clingo_clause_type_volatile_static, &result_add_clause)) ;
 
         // propagation must return immediately, there is a conflict
         if (not result_add_clause){
-            // debugf("conflict add clause");
+            debugf("conflict add clause");
             return true ;
         }
 
@@ -137,6 +141,7 @@ bool PropagatorClingo::add_clauses_propagated_lits(void *control, const std::vec
         
         if (!result_propagate){ 
             // propagation must return immediately, a conflict has been raised 
+            debugf("conflict propagate");
             return true ;
         }   
     }
@@ -146,12 +151,15 @@ bool PropagatorClingo::add_clauses_propagated_lits(void *control, const std::vec
 bool PropagatorClingo::propagate(clingo_propagate_control_t *control, const clingo_literal_t *changes, size_t size){
 
     if(!enabled) return true;
-    for(clingo_literal_t slit: to_watch_slit){
-        if(!clingo_propagate_control_has_watch(control, slit)){
-            clingo_propagate_control_add_watch(control, slit);
-        }
-    }
 
+    if(firstPropagate){
+        for(clingo_literal_t slit: to_watch_slit){
+            if(!clingo_propagate_control_has_watch(control, slit)){
+                clingo_propagate_control_add_watch(control, slit);
+            }
+        }
+        firstPropagate = false ; 
+    }
 
     const clingo_assignment_t *assignment = clingo_propagate_control_assignment(control);
     int dl = clingo_assignment_decision_level(assignment);

@@ -23,5 +23,5 @@ build-backend = "hatchling.build"
 Homepage = "https://github.com/instafiore/amosum.git"
 
 [project.scripts]
-amomaximize = "amoclingo.__main__:optimized_run"
-amomaximize-debug = "amoclingo.__main__:run"
+amoclingo = "amoclingo.__main__:optimized_run"
+amoclingo-debug = "amoclingo.__main__:run"
