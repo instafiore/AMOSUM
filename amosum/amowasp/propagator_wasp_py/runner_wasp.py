@@ -8,7 +8,7 @@ import ast
 from  utility import *
 import utility
 from preprocess import *
-from AmoSumParser.__main__ import run as run_rewriter
+from amosum.AmoSumParser.__main__ import run as run_rewriter
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import settings
 from datetime import datetime

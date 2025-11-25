@@ -8,20 +8,16 @@
 void AmoSumPropagator::resetPropagator(){
         this->last_decision_lit = 1;
         this->dl = 0;
-        this->true_group->reset();
-        this->I->reset();
+        // this->true_group->reset();
+        // this->I->reset();
         // this->reason->reset();
         // this->redundant_lits->reset();
-        this->current_sum = 0 ;
+        // this->current_sum = 0 ;
     }
 
 void AmoSumPropagator::updateBound(int bound){
     this->bound = bound;
     // printf("Updating bound AmoSumPropagator with %d\n", this->bound);
-    if(this->bound == 151066){
-        printf("O MIO DIO\n");
-        exit(0);
-    }
     this->ge ? this->lb = bound : this->ub = bound ;
     
 }

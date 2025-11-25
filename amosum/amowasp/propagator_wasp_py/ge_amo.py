@@ -5,10 +5,11 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import amowasp
 from typing import List
-from amowasp.propagator_wasp_py.propagator_wasp import *
+from amosum.amowasp.propagator_wasp_py.propagator_wasp import *
 import amowasp.propagator_wasp_py.propagator_wasp as propagator_wasp
 from utility import *
 import time
+from amosum.amosum import AmoSumPropagator
 
 '''
 Propagator for ' >= LB  ' constraint and At Most One constraint

@@ -74,7 +74,13 @@ bool PropagatorClingo::init(clingo_propagate_init_t *_init){
             propagator->resetPropagator();
         }
     }
- 
+
+    for(auto &[plit, slit]: *map_plit_slit){
+        clingo_literal_t snew;
+        clingo_propagate_init_solver_literal(_init, plit, &snew);
+        assert(slit == snew);
+    }
+    
     // debug("Starting propagator ",unordered_map_to_string(param))
      
     // TO redo each time init is invoked
@@ -127,10 +133,11 @@ bool PropagatorClingo::add_clauses_propagated_lits(void *control, const std::vec
         init ? handle_error(clingo_propagate_init_add_clause((clingo_propagate_init*) control, clause, clause_size, &result_add_clause)) :
         handle_error(clingo_propagate_control_add_clause((clingo_propagate_control*) control, clause, clause_size, clingo_clause_type_learnt, &result_add_clause)) ;
         // handle_error(clingo_propagate_control_add_clause((clingo_propagate_control*) control, clause, clause_size, clingo_clause_type_volatile_static, &result_add_clause)) ;
+        // handle_error(clingo_propagate_control_add_clause((clingo_propagate_control*) control, clause, clause_size, clingo_clause_type_volatile, &result_add_clause)) ;
 
         // propagation must return immediately, there is a conflict
         if (not result_add_clause){
-            debugf("conflict add clause");
+            debug("conflict add clause");
             return true ;
         }
 
@@ -141,7 +148,7 @@ bool PropagatorClingo::add_clauses_propagated_lits(void *control, const std::vec
         
         if (!result_propagate){ 
             // propagation must return immediately, a conflict has been raised 
-            debugf("conflict propagate");
+            debug("conflict propagate");
             return true ;
         }   
     }

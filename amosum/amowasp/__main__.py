@@ -9,14 +9,21 @@ from utility import *
 This is the entry file to run the AMO SUM propagator(s) WASP
 '''
 
-def main():
+
+def optimized_run():
+    """
+    Wrapper that re-runs the module with -O optimization flag.
+    """
+    # Build the command: [python, -O, -m, weaksatbasedls, ...args...]
+    os.execvp(sys.executable, [sys.executable, "-O", "-m", "amowasp", *sys.argv[1:]])
+
+def run():
     
     param = init_param(sys.argv)
     runner = RunnerWasp(parameters=param)
     exitCode = runner.run()
-    # print(f"exit code: {exitCode}")
     exit(exitCode)
 
 
 if __name__ == '__main__':
-    main()
+    run()

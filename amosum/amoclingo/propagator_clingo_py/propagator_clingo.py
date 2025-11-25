@@ -1,17 +1,19 @@
 #!/home/s.fiorentino/miniconda3/bin/python3
 import sys
 import os
-from typing import Sequence
+from typing import Callable, Sequence
 # adding the root path
 import clingo
 from clingo.symbol import Number, Function
 from clingo.control import Control
 from clingo.symbol import Function
 
-from amosum_initializer import AmoSumInitializer
+from amosum.amosum_initializer import AmoSumInitializer
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from amosum import *
+from amosum.amosum import AmoSumPropagator
+from amosum.utility import *
 import amosum
 '''
     Invariants: 

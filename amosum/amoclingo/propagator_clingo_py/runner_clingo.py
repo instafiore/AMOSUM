@@ -9,8 +9,8 @@ import sys
 import os
 
 from clingo import SolveResult
-import AmoSumParser
-from amosum import *
+import amosum.AmoSumParser
+from amosum.amosum import *
 from clingo.symbol import Number
 from clingo.control import Control
 
@@ -18,11 +18,11 @@ from clingo.control import Control
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import ast
-from amowasp.propagator_wasp_py.runner_wasp import RunnerWasp
+from amosum.amowasp.propagator_wasp_py.runner_wasp import RunnerWasp
 from  utility import *
 import utility
 import settings
-from amoclingo.propagator_clingo_py.propagator_clingo import *
+from amosum.amoclingo.propagator_clingo_py.propagator_clingo import *
 from preprocess import *
 from datetime import datetime
 

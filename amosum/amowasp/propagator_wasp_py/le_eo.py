@@ -4,28 +4,32 @@ import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import amowasp
-from typing import *
+from typing import List
 from utility import *
-from amowasp.propagator_wasp_py.propagator_wasp import *
-import amowasp.propagator_wasp_py.propagator_wasp as propagator_wasp
-
+import re
+from amosum.amowasp.propagator_wasp_py.propagator_wasp import *
+import amosum.amowasp.propagator_wasp_py.propagator_wasp as propagator_wasp
+import inspect
+import amosum
+from amosum.amosum import AmoSumPropagator
 '''
-Propagator for ' >= LB ' constraint with Exactly One constraint 
+Propagator for ' <= UB ' constraint with Exactly One constraint 
+
 Invariants:
     In the aggregate set there are not two literals such that li = ~lj
 '''
 
 def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
-    propagator.S = []
-    sum_removed_weights = {}
     
+    propagator.S = []
+
     if propagator.mps_violated:
-        
+
         if not propagator.lazy_prop_activated:
             return propagator.S
+        
         l = propagator.current_literal
 
-        
         propagator.S = [not_(l)]
         propagator.reason[not_(l)] = [] if propagator.solver == AmoSumPropagator.CLINGO or propagator.dl == 0 else [not_(propagator.current_literal)]
 
@@ -35,28 +39,21 @@ def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
             derived_true = True
             g = propagator.group[not_(l)]
 
-        create_reason_falses_ge(propagator, sum_removed_weights, not_(l))
+        create_reason_falses_le(propagator, not_(l))
 
         if derived_true:
-            sml_g = max_w(g)
-            create_reason_true_ge(propagator, sml_g, not_(l), g, sum_removed_weights)
+            sml_g = min_w(g)
+            create_reason_true_le(propagator, sml_g, not_(l), g)
         propagator.to_be_propagated[not_(l)] = True
         return propagator.S
-
-
-    derived_true = []
 
     for g in propagator.groups:
         if g == G or propagator.true_group[g] is not None:
             continue
 
-        ml_g = max_w(g)
-        if ml_g is None:
-            continue
-
-        for l in g.ord_l:
+        for l in reversed(g.ord_l):
             if propagator.I[l] is None:
-                if propagator.mps(g, l, assumed=True) < propagator.lb:
+                if propagator.mps(g, l, assumed=True) > propagator.ub:
                     istrue = propagator.to_be_propagated[not_(l)] if propagator.solver == AmoSumPropagator.WASP else propagator.is_true(not_(l))
                     if not istrue:
                         propagator.S.append(not_(l))
@@ -66,11 +63,9 @@ def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
                     break
 
     if propagator.S and propagator.dl != 0:
-        create_reason_falses_ge(propagator=propagator, sum_removed_weights=sum_removed_weights)
-        propagator.compute_minimal_reason(to_minimize=propagator.S)
+        create_reason_falses_le(propagator=propagator)
 
     print_derivation(propagator.atomNames, propagator.S)
+
     return propagator.S
-
-
 

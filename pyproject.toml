@@ -1,5 +1,5 @@
 [project]
-name = "amoclingo"
+name = "amosum"
 version = "0.0.1"
 authors = [
   { name="Salvatore Fiorentino", email="salvatore.fiorentino@unical.it" },
@@ -19,9 +19,15 @@ license-files = ["LICEN[CS]E*"]
 requires = ["hatchling >= 1.26"]
 build-backend = "hatchling.build"
 
+[tool.hatch.build.targets.wheel]
+packages = ["amosum"]
+
 [project.urls]
 Homepage = "https://github.com/instafiore/amosum.git"
 
 [project.scripts]
-amoclingo = "amoclingo.__main__:optimized_run"
-amoclingo-debug = "amoclingo.__main__:run"
+amoclingo = "amosum.amoclingo.__main__:optimized_run"
+amoclingo-debug = "amosum.amoclingo.__main__:run"
+
+amowasp = "amosum.amowasp.__main__:optimized_run"
+amowasp-debug = "amosum.amowasp.__main__:run"

@@ -8,7 +8,7 @@ from ast import Tuple
 from typing import Callable, List
 import re
 import settings
-from amosum import *
+from amosum.amosum import *
 
 # mapping literal -> id
 atomNames = {}

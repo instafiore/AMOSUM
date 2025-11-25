@@ -5,7 +5,7 @@ import subprocess
 import sys
 from typing import Any, Dict, List
 import sys
-from settings import *
+from amosum.settings import *
 import time
 import clingo 
 
