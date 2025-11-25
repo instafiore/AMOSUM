@@ -21,19 +21,17 @@
 //     }
 // }
 
-void PropagatorClingo::updateBound(int bound){
+
+void PropagatorClingo::updateBound(int bound, size_t td){
     this->bound = bound;
     // printf("Updating bound PropagatorClingo with %d\n", this->bound);
+    if(this->bound != SETTINGS::NONE){
+        AmoSumPropagator* propagator = this->propagators[td];
+        propagator->updateBound(bound); 
+    }
 }
 
 void PropagatorClingo::reset(){
-    // first = true ;
-    // for(auto& prop: propagators){
-    //         if(prop) delete prop;
-    //     }
-    // propagators.clear();
-    // if(clause_clingo != nullptr) delete[] clause_clingo ;
-    // clause_clingo = nullptr;
     firstPropagate = true ; 
 }
 
@@ -42,53 +40,34 @@ bool PropagatorClingo::init(clingo_propagate_init_t *_init){
 
     if(!enabled) return true;
 
-    if(!maximizer || first){
-
-        PropagatorClingoInitializer::get_instance()->init(_init, *this);
-        
-        for (size_t i = 0; i < PropagatorClingoInitializer::get_instance()->nt; i++){
-            AmoSumPropagator* propagator = new AmoSumPropagator(atomNames, param, propagation_phase, ge, choice_cons, solver = AmoSumPropagator::CLINGO);
-            propagator->map_plit_slit = map_plit_slit ;    
-            if(this->bound != SETTINGS::NONE) propagator->updateBound(bound); 
-            this->propagators.push_back(propagator);
-        }
-        
-        for (size_t i = 0; i < PropagatorClingoInitializer::get_instance()->nt; i++) to_watch_plit = AmoSumInitializer::get_instance()->getLiterals(*PropagatorClingoInitializer::get_instance()->lits, this->propagators[i]) ;
-        
-        size_t max_clause_size = this->propagators[0]->N;
-        clause_clingo = new clingo_literal_t[max_clause_size];
-
-
-        for(clingo_literal_t plit: to_watch_plit){
-            clingo_literal_t slit = (*map_plit_slit)[plit];
-            update_map_value_vector(map_slit_plit_watched, slit, plit);
-            handle_error(clingo_propagate_init_add_watch(_init, slit));
-            handle_error(clingo_propagate_init_freeze_literal(_init, slit));
-            to_watch_slit.push_back(slit);
-        }
-
-    }else{
-        for (size_t i = 0; i < PropagatorClingoInitializer::get_instance()->nt; i++){
-            AmoSumPropagator* propagator = this->propagators[i];
-            if(this->bound != SETTINGS::NONE) propagator->updateBound(bound); 
-            propagator->resetPropagator();
-        }
-    }
-
-    for(auto &[plit, slit]: *map_plit_slit){
-        clingo_literal_t snew;
-        clingo_propagate_init_solver_literal(_init, plit, &snew);
-        assert(slit == snew);
+    PropagatorClingoInitializer::get_instance()->init(_init, *this);
+    
+    for (size_t i = 0; i < PropagatorClingoInitializer::get_instance()->nt; i++){
+        AmoSumPropagator* propagator = new AmoSumPropagator(atomNames, param, propagation_phase, ge, choice_cons, solver = AmoSumPropagator::CLINGO, maximizer);
+        propagator->map_plit_slit = map_plit_slit ;    
+        if(this->bound != SETTINGS::NONE) propagator->updateBound(bound); 
+        this->propagators.push_back(propagator);
     }
     
-    // debug("Starting propagator ",unordered_map_to_string(param))
-     
+    for (size_t i = 0; i < PropagatorClingoInitializer::get_instance()->nt; i++) to_watch_plit = AmoSumInitializer::get_instance()->getLiterals(*PropagatorClingoInitializer::get_instance()->lits, this->propagators[i]) ;
+    
+    size_t max_clause_size = this->propagators[0]->N;
+    clause_clingo = new clingo_literal_t[max_clause_size];
+
+
+    for(clingo_literal_t plit: to_watch_plit){
+        clingo_literal_t slit = (*map_plit_slit)[plit];
+        update_map_value_vector(map_slit_plit_watched, slit, plit);
+        handle_error(clingo_propagate_init_add_watch(_init, slit));
+        handle_error(clingo_propagate_init_freeze_literal(_init, slit));
+        // to_watch_slit.push_back(slit);
+    }
+
     // TO redo each time init is invoked
     std::vector<clingo_literal_t> S_plit ;
 
-    
-    for (size_t i = 0; i < PropagatorClingoInitializer::get_instance()->nt; i++) S_plit = propagators[i]->simplifyAtLevelZero(false);
-    // for (size_t i = 0; i < PropagatorClingoInitializer::get_instance()->nt; i++) S_plit = propagators[i]->simplifyAtLevelZero(true);
+    // for (size_t i = 0; i < PropagatorClingoInitializer::get_instance()->nt; i++) S_plit = propagators[i]->simplifyAtLevelZero(false);
+    for (size_t i = 0; i < PropagatorClingoInitializer::get_instance()->nt; i++) S_plit = propagators[i]->simplifyAtLevelZero(true);
     
     if (S_plit.size() == 1 and S_plit[0] == BOTTOM){ 
         bool result ; 
@@ -159,15 +138,6 @@ bool PropagatorClingo::propagate(clingo_propagate_control_t *control, const clin
 
     if(!enabled) return true;
 
-    if(firstPropagate){
-        for(clingo_literal_t slit: to_watch_slit){
-            if(!clingo_propagate_control_has_watch(control, slit)){
-                clingo_propagate_control_add_watch(control, slit);
-            }
-        }
-        firstPropagate = false ; 
-    }
-
     const clingo_assignment_t *assignment = clingo_propagate_control_assignment(control);
     int dl = clingo_assignment_decision_level(assignment);
     int td; 
@@ -175,7 +145,6 @@ bool PropagatorClingo::propagate(clingo_propagate_control_t *control, const clin
     AmoSumPropagator* prop = propagators[td];
     prop->control = control ;
     print_propagate(this, changes, size, control, dl, false, false);
-
 
     for (size_t i = 0; i < size; i++)
     {

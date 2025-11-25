@@ -108,6 +108,9 @@ struct AmoSumPropagator
 
     void updateBound(int bound);
 
+    bool maximizer;
+
+    
     AmoSumPropagator(){}
     AmoSumPropagator(
         std::unordered_map<clingo_symbol_t, clingo_literal_t>* atomNames,
@@ -115,13 +118,16 @@ struct AmoSumPropagator
         const std::vector<clingo_literal_t>* (*propagation_phase)(const Group*, AmoSumPropagator*) = nullptr,
         bool ge = true,
         std::string choice_cons = "AMO",
-        std::string solver = "WASP")
+        std::string solver = "WASP",
+        bool maximizer = false )
         : atomNames(atomNames),
           params(std::move(params)),
           propagation_phase(propagation_phase),
           ge(ge),
           choice_cons(std::move(choice_cons)),
-          solver(std::move(solver)) {}
+          solver(std::move(solver)),
+          maximizer(maximizer)
+          {}
 
     ~AmoSumPropagator(){
         for(const Group* group : groups)   delete group ;

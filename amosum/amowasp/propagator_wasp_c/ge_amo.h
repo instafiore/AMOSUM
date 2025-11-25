@@ -21,7 +21,7 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, Am
     if (propagator->mps_violated) {
         clingo_literal_t l = propagator->current_literal ;
         
-        assert(propagator->lazy_prop_activated);
+        assert(propagator->maximizer || propagator->lazy_prop_activated);
         
         propagator->S.push_back(not_(l));
 

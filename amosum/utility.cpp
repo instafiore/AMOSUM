@@ -382,6 +382,60 @@ Model::Model(const clingo_model* model, std::unordered_map<std::string,int>* wei
     
 }
 
+Model::Model(const std::unordered_map<clingo_symbol_t, clingo_literal_t> &atomNames, std::unordered_map<std::string,int>* weights_names, const clingo_assignment_t *assignmentClingo, std::unordered_map<clingo_literal_t, clingo_literal_t>* map_plit_slit){
+
+    char *str = NULL;
+    size_t str_n = 0;
+    cost = 0;
+    for (std::pair<clingo_symbol_t, clingo_literal_t> pair: atomNames) {
+            clingo_symbol_t sym = pair.first;
+            clingo_literal_t plit = pair.second;
+            size_t n;
+            char *str_new;
+        
+            // determine size of the string representation of the next symbol in the model
+            if (!clingo_symbol_to_string_size(sym, &n)) { goto error; }
+        
+            if (str_n < n) {
+            // allocate required memory to hold the symbol's string
+            if (!(str_new = (char*)realloc(str, sizeof(*str) * n))) {
+                clingo_set_error(clingo_error_bad_alloc, "could not allocate memory for symbol's string");
+                goto error;
+            }
+        
+            str = str_new;
+            str_n = n;
+            }
+
+            // retrieve the symbol's string
+            if (!clingo_symbol_to_string(sym, str, n)) {goto error; }
+            
+            clingo_literal_t slit = (*map_plit_slit)[plit];
+            bool isTrue;
+            clingo_assignment_is_true(assignmentClingo, slit, &isTrue);
+            if(isTrue){
+                assignment.push_back(str);
+                // printf("atom: *%s*\n", str);
+
+                if(weights_names != nullptr){
+                    int newCost = get_map(*weights_names,std::string(str), 0) ;
+                    cost += newCost != SETTINGS::NONE ? newCost : 0;
+                    // printf("new cost: %d\n", cost);
+                }
+            }
+    
+    }
+
+    
+    goto out;
+    error:
+    assert(false);
+
+    out:
+
+    if (str)   { free(str); }
+}
+
 std::string Model::toString(){
     std::string cost = this->cost != SETTINGS::NONE ? "Cost: "+std::to_string(this->cost)+" " : "";
     std::string res = cost + vector_to_string(assignment, "Answer Set ", std::string("{}"));
@@ -390,7 +444,7 @@ std::string Model::toString(){
 
 
 
-Result::Result(const clingo_model* model, std::unordered_map<std::string,int>* weights_names, clingo_solve_result_bitset_t &solve_ret){
+AnswerSet::AnswerSet(const clingo_model* model, std::unordered_map<std::string,int>* weights_names, clingo_solve_result_bitset_t &solve_ret){
     if(model != nullptr) this->model = new Model(model, weights_names);
     if (solve_ret & clingo_solve_result_satisfiable) {
         exitCode = 10;
@@ -415,11 +469,27 @@ Result::Result(const clingo_model* model, std::unordered_map<std::string,int>* w
     debug("exit code: ", exitCode);
 }
 
-void Result::setOptimum(){
-    exitCode = 30;
+
+AnswerSet::AnswerSet(const std::unordered_map<clingo_symbol_t, clingo_literal_t> &atomNames, std::unordered_map<std::string,int>* weights_names, const clingo_assignment_t *assignment, std::unordered_map<clingo_literal_t, clingo_literal_t>* map_plit_slit){
+    if(model != nullptr) this->model = new Model(atomNames, weights_names, assignment, map_plit_slit);
+    exitCode = 10;
+    debug("exit code: ", exitCode);
 }
 
-Result::~Result(){
+AnswerSet::AnswerSet(Model* &&model){
+    if(model != nullptr) this->model = model;
+    exitCode = 10;
+    debug("exit code: ", exitCode);
+}
+
+void AnswerSet::setOptimum(bool proved){
+    if(proved)
+        exitCode = 30;
+    else 
+        exitCode = 29;
+}
+
+AnswerSet::~AnswerSet(){
     if(model != nullptr) delete model;
 }
 
@@ -430,7 +500,7 @@ std::string Model::serialize(){
     return res;
 }
 
-std::string Result::toString(){
+std::string AnswerSet::toString(){
     // Interpret the result
     std::string result = "";
     if (exitCode == 10 || exitCode == 30) {
@@ -447,7 +517,7 @@ std::string Result::toString(){
     return result;
 }
 
-std::string Result::serialize(){
+std::string AnswerSet::serialize(){
     std::string modelSerialized = "[]";
     if (exitCode == 10 || exitCode == 30) {
         modelSerialized = model->serialize();
@@ -515,7 +585,7 @@ out:
 }
 
 
-bool solve(clingo_control_t *ctl, Result* &result, PropagatorClingo* maximizer = nullptr) {
+bool solve(clingo_control_t *ctl, AnswerSet* &result) {
     
     bool ret = true;
     clingo_solve_handle_t *handle;
@@ -534,9 +604,9 @@ bool solve(clingo_control_t *ctl, Result* &result, PropagatorClingo* maximizer =
     handle_error(clingo_solve_handle_get(handle, &solve_ret));
 
     if (model) {          
-        result = new Result(model, maximizer != nullptr ? &maximizer->weights_names(): nullptr, solve_ret);
+        result = new AnswerSet(model, nullptr, solve_ret);
     }else{
-        result = new Result(nullptr, nullptr, solve_ret);
+        result = new AnswerSet(nullptr, nullptr, solve_ret);
     }
 
     return clingo_solve_handle_close(handle) & ret;
@@ -932,24 +1002,6 @@ void print_propagate(PropagatorClingo* prop, const clingo_literal_t *changes, si
     else
         decision_literal_name = "non lo so";
 
-
-    // std::vector<std::string> trues;
-    // if(prop->propagators[td]->_mps == 179767){
-        
-    //     for(int i = 0; i < prop->propagators[td]->I->data().size(); ++i){
-    //         if(prop->propagators[td]->I->data()[i] != false){
-    //             trues.push_back(get_name(prop->atomNames, i));
-    //         }
-    //     }
-    //     debugf(vector_to_string(trues, "undef plit"));
-    //     printf("has watch %d\n",clingo_propagate_control_has_watch(control, 32));
-    //     printf("has watch - %d\n",clingo_propagate_control_has_watch(control, -32));
-    //     const clingo_assignment* ass = clingo_propagate_control_assignment(control);
-    //     bool res ;
-    //     clingo_assignment_is_true(ass, 32, &res);
-    //     printf("is true %d\n",res);
-    //     printf("is false %d\n",res);
-    // }
 
     debugf("[", decision_literal_name,", ",dl,"] propagate ", changes_str, " mps: ", prop->propagators[td]->_mps, " bound: ",prop->propagators[td]->bound," td: ", td);
 }

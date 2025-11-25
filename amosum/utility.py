@@ -282,7 +282,7 @@ class Model:
 
     def __str__(self):
         costStr = f"cost: {self.cost} " if not self.cost is None else ""
-        return f"{costStr}{self.assigment}"
+        return f"{costStr}Answer Set {self.assigment}"
 
     @staticmethod
     def parse(serialized: str) -> "Result":
@@ -306,11 +306,13 @@ class Result:
         self.model : Model = model
         self.exitCode : int = exitCode
         self.isOptimum: bool = exitCode == 30
+        self.isUnknown: bool = exitCode == 29
         self.timeModel: float = None
         self.cumulativeTime: float = None
 
     def __str__(self):
         isOptimumString = "Optimum " if self.isOptimum else ""
+        isUnkownString = "Unkown " if self.isUnknown else ""
         timeModelString = f"Time {self.timeModel}s " if not self.timeModel is None else ""
         cumulativeTimeString = f"Cumulative Time {self.cumulativeTime}s " if not self.cumulativeTime is None else ""
         if self.model:
@@ -321,7 +323,7 @@ class Result:
             else:
                 strModel = str(self.exitCode)
 
-        return f"{cumulativeTimeString}{timeModelString}{isOptimumString}{strModel}"
+        return f"{cumulativeTimeString}{timeModelString}{isOptimumString}{isUnkownString}{strModel}"
 
     @staticmethod
     def parse(serialized: str) -> "Result":

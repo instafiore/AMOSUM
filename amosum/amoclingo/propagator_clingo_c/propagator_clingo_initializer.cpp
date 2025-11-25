@@ -31,7 +31,7 @@ void PropagatorClingoInitializer::init(clingo_propagate_init* _init, PropagatorC
     debug("[init] number of threads ", nt);
     clingo_symbolic_atoms_t const *symbolic_atoms;
     clingo_symbolic_atom_iterator_t symbolic_atoms_it, symbolic_atoms_ie;
-    
+
     handle_error(clingo_propagate_init_symbolic_atoms(_init, &symbolic_atoms));
     handle_error(clingo_symbolic_atoms_end(symbolic_atoms, &symbolic_atoms_ie));
 

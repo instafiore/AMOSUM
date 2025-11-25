@@ -30,7 +30,7 @@ public:
     bool firstPropagate = true;
     bool maximizer = false ;
     std::vector<clingo_literal_t> to_watch_plit;
-    std::vector<clingo_literal_t> to_watch_slit;
+    // std::vector<clingo_literal_t> to_watch_slit;
 
     // void removeWatches(clingo_control_t *ctl);
     
@@ -46,6 +46,9 @@ public:
     std::unordered_map<clingo_literal_t, clingo_literal_t>* map_plit_slit = nullptr ;
 
     clingo_literal_t* clause_clingo ;
+
+    std::vector<clingo_literal_t> true_plit;
+
 
     bool enabled;
 
@@ -68,7 +71,7 @@ public:
 
     
     
-    void updateBound(int bound);
+    void updateBound(int bound, size_t td);
     void reset();
     
     bool init(clingo_propagate_init_t *_init);
@@ -86,6 +89,6 @@ public:
             if(prop) delete prop;
         }
         propagators.clear();
-        if(clause_clingo != nullptr) delete[] clause_clingo ;
+        if(clause_clingo != nullptr) delete[] clause_clingo;
     }
 };

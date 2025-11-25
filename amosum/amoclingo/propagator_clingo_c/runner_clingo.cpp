@@ -13,31 +13,43 @@
 #include <chrono>
 #include <csignal>
 #include <sys/signal.h>
+#include "optimizer_clingo.h"
 
-// void signalHandler(int signum) {
-//     print("Received SIGINT (Ctrl+C)");
-//     exit(signum);
-// }
+
+ParameterMap params;
+void signalHandler(int signum) {
+    AnswerSet* optAnswer = OptimizerClingo::getInstance()->currentAnswerSet;
+    optAnswer->setOptimum(false);
+    if(params.find("serialize") == params.end())  printf("%s\n",optAnswer->toString().c_str());
+    else  printf("%s\n",optAnswer->serialize().c_str());
+    printf("optAnswer->exitCode: %d\n",optAnswer->exitCode);
+    exit(optAnswer->exitCode);
+}
 
 PropagatorClingo* register_propagator(clingo_control_t *ctl, clingo_propagator_t prop, std::string prop_type, const ParameterMap& param, std::vector<PropagatorClingo*> &propagators);
 bool init(clingo_propagate_init_t *_init, PropagatorClingo *propagator){
-    bool res =  propagator->init(_init);
-    return res;
+    return propagator->init(_init);
 }
 bool propagate(clingo_propagate_control_t *control, const clingo_literal_t *changes, size_t size, PropagatorClingo *propagator){ 
-    bool res =  propagator->propagate(control, changes, size);
-    return res;
+    return propagator->propagate(control, changes, size);
 }
 void undo(clingo_propagate_control_t *control, const clingo_literal_t *changes, size_t size, PropagatorClingo *propagator){
     propagator->undo(control, changes, size);
 }
 
+bool initcheck(clingo_propagate_init_t *_init, OptimizerClingo *optimizer){
+    return optimizer->init(_init);
+}
+
+bool check(clingo_propagate_control_t *control, OptimizerClingo *optimizer){
+    return optimizer->check(control);
+}
+
 int main(int argc, char const *argv[])
 {
-
-
-    // signal(SIGINT, signalHandler);
-    ParameterMap params =  init_param(argc, argv);
+    
+    params =  init_param(argc, argv);
+    signal(SIGINT, signalHandler);
 
     std::string encoding_path = "" ;
     params.find("enc") != params.end() ? encoding_path = params.find("enc")->second : NULL ;
@@ -71,13 +83,19 @@ int main(int argc, char const *argv[])
     clingo_configuration_t *config = NULL;
     clingo_id_t root_key, solve_key, seed_key;
 
-    // create a propagator with the functions above
-    // using the default implementation for the model check
-    clingo_propagator_t prop = {
+    clingo_propagator_t prop_callback = {
         (clingo_propagator_init_callback_t)init,
         (clingo_propagator_propagate_callback_t)propagate,
         (clingo_propagator_undo_callback_t)undo,
         NULL,
+        NULL,
+    };
+
+    clingo_propagator_t optimizer_callback = {
+        (clingo_propagator_init_callback_t)initcheck,
+        NULL,
+        NULL,
+        (clingo_propagator_check_callback_t)check,
         NULL,
     };
 
@@ -86,12 +104,15 @@ int main(int argc, char const *argv[])
 
     std::vector<PropagatorClingo*> propagators ;
     PropagatorClingo* propagatorMaximize = nullptr ;
+
     for(auto& [prop_type, param]: prop_type_params){
         if (prop_type == "amomaximize"){
-            propagatorMaximize = register_propagator(ctl, prop, "ge_amo", param, propagators);
+            propagatorMaximize = register_propagator(ctl, prop_callback, "ge_amo", param, propagators);
             propagatorMaximize->maximizer = true;
+            OptimizerClingo::initInstace(params, propagatorMaximize);
+            handle_error(clingo_control_register_propagator(ctl, &optimizer_callback, OptimizerClingo::getInstance(), true));
         }else{
-            register_propagator(ctl, prop, prop_type, param, propagators);
+            register_propagator(ctl, prop_callback, prop_type, param, propagators);
         }
     }
     
@@ -99,76 +120,33 @@ int main(int argc, char const *argv[])
     if (params.find("enc") != params.end()) handle_error(clingo_control_load(ctl, encoding_path.c_str())) ;
     if (params.find("i") != params.end()) handle_error(clingo_control_load(ctl, instance_path.c_str()));
     
-
     handle_error((clingo_control_ground(ctl, parts, 1, NULL, NULL)));
 
-    int countMaximize = 0;
-    int nMaximize = 10000;
+    AnswerSet* result;
+    handle_error(solve(ctl, result));
+    assert(result->exitCode == 20);
+    // if(params.find("serialize") == params.end())  printf("%s\n",result->toString().c_str());
+    // else  printf("%s\n",result->serialize().c_str());
 
-    Result* resultOpt = nullptr ;
-    Result* previous = nullptr ;
-
-
-    int bound = 0;
-    while(true){
-
-        Result* result;
-        
-        handle_error(solve(ctl, result, propagatorMaximize));
-        
-        
-        if(params.find("serialize") == params.end())  printf("%s\n",result->toString().c_str());
-        else  printf("%s\n",result->serialize().c_str());
-
-        if(propagatorMaximize == nullptr){
-            resultOpt = result; 
-            break;
-        }
-
-        if(result->exitCode != 10) break;
-        if(resultOpt != nullptr) previous = resultOpt;
-        resultOpt = result; 
-
-
-        bound = result->model->cost + 1;
-        propagatorMaximize->updateBound(bound);
-
-        if(previous != nullptr) delete previous;   
-
-        // AmoSumInitializer::get_instance()->reset();
-        // PropagatorClingoInitializer::get_instance()->reset();
-        propagatorMaximize->reset();
-
-        // propagatorMaximize->enabled = false;
-        // propagatorMaximize = new PropagatorClingo(*propagatorMaximize);
-        // propagatorMaximize->enabled = true;
-        // handle_error(clingo_control_register_propagator(ctl, &prop, propagatorMaximize, false));
-        
-        // ++countMaximize;
-        // if(countMaximize >= nMaximize) break;
-    }
-
-    if(propagatorMaximize != nullptr) {
-        resultOpt->setOptimum();
-        if(params.find("serialize") == params.end())  printf("%s\n",resultOpt->toString().c_str());
-        else  printf("%s\n",resultOpt->serialize().c_str());
-    }
+    AnswerSet* optAnswer = OptimizerClingo::getInstance()->currentAnswerSet;
+    optAnswer->setOptimum();
+    if(params.find("serialize") == params.end())  printf("%s\n",optAnswer->toString().c_str());
+    else  printf("%s\n",optAnswer->serialize().c_str());
     
     // FREE
     for(auto& propagator: propagators){
         if(propagator) delete propagator;
     }
-    if (ctl) { clingo_control_free(ctl); }
-
+    if(ctl) { clingo_control_free(ctl); }
+    
     
 
     AmoSumInitializer::cleanup();
     PropagatorClingoInitializer::cleanup();
+    OptimizerClingo::cleanup();
     // printf("returning exit code: %d", resultOpt->exitCode);
 
-    
-
-    return resultOpt->exitCode;
+    return result->exitCode;
 }
 
 PropagatorClingo* register_propagator(clingo_control_t *ctl, clingo_propagator_t prop, 
