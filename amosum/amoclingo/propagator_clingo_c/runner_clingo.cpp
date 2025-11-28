@@ -18,6 +18,10 @@
 
 ParameterMap params;
 void signalHandler(int signum) {
+    OptimizerClingo* instance = OptimizerClingo::getInstance();
+    if(instance == nullptr){
+        exit(SIGINT);
+    }
     AnswerSet* optAnswer = OptimizerClingo::getInstance()->currentAnswerSet;
     optAnswer->setOptimum(false);
     if(params.find("serialize") == params.end())  printf("%s\n",optAnswer->toString().c_str());
@@ -112,7 +116,8 @@ int main(int argc, char const *argv[])
             OptimizerClingo::initInstace(params, propagatorMaximize);
             handle_error(clingo_control_register_propagator(ctl, &optimizer_callback, OptimizerClingo::getInstance(), true));
         }else{
-            register_propagator(ctl, prop_callback, prop_type, param, propagators);
+            propagatorMaximize = register_propagator(ctl, prop_callback, prop_type, param, propagators);
+            // register_propagator(ctl, prop_callback, prop_type, param, propagators);
         }
     }
     
@@ -123,16 +128,21 @@ int main(int argc, char const *argv[])
     handle_error((clingo_control_ground(ctl, parts, 1, NULL, NULL)));
 
     AnswerSet* result;
-    handle_error(solve(ctl, result));
-    assert(result->exitCode == 20);
-    // if(params.find("serialize") == params.end())  printf("%s\n",result->toString().c_str());
-    // else  printf("%s\n",result->serialize().c_str());
+    bool falseLiterals = get_map(params, std::string("falseLiterals"), SETTINGS::FALSE_STR) == SETTINGS::TRUE_STR;
+    handle_error(solve(ctl, result, falseLiterals));
+    OptimizerClingo* instanceOptimizer = OptimizerClingo::getInstance();
+    assert(instanceOptimizer == nullptr || result->exitCode == 20);
+    if(instanceOptimizer == nullptr){
+        if(params.find("serialize") == params.end())  printf("%s\n",result->toString().c_str());
+        else  printf("%s\n",result->serialize().c_str());
+    }else{
+        AnswerSet* optAnswer = instanceOptimizer->currentAnswerSet;
+        optAnswer->setOptimum();
+        if(params.find("serialize") == params.end())  printf("%s\n",optAnswer->toString().c_str());
+        else  printf("%s\n",optAnswer->serialize().c_str());
+    }
 
-    AnswerSet* optAnswer = OptimizerClingo::getInstance()->currentAnswerSet;
-    optAnswer->setOptimum();
-    if(params.find("serialize") == params.end())  printf("%s\n",optAnswer->toString().c_str());
-    else  printf("%s\n",optAnswer->serialize().c_str());
-    
+
     // FREE
     for(auto& propagator: propagators){
         if(propagator) delete propagator;

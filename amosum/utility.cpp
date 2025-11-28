@@ -315,14 +315,14 @@ out:
   return ret;
 }
 
-Model::Model(const clingo_model* model, std::unordered_map<std::string,int>* weights_names){
+Model::Model(const clingo_model* model){
 
         clingo_symbol_t *atoms = NULL;
         size_t atoms_n;
         clingo_symbol_t const *it, *ie;
         char *str = NULL;
         size_t str_n = 0;
-        cost = 0;
+        // cost = 0;
         // determine the number of (shown) symbols in the model
         if (!clingo_model_symbols_size(model, clingo_show_type_atoms, &atoms_n)) { goto error; }
         
@@ -359,14 +359,6 @@ Model::Model(const clingo_model* model, std::unordered_map<std::string,int>* wei
 
             assignment.push_back(str);
 
-            // printf("atom: *%s*\n", str);
-
-            if(weights_names != nullptr){
-                int newCost = get_map(*weights_names,std::string(str), 0) ;
-                cost += newCost != SETTINGS::NONE ? newCost : 0;
-                // printf("new cost: %d\n", cost);
-            }
-    
         }
         
         
@@ -382,12 +374,62 @@ Model::Model(const clingo_model* model, std::unordered_map<std::string,int>* wei
     
 }
 
-Model::Model(const std::unordered_map<clingo_symbol_t, clingo_literal_t> &atomNames, std::unordered_map<std::string,int>* weights_names, const clingo_assignment_t *assignmentClingo, std::unordered_map<clingo_literal_t, clingo_literal_t>* map_plit_slit){
+
+// Model::Model(const clingo_model* model, bool falseLiterals){
+
+//     char *str = NULL;
+//     size_t str_n = 0;
+//     for (std::pair<clingo_symbol_t, clingo_literal_t> pair: *PropagatorClingoInitializer::get_instance()->atomNames) {
+//             clingo_symbol_t sym = pair.first;
+//             clingo_literal_t plit = pair.second;
+//             size_t n;
+//             char *str_new;
+        
+//             // determine size of the string representation of the next symbol in the model
+//             if (!clingo_symbol_to_string_size(sym, &n)) { goto error; }
+        
+//             if (str_n < n) {
+//             // allocate required memory to hold the symbol's string
+//             if (!(str_new = (char*)realloc(str, sizeof(*str) * n))) {
+//                 clingo_set_error(clingo_error_bad_alloc, "could not allocate memory for symbol's string");
+//                 goto error;
+//             }
+        
+//             str = str_new;
+//             str_n = n;
+//             }
+
+//             // retrieve the symbol's string
+//             if (!clingo_symbol_to_string(sym, str, n)) {goto error; }
+            
+//             clingo_literal_t slit = (*PropagatorClingoInitializer::get_instance()->map_plit_slit)[plit];
+//             bool isTrue;
+//             clingo_model_contains(model, sym, &isTrue);
+            
+//             if(isTrue){
+//                 assignment.push_back(str);
+//                 // printf("atom: *%s*\n", str);
+//             }
+//             else if(falseLiterals){
+//                 assignment.push_back("~"+std::string(str));
+//             }
+    
+//     }
+
+//     goto out;
+//     error:
+//     assert(false);
+
+//     out:
+
+//     if (str)   { free(str); }
+// }
+
+Model::Model(const clingo_assignment_t *assignmentClingo, bool falseLiterals){
 
     char *str = NULL;
     size_t str_n = 0;
-    cost = 0;
-    for (std::pair<clingo_symbol_t, clingo_literal_t> pair: atomNames) {
+    for (std::pair<clingo_symbol_t, clingo_literal_t> pair: *PropagatorClingoInitializer::get_instance()->atomNames) {
             clingo_symbol_t sym = pair.first;
             clingo_literal_t plit = pair.second;
             size_t n;
@@ -410,18 +452,16 @@ Model::Model(const std::unordered_map<clingo_symbol_t, clingo_literal_t> &atomNa
             // retrieve the symbol's string
             if (!clingo_symbol_to_string(sym, str, n)) {goto error; }
             
-            clingo_literal_t slit = (*map_plit_slit)[plit];
+            clingo_literal_t slit = (*PropagatorClingoInitializer::get_instance()->map_plit_slit)[plit];
             bool isTrue;
             clingo_assignment_is_true(assignmentClingo, slit, &isTrue);
+            
             if(isTrue){
                 assignment.push_back(str);
                 // printf("atom: *%s*\n", str);
-
-                if(weights_names != nullptr){
-                    int newCost = get_map(*weights_names,std::string(str), 0) ;
-                    cost += newCost != SETTINGS::NONE ? newCost : 0;
-                    // printf("new cost: %d\n", cost);
-                }
+            }
+            else if(falseLiterals){
+                assignment.push_back("~"+std::string(str));
             }
     
     }
@@ -437,16 +477,15 @@ Model::Model(const std::unordered_map<clingo_symbol_t, clingo_literal_t> &atomNa
 }
 
 std::string Model::toString(){
-    std::string cost = this->cost != SETTINGS::NONE ? "Cost: "+std::to_string(this->cost)+" " : "";
-    std::string res = cost + vector_to_string(assignment, "Answer Set ", std::string("{}"));
+    // std::string cost = this->cost != SETTINGS::NONE ? "Cost: "+std::to_string(this->cost)+" " : "";
+    std::string res = vector_to_string(assignment, "Answer Set ", std::string("{}"));
     return res;
 }
 
 
-
-AnswerSet::AnswerSet(const clingo_model* model, std::unordered_map<std::string,int>* weights_names, clingo_solve_result_bitset_t &solve_ret){
-    if(model != nullptr) this->model = new Model(model, weights_names);
-    if (solve_ret & clingo_solve_result_satisfiable) {
+AnswerSet::AnswerSet(Model* &&model, clingo_solve_result_bitset_t &solve_ret){
+    if(model != nullptr) this->model = model;
+    if (solve_ret & clingo_solve_result_satisfiable){
         exitCode = 10;
     } 
     else if (solve_ret & clingo_solve_result_unsatisfiable) {
@@ -470,12 +509,6 @@ AnswerSet::AnswerSet(const clingo_model* model, std::unordered_map<std::string,i
 }
 
 
-AnswerSet::AnswerSet(const std::unordered_map<clingo_symbol_t, clingo_literal_t> &atomNames, std::unordered_map<std::string,int>* weights_names, const clingo_assignment_t *assignment, std::unordered_map<clingo_literal_t, clingo_literal_t>* map_plit_slit){
-    if(model != nullptr) this->model = new Model(atomNames, weights_names, assignment, map_plit_slit);
-    exitCode = 10;
-    debug("exit code: ", exitCode);
-}
-
 AnswerSet::AnswerSet(Model* &&model){
     if(model != nullptr) this->model = model;
     exitCode = 10;
@@ -495,8 +528,8 @@ AnswerSet::~AnswerSet(){
 
 
 std::string Model::serialize(){
-    std::string cost = this->cost != SETTINGS::NONE ? ","+std::to_string(this->cost)+"" : "";
-    std::string res = "["+ vector_to_string(assignment, "", std::string("[]")) + cost +"]";
+    // std::string cost = this->cost != SETTINGS::NONE ? ","+std::to_string(this->cost)+"" : "";
+    std::string res = vector_to_string(assignment, "", std::string("[]"));
     return res;
 }
 
@@ -585,7 +618,8 @@ out:
 }
 
 
-bool solve(clingo_control_t *ctl, AnswerSet* &result) {
+// bool solve(clingo_control_t *ctl, AnswerSet* &result) {
+bool solve(clingo_control_t *ctl, AnswerSet* &result, bool falseLiterals){
     
     bool ret = true;
     clingo_solve_handle_t *handle;
@@ -604,9 +638,9 @@ bool solve(clingo_control_t *ctl, AnswerSet* &result) {
     handle_error(clingo_solve_handle_get(handle, &solve_ret));
 
     if (model) {          
-        result = new AnswerSet(model, nullptr, solve_ret);
+        result = new AnswerSet(new Model(model), solve_ret);
     }else{
-        result = new AnswerSet(nullptr, nullptr, solve_ret);
+        result = new AnswerSet(nullptr, solve_ret);
     }
 
     return clingo_solve_handle_close(handle) & ret;

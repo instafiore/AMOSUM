@@ -78,7 +78,8 @@ class RunnerClingoC(RunnerWasp):
             run += prop_run
 
         # print(f"weights: {str(preprocess_map["amosum_mapweights"])}")
-
+        # weigths = preprocess_map["amosum_mapweights"].getdefault("__amomaximizeid__",None)
+        weights = preprocess_map["amosum_mapweights"]
 
         if self.PRINT_RUN:
             print(f"run:\t {run}")
@@ -93,7 +94,7 @@ class RunnerClingoC(RunnerWasp):
         result = None
         for line in run_and_stream(run):
             if not line.strip(): continue
-            result = Result.parse(line)
+            result = Result.parse(line, weights)
             if result is None:
                 continue
             endCurrentModelTime = time.time()

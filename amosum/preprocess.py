@@ -50,10 +50,11 @@ def preprocess_ground_program(file: str) -> dict:
                     terms = getTerms(PREDICATE_GROUP, l[1])
                     name = terms[0]
                     sign = terms[1].replace("\"","")
-                    weight = terms[2]
+                    weight = int(terms[2])
                     id = terms[3]
                     aggrid = terms[4]
                     result_map["amosum_mapweights"].setdefault(aggrid, dict())
+                    # result_map["amosum_mapweights"][aggrid][name] = {"sign": sign, "weight": weight, "id": id}
                     result_map["amosum_mapweights"][name] = {"sign": sign, "weight": weight, "id": id}
 
 

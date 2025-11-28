@@ -8,7 +8,7 @@ bool OptimizerClingo::init(clingo_propagate_init_t *_init){
 }
 
 OptimizerClingo* OptimizerClingo::getInstance(){
-    if(instance == nullptr) assert(false);
+    // if(instance == nullptr) assert(false);
     return instance;
 }
 
@@ -22,8 +22,7 @@ bool OptimizerClingo::check(clingo_propagate_control_t *control){
     int td; 
     dl == 0 ? td = 0 : td = clingo_propagate_control_thread_id(control);
     if(currentAnswerSet != nullptr) delete currentAnswerSet;
-    // currentAnswerSet = new AnswerSet(*propagator->atomNames, &propagator->weights_names(), assignment, propagator->map_plit_slit);
-    currentAnswerSet = new AnswerSet(new Model(*propagator->atomNames, &propagator->weights_names(), assignment, propagator->map_plit_slit));
+    currentAnswerSet = new AnswerSet(new Model(assignment));
     if(params.find("serialize") == params.end())  printf("%s\n",currentAnswerSet->toString().c_str());
     else  printf("%s\n",currentAnswerSet->serialize().c_str());
     int mps = propagator->propagators[td]->_mps;

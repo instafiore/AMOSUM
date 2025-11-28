@@ -67,19 +67,20 @@ int64_t from_string_to_symbol_or_lit(std::string str, const std::unordered_map<c
 std::map<std::string, clingo_literal_t> create_atomNames_string(const std::unordered_map<clingo_symbol_t, clingo_literal_t> *atomNames);
 void handle_error(bool success);
 bool print_model(clingo_model_t const *model);
-bool solve(clingo_control_t *ctl, AnswerSet* &result);
+// bool solve(clingo_control_t *ctl, AnswerSet* &result);
+bool solve(clingo_control_t *ctl, AnswerSet* &result, bool falseLiterals=false);
 std::chrono::time_point<std::chrono::high_resolution_clock> start_timer();
 void display_end_timer(const std::chrono::time_point<std::chrono::high_resolution_clock>& start, std::string name);
 struct AmoSumPropagator;
 
 class Model{
 public:
-    int cost;
     std::vector<std::string> assignment;
-    Model(const clingo_model* model, std::unordered_map<std::string,int>* weights_names);
-    Model(const std::unordered_map<clingo_symbol_t, clingo_literal_t> &atomNames, std::unordered_map<std::string,int>* weights_names, const clingo_assignment_t *assignment, std::unordered_map<clingo_literal_t, clingo_literal_t>* map_plit_slit);
+    Model(const clingo_model* model);
+    Model(const clingo_assignment_t *assignmentClingo, bool falseLiterals=false);
     std::string toString();
     std::string serialize();
+    
 };
 
 
@@ -88,8 +89,7 @@ class AnswerSet{
 public:
     Model* model = nullptr;
     int exitCode ;
-    AnswerSet(const clingo_model* model, std::unordered_map<std::string,int>* weights_names, clingo_solve_result_bitset_t &solve_ret);
-    AnswerSet(const std::unordered_map<clingo_symbol_t, clingo_literal_t> &atomNames, std::unordered_map<std::string,int>* weights_names, const clingo_assignment_t *assignment, std::unordered_map<clingo_literal_t, clingo_literal_t>* map_plit_slit);
+    AnswerSet(Model* &&model, clingo_solve_result_bitset_t &solve_ret);
     AnswerSet(Model* &&model);
     std::string toString();
     std::string serialize();

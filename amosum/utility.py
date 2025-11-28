@@ -1,4 +1,5 @@
 # utility module
+import argparse
 from enum import Enum
 import re
 import subprocess
@@ -22,6 +23,53 @@ NOT = "~"
 REGEX_LIT = rf"{NOT}?(\w+(\(\w+({SEPARATOR_ASSUMPTIONS}\w+)*\))?)" 
 REGEX_ASSUMPTIONS = rf"^\[{REGEX_LIT}({SEPARATOR_ASSUMPTIONS}{NOT}?{REGEX_LIT})*\]$"
 VALID_VALUES_ASS = f"[[{NOT}]<atom_name>[(param1,parm2,...)]:...] "
+
+
+def parse_args_check():
+    parser = argparse.ArgumentParser(description="Checker for AMOSUM")
+    parser.add_argument("--checkerPath", required=True, help="Path to file checker")
+    parser.add_argument("--pathOutput", required=True, help="Path to file pathOutput")
+
+    return vars(parser.parse_args())
+
+def checkAmomaximize(args: Dict[str, Any]) -> None:
+
+    regex = r"Cumulative Time \d+\.\d+s Time \d+\.\d+s cost: (?P<cost>\d+) Answer Set \[(?P<answerset>.*)\]"
+
+    with open(args["pathOutput"], "r") as f:
+        for line in f.readlines():
+            matchRegex = re.search(regex, line)
+            if matchRegex:
+                instance = ""
+                cost = int(matchRegex.group("cost"))
+                answerset = matchRegex.group("answerset").split(", ")
+                # print(f"answerset: {answerset}")
+                for atom in answerset:
+                    atom = atom.replace("'","")
+                    # instance += f":- not {atom}.\n"
+                    instance += f"{atom}.\n"
+                costInstance = f"expectedCost({cost})."
+                # print(f"{instance}")
+                # print(f"{costInstance}")
+                ctl = clingo.Control()
+                ctl.load(args["checkerPath"])
+                ctl.add(instance)
+                ctl.add(f"{costInstance}\n")
+                ctl.ground()
+                result: clingo.SolveResult
+                def onResult(resultC: clingo.SolveResult):
+                    nonlocal result
+                    result = resultC
+                print(f"trying with {args["pathOutput"]}, {costInstance}")
+                ctl.solve(on_finish=lambda x: onResult(x))
+
+                print(f"Result check: {result}")
+                if not result.satisfiable:
+                    print(f"Error with: {args["pathOutput"]}, {costInstance}\n{answerset}")
+                    exit(1)
+
+        print("Check passed")  
+        exit(0)
 
 def set_debug(debug):
     global DEBUG
@@ -278,7 +326,7 @@ class Model:
 
     def __init__(self, cost: int,  assignment : List):
         self.cost = cost 
-        self.assigment : List = assignment
+        self.assigment : List[str] = assignment
 
     def __str__(self):
         costStr = f"cost: {self.cost} " if not self.cost is None else ""
@@ -326,7 +374,7 @@ class Result:
         return f"{cumulativeTimeString}{timeModelString}{isOptimumString}{isUnkownString}{strModel}"
 
     @staticmethod
-    def parse(serialized: str) -> "Result":
+    def parse(serialized: str, weights: Dict[str, Dict] = None) -> "Result":
         # print(f"serialized: {serialized}")
         try:
             resultJson = json.loads(serialized)
@@ -336,8 +384,14 @@ class Result:
         modelJson = resultJson[0]
 
         if modelJson:
-            assigment  = modelJson[0]
-            cost  = modelJson[1] if len(modelJson) > 1 else None
+            assigment  = modelJson
+            cost = 0
+            for atom in assigment:
+                if atom in weights:
+                    cost += weights[atom]["weight"] if weights[atom]["sign"] == "+" else 0
+                    # cost += weights[atom]["weight"]
+                    # print(f"atom: {atom} weight: {weights[atom]["weight"]} sign: {weights[atom]["sign"]} cost: {cost}")
+            # cost = sum(weights[atom]["weight"] for atom in assigment if atom in weights) if weights else None
             model = Model(cost, assigment)
         else:
             model = None
