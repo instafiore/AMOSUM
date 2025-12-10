@@ -40,6 +40,7 @@ class RunnerClingoC(RunnerWasp):
         generator = run_and_stream(run)
         result: Result
         alreadyPrinted = False
+   
         try:
             for line in generator:
                 # print(f"New line {line}")
@@ -59,7 +60,7 @@ class RunnerClingoC(RunnerWasp):
             
             result.exitCode = 30
         except KeyboardInterrupt as e:
-       
+            
             for line in generator:
                 # print(f"New line {line}")
                 if not line.strip(): continue
@@ -141,13 +142,8 @@ class RunnerClingoC(RunnerWasp):
         totalTime = time.time()
         result = None
         
-        # try:
-        result = self.handleRun(run, weights, totalTime)
-        # except KeyboardInterrupt as e:
-        #     optimum = False
-        #     result = self.handleRun(run, weights, totalTime)
 
-        # print(result)
+        result = self.handleRun(run, weights, totalTime)
         print(f"Exit code: {result.exitCode}")
         
         return result.exitCode if result else 40
