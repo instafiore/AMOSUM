@@ -136,7 +136,7 @@ class AmoSumTransformer(Transformer):
             debug(f"aggregate_id: {aggregate_id}")
 
             
-
+            # TODO: support negated literals
             naf_literals = amosum_aggregate_element.children[2]
             classical_literal_amosum = pick_n_subtree(naf_literals, data="naf_literal", n=1)
             assert ValidatorAmoSum.checkNode(classical_literal_amosum.children[0], valid_values = ["classical_literal"])

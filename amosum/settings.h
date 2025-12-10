@@ -21,4 +21,11 @@ const char SEPARATOR_ASSUMPTIONS = ':';
 const char NOT = '~';
 const std::string NONE_STR = "";
 const std::string LAZY_HYBRID = "hybrid";
+const int SAT = 10;
+const int UNSAT = 20;
+const int UNKNOWN = 29;
+const int OPTIMUM = 30;
+const int SEARCH_SPACE_EXHAUSTED = 40;
+const int TIMEOUT = 60;
+const int ERROR = 70;
 }

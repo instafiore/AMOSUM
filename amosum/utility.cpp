@@ -486,21 +486,21 @@ std::string Model::toString(){
 AnswerSet::AnswerSet(Model* &&model, clingo_solve_result_bitset_t &solve_ret){
     if(model != nullptr) this->model = model;
     if (solve_ret & clingo_solve_result_satisfiable){
-        exitCode = 10;
+        exitCode = SETTINGS::SAT;
     } 
     else if (solve_ret & clingo_solve_result_unsatisfiable) {
-        exitCode = 20;
+        exitCode = SETTINGS::UNSAT;
     } 
     else {
         if (solve_ret & clingo_solve_result_exhausted) {
-            exitCode = 40;
+            exitCode = SETTINGS::SEARCH_SPACE_EXHAUSTED;
             debugf("ERROR: Search space exhausted.\n");
         }
         else if (solve_ret & clingo_solve_result_interrupted) {
-            exitCode = 60;
+            exitCode = SETTINGS::TIMEOUT;
             debugf("timeout: Solving was interrupted.\n");
         }else {
-            exitCode = 70;
+            exitCode = SETTINGS::ERROR;
             debugf("ERROR: Unexpected solve result\n");
         }
         exit(exitCode);
@@ -511,15 +511,15 @@ AnswerSet::AnswerSet(Model* &&model, clingo_solve_result_bitset_t &solve_ret){
 
 AnswerSet::AnswerSet(Model* &&model){
     if(model != nullptr) this->model = model;
-    exitCode = 10;
+    exitCode = SETTINGS::SAT;
     debug("exit code: ", exitCode);
 }
 
 void AnswerSet::setOptimum(bool proved){
     if(proved)
-        exitCode = 30;
+        exitCode = SETTINGS::OPTIMUM;
     else 
-        exitCode = 29;
+        exitCode = SETTINGS::UNKNOWN;
 }
 
 AnswerSet::~AnswerSet(){
@@ -533,16 +533,24 @@ std::string Model::serialize(){
     return res;
 }
 
+
+bool isSat(int exitCode){
+    return exitCode == SETTINGS::SAT || exitCode == SETTINGS::OPTIMUM || exitCode == SETTINGS::UNKNOWN;
+}
+
 std::string AnswerSet::toString(){
     // Interpret the result
     std::string result = "";
-    if (exitCode == 10 || exitCode == 30) {
+    if (isSat(exitCode)) {
         result = model->toString();
-        if(exitCode == 30){
+        if(exitCode == SETTINGS::OPTIMUM){
             result = "[Optimum] " + result ;
         }
+        if(exitCode == SETTINGS::UNKNOWN){
+            result = "[Unknown] " + result ;
+        }
     } 
-    else if (exitCode == 20) {
+    else if (exitCode == SETTINGS::UNSAT) {
         result = "UNSAT";
     }else{
         return "ERROR";
@@ -552,7 +560,7 @@ std::string AnswerSet::toString(){
 
 std::string AnswerSet::serialize(){
     std::string modelSerialized = "[]";
-    if (exitCode == 10 || exitCode == 30) {
+    if (isSat(exitCode)) {
         modelSerialized = model->serialize();
     } 
     std::vector<int> others = {exitCode};

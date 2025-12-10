@@ -34,6 +34,55 @@ class RunnerClingoC(RunnerWasp):
 
     def __init__(self, parameters: Dict[str, str]) -> None:
         super().__init__(parameters)
+
+    def handleRun(self, run, weights, totalTime) -> Result:
+        eachModelTime = totalTime
+        generator = run_and_stream(run)
+        result: Result
+        alreadyPrinted = False
+        try:
+            for line in generator:
+                # print(f"New line {line}")
+                if not line.strip(): continue
+                result = Result.parse(line, weights)
+                if result is None:
+                    continue
+                endCurrentModelTime = time.time()
+                result.cumulativeTime = round(endCurrentModelTime - totalTime,3)
+                result.timeModel = round(endCurrentModelTime - eachModelTime, 3)
+                print(result)
+                # print(f"Result normal: {result}")
+                eachModelTime = endCurrentModelTime
+
+                if result.exitCode == 29 or result.exitCode == 30:
+                    alreadyPrinted = True
+            
+            result.exitCode = 30
+        except KeyboardInterrupt as e:
+       
+            for line in generator:
+                # print(f"New line {line}")
+                if not line.strip(): continue
+                resultNew = Result.parse(line, weights)
+                if resultNew is None:
+                    continue
+                result = resultNew
+                endCurrentModelTime = time.time()
+                result.cumulativeTime = round(endCurrentModelTime - totalTime,3)
+                result.timeModel = round(endCurrentModelTime - eachModelTime, 3)
+                # print(f"Result key: {result}")
+                print(result)
+                eachModelTime = endCurrentModelTime
+
+                if result.exitCode == 29 or result.exitCode == 30:
+                    alreadyPrinted = True
+            
+            result.exitCode = 29
+
+        if not alreadyPrinted:
+            print(result)
+        
+        return result
     
     def run_instance(self, instance, encoding=None):
         
@@ -90,18 +139,16 @@ class RunnerClingoC(RunnerWasp):
         if not self.exp or self.param.get("clean",False) or self.param.get("make",False)  : self.compile()
 
         totalTime = time.time()
-        eachModelTime = totalTime
         result = None
-        for line in run_and_stream(run):
-            if not line.strip(): continue
-            result = Result.parse(line, weights)
-            if result is None:
-                continue
-            endCurrentModelTime = time.time()
-            result.cumulativeTime = round(endCurrentModelTime - totalTime,3)
-            result.timeModel = round(endCurrentModelTime - eachModelTime, 3)
-            print(result)
-            eachModelTime = endCurrentModelTime
+        
+        # try:
+        result = self.handleRun(run, weights, totalTime)
+        # except KeyboardInterrupt as e:
+        #     optimum = False
+        #     result = self.handleRun(run, weights, totalTime)
+
+        # print(result)
+        print(f"Exit code: {result.exitCode}")
         
         return result.exitCode if result else 40
     

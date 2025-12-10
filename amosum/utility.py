@@ -2,6 +2,7 @@
 import argparse
 from enum import Enum
 import re
+import signal
 import subprocess
 import sys
 from typing import Any, Dict, List
@@ -303,23 +304,40 @@ class SymmetricFunction:
         self.intepretation[i] = value
 
 def run_and_stream(cmd):
-    proc = subprocess.Popen(
-        cmd,
-        shell=True,
-        stdout=subprocess.PIPE,
-        # stderr=subprocess.STDOUT,
-        text=True,
-        bufsize=1,              
-    )
-
     try:
+        proc = subprocess.Popen(
+            cmd,
+            shell=True,
+            stdout=subprocess.PIPE,
+            # stderr=subprocess.STDOUT,
+            text=True,
+            bufsize=1,              
+        )
+
         for line in proc.stdout: 
             line = line.rstrip("\n")
             yield line           
-    except KeyboardInterrupt:
-        proc.kill()
-        proc.wait()
-        return 
+    except KeyboardInterrupt as e:
+
+        print("Interrupted! Getting remaining output...")
+
+        # Try to let the subprocess finish gracefully
+        try:
+            proc.send_signal(signal.SIGINT)
+        except Exception:
+            pass
+
+        for line in proc.stdout: 
+            line = line.rstrip("\n")
+            yield line 
+
+        raise KeyboardInterrupt()
+    finally:
+        try:
+            proc.wait(timeout=3)
+        except Exception:
+            proc.kill()
+            proc.wait()
 
 import json
 class Model:
@@ -350,13 +368,23 @@ class Result:
     timeModel: float
     cumulativeTime: float
 
+
+
     def __init__(self, model: Model, exitCode: int):
         self.model : Model = model
         self.exitCode : int = exitCode
-        self.isOptimum: bool = exitCode == 30
-        self.isUnknown: bool = exitCode == 29
+        # self.isOptimum: bool = exitCode == 30
+        # self.isUnknown: bool = exitCode == 29
         self.timeModel: float = None
         self.cumulativeTime: float = None
+
+    @property
+    def isOptimum(self):
+        return self.exitCode == 30
+    
+    @property
+    def isUnknown(self):
+        return self.exitCode == 29
 
     def __str__(self):
         isOptimumString = "Optimum " if self.isOptimum else ""
@@ -379,10 +407,17 @@ class Result:
         try:
             resultJson = json.loads(serialized)
         except Exception as e:
-            print(serialized)
-            return None
+            regexTrunckedAnswerset = r"\[\[.*(?P<finalAnswerset>\[\[.*\]\s*,\s*\[.+\])"
+            matchTrunched = re.search(regexTrunckedAnswerset, serialized)
+            if matchTrunched:
+                realAnswerset = matchTrunched.group("finalAnswerset")
+                resultJson = json.loads(realAnswerset)
+            else:
+                print(f"Not valid: {serialized} exception: {e}")
+                return None
         modelJson = resultJson[0]
 
+        # TODO: TO HANDLE NEGATIVE LITERALS
         if modelJson:
             assigment  = modelJson
             cost = 0
@@ -398,6 +433,7 @@ class Result:
         
         otherString = resultJson[1]
         exitCode = int(otherString[0])
+        # print(f"Exit coddddeee: {exitCode}")
         return Result(model, exitCode)
 
 class WeightFunction(SymmetricFunction):

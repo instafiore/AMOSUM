@@ -26,7 +26,7 @@ void signalHandler(int signum) {
     optAnswer->setOptimum(false);
     if(params.find("serialize") == params.end())  printf("%s\n",optAnswer->toString().c_str());
     else  printf("%s\n",optAnswer->serialize().c_str());
-    printf("optAnswer->exitCode: %d\n",optAnswer->exitCode);
+    // printf("optAnswer->exitCode: %d\n",optAnswer->exitCode);
     exit(optAnswer->exitCode);
 }
 
@@ -34,6 +34,7 @@ PropagatorClingo* register_propagator(clingo_control_t *ctl, clingo_propagator_t
 bool init(clingo_propagate_init_t *_init, PropagatorClingo *propagator){
     return propagator->init(_init);
 }
+
 bool propagate(clingo_propagate_control_t *control, const clingo_literal_t *changes, size_t size, PropagatorClingo *propagator){ 
     return propagator->propagate(control, changes, size);
 }
@@ -131,7 +132,7 @@ int main(int argc, char const *argv[])
     bool falseLiterals = get_map(params, std::string("falseLiterals"), SETTINGS::FALSE_STR) == SETTINGS::TRUE_STR;
     handle_error(solve(ctl, result, falseLiterals));
     OptimizerClingo* instanceOptimizer = OptimizerClingo::getInstance();
-    assert(instanceOptimizer == nullptr || result->exitCode == 20);
+    assert(instanceOptimizer == nullptr || result->exitCode == SETTINGS::UNSAT);
     if(instanceOptimizer == nullptr){
         if(params.find("serialize") == params.end())  printf("%s\n",result->toString().c_str());
         else  printf("%s\n",result->serialize().c_str());

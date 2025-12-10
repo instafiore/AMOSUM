@@ -318,8 +318,7 @@ class RunnerWasp:
         else:
             for instance in self.instances:
                 enc_aggr = self.param.get("enc_aggr", False)
-                encoding = settings.MAP_ENC_ENCODING_FILES[self.enc_type][0 if enc_aggr else 1] \
-                    if self.enc_type else None
+                encoding = settings.MAP_ENC_ENCODING_FILES[self.enc_type][0 if enc_aggr else 1] if self.enc_type else None
                 encoding = self.enc if self.enc else encoding
         
                 return self.run_instance(instance, encoding=encoding)
