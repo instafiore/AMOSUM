@@ -26,11 +26,15 @@ AMOSUM is implemented in both **WASP** and **Clingo**, and includes:
 
 ---
 
+## Selection Branch
+- If you are not in branch ```amosum``` type:
+    - git switch amosum
+    
 ## Dependencies
 
 - `clingo >= 5.8.0`  
 - `g++`  
-- Python 3.x
+- Python 3.13
 
 ---
 
@@ -39,12 +43,14 @@ AMOSUM is implemented in both **WASP** and **Clingo**, and includes:
 Install requirements:
 
 ```bash
+
 pip install -r requirements.txt
 ```
 
 Update the submodules:
 
 ```bash
+git submodule init 
 git submodule update --remote --merge
 ```
 
