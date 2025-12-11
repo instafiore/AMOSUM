@@ -55,10 +55,10 @@ class RunnerClingoC(RunnerWasp):
                 # print(f"Result normal: {result}")
                 eachModelTime = endCurrentModelTime
 
-                if result.exitCode == 29 or result.exitCode == 30:
-                    alreadyPrinted = True
+                # if result.exitCode == 29 or result.exitCode == 30:
+                #     alreadyPrinted = True
             
-            result.exitCode = 30
+            # result.exitCode = 30
         except KeyboardInterrupt as e:
             
             for line in generator:
@@ -75,13 +75,13 @@ class RunnerClingoC(RunnerWasp):
                 print(result)
                 eachModelTime = endCurrentModelTime
 
-                if result.exitCode == 29 or result.exitCode == 30:
-                    alreadyPrinted = True
+                # if result.exitCode == 29 or result.exitCode == 30:
+                #     alreadyPrinted = True
             
-            result.exitCode = 29
+            # result.exitCode = 29
 
-        if not alreadyPrinted:
-            print(result)
+        # if not alreadyPrinted:
+        #     print(result)
         
         return result
     
