@@ -190,7 +190,7 @@ class AmoSumInitializer:
         assert not amosum_propagator.lazy_perc is None
         # Debugging lazy threshold and propagation
         lazy_str = f" lazy threshold {amosum_propagator.lazy_perc}" if amosum_propagator.lazy_prop_activated else ""
-        debug(f"Starting py propagator with param {amosum_propagator.param}{lazy_str}", force_print=True)
+        # debug(f"Starting py propagator with param {amosum_propagator.param}{lazy_str}", force_print=True)
 
         for i in range(1, len(lits)):
             l = lits[i]
