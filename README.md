@@ -61,19 +61,19 @@ cd ../../
 
 ## Running AMOSUM
 
-### Clingo — C++ propagator
+### AMOCLINGO — C++ propagator
 
 ```bash
-python ./prop_clingo/run.py -enc <encoding> -i <instance> -exp -lang c > out
+python ./prop_clingo/run.py -enc <encoding> -i <instance> -exp -lang c 
 ```
 
-### Clingo — Python propagator
+### AMOCLINGO — Python propagator
 
 ```bash
-python ./prop_clingo/run.py -enc <encoding> -i <instance> -exp -lang py > out
+python ./prop_clingo/run.py -enc <encoding> -i <instance> -exp -lang py 
 ```
 
-### WASP — Python propagator
+### AMOWASP — Python propagator
 
 ```bash
 python ./prop_wasp/run.py -enc <encoding> -i <instance> -exp
@@ -93,7 +93,7 @@ Enable lazy propagation with:
 
 ## Example Runs
 
-### AMOSUM + Clingo (Full propagation with minimization)
+### AMOCLINGO-INF-MR (Full propagation with minimization)
 
 ```bash
 ./prop_clingo/run.py \
@@ -102,7 +102,7 @@ Enable lazy propagation with:
     -exp -lang c
 ```
 
-### AMOSUM + Clingo (Lazy propagation)
+### AMOCLINGO-L (Lazy propagation)
 
 ```bash
 ./prop_clingo/run.py \
