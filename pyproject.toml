@@ -4,6 +4,7 @@ version = "0.0.1"
 authors = [
   { name="Salvatore Fiorentino", email="salvatore.fiorentino@unical.it" },
 ]
+dynamic = ["dependencies"]
 
 description = "At most one aware system"
 readme = "README.md"
@@ -16,11 +17,14 @@ license = "MIT"
 license-files = ["LICEN[CS]E*"]
 
 [build-system]
-requires = ["hatchling >= 1.26"]
+requires = ["hatchling >= 1.26", "hatch-requirements-txt"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["amosum"]
+
+[tool.hatch.metadata.hooks.requirements_txt]
+files = ["requirements.txt"]
 
 [project.urls]
 Homepage = "https://github.com/instafiore/amosum.git"

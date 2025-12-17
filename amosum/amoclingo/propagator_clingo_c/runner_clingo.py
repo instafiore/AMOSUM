@@ -128,7 +128,7 @@ class RunnerClingoC(RunnerWasp):
             run += prop_run
 
         # print(f"weights: {str(preprocess_map["amosum_mapweights"])}")
-        # weigths = preprocess_map["amosum_mapweights"].getdefault("__amomaximizeid__",None)
+        # weigths = preprocess_map["amosum_mapweights"].getdefault("__amomaximizeid__",None) # Decomment to have cost only for amomaximize problems
         weights = preprocess_map["amosum_mapweights"]
 
         if self.PRINT_RUN:
