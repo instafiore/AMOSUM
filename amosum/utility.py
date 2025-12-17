@@ -35,16 +35,17 @@ def parse_args_check():
 
 def checkAmomaximize(args: Dict[str, Any]) -> None:
 
-    regex = r"Cumulative Time \d+\.\d+s Time \d+\.\d+s cost: (?P<cost>\d+) Answer Set \[(?P<answerset>.*)\]"
+    regex = r"Cumulative Time \d+\.\d+s\s+Time \d+\.\d+s\s*\w*\s*cost: (?P<cost>\d+) Answer Set \[(?P<answerset>.*)\]"
 
     with open(args["pathOutput"], "r") as f:
         for line in f.readlines():
             matchRegex = re.search(regex, line)
+            # print(f"match: {matchRegex}")
             if matchRegex:
                 instance = ""
                 cost = int(matchRegex.group("cost"))
                 answerset = matchRegex.group("answerset").split(", ")
-                # print(f"answerset: {answerset}")
+                print(f"answerset: {answerset}")
                 for atom in answerset:
                     atom = atom.replace("'","")
                     # instance += f":- not {atom}.\n"
