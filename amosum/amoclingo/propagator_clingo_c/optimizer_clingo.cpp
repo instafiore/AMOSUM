@@ -33,17 +33,17 @@ bool OptimizerClingo::check(clingo_propagate_control_t *control){
     return true;
 }
 
-void OptimizerClingo::discardCurrentCost(clingo_propagate_control_t *control){
-    if(propagator->dl == 0) return ;
+void OptimizerClingo::discardCurrentCost(clingo_propagate_control_t *control, size_t td){
+
     std::vector<clingo_literal_t> clause;
-    for (auto* g : propagator->groups) {
-        if (propagator->true_group->get(g) != SETTINGS::NONE) {
-            clause->push_back(not_(propagator->true_group->get(g)));
+    for (auto* g : propagator->propagators[td]->groups) {
+        if (propagator->propagators[td]->true_group->get(g) != SETTINGS::NONE) {
+            clause.push_back(not_(propagator->propagators[td]->true_group->get(g)));
         }
     }
 
     bool result_add_clause;
-    handle_error(clingo_propagate_control_add_clause((clingo_propagate_control*) control, clause.data, clause_size, clingo_clause_type_learnt, &result_add_clause));
+    handle_error(clingo_propagate_control_add_clause((clingo_propagate_control*) control, clause.data(), clause.size(), clingo_clause_type_learnt, &result_add_clause));
 
     if (not result_add_clause){
         return;
