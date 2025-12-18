@@ -31,7 +31,7 @@ const std::vector<clingo_literal_t> AmoSumPropagator::simplifyAtLevelZero(const 
         std::string error_string = ge ? (std::to_string(_mps) + " < " + std::to_string(lb) + " !!!") : (std::to_string(_mps) + " > " + std::to_string(ub) + " !!!");
         if ((ge && _mps < lb) || (!ge && _mps > ub)) {
                 debugf(error_string)
-                return {SETTINGS::BOTTOM};
+                return {SETTINGS::PLITBOTTOM};
         }
         
         

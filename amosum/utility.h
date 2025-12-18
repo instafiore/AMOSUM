@@ -210,7 +210,10 @@ public:
     }
 };
 
-inline int not_(int literal) { return -literal; }
+inline int not_(int literal) { 
+    if(literal == SETTINGS::NONE) return SETTINGS::NONE;
+    return -literal; 
+}
 
 void create_reason_falses(AmoSumPropagator* propagator, bool ge, std::unordered_map<clingo_literal_t, int> &sum_removed_weights, clingo_literal_t flipped);
 void create_reason_falses_ge(AmoSumPropagator* propagator, std::unordered_map<clingo_literal_t, int> &sum_removed_weights, clingo_literal_t flipped);

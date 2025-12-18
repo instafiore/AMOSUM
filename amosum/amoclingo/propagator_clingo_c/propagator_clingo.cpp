@@ -70,7 +70,7 @@ bool PropagatorClingo::init(clingo_propagate_init_t *_init){
     // for (size_t i = 0; i < PropagatorClingoInitializer::get_instance()->nt; i++) S_plit = propagators[i]->simplifyAtLevelZero(false);
     for (size_t i = 0; i < PropagatorClingoInitializer::get_instance()->nt; i++) S_plit = propagators[i]->simplifyAtLevelZero(true);
     
-    if (S_plit.size() == 1 and S_plit[0] == SETTINGS::BOTTOM){ 
+    if (S_plit.size() == 1 and S_plit[0] == SETTINGS::PLITBOTTOM){ 
         bool result ; 
         handle_error(clingo_propagate_init_add_clause((clingo_propagate_init*) _init, NULL, 0, &result));
         debugf("added empty clause ", result);
@@ -101,7 +101,7 @@ bool PropagatorClingo::add_clauses_propagated_lits(void *control, const std::vec
         const std::vector<clingo_literal_t>* R_plit = dl > 0 ? prop->getReasonForLiteral(plit) : nullptr;
         size_t clause_size = (dl > 0 ? R_plit->size() : 0) + 1 ;
         clingo_literal_t* clause = clause_clingo;
-        clingo_literal_t slit = (*map_plit_slit)[plit];
+        clingo_literal_t slit = plit != SETTINGS::PLITBOTTOM ? (*map_plit_slit)[plit] : SETTINGS::BOTTOM;
         clause[0] = slit ; 
         assert(clause_size <= this->propagators[0]->N);
         for (size_t i = 1; i < clause_size; i++) {

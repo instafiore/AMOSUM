@@ -31,4 +31,5 @@ const int TIMEOUT = 60;
 const int ERROR = 70;
 const clingo_literal_t BOTTOM = -1;
 const clingo_literal_t TOP = 1;
+const clingo_literal_t PLITBOTTOM = 0;
 }
