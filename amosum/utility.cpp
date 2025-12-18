@@ -728,7 +728,7 @@ void create_reason_falses_ge(AmoSumPropagator* propagator, std::unordered_map<cl
                             G = propagator->group->get(not_(derived));
                             derived_true = false;
                         }
-                        assert(G != nullptr);
+                        assert((propagator->maximizer && propagator->mps_violated) or G != nullptr);
                         if(g == G) continue; 
 
                         auto mps_h = propagator->mps_violated ? propagator->_mps : std::get<0>(propagator->mps(G, derived, !derived_true));
@@ -769,7 +769,8 @@ void create_reason_falses_ge(AmoSumPropagator* propagator, std::unordered_map<cl
                 
 
                 // ADDED
-                assert(G != nullptr);
+                // assert(G != nullptr);
+                assert((propagator->maximizer && propagator->mps_violated) or G != nullptr);
 
                 auto mps_h = propagator->mps_violated ? propagator->_mps : std::get<0>(propagator->mps(G, derived, !derived_true));
 

@@ -33,6 +33,8 @@ public:
     bool init(clingo_propagate_init_t *_init);
     bool check(clingo_propagate_control_t *control);
 
+    void discardCurrentCost(clingo_propagate_control_t *control);
+
     std::vector<AmoSumPropagator*> propagators ; 
     ~OptimizerClingo(){
         if(currentAnswerSet != nullptr) delete currentAnswerSet;

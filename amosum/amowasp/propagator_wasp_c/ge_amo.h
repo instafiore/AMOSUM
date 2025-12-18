@@ -5,6 +5,7 @@
 #include <string>
 #include <assert.h>
 #include "../../utility.h"
+#include "../../settings.h"
 #include "../../amosum.h"
 #include <sstream>
 #include <iostream>
@@ -19,7 +20,8 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, Am
     std::unordered_map<clingo_literal_t, int> sum_removed_weights;
 
     if (propagator->mps_violated) {
-        clingo_literal_t l = propagator->current_literal ;
+        clingo_literal_t l =  propagator->maximizer ? SETTINGS::TOP : propagator->current_literal;
+        // clingo_literal_t l =  propagator->current_literal;
         
         assert(propagator->maximizer || propagator->lazy_prop_activated);
         
@@ -28,22 +30,24 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, Am
         auto R = get_perfect_hash_with_pointer(propagator->reason.get(), not_(l));
         R->clear();
  
-        bool derived_true = false;
-        Group* g = propagator->group->get(l);
-        if(g == nullptr){
-            derived_true = true ;
-            g = propagator->group->get(not_(l));
-        }
-        
         create_reason_falses_ge(propagator, sum_removed_weights, not_(l));
-        
-        if(derived_true){
-            clingo_literal_t sml_g = max_w(g) ;
-            create_reason_true_ge(propagator, sml_g, not_(l), g, sum_removed_weights);
+
+        if(!propagator->maximizer){
+            bool derived_true = false;
+            Group* g = propagator->group->get(l);
+            if(g == nullptr){
+                derived_true = true ;
+                g = propagator->group->get(not_(l));
+            }
+            
+            if(derived_true){
+                clingo_literal_t sml_g = max_w(g) ;
+                create_reason_true_ge(propagator, sml_g, not_(l), g, sum_removed_weights);
+            }
         }
 
         
-        propagator->compute_minimal_reason(propagator->S);
+        // propagator->compute_minimal_reason(propagator->S);
         debug("MPS VIOLATED");
         print_derivation(propagator->atomNames, propagator->S, false);
         return &propagator->S;

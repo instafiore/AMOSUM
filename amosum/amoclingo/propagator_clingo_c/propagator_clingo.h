@@ -19,7 +19,7 @@ class PropagatorClingo{
 private:
 public:
     std::unordered_map<clingo_symbol_t, clingo_literal_t>* atomNames;
-    static const clingo_literal_t BOTTOM = 1 ;
+    
     std::unordered_map<std::string, std::string> param;
     const std::vector<clingo_literal_t>* (*propagation_phase)(const Group*, AmoSumPropagator*);
     bool ge;

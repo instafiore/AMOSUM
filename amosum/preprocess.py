@@ -54,7 +54,7 @@ def preprocess_ground_program(file: str) -> dict:
                     id = terms[3]
                     aggrid = terms[4]
                     result_map["amosum_mapweights"].setdefault(aggrid, dict())
-                    # result_map["amosum_mapweights"][aggrid][name] = {"sign": sign, "weight": weight, "id": id}
+                    # result_map["amosum_mapweights"][aggrid][name] = {"sign": sign, "weight": weight, "id": id} # Decomment to have cost only for amomaximize problems
                     result_map["amosum_mapweights"][name] = {"sign": sign, "weight": weight, "id": id}
 
 

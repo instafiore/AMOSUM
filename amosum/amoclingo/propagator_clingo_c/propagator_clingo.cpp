@@ -11,6 +11,7 @@
 #include <vector>
 #include <limits>
 #include "propagator_clingo.h"
+#include "../../settings.h"
 
 
 // void  PropagatorClingo::removeWatches(clingo_control_t *ctl){
@@ -69,7 +70,7 @@ bool PropagatorClingo::init(clingo_propagate_init_t *_init){
     // for (size_t i = 0; i < PropagatorClingoInitializer::get_instance()->nt; i++) S_plit = propagators[i]->simplifyAtLevelZero(false);
     for (size_t i = 0; i < PropagatorClingoInitializer::get_instance()->nt; i++) S_plit = propagators[i]->simplifyAtLevelZero(true);
     
-    if (S_plit.size() == 1 and S_plit[0] == BOTTOM){ 
+    if (S_plit.size() == 1 and S_plit[0] == SETTINGS::BOTTOM){ 
         bool result ; 
         handle_error(clingo_propagate_init_add_clause((clingo_propagate_init*) _init, NULL, 0, &result));
         debugf("added empty clause ", result);

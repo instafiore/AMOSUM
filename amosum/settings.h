@@ -6,6 +6,7 @@
 #include <regex>
 #include <stdexcept>
 #include <limits>
+#include <clingo.h>
 
 namespace SETTINGS {
 const std::vector<std::string> PROPAGATORS_NAMES = {"ge_amo", "ge_eo", "le_eo","amomaximize"}; 
@@ -28,4 +29,6 @@ const int OPTIMUM = 30;
 const int SEARCH_SPACE_EXHAUSTED = 40;
 const int TIMEOUT = 60;
 const int ERROR = 70;
+const clingo_literal_t BOTTOM = -1;
+const clingo_literal_t TOP = 1;
 }
