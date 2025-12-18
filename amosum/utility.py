@@ -63,7 +63,7 @@ def checkAmomaximize(args: Dict[str, Any]) -> None:
                     nonlocal result
                     result = resultC
                 print(f"trying with {args["pathOutput"]}, {costInstance}")
-                ctl.solve(on_finish=lambda x: onResult(x))
+                ctl.solve(on_finish=lambda x: onResult(x), on_model=print)
 
                 print(f"Result check: {result}")
                 if not result.satisfiable:
