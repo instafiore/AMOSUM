@@ -30,6 +30,7 @@ bool OptimizerClingo::check(clingo_propagate_control_t *control){
     // propagator->propagators[td]->mps_violated = true;
     // const std::vector<clingo_literal_t>* propagated = propagator->propagation_phase(nullptr, propagator->propagators[td]);
     // if(propagated != nullptr) propagator->add_clauses_propagated_lits(control, *propagated, dl, false);
+    discardCurrentCost(control, td);
     return true;
 }
 
