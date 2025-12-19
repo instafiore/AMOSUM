@@ -102,7 +102,7 @@ bool PropagatorClingo::add_clauses_propagated_lits(void *control, const std::vec
         size_t clause_size = (dl > 0 ? R_plit->size() : 0) + 1 ;
         clingo_literal_t* clause = clause_clingo;
         clingo_literal_t slit = plit != SETTINGS::PLITBOTTOM ? (*map_plit_slit)[plit] : SETTINGS::BOTTOM;
-        clause[0] = slit ; 
+        clause[0] = slit; 
         assert(clause_size <= this->propagators[0]->N);
         for (size_t i = 1; i < clause_size; i++) {
             clingo_literal_t r_plit =  (*R_plit)[i-1];
