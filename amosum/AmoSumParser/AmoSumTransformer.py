@@ -160,8 +160,8 @@ class AmoSumTransformer(Transformer):
             # bound = amosum.children[-1]
 
         binop = Tree("binop", [Token("GREATER_OR_EQ", ">=")])
-        bound = Tree("term", [Token("NUMBER", "478671")])
-        # bound = Tree("term", [Token("NUMBER", "0")])
+        # bound = Tree("term", [Token("NUMBER", "478671")])
+        bound = Tree("term", [Token("NUMBER", "0")])
         # bound = Tree("term", [Token("TERM", "X")])
         amosum_rules = AspFactory.create_amosum_rules(bound, binop, aggregate_id, body = None, aggregate_function = amosum_function)
         bound_rule = amosum_rules["bound_rule"]

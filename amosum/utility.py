@@ -817,8 +817,9 @@ def create_reason_falses(propagator, ge):
 def create_reason_falses_ge(propagator, sum_removed_weights: Dict, flipped = None):
 
     if propagator.dl == 0: return 
-    breaks = {}
+    
     for g in propagator.groups:
+        breaks = {}
         ord_l = g.ord_l
         if propagator.true_group[g] is None:
             mw_g = propagator.weight[max_w(g)]

@@ -145,7 +145,7 @@ bool PropagatorClingo::propagate(clingo_propagate_control_t *control, const clin
     dl == 0 ? td = 0 : td = clingo_propagate_control_thread_id(control) ; 
     AmoSumPropagator* prop = propagators[td];
     prop->control = control ;
-    print_propagate(this, changes, size, control, dl, false, false);
+    // print_propagate(this, changes, size, control, dl, false, false);
 
     for (size_t i = 0; i < size; i++)
     {
@@ -208,7 +208,7 @@ void PropagatorClingo::undo(clingo_propagate_control_t *control, const clingo_li
         clingo_literal_t slit = changes[i];
         extend_vector(plit_list, map_slit_plit_watched[slit]);
     }
-    print_undo(this, changes, size, control, dl, td, false, false);
+    // print_undo(this, changes, size, control, dl, td, false, false);
     prop->onLiteralsUndefined(plit_list, false);
 }
 
