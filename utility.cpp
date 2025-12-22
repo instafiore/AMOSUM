@@ -395,10 +395,11 @@ void create_reason_falses_ge(AmoSumPropagator* propagator, std::unordered_map<cl
 
     if(propagator->dl == 0) return ;
 
-    std::unordered_map<int, bool> breaks;
+    // std::unordered_map<int, bool> breaks;
     
     for (auto* g : propagator->groups) {
         if (propagator->true_group->get(g) == SETTINGS::NONE) {
+            std::unordered_map<int, bool> breaks;
             clingo_literal_t ml_g = m_w(g, propagator->ge);
 
             int mw_g = propagator->weight->get(ml_g);
