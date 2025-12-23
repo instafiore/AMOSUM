@@ -21,7 +21,8 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
         auto start = std::chrono::high_resolution_clock::now();
         amosum_propagator->N = lits[0] + 1;
         // debugf("N: ", amosum_propagator->N);
-        amosum_propagator->minimization = get_map(amosum_propagator->params, std::string("min_r"), std::string(Minimize::NO_MINIMIZATION)) ;
+        amosum_propagator->minimization = get_map(amosum_propagator->params, std::string("min_r"), std::string(Minimize::MINIMAL_ON_THE_FLY)) ;
+        // amosum_propagator->minimization = get_map(amosum_propagator->params, std::string("min_r"), std::string(Minimize::NO_MINIMIZATION)) ;
         amosum_propagator->strategy = get_map(amosum_propagator->params, std::string("strategy"), amosum_propagator->strategy);
         amosum_propagator->I.reset(new InterpretationFunction(amosum_propagator->N));
         amosum_propagator->group.reset(new GroupFunction(amosum_propagator->N));

@@ -705,6 +705,7 @@ void create_reason_falses_ge(AmoSumPropagator* propagator, std::unordered_map<cl
 
     if(propagator->dl == 0) return ;
 
+    bool minimizationOnTheFly = propagator->minimization == Minimize::MINIMAL_ON_THE_FLY;
     
     // std::unordered_map<int, bool> breaks;
     for (auto* g : propagator->groups) {
@@ -720,7 +721,7 @@ void create_reason_falses_ge(AmoSumPropagator* propagator, std::unordered_map<cl
                 if (propagator->weight->get(l) < mw_g) break;
                 if (!propagator->I->get(l) && !equals(l, flipped)) {
                     for(auto derived : propagator->S){
-                        if(breaks.find(derived) != breaks.end() && breaks[derived]) continue;
+                        if(minimizationOnTheFly && breaks.find(derived) != breaks.end() && breaks[derived]) continue;
                         
                         Group* G = propagator->group->get(derived);
                         bool derived_true = true;
@@ -731,21 +732,26 @@ void create_reason_falses_ge(AmoSumPropagator* propagator, std::unordered_map<cl
                         assert((propagator->maximizer && propagator->mps_violated) or G != nullptr);
                         if(g == G) continue; 
 
-                        auto mps_h = propagator->mps_violated ? propagator->_mps : std::get<0>(propagator->mps(G, derived, !derived_true));
-                        int s = propagator->lb - mps_h - 1;
-                        int weight = propagator->weight->get(l);
-                        int inc = weight - mw_g;
-                        // 
-
+                        bool redundant = false;
                         auto R = get_perfect_hash_with_pointer(propagator->reason.get(), derived);
-        
-                        get_map(sum_removed_weights, derived, 0, true);
-                        if(sum_removed_weights[derived] + inc <= s){
-                            sum_removed_weights[derived] += inc ;
-                            breaks[derived] = true ;
-                        }else{
-                            R->push_back(l);
+
+                        if(minimizationOnTheFly){
+                            auto mps_h = propagator->mps_violated ? propagator->_mps : std::get<0>(propagator->mps(G, derived, !derived_true));
+                            int s = propagator->lb - mps_h - 1;
+                            int weight = propagator->weight->get(l);
+                            int inc = weight - mw_g;
+            
+                            get_map(sum_removed_weights, derived, 0, true);
+                            if(sum_removed_weights[derived] + inc <= s){
+                                sum_removed_weights[derived] += inc ;
+                                breaks[derived] = true ;
+                                redundant = true;
+                            }
+                    
                         }
+                        
+                        if(!redundant) R->push_back(l);
+                        
                         
                     }
                 }
@@ -764,28 +770,31 @@ void create_reason_falses_ge(AmoSumPropagator* propagator, std::unordered_map<cl
                     derived_true = false;
                 }
                 //
-                if(g == G) continue; 
-
-                
+                if(g == G) continue;                 
 
                 // ADDED
                 // assert(G != nullptr);
                 assert((propagator->maximizer && propagator->mps_violated) or G != nullptr);
 
-                auto mps_h = propagator->mps_violated ? propagator->_mps : std::get<0>(propagator->mps(G, derived, !derived_true));
+                bool redundant = false;
 
-                int s = propagator->lb - mps_h - 1;
-                int w = propagator->weight->get(tr); 
-                int w_mw_g = g->ord_l.size() > 0 ? propagator->weight->get(g->ord_l.back()) : s + 1 + w; 
-                int inc = w_mw_g - w;
-                assert(inc >= 0);
+                if(minimizationOnTheFly){
+                    auto mps_h = propagator->mps_violated ? propagator->_mps : std::get<0>(propagator->mps(G, derived, !derived_true));
+                    int s = propagator->lb - mps_h - 1;
+                    int w = propagator->weight->get(tr); 
+                    int w_mw_g = g->ord_l.size() > 0 ? propagator->weight->get(g->ord_l.back()) : s + 1 + w; 
+                    int inc = w_mw_g - w;
+                    assert(inc >= 0);
 
-                get_map(sum_removed_weights, derived, 0, true);
-                if(sum_removed_weights[derived] + inc <= s){
-                    sum_removed_weights[derived] += inc ;
-                }else{
-                    R->push_back(not_(tr));
+                    get_map(sum_removed_weights, derived, 0, true);
+                    if(sum_removed_weights[derived] + inc <= s){
+                        sum_removed_weights[derived] += inc ;
+                        redundant = true;
+                    }
                 }
+
+                if(!redundant)  R->push_back(not_(tr));
+
             }    
         }
     }

@@ -41,7 +41,7 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_eo(const Group* G, Amo
             create_reason_true_ge(propagator, sml_g, not_(l), g, sum_removed_weights);
         }
 
-        propagator->compute_minimal_reason(propagator->S);
+        // propagator->compute_minimal_reason(propagator->S);
         // print_derivation(propagator->atomNames, propagator->S, false);
         return &propagator->S;
     }
@@ -72,7 +72,7 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_eo(const Group* G, Amo
 
     if (!propagator->S.empty() && propagator->dl != 0) {
         create_reason_falses_ge(propagator, sum_removed_weights, SETTINGS::NONE);
-        propagator->compute_minimal_reason(propagator->S);
+        // propagator->compute_minimal_reason(propagator->S);
     }
 
     // print_derivation(propagator->atomNames, propagator->S, false);
