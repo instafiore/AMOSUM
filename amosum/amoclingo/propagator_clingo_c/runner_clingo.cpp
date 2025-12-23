@@ -55,6 +55,7 @@ int main(int argc, char const *argv[])
     
     params =  init_param(argc, argv);
     signal(SIGINT, signalHandler);
+    signal(SIGTERM, signalHandler);
 
     std::string encoding_path = "" ;
     params.find("enc") != params.end() ? encoding_path = params.find("enc")->second : NULL ;

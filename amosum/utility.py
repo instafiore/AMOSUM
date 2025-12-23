@@ -304,41 +304,64 @@ class SymmetricFunction:
                 value = None
         self.intepretation[i] = value
 
+
+
 def run_and_stream(cmd):
-    try:
-        proc = subprocess.Popen(
-            cmd,
-            shell=True,
-            stdout=subprocess.PIPE,
-            # stderr=subprocess.STDOUT,
-            text=True,
-            bufsize=1,              
-        )
 
+    stop_requested = False
+
+    def on_sigterm(signum, frame):
+        nonlocal stop_requested
+        stop_requested = True
+        print("Received SIGTERM, forwarding to subprocess runner clingo")
+        
+
+    signal.signal(signal.SIGTERM, on_sigterm)
+    signal.signal(signal.SIGINT, on_sigterm)
+
+
+    # try:
+    proc = subprocess.Popen(
+        cmd,
+        shell=True,
+        stdout=subprocess.PIPE,
+        # stderr=subprocess.STDOUT,
+        text=True,
+        bufsize=1,              
+    )
+
+    for line in proc.stdout: 
+        line = line.rstrip("\n")
+        yield line   
+
+    if stop_requested:
+        print("Interrupted!!!")
+        proc.send_signal(signal.SIGINT)
         for line in proc.stdout: 
             line = line.rstrip("\n")
-            yield line           
-    except KeyboardInterrupt as e:
+            yield line
 
-        print("Interrupted! Getting remaining output...")
+    # except KeyboardInterrupt as e:
 
-        # Try to let the subprocess finish gracefully
-        try:
-            proc.send_signal(signal.SIGINT)
-        except Exception:
-            pass
+    #     print("Interrupted! Getting remaining output...")
 
-        for line in proc.stdout: 
-            line = line.rstrip("\n")
-            yield line 
+    #     # Try to let the subprocess finish gracefully
+    #     try:
+    #         proc.send_signal(signal.SIGINT)
+    #     except Exception as e:
+    #         print(e)
 
-        raise KeyboardInterrupt()
-    finally:
-        try:
-            proc.wait(timeout=3)
-        except Exception:
-            proc.kill()
-            proc.wait()
+    #     for line in proc.stdout: 
+    #         line = line.rstrip("\n")
+    #         yield line 
+
+    #     raise KeyboardInterrupt()
+    # finally:
+    #     try:
+    #         proc.wait(timeout=3)
+    #     except Exception:
+    #         proc.kill()
+    #         proc.wait()
 
 import json
 class Model:
@@ -414,7 +437,7 @@ class Result:
                 realAnswerset = matchTrunched.group("finalAnswerset")
                 resultJson = json.loads(realAnswerset)
             else:
-                # print(f"Not valid: {serialized} exception: {e}")
+                print(f"Not valid: {serialized}")
                 return None
         modelJson = resultJson[0]
 

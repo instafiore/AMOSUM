@@ -9,6 +9,7 @@ import sys
 import os
 import AmoSumParser
 from amosum import *
+import signal
 
 # adding root path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -20,6 +21,7 @@ import utility
 import settings
 from preprocess import *
 from datetime import datetime
+
 
 
         
@@ -41,39 +43,40 @@ class RunnerClingoC(RunnerWasp):
         result: Result
         alreadyPrinted = False
    
-        try:
-            for line in generator:
-                # print(f"New line {line}")
-                if not line.strip(): continue
-                result = Result.parse(line, weights)
-                if result is None:
-                    continue
-                endCurrentModelTime = time.time()
-                result.cumulativeTime = round(endCurrentModelTime - totalTime,3)
-                result.timeModel = round(endCurrentModelTime - eachModelTime, 3)
-                print(result)
-                # print(f"Result normal: {result}")
-                eachModelTime = endCurrentModelTime
+        # try:
+        for line in generator:
+            # print(f"New line {line}")
+            if not line.strip(): continue
+            resultNew = Result.parse(line, weights)
+            if resultNew is None:
+                continue
+            result = resultNew
+            endCurrentModelTime = time.time()
+            result.cumulativeTime = round(endCurrentModelTime - totalTime,3)
+            result.timeModel = round(endCurrentModelTime - eachModelTime, 3)
+            print(result)
+            # print(f"Result normal: {result}")
+            eachModelTime = endCurrentModelTime
 
                 # if result.exitCode == 29 or result.exitCode == 30:
                 #     alreadyPrinted = True
             
             # result.exitCode = 30
-        except KeyboardInterrupt as e:
+        # except Exception as e:
             
-            for line in generator:
-                # print(f"New line {line}")
-                if not line.strip(): continue
-                resultNew = Result.parse(line, weights)
-                if resultNew is None:
-                    continue
-                result = resultNew
-                endCurrentModelTime = time.time()
-                result.cumulativeTime = round(endCurrentModelTime - totalTime,3)
-                result.timeModel = round(endCurrentModelTime - eachModelTime, 3)
-                # print(f"Result key: {result}")
-                print(result)
-                eachModelTime = endCurrentModelTime
+        #     for line in generator:
+        #         # print(f"New line {line}")
+        #         if not line.strip(): continue
+        #         resultNew = Result.parse(line, weights)
+        #         if resultNew is None:
+        #             continue
+        #         result = resultNew
+        #         endCurrentModelTime = time.time()
+        #         result.cumulativeTime = round(endCurrentModelTime - totalTime,3)
+        #         result.timeModel = round(endCurrentModelTime - eachModelTime, 3)
+        #         # print(f"Result key: {result}")
+        #         print(result)
+        #         eachModelTime = endCurrentModelTime
 
                 # if result.exitCode == 29 or result.exitCode == 30:
                 #     alreadyPrinted = True
