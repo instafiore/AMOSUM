@@ -706,7 +706,8 @@ void create_reason_falses_ge(AmoSumPropagator* propagator, std::unordered_map<cl
     if(propagator->dl == 0) return ;
 
     bool minimizationOnTheFly = propagator->minimization == Minimize::MINIMAL_ON_THE_FLY;
-    
+
+
     // std::unordered_map<int, bool> breaks;
     for (auto* g : propagator->groups) {
         if (propagator->true_group->get(g) == SETTINGS::NONE) {
