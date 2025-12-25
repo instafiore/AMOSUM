@@ -707,35 +707,33 @@ void create_reason_falses_ge(AmoSumPropagator* propagator, std::unordered_map<cl
 
     bool minimizationOnTheFly = propagator->minimization == Minimize::MINIMAL_ON_THE_FLY;
 
+    for(auto derived : propagator->S){
+        auto R = get_perfect_hash_with_pointer(propagator->reason.get(), derived);
+        for (auto* g : propagator->groups) {
+            // ADDED
+            Group* G = propagator->group->get(derived);
+            bool derived_true = true;
+            if (G == nullptr) {
+                G = propagator->group->get(not_(derived));
+                derived_true = false;
+            }
+            //
+            if(g == G) continue; 
+            assert((propagator->maximizer && propagator->mps_violated && derived == SETTINGS::PLITBOTTOM ) || G != nullptr);
 
-    // std::unordered_map<int, bool> breaks;
-    for (auto* g : propagator->groups) {
-        if (propagator->true_group->get(g) == SETTINGS::NONE) {
-            std::unordered_map<int, bool> breaks;
-            clingo_literal_t ml_g = m_w(g, propagator->ge);
-
-            int mw_g = propagator->weight->get(ml_g);
-
-            for (int i = static_cast<int>(g->ord_l.size()) - 1; i >= 0; --i) {
-                clingo_literal_t l = g->ord_l[i];
+            if (propagator->true_group->get(g) == SETTINGS::NONE) {
                 
-                if (propagator->weight->get(l) < mw_g) break;
-                if (!propagator->I->get(l) && !equals(l, flipped)) {
-                    for(auto derived : propagator->S){
-                        if(minimizationOnTheFly && breaks.find(derived) != breaks.end() && breaks[derived]) continue;
+                clingo_literal_t ml_g = m_w(g, propagator->ge);
+
+                int mw_g = propagator->weight->get(ml_g);
+
+                for (int i = static_cast<int>(g->ord_l.size()) - 1; i >= 0; --i) {
+                    clingo_literal_t l = g->ord_l[i];
+                    
+                    if (propagator->weight->get(l) < mw_g) break;
+                    if (!propagator->I->get(l) && !equals(l, flipped)) {
                         
-                        Group* G = propagator->group->get(derived);
-                        bool derived_true = true;
-                        if (!G) {
-                            G = propagator->group->get(not_(derived));
-                            derived_true = false;
-                        }
-                        assert((propagator->maximizer && propagator->mps_violated) or G != nullptr);
-                        if(g == G) continue; 
-
                         bool redundant = false;
-                        auto R = get_perfect_hash_with_pointer(propagator->reason.get(), derived);
-
                         if(minimizationOnTheFly){
                             auto mps_h = propagator->mps_violated ? propagator->_mps : std::get<0>(propagator->mps(G, derived, !derived_true));
                             int s = propagator->lb - mps_h - 1;
@@ -745,40 +743,21 @@ void create_reason_falses_ge(AmoSumPropagator* propagator, std::unordered_map<cl
                             get_map(sum_removed_weights, derived, 0, true);
                             if(sum_removed_weights[derived] + inc <= s){
                                 sum_removed_weights[derived] += inc ;
-                                breaks[derived] = true ;
                                 redundant = true;
+                                break;
                             }
                     
                         }
                         
                         if(!redundant) R->push_back(l);
-                        
-                        
+                            
                     }
                 }
-            }
-        } 
-        else if(!equals(propagator->true_group->get(g), flipped)) {
-            int tr = propagator->true_group->get(g) ;
-    
-            for(auto derived : propagator->S){
-                auto R = get_perfect_hash_with_pointer(propagator->reason.get(), derived);
-                // ADDED
-                Group* G = propagator->group->get(derived);
-                bool derived_true = true;
-                if (!G) {
-                    G = propagator->group->get(not_(derived));
-                    derived_true = false;
-                }
-                //
-                if(g == G) continue;                 
-
-                // ADDED
-                // assert(G != nullptr);
-                assert((propagator->maximizer && propagator->mps_violated) or G != nullptr);
+            } else if(!equals(propagator->true_group->get(g), flipped)) {
+                int tr = propagator->true_group->get(g) ;
+                auto mps_h = propagator->mps_violated ? propagator->_mps : std::get<0>(propagator->mps(G, derived, !derived_true));
 
                 bool redundant = false;
-
                 if(minimizationOnTheFly){
                     auto mps_h = propagator->mps_violated ? propagator->_mps : std::get<0>(propagator->mps(G, derived, !derived_true));
                     int s = propagator->lb - mps_h - 1;
@@ -791,15 +770,16 @@ void create_reason_falses_ge(AmoSumPropagator* propagator, std::unordered_map<cl
                     if(sum_removed_weights[derived] + inc <= s){
                         sum_removed_weights[derived] += inc ;
                         redundant = true;
+                        
                     }
                 }
 
                 if(!redundant)  R->push_back(not_(tr));
-
-            }    
+                 
+            }
         }
+
     }
-    
 
     // if(propagator->dl == 0) return ;
     
@@ -837,7 +817,7 @@ void create_reason_falses_ge(AmoSumPropagator* propagator, std::unordered_map<cl
 
 void create_reason_true_ge(AmoSumPropagator* propagator, clingo_literal_t sml_g, clingo_literal_t derived, Group* g, std::unordered_map<clingo_literal_t, int> &sum_removed_weights){
     if(propagator->dl == 0) return ;
-    
+    bool minimizationOnTheFly = propagator->minimization == Minimize::MINIMAL_ON_THE_FLY;
     int i = sml_g != SETTINGS::NONE ? g->ord_i[sml_g] : 0;
     int j = g->ord_l.size() -1;
     // int j = g->ord_l.size(); 
@@ -852,18 +832,21 @@ void create_reason_true_ge(AmoSumPropagator* propagator, clingo_literal_t sml_g,
     // for (int k = i; k < j; ++k) {
     for (int k = j; k >= i; --k) {
         clingo_literal_t lit = g->ord_l[k];
-        int weight = propagator->weight->get(lit);
-        int w_sml = propagator->weight->get(sml_g);
-        int inc = weight - w_sml ;
-        if (!propagator->I->get(lit) && !equals(derived, lit)) {
-            get_map(sum_removed_weights, derived, 0, true);
-            if(sum_removed_weights[derived] + inc <= s){
-                sum_removed_weights[derived] += inc;
-                break;
-            }else
-                R->push_back(lit);
-            // R->push_back(lit);
+        bool redundant = false;
+        if(minimizationOnTheFly){
+            int weight = propagator->weight->get(lit);
+            int w_sml = propagator->weight->get(sml_g);
+            int inc = weight - w_sml ;
+            if (!propagator->I->get(lit) && !equals(derived, lit)) {
+                get_map(sum_removed_weights, derived, 0, true);
+                if(sum_removed_weights[derived] + inc <= s){
+                    sum_removed_weights[derived] += inc;
+                    redundant = true;
+                    break;
+                }    
+            }
         }
+        if(!redundant) R->push_back(lit);
     }
 
     //     if(propagator->dl == 0) return ;

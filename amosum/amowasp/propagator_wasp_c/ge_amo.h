@@ -47,7 +47,7 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, Am
         }
 
         
-        // propagator->compute_minimal_reason(propagator->S);
+        propagator->compute_minimal_reason(propagator->S);
         debug("MPS VIOLATED");
         print_derivation(propagator->atomNames, propagator->S, false);
         return &propagator->S;
@@ -105,7 +105,7 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, Am
     
     if (!propagator->S.empty() && propagator->dl != 0) {
         create_reason_falses_ge(propagator, sum_removed_weights, SETTINGS::NONE);
-        // propagator->compute_minimal_reason(propagator->S);
+        propagator->compute_minimal_reason(propagator->S);
     }
 
     
