@@ -395,73 +395,50 @@ void create_reason_falses_ge(AmoSumPropagator* propagator, std::unordered_map<cl
 
     if(propagator->dl == 0) return ;
 
-    // std::unordered_map<int, bool> breaks;
-    
-    for (auto* g : propagator->groups) {
-        if (propagator->true_group->get(g) == SETTINGS::NONE) {
-            std::unordered_map<int, bool> breaks;
-            clingo_literal_t ml_g = m_w(g, propagator->ge);
 
-            int mw_g = propagator->weight->get(ml_g);
+    for(auto derived : propagator->S){
+        auto R = get_perfect_hash_with_pointer(propagator->reason.get(), derived);
+        for (auto* g : propagator->groups) {
+            // ADDED
+            Group* G = propagator->group->get(derived);
+            bool derived_true = true;
+            if (G == nullptr) {
+                G = propagator->group->get(not_(derived));
+                derived_true = false;
+            }
+            //
+            if(g == G) continue; 
+            assert(G != nullptr);
 
-            for (int i = static_cast<int>(g->ord_l.size()) - 1; i >= 0; --i) {
-                clingo_literal_t l = g->ord_l[i];
+            if (propagator->true_group->get(g) == SETTINGS::NONE) {
                 
-                if (propagator->weight->get(l) < mw_g) break;
-                if (!propagator->I->get(l) && !equals(l, flipped)) {
-                    for(auto derived : propagator->S){
-                        // ADDED
-                        if(breaks.find(derived) != breaks.end() && breaks[derived]) continue;
-                        
-                        Group* G = propagator->group->get(derived);
-                        bool derived_true = true;
-                        if (!G) {
-                            G = propagator->group->get(not_(derived));
-                            derived_true = false;
-                        }
-                        assert(G != nullptr);
-                        if(g == G) continue; 
+                clingo_literal_t ml_g = m_w(g, propagator->ge);
 
+                int mw_g = propagator->weight->get(ml_g);
+
+                for (int i = static_cast<int>(g->ord_l.size()) - 1; i >= 0; --i) {
+                    clingo_literal_t l = g->ord_l[i];
+                    
+                    if (propagator->weight->get(l) < mw_g) break;
+                    if (!propagator->I->get(l) && !equals(l, flipped)) {
+                        
                         auto mps_h = propagator->mps_violated ? propagator->_mps : std::get<0>(propagator->mps(G, derived, !derived_true));
                         int s = propagator->lb - mps_h - 1;
                         int weight = propagator->weight->get(l);
                         int inc = weight - mw_g;
-                        // 
-
-                        auto R = get_perfect_hash_with_pointer(propagator->reason.get(), derived);
-        
+                        
                         get_map(sum_removed_weights, derived, 0, true);
                         if(sum_removed_weights[derived] + inc <= s){
                             sum_removed_weights[derived] += inc ;
-                            breaks[derived] = true ;
+                            break;
                         }else{
                             R->push_back(l);
                         }
-                        
+                            
                     }
                 }
-            }
-        } 
-        else if(!equals(propagator->true_group->get(g), flipped)) {
-            int tr = propagator->true_group->get(g) ;
-    
-            for(auto derived : propagator->S){
-                auto R = get_perfect_hash_with_pointer(propagator->reason.get(), derived);
-                // ADDED
-                Group* G = propagator->group->get(derived);
-                bool derived_true = true;
-                if (!G) {
-                    G = propagator->group->get(not_(derived));
-                    derived_true = false;
-                }
-                //
-                if(g == G) continue; 
-
-                
-
-                // ADDED
-                assert(G != nullptr);
-
+            } else if(!equals(propagator->true_group->get(g), flipped)) {
+                int tr = propagator->true_group->get(g) ;
                 auto mps_h = propagator->mps_violated ? propagator->_mps : std::get<0>(propagator->mps(G, derived, !derived_true));
 
                 int s = propagator->lb - mps_h - 1;
@@ -476,9 +453,14 @@ void create_reason_falses_ge(AmoSumPropagator* propagator, std::unordered_map<cl
                 }else{
                     R->push_back(not_(tr));
                 }
-            }    
+                 
+            }
         }
+
     }
+
+    
+    
     
 
     // if(propagator->dl == 0) return ;

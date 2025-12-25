@@ -2,7 +2,9 @@
 import sys
 import os
 import re
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+path=os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(path)
+print(f"PATH: {path}")
 from prop_wasp.propagator_wasp_py.runner_wasp  import RunnerWasp
 from utility import *
 '''
