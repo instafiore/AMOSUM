@@ -459,9 +459,6 @@ void create_reason_falses_ge(AmoSumPropagator* propagator, std::unordered_map<cl
 
     }
 
-    
-    
-    
 
     // if(propagator->dl == 0) return ;
     
