@@ -212,7 +212,7 @@ const std::vector<clingo_literal_t>* AmoSumPropagator::getReasonForLiteral(const
 void AmoSumPropagator::compute_minimal_reason(const std::vector<clingo_literal_t>& to_minimize) {
     // Invariants: reason is grouped by self.group id, and in each self.group, literals are sorted in descending order.
 
-    if (minimization == Minimize::NO_MINIMIZATION || propagator->minimization == Minimize::MINIMAL_ON_THE_FLY) {
+    if (minimization == Minimize::NO_MINIMIZATION || minimization == Minimize::MINIMAL_ON_THE_FLY) {
         return;
     }
 
