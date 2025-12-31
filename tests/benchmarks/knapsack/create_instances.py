@@ -2,7 +2,7 @@
 import sys
 import os
 import re
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../amosum')))
 import settings
 import subprocess
 from scipy.stats import norm
@@ -40,7 +40,8 @@ ind = 0
 start_n : int
 instances_str : str
 step = 5
-nips = 10
+# nips = 10 
+nips = 1 # new
 
 if light:
     start_n = 5
@@ -48,7 +49,8 @@ if light:
     N = 20
 else:
     start_n = 10
-    instances_str = "instances"
+    # instances_str = "instances"
+    instances_str = "instances_new" #new
     N = 100
 
 end_n : int = step * ( N // nips - 1) + start_n
@@ -113,17 +115,7 @@ for n in range(start_n,end_n+1,5):
         instances.append(instance)
         ind+=1
         print(f"{instance[0]} {instance[1]} {instance[2]} {instance[3]} {instance[6]}")
-        
-    
-
-
-        
-        
-    
-
-
-
-
+         
 '''
 object(1,100,1000).
 object(2,200,4000).
