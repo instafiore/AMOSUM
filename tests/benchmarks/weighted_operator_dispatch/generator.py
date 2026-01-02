@@ -57,7 +57,7 @@ def generate_instance(
         task = queue.pop(0)
         n_children = random.randint(0,min(branching_factor,len(tasks)))
 
-        for i in range(n_children):
+        for _ in range(n_children):
             child = random.choice(tasks)
             queue.append(child)
             tasks.remove(child)
@@ -71,7 +71,6 @@ def generate_N_instances(
     N: int,
     output_dir="instances",
     units_range=(2,100),
-    num_tasks_range=(2,500),
     num_slots_range=(5,100),
     seed = 13
 ):
@@ -83,17 +82,21 @@ def generate_N_instances(
 
     os.makedirs(output_dir, exist_ok=True)
 
+    possibleCP = [0.2, 0.5, 0.7]
     for i in range(1, N + 1):
         num_units= random.randint(*units_range)
-        num_tasks= random.randint(*num_tasks_range)
+        num_tasks= random.randint(int(num_units*0.2),int(num_units*1.2))
         num_slots= random.randint(*num_slots_range)
+        capability_prob = random.choice(possibleCP)
         instance = generate_instance(
             num_units=num_units,
             num_tasks=num_tasks,
-            num_slots=num_slots
+            num_slots=num_slots,
+            capability_prob = capability_prob
         )
 
-        filename = os.path.join(output_dir, f"{i:03}-wod-u{num_units}-t{num_tasks}-s{num_slots}.asp")
+        capability_prob = str(capability_prob).replace(".","_")
+        filename = os.path.join(output_dir, f"{i:03}-wod-u{num_units}-t{num_tasks}-s{num_slots}-cp{capability_prob}.asp")
         with open(filename, "w") as f:
             f.write(instance)
 
@@ -102,9 +105,11 @@ def generate_N_instances(
 
 
 if __name__ == "__main__":
+    # U = 100
+    TS = 10
+    N = 100
     generate_N_instances(
-        N=100,
-        units_range=(2,10),
-        num_tasks_range=(2,100),
-        num_slots_range=(1,24)
+        N=N,
+        units_range=(50,500),
+        num_slots_range=(TS,TS)
     )
