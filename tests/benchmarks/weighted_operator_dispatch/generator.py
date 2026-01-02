@@ -2,10 +2,9 @@ import random
 import os
 
 def generate_instance(
-    num_operators: int,
+    num_units: int,
     num_tasks: int,
     num_slots: int,
-    units_per_operator_range= (1, 5),
     workload_range=(5, 15),
     duration_range=(1, 3),
     efficiency_range=(1, 100),
@@ -21,22 +20,15 @@ def generate_instance(
         random.seed(seed)
 
     asp = []
-    unit_id = 1
-
     # ---------- Time slots ----------
     for s in range(1, num_slots + 1):
         asp.append(f"time_slot(s{s}).")
 
     # ---------- Units ----------
-    for o in range(1, num_operators + 1):
-        operator = f"o{o}"
-        units_per_operator = random.randint(*units_per_operator_range)
-        for _ in range(units_per_operator):
-            maxw = random.randint(*workload_range)
-            asp.append(f"unit(u{unit_id},{operator},{maxw}).")
-            unit_id += 1
+    for unit_id in range(1, num_units + 1):
+        maxw = random.randint(*workload_range)
+        asp.append(f"unit(u{unit_id},{maxw}).")
 
-    total_units = unit_id - 1
 
     # ---------- Tasks ----------
     for t in range(1, num_tasks + 1):
@@ -44,7 +36,7 @@ def generate_instance(
         asp.append(f"task(t{t},{duration}).")
 
     # ---------- Capabilities ----------
-    for u in range(1, total_units + 1):
+    for u in range(1, num_units + 1):
         for t in range(1, num_tasks + 1):
             if random.random() < capability_prob:
                 eff = random.randint(*efficiency_range)
@@ -72,14 +64,13 @@ def generate_instance(
             asp.append(f"dependent(t{child},t{task}).")
 
 
-
     return "\n".join(asp)
 
 
 def generate_N_instances(
     N: int,
     output_dir="instances",
-    operators_range=(2,100),
+    units_range=(2,100),
     num_tasks_range=(2,500),
     num_slots_range=(5,100),
     seed = 13
@@ -93,27 +84,27 @@ def generate_N_instances(
     os.makedirs(output_dir, exist_ok=True)
 
     for i in range(1, N + 1):
-        num_operators= random.randint(*operators_range)
+        num_units= random.randint(*units_range)
         num_tasks= random.randint(*num_tasks_range)
         num_slots= random.randint(*num_slots_range)
         instance = generate_instance(
-            num_operators=num_operators,
+            num_units=num_units,
             num_tasks=num_tasks,
             num_slots=num_slots
         )
 
-        filename = os.path.join(output_dir, f"{i:03}-wod-o{num_operators}-t{num_tasks}-s{num_slots}.asp")
+        filename = os.path.join(output_dir, f"{i:03}-wod-u{num_units}-t{num_tasks}-s{num_slots}.asp")
         with open(filename, "w") as f:
             f.write(instance)
 
         print(f"Generated {filename}")
 
 
-# ---------------- Example usage ----------------
+
 if __name__ == "__main__":
     generate_N_instances(
         N=100,
-        operators_range=(2,100),
-        num_tasks_range=(2,500),
-        num_slots_range=(5,100)
+        units_range=(2,10),
+        num_tasks_range=(2,100),
+        num_slots_range=(1,24)
     )
