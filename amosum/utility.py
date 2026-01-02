@@ -449,7 +449,7 @@ class Result:
                 if atom in weights:
                     cost += weights[atom]["weight"] if weights[atom]["sign"] == "+" else 0
                     # cost += weights[atom]["weight"]
-                    # print(f"atom: {atom} weight: {weights[atom]["weight"]} sign: {weights[atom]["sign"]} cost: {cost}")
+                    print(f"atom: {atom} weight: {weights[atom]["weight"]} sign: {weights[atom]["sign"]} cost: {cost}")
             # cost = sum(weights[atom]["weight"] for atom in assigment if atom in weights) if weights else None
             model = Model(cost, assigment)
         else:
