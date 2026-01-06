@@ -23,16 +23,25 @@ def generate_instance(
     lines.append(f"start({start}).")
 
     # Ensure basic reachability: build a spanning tree from start
+    addedPairs = set()
     for i in range(1, num_cities):
         r = random.randint(*revenue_range)
         lines.append(f"revenue({cities[i-1]},{cities[i]},{r}).")
+        pair = f"{i-1}-{i}"
+        assert pair not in addedPairs
+        addedPairs.add(pair)
 
     # Add extra edges to increase choice (controlled by density)
-    for x in cities:
-        for y in cities:
-            if x != y and random.random() <= density:
+    for i in range(num_cities):
+        x = cities[i]
+        for j in range(num_cities):
+            y = cities[j]
+            if i != j and i != j - 1 and random.random() <= density:
                 r = random.randint(*revenue_range)
                 lines.append(f"revenue({x},{y},{r}).")
+                pair = f"{i}-{j}"
+                assert pair not in addedPairs
+                addedPairs.add(pair)
 
     return "\n".join(lines)
 

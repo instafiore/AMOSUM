@@ -45,7 +45,7 @@ def checkAmomaximize(args: Dict[str, Any]) -> None:
                 instance = ""
                 cost = int(matchRegex.group("cost"))
                 answerset = matchRegex.group("answerset").split(", ")
-                print(f"answerset: {answerset}")
+                print(f"% answerset: {answerset}")
                 for atom in answerset:
                     atom = atom.replace("'","")
                     # instance += f":- not {atom}.\n"
@@ -55,22 +55,25 @@ def checkAmomaximize(args: Dict[str, Any]) -> None:
                 # print(f"{costInstance}")
                 ctl = clingo.Control()
                 ctl.load(args["checkerPath"])
-                ctl.add(instance)
+                try:
+                    ctl.add(instance)
+                except RuntimeError as e:
+                    exit(13)
                 ctl.add(f"{costInstance}\n")
                 ctl.ground()
                 result: clingo.SolveResult
                 def onResult(resultC: clingo.SolveResult):
                     nonlocal result
                     result = resultC
-                print(f"trying with {args["pathOutput"]}, {costInstance}")
-                ctl.solve(on_finish=lambda x: onResult(x), on_model=print)
+                print(f"% trying with {args["pathOutput"]}, {costInstance}")
+                ctl.solve(on_finish=lambda x: onResult(x), on_model=lambda x: print(f"% {x}"))
 
-                print(f"Result check: {result}")
+                print(f"% Result check: {result}")
                 if not result.satisfiable:
-                    print(f"Error with: {args["pathOutput"]}, {costInstance}\n{answerset}")
+                    print(f"% Error with: {args["pathOutput"]}, {costInstance}\n{answerset}")
                     exit(1)
 
-        print("Check passed")  
+        print("% Check passed")  
         exit(0)
 
 def set_debug(debug):
