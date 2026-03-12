@@ -7,21 +7,13 @@ bool OptimizerClingo::init(clingo_propagate_init_t *_init){
     return true;
 }
 
-OptimizerClingo* OptimizerClingo::getInstance(){
-    // if(instance == nullptr) assert(false);
-    return instance;
-}
 
-void OptimizerClingo::initInstace(const ParameterMap &params,PropagatorClingo* propagator){
-    instance = new OptimizerClingo(params, propagator);
-}
- 
-bool OptimizerClingo::check(clingo_propagate_control_t *control){
+bool OptimizerClingo::check(clingo_propagate_control_t *control) noexcept{
     const clingo_assignment_t *assignment = clingo_propagate_control_assignment(control);
     int dl = clingo_assignment_decision_level(assignment);
     int td; 
     dl == 0 ? td = 0 : td = clingo_propagate_control_thread_id(control);
-    if(currentAnswerSet != nullptr) delete currentAnswerSet;
+    if(currentAnswerSet != nullptr) answerSets.push_back(currentAnswerSet) ;
     currentAnswerSet = new AnswerSet(new Model(assignment));
     if(params.find("serialize") == params.end())  printf("%s\n",currentAnswerSet->toString().c_str());
     else  printf("%s\n",currentAnswerSet->serialize().c_str());
@@ -33,26 +25,3 @@ bool OptimizerClingo::check(clingo_propagate_control_t *control){
     return true;
 }
 
-void OptimizerClingo::discardCurrentCost(clingo_propagate_control_t *control, size_t td){
-
-    // std::vector<clingo_literal_t> clause;
-    // for (auto* g : propagator->propagators[td]->groups) {
-    //     if (propagator->propagators[td]->true_group->get(g) != SETTINGS::NONE) {
-    //         clingo_literal_t programLiteral = not_(propagator->propagators[td]->true_group->get(g));
-    //         clingo_literal_t solvingLiteral = *(propagator->propagators[td]->map_plit_slit)[programLiteral];
-    //         clause.push_back(solvingLiteral);
-    //     }
-    // }
-
-    // bool result_add_clause;
-    // handle_error(clingo_propagate_control_add_clause((clingo_propagate_control*) control, clause.data(), clause.size(), clingo_clause_type_learnt, &result_add_clause));
-
-    // if (not result_add_clause){
-    //     return;
-    // }
-
-    // bool result_propagate;
-    // handle_error(clingo_propagate_control_propagate((clingo_propagate_control*)control, &result_propagate));
-}
-
-OptimizerClingo* OptimizerClingo::instance = nullptr ;

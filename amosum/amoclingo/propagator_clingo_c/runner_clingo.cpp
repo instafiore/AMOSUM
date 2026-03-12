@@ -17,12 +17,10 @@
 
 
 ParameterMap params;
+OptimizerClingo* opt;
+
 void signalHandler(int signum) {
-    OptimizerClingo* instance = OptimizerClingo::getInstance();
-    if(instance == nullptr){
-        exit(SIGINT);
-    }
-    AnswerSet* optAnswer = OptimizerClingo::getInstance()->currentAnswerSet;
+    AnswerSet* optAnswer = opt->currentAnswerSet;
     optAnswer->setOptimum(false);
     if(params.find("serialize") == params.end())  printf("%s\n",optAnswer->toString().c_str());
     else  printf("%s\n",optAnswer->serialize().c_str());
@@ -115,8 +113,8 @@ int main(int argc, char const *argv[])
         if (prop_type == "amomaximize"){
             propagatorMaximize = register_propagator(ctl, prop_callback, "ge_amo", param, propagators);
             propagatorMaximize->maximizer = true;
-            OptimizerClingo::initInstace(params, propagatorMaximize);
-            handle_error(clingo_control_register_propagator(ctl, &optimizer_callback, OptimizerClingo::getInstance(), true));
+            opt = new OptimizerClingo(params, propagatorMaximize);
+            handle_error(clingo_control_register_propagator(ctl, &optimizer_callback, opt, true));
         }else{
             propagatorMaximize = register_propagator(ctl, prop_callback, prop_type, param, propagators);
             // register_propagator(ctl, prop_callback, prop_type, param, propagators);
@@ -132,13 +130,12 @@ int main(int argc, char const *argv[])
     AnswerSet* result;
     bool falseLiterals = get_map(params, std::string("falseLiterals"), SETTINGS::FALSE_STR) == SETTINGS::TRUE_STR;
     handle_error(solve(ctl, result, falseLiterals));
-    OptimizerClingo* instanceOptimizer = OptimizerClingo::getInstance();
-    assert(instanceOptimizer == nullptr || result->exitCode == SETTINGS::UNSAT);
-    if(instanceOptimizer == nullptr){
+    assert(opt == nullptr || result->exitCode == SETTINGS::UNSAT);
+    if(opt == nullptr){
         if(params.find("serialize") == params.end())  printf("%s\n",result->toString().c_str());
         else  printf("%s\n",result->serialize().c_str());
     }else{
-        AnswerSet* optAnswer = instanceOptimizer->currentAnswerSet;
+        AnswerSet* optAnswer = opt->currentAnswerSet;
         optAnswer->setOptimum();
         if(params.find("serialize") == params.end())  printf("%s\n",optAnswer->toString().c_str());
         else  printf("%s\n",optAnswer->serialize().c_str());
@@ -155,7 +152,6 @@ int main(int argc, char const *argv[])
 
     AmoSumInitializer::cleanup();
     PropagatorClingoInitializer::cleanup();
-    OptimizerClingo::cleanup();
     // printf("returning exit code: %d", resultOpt->exitCode);
 
     return result->exitCode;
