@@ -9,7 +9,7 @@ TARGET = runner_clingo
 C=cpp
 PROP_WASP = $(SRC_DIR)/prop_wasp/propagator_wasp_c
 
-SRCS = $(shell find $(SRC_DIR) -name '*.$(C)')
+SRCS = $(shell find $(SRC_DIR) -name '*.$(C)' | grep -v env )
 OBJS = $(addprefix $(BUILD_DIR)/, $(notdir $(SRCS:.$(C)=.o)))
 
 all: $(TARGET)
