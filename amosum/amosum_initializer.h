@@ -7,6 +7,7 @@ struct generic_data{
     std::vector<clingo_literal_t> bind;
     std::unordered_map<std::string,int> weights_names ;
     clingo_literal_t aux_lit ;
+    WeightFunction* weight = nullptr;
 };
 
 class AmoSumInitializer{
@@ -16,7 +17,7 @@ private:
     bool first = true ;
     static AmoSumInitializer* instance;
     std::map<std::string, clingo_literal_t> atomNamesString;
-    std::unique_ptr<WeightFunction> weight ;
+    // std::unique_ptr<WeightFunction> weight ;
     std::unordered_map<std::string, AggregateFunction*> aggregate_map ;
     std::unordered_map<std::string, generic_data*> generic_data_map ;
     static const std::string DEFAULT_LAZY;
@@ -41,7 +42,7 @@ public:
         generic_data_map.clear();
     }
 
-    WeightFunction* weightFunction();
+    // WeightFunction* weightFunction();
 
     static void cleanup(){
         delete instance ;

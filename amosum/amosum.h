@@ -21,7 +21,8 @@ struct AmoSumPropagator
 
     // A function from literals -> weights
     // assuming that the aggregate does not contain the to literal l and !l
-    WeightFunction* weight ;
+    // WeightFunction* weight ;
+    std::unique_ptr<WeightFunction> weight ;
 
     // A function from literals -> {True, False}
     std::unique_ptr<AggregateFunction> aggregate;

@@ -40,20 +40,22 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
 
         amosum_propagator->lb = SETTINGS::NONE;
         amosum_propagator->ub = SETTINGS::NONE;
-
+        // amosum_propagator->weight.reset(new WeightFunction(amosum_propagator->N));
         
         if(first){
-            weight.reset(new WeightFunction(amosum_propagator->N));
+            // weight.reset(new WeightFunction(amosum_propagator->N));
             first = false ;
             common_phase(amosum_propagator);
         }
        
         assign(amosum_propagator);
         
-        specific_phase(lits, amosum_propagator);
-        
         generic_data* gd = nullptr ;
         gd = get_map(generic_data_map, amosum_propagator->ID, gd);
+
+        if(gd->bind.size() > 0) specific_phase(lits, amosum_propagator);
+        
+        
         return gd->bind;
         
     }
@@ -62,7 +64,7 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
         std::regex pattern_aux(SETTINGS::REGEX_AUX);
         atomNamesString = create_atomNames_string(amosum_propagator->atomNames);
         std::map<clingo_symbol_t, clingo_literal_t> atomNamesTmp(amosum_propagator->atomNames->begin(), amosum_propagator->atomNames->end());
-
+        const size_t N = amosum_propagator->N;
         for(auto &[symbolic_atom, literal]: atomNamesTmp){
                 
             std::string a = from_symbol_to_string(symbolic_atom);
@@ -97,7 +99,6 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
 
                     int w = std::stoi(from_symbol_to_string(terms[2]));
     
-                    weight->set(lit, w) ; 
             
                     std::string group_id = from_symbol_to_string(terms[3]);
                     
@@ -106,11 +107,13 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
                     gd = get_map(generic_data_map, id_str, gd);
                     if(!gd){ 
                         gd = new generic_data();
+                        gd->weight = new WeightFunction(N);
                         generic_data_map[id_str] = gd ;
                     }
                     if(is_aux){
                         gd->aux_lit = lit ;
                     }
+                    gd->weight->set(lit, w) ; 
                     gd->weights_names[lit_str] = w ;
                     std::vector<clingo_literal_t> G = get_map_value_vector(gd->groups_raw, group_id);
                     G.push_back(lit);
@@ -156,7 +159,7 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
         AggregateFunction* currentAggregate = amosum_propagator->aggregate.get();
         // if(currentAggregate != aggregate_map[ID]) 
         amosum_propagator->aggregate.reset(aggregate_map[ID]) ;
-        amosum_propagator->weight = weight.get() ;
+        amosum_propagator->weight.reset(generic_data_map[ID]->weight);
         if(amosum_propagator->bound == SETTINGS::NONE)  amosum_propagator->bound = generic_data_map[ID]->bound;
         amosum_propagator->ge ? amosum_propagator->lb = amosum_propagator->bound : amosum_propagator->ub = amosum_propagator->bound ;
 
@@ -178,7 +181,7 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
 
         for(auto &[group_id, lits_group]: generic_data_map[ID]->groups_raw){
                 std::vector<std::pair<int, int>> lits_ord;
-                for (int lit : lits_group) lits_ord.emplace_back(lit, weight->get(lit));
+                for (int lit : lits_group) lits_ord.emplace_back(lit, amosum_propagator->weight->get(lit));
                 std::sort(lits_ord.begin(), lits_ord.end(), [](const std::pair<int, int>& a, const std::pair<int, int>& b) {
                         return a.second < b.second; 
                 });
@@ -194,8 +197,8 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
                 Group* G = new Group(ord_l,ord_i,group_id) ;
                 
                 clingo_literal_t ml = m_w(G, amosum_propagator->ge) ;
-                int max_w = weight->get(ml);
-                int min_w = amosum_propagator->lazy_prop_activated || !amosum_propagator->ge ? weight->get(m_w(G, !amosum_propagator->ge)) : 0 ;
+                int max_w = amosum_propagator->weight->get(ml);
+                int min_w = amosum_propagator->lazy_prop_activated || !amosum_propagator->ge ? amosum_propagator->weight->get(m_w(G, !amosum_propagator->ge)) : 0 ;
 
 
                 amosum_propagator->_mps = amosum_propagator->_mps + max_w;

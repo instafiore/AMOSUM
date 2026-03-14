@@ -5,14 +5,29 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "amoclingo",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "amosum/amoclingo/__main__.py",
+            "console": "integratedTerminal",
+            "python": "/opt/homebrew/anaconda3/envs/amosum/bin/python",
+            "args":[
+                "-enc /Users/instafiore/Workspace/AMOSUM/tests/benchmarks/graph_colouring/encoding-amosum-amo.asp",
+                "-i /Users/instafiore/Workspace/AMOSUM/tests/benchmarks/graph_colouring/instances_light/0001-graph_colouring-125-0.asp",
+                "-exp"
+            ]
+        },
+        {
             "name": "C++ Debug (g++)",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/amosum/amoclingo/propagator_clingo_c/bin/amosum_cpp",
-            "args": ["-enc=/tmp/.encoding-amomaximize-amo_without_amosum_2025-11-25-12-07-02-326330.asp",
-                    "-i=/tmp/.0001-knapsack-10-21042-17651-type1_without_amosum_2025-11-25-18-46-41-516750.asp",
-                    // "-serialize",
-                    "-amosum_propagator=amomaximize -id __amomaximizeid__ -enc /Users/instafiore/Workspace/AMOSUM/tests/benchmarks/knapsack/encoding-amomaximize-amo.asp -i /Users/instafiore/Workspace/AMOSUM/tests/benchmarks/knapsack/instances/0001-knapsack-10-21042-17651-type1.asp -exp" ],
+            "args": [
+                "-enc=/tmp/.encoding-amomaximize-amo_without_amosum_2026-03-14-15-55-40-761978.asp",
+                "-i=/tmp/.0001-graph_colouring-125-0_without_amosum_2026-03-14-15-55-40-798518.asp",
+                "-serialize",
+                "-amosum_propagator=amomaximize -id __amomaximizeid__ -enc /Users/instafiore/Workspace/AMOSUM/tests/benchmarks/graph_colouring/encoding-amomaximize-amo.asp -i /Users/instafiore/Workspace/AMOSUM/tests/benchmarks/graph_colouring/instances_light/0001-graph_colouring-125-0.asp -exp"
+            ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],

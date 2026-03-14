@@ -40,51 +40,23 @@ class RunnerClingoC(RunnerWasp):
     def handleRun(self, run, weights, totalTime) -> Result:
         eachModelTime = totalTime
         generator = run_and_stream(run)
-        result: Result
+        result: Result = None
         alreadyPrinted = False
-   
-        # try:
+        maximizationProblem = not weights is None
+
         for line in generator:
-            # print(f"New line {line}")
+            # print(f"serialized: {line}")
             if not line.strip(): continue
             resultNew = Result.parse(line, weights)
             if resultNew is None:
                 continue
             result = resultNew
-            endCurrentModelTime = time.time()
-            result.cumulativeTime = round(endCurrentModelTime - totalTime,3)
-            result.timeModel = round(endCurrentModelTime - eachModelTime, 3)
+            if maximizationProblem:
+                endCurrentModelTime = time.time()
+                result.cumulativeTime = round(endCurrentModelTime - totalTime,3)
+                result.timeModel = round(endCurrentModelTime - eachModelTime, 3)
+                eachModelTime = endCurrentModelTime            
             print(result)
-            # print(f"Result normal: {result}")
-            eachModelTime = endCurrentModelTime
-
-                # if result.exitCode == 29 or result.exitCode == 30:
-                #     alreadyPrinted = True
-            
-            # result.exitCode = 30
-        # except Exception as e:
-            
-        #     for line in generator:
-        #         # print(f"New line {line}")
-        #         if not line.strip(): continue
-        #         resultNew = Result.parse(line, weights)
-        #         if resultNew is None:
-        #             continue
-        #         result = resultNew
-        #         endCurrentModelTime = time.time()
-        #         result.cumulativeTime = round(endCurrentModelTime - totalTime,3)
-        #         result.timeModel = round(endCurrentModelTime - eachModelTime, 3)
-        #         # print(f"Result key: {result}")
-        #         print(result)
-        #         eachModelTime = endCurrentModelTime
-
-                # if result.exitCode == 29 or result.exitCode == 30:
-                #     alreadyPrinted = True
-            
-            # result.exitCode = 29
-
-        # if not alreadyPrinted:
-        #     print(result)
         
         return result
     
@@ -131,8 +103,8 @@ class RunnerClingoC(RunnerWasp):
             run += prop_run
 
         # print(f"weights: {str(preprocess_map["amosum_mapweights"])}")
-        # weigths = preprocess_map["amosum_mapweights"].getdefault("__amomaximizeid__",None) # Decomment to have cost only for amomaximize problems
-        weights = preprocess_map["amosum_mapweights"]
+        weights = preprocess_map["amosum_mapweights"].get("__amomaximizeid__",None) # Decomment to have cost only for amomaximize problems
+        # weights = preprocess_map["amosum_mapweights"]
 
         if self.PRINT_RUN:
             print(f"run:\t {run}")

@@ -316,7 +316,7 @@ def run_and_stream(cmd):
     def on_sigterm(signum, frame):
         nonlocal stop_requested
         stop_requested = True
-        print("Received SIGTERM, forwarding to subprocess runner clingo")
+        print("Received SIGTERM, forwarding to subprocess amosum cpp")
         
 
     signal.signal(signal.SIGTERM, on_sigterm)
@@ -430,7 +430,6 @@ class Result:
 
     @staticmethod
     def parse(serialized: str, weights: Dict[str, Dict] = None) -> "Result":
-        # print(f"serialized: {serialized}")
         try:
             resultJson = json.loads(serialized)
         except Exception as e:
@@ -447,20 +446,22 @@ class Result:
         # TODO: TO HANDLE NEGATIVE LITERALS
         if modelJson:
             assigment  = modelJson
-            cost = 0
-            for atom in assigment:
-                if atom in weights:
-                    cost += weights[atom]["weight"] if weights[atom]["sign"] == "+" else 0
-                    # cost += weights[atom]["weight"]
-                    # print(f"atom: {atom} weight: {weights[atom]["weight"]} sign: {weights[atom]["sign"]} cost: {cost}")
-            # cost = sum(weights[atom]["weight"] for atom in assigment if atom in weights) if weights else None
+            if not weights is None:
+                cost = 0
+                for atom in assigment:
+                    if atom in weights:
+                        cost += weights[atom]["weight"] if weights[atom]["sign"] == "+" else 0
+                        # cost += weights[atom]["weight"]
+                        # print(f"atom: {atom} weight: {weights[atom]["weight"]} sign: {weights[atom]["sign"]} cost: {cost}")
+                # cost = sum(weights[atom]["weight"] for atom in assigment if atom in weights) if weights else None
+            else:
+                cost = None
             model = Model(cost, assigment)
         else:
             model = None
         
         otherString = resultJson[1]
         exitCode = int(otherString[0])
-        # print(f"Exit coddddeee: {exitCode}")
         return Result(model, exitCode)
 
 class WeightFunction(SymmetricFunction):
