@@ -36,7 +36,7 @@ class PropagatorClingoInitializer:
         self.map_slit_plit = {}
         self.map_plit_slit = {}
         self.nt = _init.number_of_threads
-        print(f"[init] number of threads: {self.nt}")
+        # print(f"[init] number of threads: {self.nt}")
 
         symbolic_atoms: SymbolicAtoms = _init.symbolic_atoms
         for atom in symbolic_atoms:

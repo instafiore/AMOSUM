@@ -19,11 +19,12 @@ import traceback
 
 # Assuming the related functions and classes like WeightFunction, GroupFunction, AggregateFunction, etc., are defined elsewhere in the project.
 class GenericData:
-    def __init__(self):
+    def __init__(self, N):
         self.bound = None  # Default equivalent to SETTINGS::NONE
         self.groups_raw = {}  # A dictionary with string keys and list of literals as values
         self.bind = []  # A list of literals
         self.weights_names = {}  # A dictionary with string keys and integer values
+        self.weight : WeightFunction = WeightFunction(N)
     
     def __repr__(self):
         return f"GenericData(bound={self.bound}, groups_raw={self.groups_raw}, bind={self.bind}, weights_names={self.weights_names})"
@@ -71,7 +72,7 @@ class AmoSumInitializer:
         amosum_propagator.groups_literals = []
 
         if self.first:
-            self.weight = WeightFunction(amosum_propagator.N)
+            # self.weight = WeightFunction(amosum_propagator.N)
             self.first = False
             self.common_phase(amosum_propagator)
 
@@ -107,11 +108,14 @@ class AmoSumInitializer:
                 lit *= sign
 
                 weight = int(terms[2])
-                self.weight[lit] = weight
+                # self.weight[lit] = weight
 
                 group_id = terms[3]
-                gd = self.generic_data_map.setdefault(id_str, GenericData())
+                if not id_str in self.generic_data_map:
+                    self.generic_data_map[id_str] = GenericData(amosum_propagator.N)
+                gd = self.generic_data_map[id_str]
                 gd.weights_names[atom_name] = weight
+                gd.weight[lit] = weight
 
                 # Update groups and aggregates
                 gd.groups_raw.setdefault(group_id, [])
@@ -132,7 +136,9 @@ class AmoSumInitializer:
                 if len(terms) != 2:
                     continue
                 id_str = terms[1]
-                gd = self.generic_data_map.setdefault(id_str, GenericData())
+                if not id_str in self.generic_data_map:
+                    self.generic_data_map[id_str] = GenericData(amosum_propagator.N)
+                gd = self.generic_data_map[id_str]
                 if gd.bound is not None:
                     raise ValueError("Bound is already set!")
                 gd.bound = int(terms[0])
@@ -140,7 +146,7 @@ class AmoSumInitializer:
     def assign(self, amosum_propagator):
         ID = amosum_propagator.ID
         amosum_propagator.aggregate = self.aggregate_map[ID]
-        amosum_propagator.weight = self.weight
+        amosum_propagator.weight = self.generic_data_map[ID].weight
         if amosum_propagator.ge: amosum_propagator.lb = self.generic_data_map[ID].bound
         else: amosum_propagator.ub = self.generic_data_map[ID].bound
         amosum_propagator.bound = self.generic_data_map[ID].bound
@@ -159,15 +165,15 @@ class AmoSumInitializer:
 
         # Logging and preprocessing
         for group_id, lits_group in self.generic_data_map[ID].groups_raw.items():
-            lits_ord = sorted([(lit, self.weight[lit]) for lit in lits_group], key=lambda x: x[1])
+            lits_ord = sorted([(lit, amosum_propagator.weight[lit]) for lit in lits_group], key=lambda x: x[1])
             ord_l = [lit for lit, _ in lits_ord]
             ord_i = {lit: i for i, (lit, _) in enumerate(lits_ord)}
 
             G = Group(ord_l, ord_i, group_id)
             ml = m_w(G, amosum_propagator.ge)
 
-            max_w = self.weight[ml]
-            min_w = self.weight[m_w(G, not amosum_propagator.ge)] if amosum_propagator.lazy_prop_activated or not amosum_propagator.ge else 0
+            max_w = amosum_propagator.weight[ml]
+            min_w = amosum_propagator.weight[m_w(G, not amosum_propagator.ge)] if amosum_propagator.lazy_prop_activated or not amosum_propagator.ge else 0
 
             amosum_propagator._mps += max_w
             diff = abs(max_w - min_w)

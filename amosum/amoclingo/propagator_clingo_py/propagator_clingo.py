@@ -36,7 +36,7 @@ class PropagatorClingo(clingo.Propagator):
 
         self.propagators = []
         for i in range(PropagatorClingoInitializer.get_instance().nt):
-                propagator = amosum.AmoSumPropagator(atomNames=self.atomNames, sys_parameters=self.sys_parameters,
+                propagator = AmoSumPropagator(atomNames=self.atomNames, sys_parameters=self.sys_parameters,
                                       propagation_phase=self.propagation_phase, ge=self.ge, choice_cons=self.choice_cons, solver=AmoSumPropagator.CLINGO)
                 propagator.map_plit_slit = self.map_plit_slit
                 self.propagators.append(propagator)

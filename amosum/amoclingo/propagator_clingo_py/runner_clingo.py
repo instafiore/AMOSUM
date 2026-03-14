@@ -71,17 +71,13 @@ class RunnerClingoPython(RunnerWasp):
         self.ctl = Control(arguments=arguments)
         self.propagators: List[PropagatorClingo] = []
         # Load the instance file
-        
-        self.ctl.load(self.str_weights) if self.str_weights != "" else ""
-        self.ctl.load(self.str_lb) if self.str_lb != "" else ""
-        self.ctl.load(self.str_ub) if self.str_ub != "" else ""
 
         # Rewrinting without #amosum construct
 
         hidden_location_encoding= self.rewrite_file_without_amosum(location_encoding)
         hidden_location_instance= self.rewrite_file_without_amosum(location_instance)
         # print(f"grounded file:\n {cat(hidden_location_encoding)}")
-        grounded_program = ground_program(hidden_location_encoding, hidden_location_instance, self.str_weights, self.str_lb, self.str_ub)
+        grounded_program = ground_program(hidden_location_encoding, hidden_location_instance)
         # print(f"grounded_program: {grounded_program}")
 
         preprocess_map = preprocess_ground_program(grounded_program)
@@ -94,74 +90,33 @@ class RunnerClingoPython(RunnerWasp):
         for amosum in preprocess_map["amosum_set"]:
             self.registerPropagator(prop_type=amosum.prop_type, id=amosum.id)
 
+        model : Model = None
+        def on_model(modelClingo):
+            nonlocal model
+            model = Model(None, [str(atom) for atom in modelClingo.symbols(shown=True)])
 
-        # Collect all models
-        models = []
-
-        def on_model(model):
-            # Append the model's symbols to the list
-            regex_query = self.get_regex_query_atom_answerset()
-            model = set([str(atom) for atom in model.symbols(shown=True)])
-            filtered_model = set()
-            for atom in model:
-                string = f" {atom}"
-                result_match = re.search(regex_query, string)
-                # print(f"atom str: {atom} regex_query: {regex_query} match: {result_match}")
-                if result_match:
-                    filtered_model.add(atom)
-            # print(f"filtered_model: {filtered_model} model_str: {model} regex_query: {regex_query}")
-            models.append(set(filtered_model))
-
-        
-
-            
-        # Solve and get all models
-        start_time = time.time()  
-        res = "timeout"
-        sat = True
-
-        def on_unsat(x):
-            global sat
-            debug("UNSAT", force_print=True)
-            sat = False
-
+    
+        result: Result = None
         def on_finish(x: SolveResult):
-            debug(f"result: {x}", force_print=True)
+            nonlocal result
+            if x.unsatisfiable:
+                exitCode = 20
+            elif x.satisfiable:
+                exitCode = 10
+            else:
+                exitCode = 1
+            result = Result(model, exitCode)
 
         try:
-            handle : clingo.SolveHandle = self.ctl.solve(on_finish=on_finish ,on_model=on_model, on_unsat=on_unsat, async_ = True)
-            res = handle.wait(self.timeout_m * 60 if not self.exp else None)
+            handle : clingo.SolveHandle = self.ctl.solve(on_finish=on_finish ,on_model=on_model, async_ = True)
+            handle.wait()
         except Exception as e:
-            res = "error"
+            result = Result(None, 1)
             raise e
-
-        end_time = time.time()  # End time
-
-        iterations = 0 
-        for prop in self.propagators:
-            amosum_prop = prop.propagators[0]
-            iterations += amosum_prop.count 
         
-        debug(f"iterations: {iterations}", force_print=True)
-
-        for propagator in self.propagators:
-            amosum_propagator = propagator.propagators[0]
-            self.update_maps_weights_list(input = amosum_propagator)
-
-        regex_name_file = r"(.*\/)?(?P<name>.+)\.asp"
-        encoding_name = re.match(regex_name_file, location_encoding).group("name")  if encoding else ""
-        instance_name = re.match(regex_name_file, location_instance).group("name")
-        filename = f"{STATISTICS_RUN}/{date_string}-{encoding_name}-{instance_name}"
-        self.print_stats_to_file(filename=filename)
+        print(result)
         
-        wall_time = end_time - start_time 
-        wall_time = round(wall_time, 2) if res else "timeout" 
-
-        # restoring the instance.asp file
-        self.comment_bound(instance=instance, ub=False, restore=True)
-        self.comment_bound(instance=instance, ub=True, restore=True)
-        
-        return models, wall_time
+        return result.exitCode
     
     def update_maps_weights_list(self, input: AmoSumPropagator):
 
