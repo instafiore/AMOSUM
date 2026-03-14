@@ -832,21 +832,21 @@ void create_reason_true_ge(AmoSumPropagator* propagator, clingo_literal_t sml_g,
     // for (int k = i; k < j; ++k) {
     for (int k = j; k >= i; --k) {
         clingo_literal_t lit = g->ord_l[k];
-        bool redundant = false;
-        if(minimizationOnTheFly){
-            int weight = propagator->weight->get(lit);
-            int w_sml = propagator->weight->get(sml_g);
-            int inc = weight - w_sml ;
-            if (!propagator->I->get(lit) && !equals(derived, lit)) {
+        int weight = propagator->weight->get(lit);
+        int w_sml = propagator->weight->get(sml_g);
+        int inc = weight - w_sml ;
+        if (!propagator->I->get(lit) && !equals(derived, lit)) {
+            bool redundant = false;
+            if(minimizationOnTheFly){
                 get_map(sum_removed_weights, derived, 0, true);
                 if(sum_removed_weights[derived] + inc <= s){
                     sum_removed_weights[derived] += inc;
                     redundant = true;
                     break;
-                }    
+                } 
             }
+            if(!redundant) R->push_back(lit);   
         }
-        if(!redundant) R->push_back(lit);
     }
 
     //     if(propagator->dl == 0) return ;
