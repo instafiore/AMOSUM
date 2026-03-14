@@ -56,7 +56,7 @@ class AmoSumInitializer:
 
     def getLiterals(self, lits, amosum_propagator):
         amosum_propagator.N = lits[0] + 1
-        amosum_propagator.minimization = amosum_propagator.param.get("min_r",Minimize.NO_MINIMIZATION.value)
+        amosum_propagator.minimization = amosum_propagator.param.get("min-r",Minimize.NO_MINIMIZATION.value)
         amosum_propagator.strategy = amosum_propagator.param.get("strategy",self.strategy)
         amosum_propagator.I = SymmetricFunction(amosum_propagator.N)
         amosum_propagator.group = GroupFunction(amosum_propagator.N)

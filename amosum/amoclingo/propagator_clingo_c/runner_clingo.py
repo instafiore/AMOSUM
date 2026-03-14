@@ -26,7 +26,7 @@ from datetime import datetime
 
         
 
-class RunnerClingoC(RunnerWasp):
+class RunnerClingoCpp(RunnerWasp):
     '''
     This class is meant to run experiments on the AMO sum propagator(s) Clingo using C API
     '''
@@ -60,27 +60,14 @@ class RunnerClingoC(RunnerWasp):
         
         return result
     
-    def run_instance(self, instance, encoding=None):
+    def run(self):
         
-        # Get the current date and time
-        now = datetime.now()
+        location_encoding = self.encoding
+        location_instance = self.instance
 
-        # Format it as a string
-        date_string = now.strftime("%Y-%m-%d-%H-%M")
+        print(f"encoding: {location_encoding}") 
+        print(f"instance: {location_instance}")
 
-        # Setup encoding and instance file paths
-        location_encoding = f"{self.location}/{encoding}.asp" if encoding else ""
-        location_encoding = encoding if self.enc else  location_encoding
-        location_encoding = f"{self.location}/{encoding}.asp" if self.enc and not self.exp else location_encoding
-        location_instance = f"{self.location_instance}/{instance}.asp" if not self.exp else instance
-
-        timeout_str = f"timeout {self.timeout_m}m time -p " if not self.exp else ""
-
-        print(f"encoding: {location_encoding}") if not self.exp  else None
-        print(f"instance: {location_instance}") if not self.exp  else None
-
-        # self.create_bound(instance=instance, ub=False)
-        # self.create_bound(instance=instance, ub=True)
         
         hidden_location_encoding= self.rewrite_file_without_amosum(location_encoding)
         hidden_location_instance= self.rewrite_file_without_amosum(location_instance)
@@ -88,9 +75,9 @@ class RunnerClingoC(RunnerWasp):
         
         grounded_program, run_command_ground = ground_program(hidden_location_encoding, hidden_location_instance, return_command=True)
         
-        run = f"{timeout_str} {settings.PROPAGATOR_DIR_LOCATION_CLINGO_C_BIN}/./{RunnerClingoC.SOLVER_EXE} {self.n0}\
-            -enc={hidden_location_encoding}\
-            -i={hidden_location_instance} \
+        run = f"{settings.PROPAGATOR_DIR_LOCATION_CLINGO_C_BIN}/./{RunnerClingoCpp.SOLVER_EXE} {self.n0}\
+            -encoding={hidden_location_encoding}\
+            -instance={hidden_location_instance} \
             -serialize"
 
         preprocess_map =  preprocess_ground_program(grounded_program)
@@ -106,34 +93,13 @@ class RunnerClingoC(RunnerWasp):
         weights = preprocess_map["amosum_mapweights"].get("__amomaximizeid__",None) # Decomment to have cost only for amomaximize problems
         # weights = preprocess_map["amosum_mapweights"]
 
-        if self.PRINT_RUN:
-            print(f"run:\t {run}")
-
-        # running test
-        # self.maps_weights_list = []
-        # compile propagator
-        if not self.exp or self.param.get("clean",False) or self.param.get("make",False)  : self.compile()
+     
+        print(f"run:\t {run}")
 
         totalTime = time.time()
         result = None
         
-
         result = self.handleRun(run, weights, totalTime)
         print(f"Exit code: {result.exitCode}")
         
         return result.exitCode if result else 40
-    
-
-    def compile(self):
-        make = self.param.get("make",False) 
-        clean = self.param.get("clean",False) 
-        clean = clean or self.param.get("d",False) or self.param.get("check_mps",False) or self.param.get("sanitize",False)
-        compile_with_debug = "DEBUG=-DDEBUG" if self.param.get("d",False) else ""
-        compile_with_check_mps = "CHECK_MPS=-DCHECK_MPS" if self.param.get("check_mps",False) else ""
-        compile_with_sanitize = 'SANITIZE_ADDRESS="-fsanitize=address -g"' if self.param.get("sanitize", False) else ""
-        compile_with_sanitize = 'SANITIZE_ADDRESS=-g' if not self.param.get("sanitize", False) and self.param.get("g", False) else compile_with_sanitize
-        clean_run = f"make -C {PROPAGATOR_DIR_LOCATION_CLINGO_C} clean"
-        compile_run = f"make -C {PROPAGATOR_DIR_LOCATION_CLINGO_C} {compile_with_debug} {compile_with_check_mps} {compile_with_sanitize}"
-        # print(compile_run)
-        subprocess.run(clean_run, shell=True) if clean else ""
-        subprocess.run(compile_run, shell=True)

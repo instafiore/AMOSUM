@@ -4,7 +4,7 @@ import os
 # adding the root path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from amoclingo.propagator_clingo_py.runner_clingo import RunnerClingoPython
-from amoclingo.propagator_clingo_c.runner_clingo import RunnerClingoC
+from amoclingo.propagator_clingo_c.runner_clingo import RunnerClingoCpp
 from utility import *
 
 '''
@@ -20,15 +20,17 @@ def optimized_run():
 
 def run():
     
-    DEFAULT_LANG = "c"
-    param = init_param(sys.argv)
-    
-    language = param.get("lang", DEFAULT_LANG)
-    runner : RunnerClingoC | RunnerClingoPython
+    # param = init_param(sys.argv)
+    params = parse_args()
+
+    print(f"Parameters: {params}")
+
+    language = params.get("lang")
+    runner : RunnerClingoCpp | RunnerClingoPython
     if language == "py":
-        runner = RunnerClingoPython(parameters=param)
-    elif language == "c":
-        runner = RunnerClingoC(parameters=param)
+        runner = RunnerClingoPython(parameters=params)
+    elif language == "cpp":
+        runner = RunnerClingoCpp(parameters=params)
     else:
         assert False
     exitCode = runner.run()

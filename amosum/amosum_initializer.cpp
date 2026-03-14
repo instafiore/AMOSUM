@@ -20,9 +20,7 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
 
         auto start = std::chrono::high_resolution_clock::now();
         amosum_propagator->N = lits[0] + 1;
-        // debugf("N: ", amosum_propagator->N);
         amosum_propagator->minimization = get_map(amosum_propagator->params, std::string("min_r"), std::string(Minimize::MINIMAL_ON_THE_FLY)) ;
-        // amosum_propagator->minimization = get_map(amosum_propagator->params, std::string("min_r"), std::string(Minimize::NO_MINIMIZATION)) ;
         amosum_propagator->strategy = get_map(amosum_propagator->params, std::string("strategy"), amosum_propagator->strategy);
         amosum_propagator->I.reset(new InterpretationFunction(amosum_propagator->N));
         amosum_propagator->group.reset(new GroupFunction(amosum_propagator->N));
@@ -140,6 +138,7 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
                     gd = get_map(generic_data_map, id_str, gd);
                     if(!gd){ 
                         gd = new generic_data();
+                        gd->weight = new WeightFunction(N);
                         generic_data_map[id_str] = gd ;
                     }
                     int bound = SETTINGS::NONE;
@@ -159,7 +158,10 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
         AggregateFunction* currentAggregate = amosum_propagator->aggregate.get();
         // if(currentAggregate != aggregate_map[ID]) 
         amosum_propagator->aggregate.reset(aggregate_map[ID]) ;
-        amosum_propagator->weight.reset(generic_data_map[ID]->weight);
+        generic_data* gd = generic_data_map[ID];
+        if(gd == nullptr) return;
+        WeightFunction* weight = gd->weight;
+        amosum_propagator->weight.reset(weight);
         if(amosum_propagator->bound == SETTINGS::NONE)  amosum_propagator->bound = generic_data_map[ID]->bound;
         amosum_propagator->ge ? amosum_propagator->lb = amosum_propagator->bound : amosum_propagator->ub = amosum_propagator->bound ;
 

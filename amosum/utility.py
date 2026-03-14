@@ -150,6 +150,20 @@ def debug(*message: str, G: 'Group' = None , end ="\n", force_print = False, fil
         sys.stderr.flush()
 
 
+def parse_args():
+    
+    parser = argparse.ArgumentParser(description='Amosum propagator')
+    parser.add_argument("-e", "--encoding", required=True, help="Path to encoding file")
+    parser.add_argument("-i", "--instance", help="Path to instance file (optional)")
+    parser.add_argument("-l", "--lazy", choices=["false","true","hybrid"], help="Define lazy configuration (default false)", default=f"false")
+    parser.add_argument("-m", "--min-r", choices=[e.value for e in Minimize], help="Define minimization technique (default no minimization)", default=str(Minimize.NO_MINIMIZATION.value))
+    parser.add_argument("-lg", "--lang", choices=["cpp", "py"], help="Define the language to use (default cpp)", default="cpp")
+   
+
+    dict_res = vars(parser.parse_args())
+   
+    return dict_res
+
 def init_param(argv):
     param = {}
     regex = r"^-(.+)" 
@@ -1016,9 +1030,10 @@ def create_reason_true_le(propagator, sml_g, derived, g):
 # MINIMIZING REASON 
 #################################################################################################################################################
 class Minimize(Enum):
-    NO_MINIMIZATION = "default"
+    NO_MINIMIZATION = "nomin"
     MINIMAL = "min"
     CARDINALITY_MINIMAL = "cmin"
+    MINONTHEFLY = "minfly"
 
 def is_true_in_reason(lit, group: GroupFunction):
     '''

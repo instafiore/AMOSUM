@@ -23,10 +23,10 @@
             "request": "launch",
             "program": "${workspaceFolder}/amosum/amoclingo/propagator_clingo_c/bin/amosum_cpp",
             "args": [
-                "-enc=/tmp/.encoding-amomaximize-amo_without_amosum_2026-03-14-15-55-40-761978.asp",
-                "-i=/tmp/.0001-graph_colouring-125-0_without_amosum_2026-03-14-15-55-40-798518.asp",
+                "-encoding=/tmp/.encoding-amosum-amo_without_amosum_2026-03-14-19-58-03-393472.asp",
+                "-instance=/tmp/.0001-graph_colouring-125-0_without_amosum_2026-03-14-19-58-03-422934.asp",
                 "-serialize",
-                "-amosum_propagator=amomaximize -id __amomaximizeid__ -enc /Users/instafiore/Workspace/AMOSUM/tests/benchmarks/graph_colouring/encoding-amomaximize-amo.asp -i /Users/instafiore/Workspace/AMOSUM/tests/benchmarks/graph_colouring/instances_light/0001-graph_colouring-125-0.asp -exp"
+                "-amosum_propagator=ge_amo -id (0,lb(410,0)) -encoding /Users/instafiore/Workspace/AMOSUM/tests/benchmarks/graph_colouring/encoding-amosum-amo.asp -instance /Users/instafiore/Workspace/AMOSUM/tests/benchmarks/graph_colouring/instances_light/0001-graph_colouring-125-0.asp -lazy false -min_r nomin -lang cpp"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

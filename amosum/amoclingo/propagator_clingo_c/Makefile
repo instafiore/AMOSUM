@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS = -Wall -Wextra -std=c++20 -I/opt/homebrew/include -I$(CONDA_PREFIX)/include $(LOGGER_ACTIVE) -O0 -g $(EXTRA_CFLAGS)
+CFLAGS = -Wall -Wextra -std=c++20 -I/opt/homebrew/include -I$(CONDA_PREFIX)/include $(EXTRA_CFLAGS)
 LDFLAGS = -L/opt/homebrew/lib -L$(CONDA_PREFIX)/lib -Wl,-rpath,/opt/homebrew/lib -Wl,-rpath,$(CONDA_PREFIX)/lib -lclingo $(EXTRA_LDFLAGS)
 BUILD_DIR = build
 BIN_DIR = bin
@@ -14,9 +14,22 @@ OBJS = $(addprefix $(BUILD_DIR)/, $(notdir $(SRCS:.$(C)=.o)))
 
 all: $(TARGET)
 
+BUILD_MODE ?= release
+ifeq ($(BUILD_MODE), test)
+    EXTRA_CFLAGS  = -fsanitize=address -g -O0
+    EXTRA_LDFLAGS = -fsanitize=address
+else
+    EXTRA_CFLAGS  = -O3 -DNDEBUG
+    EXTRA_LDFLAGS =
+endif
+
+all: $(TARGET)
+	
 test:
-	@echo $(SRCS)
-	@echo $(OBJS)
+	@$(MAKE) BUILD_MODE=test
+
+release:
+	@$(MAKE) BUILD_MODE=release
 
 $(TARGET): $(OBJS)
 	@echo "Linking $@"

@@ -15,11 +15,13 @@ def optimized_run():
     Wrapper that re-runs the module with -O optimization flag.
     """
     # Build the command: [python, -O, -m, weaksatbasedls, ...args...]
-    os.execvp(sys.executable, [sys.executable, "-O", "-m", "amowasp", *sys.argv[1:]])
+    os.execvp(sys.executable, [sys.executable, "-O", "-m", "amosum.amowasp", *sys.argv[1:]])
 
 def run():
     
     param = init_param(sys.argv)
+
+    
     runner = RunnerWasp(parameters=param)
     exitCode = runner.run()
     exit(exitCode)

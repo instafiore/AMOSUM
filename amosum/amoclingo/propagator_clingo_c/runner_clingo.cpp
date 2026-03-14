@@ -56,9 +56,9 @@ int main(int argc, char const *argv[])
     signal(SIGTERM, signalHandler);
 
     std::string encoding_path = "" ;
-    params.find("enc") != params.end() ? encoding_path = params.find("enc")->second : NULL ;
+    params.find("encoding") != params.end() ? encoding_path = params.find("encoding")->second : NULL ;
     std::string instance_path = "" ;
-    params.find("i") != params.end() ? instance_path = params.find("i")->second : NULL ;
+    params.find("instance") != params.end() ? instance_path = params.find("instance")->second : NULL ;
 
     int major, minor, revision;
     clingo_version(&major, &minor, &revision);
@@ -122,8 +122,8 @@ int main(int argc, char const *argv[])
     }
     
     // Loading the program to the control
-    if (params.find("enc") != params.end()) handle_error(clingo_control_load(ctl, encoding_path.c_str())) ;
-    if (params.find("i") != params.end()) handle_error(clingo_control_load(ctl, instance_path.c_str()));
+    if (params.find("encoding") != params.end()) handle_error(clingo_control_load(ctl, encoding_path.c_str())) ;
+    if (params.find("instance") != params.end()) handle_error(clingo_control_load(ctl, instance_path.c_str()));
     
     handle_error((clingo_control_ground(ctl, parts, 1, NULL, NULL)));
 
