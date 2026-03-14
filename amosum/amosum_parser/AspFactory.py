@@ -2,8 +2,8 @@ import sys
 from typing import List
 from lark import Lark, Transformer, Tree, Token, Visitor
 
-from AmoSumParser.ValidatorAmoSum import ValidatorAmoSum
-from AmoSumParser.utils import concatenate_nodes
+from amosum_parser.ValidatorAmoSum import ValidatorAmoSum
+from amosum_parser.utils import concatenate_nodes
 from settings import *
 
 

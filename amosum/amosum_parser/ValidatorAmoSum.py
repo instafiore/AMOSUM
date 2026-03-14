@@ -4,8 +4,8 @@ from typing import List
 
 from lark import Token, Tree
 
-from AmoSumParser.AmoSumGrammar import *
-from AmoSumParser.utils import debug
+from amosum_parser.AmoSumGrammar import *
+from amosum_parser.utils import debug
 
 
 class ValidatorAmoSum:

@@ -7,7 +7,7 @@ from typing import Dict, List
 import re
 import sys
 import os
-import AmoSumParser
+import amosum_parser
 from amosum import *
 import signal
 

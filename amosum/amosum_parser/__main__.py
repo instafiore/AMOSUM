@@ -1,4 +1,3 @@
-#!/Users/instafiore/instafiore_env/bin/python
 import os
 import sys
 
@@ -13,9 +12,9 @@ sys.path.append(path_father_dir)
 # print(sys.path)
 from utility import *
 from lark import Lark
-from AmoSumParser.AmoSumTransformer import AmoSumTransformer # type: ignore
-from AmoSumParser.AmoSumGrammar import grammar as gr
-from AmoSumParser.utils import *
+from amosum_parser.AmoSumTransformer import AmoSumTransformer # type: ignore
+from amosum_parser.AmoSumGrammar import grammar as gr
+from amosum_parser.utils import *
 
 def run(input, path = True):
     if input is None or input == "":

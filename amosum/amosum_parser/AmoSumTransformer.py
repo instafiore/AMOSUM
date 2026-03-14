@@ -1,12 +1,12 @@
-from AmoSumParser.utils import debug
-from AmoSumParser import AspFactory
+from amosum_parser.utils import debug
+from amosum_parser import AspFactory
 import sys
 from typing import List
 from lark import Lark, Transformer, Tree, Token, Visitor
-from AmoSumParser.ValidatorAmoSum import ValidatorAmoSum
-from AmoSumParser.AmoSumGrammar import *
-from AmoSumParser.utils import *
-from AmoSumParser.AspFactory import AspFactory
+from amosum_parser.ValidatorAmoSum import ValidatorAmoSum
+from amosum_parser.AmoSumGrammar import *
+from amosum_parser.utils import *
+from amosum_parser.AspFactory import AspFactory
 from settings import *
 
 class AmoSumTransformer(Transformer):

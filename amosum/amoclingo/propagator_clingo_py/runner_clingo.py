@@ -9,7 +9,7 @@ import sys
 import os
 
 from clingo import SolveResult
-import amosum.AmoSumParser
+import amosum.amosum_parser
 from amosum.amosum import *
 from clingo.symbol import Number
 from clingo.control import Control

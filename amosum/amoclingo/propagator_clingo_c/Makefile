@@ -22,8 +22,6 @@ else
     EXTRA_CFLAGS  = -O3 -DNDEBUG
     EXTRA_LDFLAGS =
 endif
-
-all: $(TARGET)
 	
 test:
 	@$(MAKE) BUILD_MODE=test
