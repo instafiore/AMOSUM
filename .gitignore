@@ -181,3 +181,6 @@ tests/results/**
 **/*log*
 
 
+!logger.h
+!logger.cpp
+
