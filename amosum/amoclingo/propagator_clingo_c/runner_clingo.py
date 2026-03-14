@@ -31,7 +31,7 @@ class RunnerClingoC(RunnerWasp):
     This class is meant to run experiments on the AMO sum propagator(s) Clingo using C API
     '''
 
-    SOLVER_EXE = "runner_clingo"
+    SOLVER_EXE = "amosum_cpp"
     
 
     def __init__(self, parameters: Dict[str, str]) -> None:

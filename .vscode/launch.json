@@ -8,7 +8,7 @@
             "name": "C++ Debug (g++)",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/amosum/amoclingo/propagator_clingo_c/bin/runner_clingo",
+            "program": "${workspaceFolder}/amosum/amoclingo/propagator_clingo_c/bin/amosum_cpp",
             "args": ["-enc=/tmp/.encoding-amomaximize-amo_without_amosum_2025-11-25-12-07-02-326330.asp",
                     "-i=/tmp/.0001-knapsack-10-21042-17651-type1_without_amosum_2025-11-25-18-46-41-516750.asp",
                     // "-serialize",

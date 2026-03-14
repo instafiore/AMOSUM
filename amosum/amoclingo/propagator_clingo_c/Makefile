@@ -1,11 +1,11 @@
 CC = g++
-CFLAGS = -Wall -Wextra -std=c++17 -I/opt/homebrew/include -I$(CONDA_PREFIX)/include $(LOGGER_ACTIVE) -O3 $(EXTRA_CFLAGS)
+CFLAGS = -Wall -Wextra -std=c++20 -I/opt/homebrew/include -I$(CONDA_PREFIX)/include $(LOGGER_ACTIVE) -O3 $(EXTRA_CFLAGS)
 LDFLAGS = -L/opt/homebrew/lib -L$(CONDA_PREFIX)/lib -Wl,-rpath,/opt/homebrew/lib -Wl,-rpath,$(CONDA_PREFIX)/lib -lclingo $(EXTRA_LDFLAGS)
 BUILD_DIR = build
 BIN_DIR = bin
 INCLUDES =  
 SRC_DIR = ../..
-TARGET = runner_clingo
+TARGET = amosum_cpp
 C=cpp
 amowasp = $(SRC_DIR)/amowasp/propagator_wasp_c
 
