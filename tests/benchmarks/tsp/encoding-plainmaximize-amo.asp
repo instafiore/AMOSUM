@@ -13,4 +13,3 @@ reachable(Y) :- reachable(X), tour(X,Y).
 
 #maximize{ R,X,Y : tour(X,Y), revenue(X,Y,R) }.
 
-#show tour/2.

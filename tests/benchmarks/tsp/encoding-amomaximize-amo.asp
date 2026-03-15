@@ -12,5 +12,3 @@ reachable(Y) :- reachable(X), tour(X,Y).
 :- city(X), not reachable(X).
 
 #amomaximize{ R : tour(X,Y), revenue(X,Y,R) [X] }.
-
-#show tour/2.
