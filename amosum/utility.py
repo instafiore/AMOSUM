@@ -34,10 +34,19 @@ def parse_args_check():
 
     return vars(parser.parse_args())
 
+def parse_args_check_unsat():
+    parser = argparse.ArgumentParser(description="Checker for AMOSUM (Unsat case)")
+    parser.add_argument("--file", required=True, help="Path to file results")
+
+    return vars(parser.parse_args())
+
 def checkAmomaximize(args: Dict[str, Any]) -> None:
 
     regex = r"Cumulative Time \d+\.\d+s\s+Time \d+\.\d+s\s*\w*\s*cost: (?P<cost>\d+) Answer Set \[(?P<answerset>.*)\]"
 
+    lastCost = None
+    lastMatch = None
+    increasingCostFunction = True
     with open(args["pathOutput"], "r") as f:
         for line in f.readlines():
             matchRegex = re.search(regex, line)
@@ -45,33 +54,84 @@ def checkAmomaximize(args: Dict[str, Any]) -> None:
             if matchRegex:
                 instance = ""
                 cost = int(matchRegex.group("cost"))
+                if not lastCost is None and lastCost > cost:
+                    increasingCostFunction = False
+                    break
+                lastCost = cost
+                lastMatch = matchRegex
+
+
+        if lastMatch:
+            answerset = lastMatch.group("answerset").split(", ")
+            print(f"% answerset: {answerset}")
+            for atom in answerset:
+                atom = atom.replace("'","")
+                # instance += f":- not {atom}.\n"
+                instance += f"{atom}.\n"
+            costInstance = f"expectedCost({cost})."
+            # print(f"{instance}")
+            # print(f"{costInstance}")
+            ctl = clingo.Control()
+            ctl.load(args["checkerPath"])
+            try:
+                ctl.add(instance)
+            except RuntimeError as e:
+                exit(13)
+            ctl.add(f"{costInstance}\n")
+            ctl.ground()
+            result: clingo.SolveResult
+            def onResult(resultC: clingo.SolveResult):
+                nonlocal result
+                result = resultC
+            print(f"% trying with {args["pathOutput"]}, {costInstance}")
+            ctl.solve(on_finish=lambda x: onResult(x), on_model=lambda x: print(f"% {x}"))
+
+            print(f"% Result check: {result}")
+            if not result.satisfiable or not increasingCostFunction:
+                print(f"% Error with: {args["pathOutput"]} increasingCostFunction:{increasingCostFunction}, {costInstance}\n{answerset}")
+                exit(1)
+
+        print("% Check passed")  
+        exit(0)
+
+def checkAmosum(args: Dict[str, Any]) -> None:
+
+    regex = r"Answer Set \[(?P<answerset>.*)\]"
+
+    with open(args["pathOutput"], "r") as f:
+        for line in f.readlines():
+            matchRegex = re.search(regex, line)
+            # print(f"match: {matchRegex}")
+            if matchRegex:
+                instance = ""
                 answerset = matchRegex.group("answerset").split(", ")
                 print(f"% answerset: {answerset}")
                 for atom in answerset:
                     atom = atom.replace("'","")
                     # instance += f":- not {atom}.\n"
                     instance += f"{atom}.\n"
-                costInstance = f"expectedCost({cost})."
+                
                 # print(f"{instance}")
-                # print(f"{costInstance}")
+        
                 ctl = clingo.Control()
                 ctl.load(args["checkerPath"])
                 try:
                     ctl.add(instance)
                 except RuntimeError as e:
                     exit(13)
-                ctl.add(f"{costInstance}\n")
+    
                 ctl.ground()
                 result: clingo.SolveResult
                 def onResult(resultC: clingo.SolveResult):
                     nonlocal result
                     result = resultC
-                print(f"% trying with {args["pathOutput"]}, {costInstance}")
+                print(f"% trying with {args["pathOutput"]}")
                 ctl.solve(on_finish=lambda x: onResult(x), on_model=lambda x: print(f"% {x}"))
 
                 print(f"% Result check: {result}")
                 if not result.satisfiable:
-                    print(f"% Error with: {args["pathOutput"]}, {costInstance}\n{answerset}")
+                    print(f"% Error with: {args["pathOutput"]}")
+                    print(f"{instance}")
                     exit(1)
 
         print("% Check passed")  
