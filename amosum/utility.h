@@ -71,7 +71,7 @@ std::map<std::string, clingo_literal_t> create_atomNames_string(const std::unord
 void handle_error(bool success);
 bool print_model(clingo_model_t const *model);
 // bool solve(clingo_control_t *ctl, AnswerSet* &result);
-bool solve(clingo_control_t *ctl, AnswerSet* &result, bool falseLiterals=false);
+bool solve(clingo_control_t *ctl, std::vector<AnswerSet*> &result, bool falseLiterals=false);
 std::chrono::time_point<std::chrono::high_resolution_clock> start_timer();
 void display_end_timer(const std::chrono::time_point<std::chrono::high_resolution_clock>& start, std::string name);
 
@@ -88,6 +88,9 @@ inline int costAtom(bool isTrue,
 
     return cost;
 }
+
+void addArgControl(std::vector<std::string>& arguments, std::string key, std::string value = "") noexcept;
+char const *const * fromVecStr2VecCstring(std::vector<std::string>& vecString);
 
 class Model{
 public:

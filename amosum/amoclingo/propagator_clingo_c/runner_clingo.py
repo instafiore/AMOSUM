@@ -74,9 +74,10 @@ class RunnerClingoCpp(RunnerWasp):
         
         grounded_program, run_command_ground = ground_program(hidden_location_encoding, hidden_location_instance, return_command=True)
         
-        run = f"{settings.PROPAGATOR_DIR_LOCATION_CLINGO_C_BIN}/./{RunnerClingoCpp.SOLVER_EXE} {self.n0}\
+        run = f"{settings.PROPAGATOR_DIR_LOCATION_CLINGO_C_BIN}/./{RunnerClingoCpp.SOLVER_EXE}\
             -encoding={hidden_location_encoding}\
             -instance={hidden_location_instance} \
+            -models={self.num_models} \
             -serialize"
 
         preprocess_map =  preprocess_ground_program(grounded_program)

@@ -129,6 +129,21 @@ ParameterMap init_param(int argc, char const *argv[]) {
     return args;
 }
 
+void addArgControl(std::vector<std::string>& arguments, std::string key, std::string value) noexcept{
+    std::string valueStr = value.size() != 0 ? "="+value : "";
+    std::string arg = "--"+key+valueStr;
+    arguments.push_back(arg);
+}
+
+char const *const * fromVecStr2VecCstring(std::vector<std::string>& vecString){ 
+    char const ** res = new const char*[vecString.size()];
+    for(size_t i = 0; i < vecString.size(); ++i){
+        const char * cstr = vecString[i].c_str();
+        res[i] = cstr;
+    }
+    return res;
+}
+
 
 void print_unordered_map(const std::unordered_map<std::string, std::string>& map){
     std::cout << unordered_map_to_string(map) << "\n" ; 
@@ -649,7 +664,7 @@ out:
 
 
 // bool solve(clingo_control_t *ctl, AnswerSet* &result) {
-bool solve(clingo_control_t *ctl, AnswerSet* &result, bool falseLiterals){
+bool solve(clingo_control_t *ctl, std::vector<AnswerSet*> &results, bool falseLiterals){
     
     bool ret = true;
     clingo_solve_handle_t *handle;
@@ -657,21 +672,25 @@ bool solve(clingo_control_t *ctl, AnswerSet* &result, bool falseLiterals){
     clingo_solve_result_bitset_t solve_ret;
 
     // get a solve handle
-
     handle_error(clingo_control_solve(ctl, clingo_solve_mode_yield, NULL, 0, NULL, NULL, &handle));
+
     // loop over all models
+    while (true) {
+        handle_error(clingo_solve_handle_resume(handle));
+        handle_error(clingo_solve_handle_model(handle, &model));
 
-    handle_error(clingo_solve_handle_resume(handle));
-    handle_error(clingo_solve_handle_model(handle, &model));
-        // print the model
+        if (!model) break;  // no more models
 
-    handle_error(clingo_solve_handle_get(handle, &solve_ret));
-
-    if (model) {          
-        result = new AnswerSet(new Model(model), solve_ret);
-    }else{
-        result = new AnswerSet(nullptr, solve_ret);
+        handle_error(clingo_solve_handle_get(handle, &solve_ret));
+        results.push_back(new AnswerSet(new Model(model), solve_ret));
     }
+
+    // get final solve result (SATISFIABLE, UNSATISFIABLE, etc.)
+    handle_error(clingo_solve_handle_get(handle, &solve_ret));
+    if (!(solve_ret & clingo_solve_result_satisfiable)) {
+        results.push_back(new AnswerSet(nullptr, solve_ret));
+    }
+
 
     return clingo_solve_handle_close(handle) & ret;
 }

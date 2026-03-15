@@ -219,6 +219,7 @@ def parse_args():
     parser.add_argument("-l", "--lazy", choices=["false","true","hybrid"], help="Define lazy configuration (default false)", default=f"false")
     parser.add_argument("-m", "--min-r", choices=[e.value for e in Minimize], help="Define minimization technique (default no minimization)", default=str(Minimize.NO_MINIMIZATION.value))
     parser.add_argument("-lg", "--lang", choices=["cpp", "py"], help="Define the language to use (default cpp)", default="cpp")
+    parser.add_argument("-n", "--models", type=int , help="Define the maximum number of models to search for (default 1)", default=1)
    
 
     dict_res = vars(parser.parse_args())

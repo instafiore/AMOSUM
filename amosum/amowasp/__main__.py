@@ -14,7 +14,6 @@ def optimized_run():
     """
     Wrapper that re-runs the module with -O optimization flag.
     """
-    # Build the command: [python, -O, -m, weaksatbasedls, ...args...]
     os.execvp(sys.executable, [sys.executable, "-O", "-m", "amosum.amowasp", *sys.argv[1:]])
 
 def run():

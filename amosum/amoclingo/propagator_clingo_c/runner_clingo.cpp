@@ -80,8 +80,15 @@ int main(int argc, char const *argv[])
     int ret = 0;
     clingo_solve_result_bitset_t solve_ret;
     clingo_control_t *ctl = NULL;
-    const char *args[] = {"--seed=42", "--parallel-mode=1"};
-    handle_error(clingo_control_new(args, 2, NULL, NULL, 20, &ctl));
+
+    std::vector<std::string> arguments;
+
+    addArgControl(arguments, "seed", "42");
+    addArgControl(arguments, "parallel-mode", "1");
+    addArgControl(arguments, "models", params.find("models")->second);
+
+
+    handle_error(clingo_control_new(fromVecStr2VecCstring(arguments), arguments.size(), NULL, NULL, 20, &ctl));
     clingo_part_t parts[] = {{"base", NULL, 0 }};
 
 
@@ -128,20 +135,22 @@ int main(int argc, char const *argv[])
     
     handle_error((clingo_control_ground(ctl, parts, 1, NULL, NULL)));
 
-    AnswerSet* result;
+    std::vector<AnswerSet*> results;
     bool falseLiterals = get_map(params, std::string("falseLiterals"), SETTINGS::FALSE_STR) == SETTINGS::TRUE_STR;
-    handle_error(solve(ctl, result, falseLiterals));
-    assert(opt == nullptr || result->exitCode == SETTINGS::UNSAT);
+    handle_error(solve(ctl, results, falseLiterals));
+    assert(opt == nullptr || results[0]->exitCode == SETTINGS::UNSAT);
     if(opt == nullptr){
-        if(params.find("serialize") == params.end())  printf("%s\n",result->toString().c_str());
-        else  printf("%s\n",result->serialize().c_str());
+        for(AnswerSet* result: results){
+            if(params.find("serialize") == params.end())  printf("%s\n",result->toString().c_str());
+            else  printf("%s\n",result->serialize().c_str());
+            delete result;
+        }
     }else{
         AnswerSet* optAnswer = opt->currentAnswerSet;
         optAnswer->setOptimum();
         if(params.find("serialize") == params.end())  printf("%s\n",optAnswer->toString().c_str());
         else  printf("%s\n",optAnswer->serialize().c_str());
     }
-
 
     // FREE
     for(auto& propagator: propagators){
@@ -155,7 +164,7 @@ int main(int argc, char const *argv[])
     PropagatorClingoInitializer::cleanup();
     // printf("returning exit code: %d", resultOpt->exitCode);
 
-    return result->exitCode;
+    return results[0]->exitCode;
 }
 
 PropagatorClingo* register_propagator(clingo_control_t *ctl, clingo_propagator_t prop, 

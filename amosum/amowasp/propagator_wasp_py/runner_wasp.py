@@ -36,9 +36,7 @@ class RunnerWasp:
         
         self.propagators = []
     
-        self.num_models = self.param.get("n","")
-        self.num_models = self.num_models
-        self.n0 = f"-n{self.num_models}" if self.num_models != "" else ""    
+        self.num_models = self.param.get("models")  
 
         self.encoding = self.param.get("encoding")
         self.instance = self.param.get("instance", None)
