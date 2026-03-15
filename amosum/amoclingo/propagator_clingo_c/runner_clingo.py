@@ -37,17 +37,16 @@ class RunnerClingoCpp(RunnerWasp):
     def __init__(self, parameters: Dict[str, str]) -> None:
         super().__init__(parameters)
 
-    def handleRun(self, run, weights, totalTime) -> Result:
+    def handleRun(self, run, totalTime, maximizationProblem = False) -> Result:
         eachModelTime = totalTime
         generator = run_and_stream(run)
         result: Result = None
-        alreadyPrinted = False
-        maximizationProblem = not weights is None
+    
 
         for line in generator:
             # print(f"serialized: {line}")
             if not line.strip(): continue
-            resultNew = Result.parse(line, weights)
+            resultNew = Result.parse(line)
             if resultNew is None:
                 continue
             result = resultNew
@@ -90,7 +89,7 @@ class RunnerClingoCpp(RunnerWasp):
             run += prop_run
 
         # print(f"weights: {str(preprocess_map["amosum_mapweights"])}")
-        weights = preprocess_map["amosum_mapweights"].get("__amomaximizeid__",None) # Decomment to have cost only for amomaximize problems
+        maximization = preprocess_map.get("maximization") # Decomment to have cost only for amomaximize problems
         # weights = preprocess_map["amosum_mapweights"]
 
      
@@ -99,7 +98,7 @@ class RunnerClingoCpp(RunnerWasp):
         totalTime = time.time()
         result = None
         
-        result = self.handleRun(run, weights, totalTime)
+        result = self.handleRun(run, totalTime, maximization)
         print(f"Exit code: {result.exitCode}")
         
         return result.exitCode if result else 40

@@ -13,8 +13,9 @@ bool OptimizerClingo::check(clingo_propagate_control_t *control) noexcept{
     int dl = clingo_assignment_decision_level(assignment);
     int td; 
     dl == 0 ? td = 0 : td = clingo_propagate_control_thread_id(control);
-    if(currentAnswerSet != nullptr) answerSets.push_back(currentAnswerSet) ;
-    currentAnswerSet = new AnswerSet(new Model(assignment));
+    // if(currentAnswerSet != nullptr) answerSets.push_back(currentAnswerSet) ;
+    if(currentAnswerSet != nullptr) delete currentAnswerSet;
+    currentAnswerSet = new AnswerSet(new Model(assignment, false, this));
     if(params.find("serialize") == params.end())  printf("%s\n",currentAnswerSet->toString().c_str());
     else  printf("%s\n",currentAnswerSet->serialize().c_str());
     int mps = propagator->propagators[td]->_mps;

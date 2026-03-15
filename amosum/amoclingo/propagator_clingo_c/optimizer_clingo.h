@@ -24,7 +24,7 @@ public:
     OptimizerClingo(const ParameterMap &params,PropagatorClingo* propagator): propagator(propagator), params(params){}
     PropagatorClingo* propagator;
     const ParameterMap &params;
-    std::vector<AnswerSet*> answerSets;
+    // std::vector<AnswerSet*> answerSets;
     AnswerSet* currentAnswerSet = nullptr;
 
     // static OptimizerClingo* getInstance();
@@ -37,7 +37,7 @@ public:
     std::vector<AmoSumPropagator*> propagators ; 
     ~OptimizerClingo(){
         if(currentAnswerSet != nullptr) {delete currentAnswerSet; currentAnswerSet = nullptr; }
-        for(AnswerSet* ans: answerSets) if(ans != nullptr) {delete ans; ans = nullptr; }
+        // for(AnswerSet* ans: answerSets) if(ans != nullptr) {delete ans; ans = nullptr; }
     }
 
     // static void cleanup(){

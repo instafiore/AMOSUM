@@ -8,25 +8,30 @@
             "name": "amoclingo",
             "type": "debugpy",
             "request": "launch",
-            "program": "amosum/amoclingo/__main__.py",
+            "module": "amosum.amoclingo.__main__",
             "console": "integratedTerminal",
             "python": "/opt/homebrew/anaconda3/envs/amosum/bin/python",
-            "args":[
-                "-enc /Users/instafiore/Workspace/AMOSUM/tests/benchmarks/graph_colouring/encoding-amosum-amo.asp",
-                "-i /Users/instafiore/Workspace/AMOSUM/tests/benchmarks/graph_colouring/instances_light/0001-graph_colouring-125-0.asp",
-                "-exp"
+            "args": [
+                // "-e=/Users/instafiore/Workspace/AMOSUM/tests/benchmarks/graph_colouring/encoding-amomaximize-amo.asp",
+                "-e=/Users/instafiore/Workspace/AMOSUM/tests/benchmarks/graph_colouring/encoding-amosum-amo.asp",
+                "-i=/Users/instafiore/Workspace/AMOSUM/tests/benchmarks/graph_colouring/instances_light/0001-graph_colouring-125-0.asp"
             ]
         },
         {
-            "name": "C++ Debug (g++)",
+            "name": "amosum cpp",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/amosum/amoclingo/propagator_clingo_c/bin/amosum_cpp",
             "args": [
-                "-encoding=/tmp/.encoding-amosum-amo_without_amosum_2026-03-14-19-58-03-393472.asp",
-                "-instance=/tmp/.0001-graph_colouring-125-0_without_amosum_2026-03-14-19-58-03-422934.asp",
+                // "-encoding=/tmp/.encoding-amosum-amo_without_amosum_2026-03-14-19-58-03-393472.asp",
+                "-encoding=/tmp/.encoding-amomaximize-amo_without_amosum_2026-03-15-09-08-52-596046.asp",
+
+                // "-instance=/tmp/.0001-graph_colouring-125-0_without_amosum_2026-03-14-19-58-03-422934.asp",
+                "-instance=/tmp/.0001-graph_colouring-125-0_without_amosum_2026-03-15-09-08-52-626714.asp",
+
                 "-serialize",
-                "-amosum_propagator=ge_amo -id (0,lb(410,0)) -encoding /Users/instafiore/Workspace/AMOSUM/tests/benchmarks/graph_colouring/encoding-amosum-amo.asp -instance /Users/instafiore/Workspace/AMOSUM/tests/benchmarks/graph_colouring/instances_light/0001-graph_colouring-125-0.asp -lazy false -min_r nomin -lang cpp"
+                // "-amosum_propagator=ge_amo -id (0,lb(410,0)) -encoding /Users/instafiore/Workspace/AMOSUM/tests/benchmarks/graph_colouring/encoding-amosum-amo.asp -instance /Users/instafiore/Workspace/AMOSUM/tests/benchmarks/graph_colouring/instances_light/0001-graph_colouring-125-0.asp -lazy false -min_r nomin -lang cpp"
+                "-amosum_propagator=amomaximize -id __amomaximizeid__ -encoding /Users/instafiore/Workspace/AMOSUM/tests/benchmarks/graph_colouring/encoding-amomaximize-amo.asp -instance /Users/instafiore/Workspace/AMOSUM/tests/benchmarks/graph_colouring/instances_light/0001-graph_colouring-125-0.asp -lazy false -min_r nomin -lang cpp",
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

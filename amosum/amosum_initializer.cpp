@@ -113,6 +113,7 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
                     }
                     gd->weight->set(lit, w) ; 
                     gd->weights_names[lit_str] = w ;
+                    gd->sign_names[lit_str] = plus_bool;
                     std::vector<clingo_literal_t> G = get_map_value_vector(gd->groups_raw, group_id);
                     G.push_back(lit);
                     gd->groups_raw[group_id] = G ;
@@ -166,7 +167,8 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
         amosum_propagator->ge ? amosum_propagator->lb = amosum_propagator->bound : amosum_propagator->ub = amosum_propagator->bound ;
 
         // amosum_propagator->weights_names = std::move(generic_data_map[ID]->weights_names);
-        amosum_propagator->weights_names = generic_data_map[ID]->weights_names;
+        amosum_propagator->weights_names = std::move(generic_data_map[ID]->weights_names);
+        amosum_propagator->sign_names = std::move(generic_data_map[ID]->sign_names);
     }
 
 

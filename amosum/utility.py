@@ -1,5 +1,6 @@
 # utility module
 import argparse
+import ast
 from enum import Enum
 import re
 import signal
@@ -393,7 +394,7 @@ class Model:
 
     @staticmethod
     def parse(serialized: str) -> "Result":
-        print(f"serialized: {serialized}")
+        # print(f"serialized: {serialized}")
         modelJson = json.loads(serialized)
         assigmnet = modelJson[0]
         cost = modelJson[1] if len(modelJson) > 1 else None
@@ -443,40 +444,67 @@ class Result:
         return f"{cumulativeTimeString}{timeModelString}{isOptimumString}{isUnkownString}{strModel}"
 
     @staticmethod
-    def parse(serialized: str, weights: Dict[str, Dict] = None) -> "Result":
+    # def parse(serialized: str, weights: Dict[str, Dict] = None) -> "Result":
+    #     try:
+    #         resultJson = json.loads(serialized)
+    #     except Exception as e:
+    #         regexTrunckedAnswerset = r"\[\[.*(?P<finalAnswerset>\[\[.*\]\s*,\s*\[.+\])"
+    #         matchTrunched = re.search(regexTrunckedAnswerset, serialized)
+    #         if matchTrunched:
+    #             realAnswerset = matchTrunched.group("finalAnswerset")
+    #             resultJson = json.loads(realAnswerset)
+    #         else:
+    #             print(f"Not valid: {serialized}")
+    #             return None
+    #     modelJson = resultJson[0]
+
+    #     # TODO: TO HANDLE NEGATIVE LITERALS
+    #     if modelJson:
+    #         assigment  = modelJson
+    #         if not weights is None:
+    #             cost = 0
+    #             for atom in assigment:
+    #                 if atom in weights:
+    #                     cost += weights[atom]["weight"] if weights[atom]["sign"] == "+" else 0
+    #                     # cost += weights[atom]["weight"]
+    #                     # print(f"atom: {atom} weight: {weights[atom]["weight"]} sign: {weights[atom]["sign"]} cost: {cost}")
+    #             # cost = sum(weights[atom]["weight"] for atom in assigment if atom in weights) if weights else None
+    #         else:
+    #             cost = None
+    #         model = Model(cost, assigment)
+    #     else:
+    #         model = None
+        
+    #     otherString = resultJson[1]
+    #     exitCode = int(otherString[0])
+    #     return Result(model, exitCode)
+
+    def parse(serialized: str) -> "Result":
         try:
-            resultJson = json.loads(serialized)
+            resultPython = ast.literal_eval(serialized)
+            # resultJson = json.loads(realAnswerset)
         except Exception as e:
             regexTrunckedAnswerset = r"\[\[.*(?P<finalAnswerset>\[\[.*\]\s*,\s*\[.+\])"
             matchTrunched = re.search(regexTrunckedAnswerset, serialized)
             if matchTrunched:
                 realAnswerset = matchTrunched.group("finalAnswerset")
-                resultJson = json.loads(realAnswerset)
+                # resultJson = json.loads(realAnswerset)
+                resultPython = ast.literal_eval(realAnswerset)
             else:
                 print(f"Not valid: {serialized}")
                 return None
-        modelJson = resultJson[0]
+  
 
-        # TODO: TO HANDLE NEGATIVE LITERALS
-        if modelJson:
-            assigment  = modelJson
-            if not weights is None:
-                cost = 0
-                for atom in assigment:
-                    if atom in weights:
-                        cost += weights[atom]["weight"] if weights[atom]["sign"] == "+" else 0
-                        # cost += weights[atom]["weight"]
-                        # print(f"atom: {atom} weight: {weights[atom]["weight"]} sign: {weights[atom]["sign"]} cost: {cost}")
-                # cost = sum(weights[atom]["weight"] for atom in assigment if atom in weights) if weights else None
-            else:
-                cost = None
-            model = Model(cost, assigment)
+        modelDict = resultPython["model"]
+
+        if modelDict:
+            model = Model(modelDict["cost"] if "cost" in modelDict else None, modelDict["answerset"])
         else:
             model = None
-        
-        otherString = resultJson[1]
-        exitCode = int(otherString[0])
+    
+        exitCode = int(resultPython["exitCode"])
         return Result(model, exitCode)
+
 
 class WeightFunction(SymmetricFunction):
     

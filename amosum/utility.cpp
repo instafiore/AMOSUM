@@ -17,6 +17,7 @@
 #include "amoclingo/propagator_clingo_c/propagator_clingo.h"
 #include "utility.tpp"
 #include <chrono>
+#include "amoclingo/propagator_clingo_c/optimizer_clingo.h"
 
 using ParameterMap = std::unordered_map<std::string, std::string>;
 int Group::autoincrement = 0;
@@ -425,10 +426,17 @@ Model::Model(const clingo_model* model){
 //     if (str)   { free(str); }
 // }
 
-Model::Model(const clingo_assignment_t *assignmentClingo, bool falseLiterals){
+Model::Model(const clingo_assignment_t *assignmentClingo, bool falseLiterals, OptimizerClingo* opt){
 
     char *str = NULL;
     size_t str_n = 0;
+    cost = 0;
+
+
+    bool isOptimizatioProblem = opt != nullptr;
+    const std::unordered_map<std::__1::string, int>& wnames = isOptimizatioProblem ? opt->propagator->propagators[0]->weights_names : std::unordered_map<std::__1::string, int>();
+    const std::unordered_map<std::__1::string, bool>& wsign = isOptimizatioProblem ? opt->propagator->propagators[0]->sign_names : std::unordered_map<std::__1::string, bool>();
+
     for (std::pair<clingo_symbol_t, clingo_literal_t> pair: *PropagatorClingoInitializer::get_instance()->atomNames) {
             clingo_symbol_t sym = pair.first;
             clingo_literal_t plit = pair.second;
@@ -456,9 +464,12 @@ Model::Model(const clingo_assignment_t *assignmentClingo, bool falseLiterals){
             bool isTrue;
             clingo_assignment_is_true(assignmentClingo, slit, &isTrue);
             
+            if(isOptimizatioProblem){
+                cost += costAtom(isTrue, wnames, wsign, str);
+            }
+
             if(isTrue){
                 assignment.push_back(str);
-                // printf("atom: *%s*\n", str);
             }
             else if(falseLiterals){
                 assignment.push_back("~"+std::string(str));
@@ -527,10 +538,19 @@ AnswerSet::~AnswerSet(){
 }
 
 
+std::string addApices(std::string input){
+    std::ostringstream oss;
+    oss<<"'"<<input<<"'";
+    return oss.str();
+}
+
 std::string Model::serialize(){
     // std::string cost = this->cost != SETTINGS::NONE ? ","+std::to_string(this->cost)+"" : "";
-    std::string res = vector_to_string(assignment, "", std::string("[]"));
-    return res;
+    std::string res = vectorToPython(assignment);
+    std::unordered_map<std::string, std::string> resMap;
+    resMap["answerset"] = res;
+    resMap["cost"] = this->cost != SETTINGS::NONE ? addApices(std::to_string(cost)) : "None";
+    return mapToPython(resMap);
 }
 
 
@@ -563,8 +583,10 @@ std::string AnswerSet::serialize(){
     if (isSat(exitCode)) {
         modelSerialized = model->serialize();
     } 
-    std::vector<int> others = {exitCode};
-    return "[" + modelSerialized + ", "+vector_to_string(others)+"]";
+    std::unordered_map<std::string, std::string> res;
+    res["model"] = modelSerialized;
+    res["exitCode"] = addApices(std::to_string(exitCode));
+    return mapToPython(res);
 }
 
 

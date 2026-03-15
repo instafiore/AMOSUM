@@ -54,6 +54,58 @@ std::string vector_to_string(const std::vector<T>& vec, std::string name = "", s
     return oss.str();
 }
 
+template <typename T>
+std::string vectorToPython(const std::vector<T>& v) {
+    std::ostringstream oss;
+    oss << "[";
+    for (size_t i = 0; i < v.size(); i++) {
+        oss << "'" << v[i] << "'";
+        if (i < v.size() - 1) oss << ",";
+    }
+    oss << "]";
+    return oss.str();
+}
+
+
+inline std::string mapToPython(const std::unordered_map<std::string, std::string>& m) {
+    std::ostringstream oss;
+    oss << "{";
+    size_t i = 0;
+    for (const auto& [key, value] : m) {
+        oss << "'" << key << "' : " << value;
+        if (i < m.size() - 1) oss << ",";
+        i++;
+    }
+    oss << "}";
+    return oss.str();
+}
+
+template <typename T>
+std::string vectorToJson(const std::vector<T>& v) {
+    std::ostringstream oss;
+    oss<<"[";
+    for (size_t i = 0; i < v.size(); i++) {
+        oss<<v[i];
+        if (i < v.size() - 1) oss<< ",";
+    }
+    oss<< "]";
+    return oss.str();
+}
+
+template <typename K, typename V>
+std::string mapToJson(const std::unordered_map<K, V>& m) {
+    std::ostringstream oss;
+    oss<<"{";
+    size_t i = 0;
+    for (const auto& [key, value] : m) {
+        oss<<"\""<<key<<"\":\""<<value<<"\"";
+        if (i < m.size() - 1) oss<<",";
+        i++;
+    }
+    oss<<"}";
+    return oss.str();
+}
+
 
 
 template <typename Key, typename Value>

@@ -102,7 +102,8 @@ struct AmoSumPropagator
     static constexpr const char* CLINGO = "clingo";
     static constexpr const char* WASP = "wasp";
 
-    std::unordered_map<std::string,int> weights_names ;
+    std::unordered_map<std::string,int> weights_names;
+    std::unordered_map<std::string,bool> sign_names;
 
     unsigned long count = 0 ;
     clingo_literal_t current_literal;

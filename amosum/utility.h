@@ -52,6 +52,9 @@ void print(const Args&... args) {
 using ParameterMap = std::unordered_map<std::string, std::string>;
 
 
+struct AmoSumPropagator;
+class OptimizerClingo;
+
 std::unordered_map<std::string, std::string> init_param(int argc, char const *argv[]);
 void remove_elements(std::vector<int>& original, const std::unordered_set<clingo_literal_t>& to_remove_set);
 void print_unordered_map(const std::unordered_map<std::string, std::string>& map);
@@ -71,16 +74,29 @@ bool print_model(clingo_model_t const *model);
 bool solve(clingo_control_t *ctl, AnswerSet* &result, bool falseLiterals=false);
 std::chrono::time_point<std::chrono::high_resolution_clock> start_timer();
 void display_end_timer(const std::chrono::time_point<std::chrono::high_resolution_clock>& start, std::string name);
-struct AmoSumPropagator;
+
+inline int costAtom(bool isTrue, 
+    const std::unordered_map<std::string, int>& wnames, 
+    const std::unordered_map<std::string, bool>& wsign, 
+    const std::string& atom){
+    int cost = 0;
+    auto it = wsign.find(atom);
+    if(it != wsign.end()){
+        bool sign = it->second;
+        if(sign && isTrue || !sign && !isTrue) cost += wnames.at(atom);
+    }
+
+    return cost;
+}
 
 class Model{
 public:
     std::vector<std::string> assignment;
     Model(const clingo_model* model);
-    Model(const clingo_assignment_t *assignmentClingo, bool falseLiterals=false);
+    Model(const clingo_assignment_t *assignmentClingo, bool falseLiterals=false, OptimizerClingo* opt = nullptr);
     std::string toString();
     std::string serialize();
-    
+    int cost = SETTINGS::NONE;
 };
 
 
