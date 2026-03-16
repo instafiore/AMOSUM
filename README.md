@@ -52,10 +52,9 @@ The following software is required:
 
 # Installation
 
-Clone the repository and install the required components:
 
 ```bash
-source ./install
+bash ./install
 pip install .
 ```
 
