@@ -449,8 +449,8 @@ Model::Model(const clingo_assignment_t *assignmentClingo, bool falseLiterals, Op
 
 
     bool isOptimizatioProblem = opt != nullptr;
-    const std::unordered_map<std::__1::string, int>& wnames = isOptimizatioProblem ? opt->propagator->propagators[0]->weights_names : std::unordered_map<std::__1::string, int>();
-    const std::unordered_map<std::__1::string, bool>& wsign = isOptimizatioProblem ? opt->propagator->propagators[0]->sign_names : std::unordered_map<std::__1::string, bool>();
+    const std::unordered_map<std::string, int>& wnames = isOptimizatioProblem ? opt->propagator->propagators[0]->weights_names : std::unordered_map<std::string, int>();
+    const std::unordered_map<std::string, bool>& wsign = isOptimizatioProblem ? opt->propagator->propagators[0]->sign_names : std::unordered_map<std::string, bool>();
 
     for (std::pair<clingo_symbol_t, clingo_literal_t> pair: *PropagatorClingoInitializer::get_instance()->atomNames) {
             clingo_symbol_t sym = pair.first;
