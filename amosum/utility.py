@@ -210,13 +210,32 @@ def debug(*message: str, G: 'Group' = None , end ="\n", force_print = False, fil
         print(message, end=end, file=file)
         sys.stderr.flush()
 
+def lazy_type(value):
+    allowed = {"false", "true", "hybrid"}
+    
+    # case 1: string options
+    if value in allowed:
+        return value
+    
+    # case 2: numeric value in [0,1]
+    try:
+        num = float(value)
+        if 0.0 <= num <= 1.0:
+            return num
+    except ValueError:
+        pass
+    
+    raise argparse.ArgumentTypeError(
+        "lazy must be 'false', 'true', 'hybrid', or a float between 0 and 1"
+    )
+
 
 def parse_args():
     
     parser = argparse.ArgumentParser(description='Amosum propagator')
     parser.add_argument("-e", "--encoding", required=True, help="Path to encoding file")
     parser.add_argument("-i", "--instance", help="Path to instance file (optional)")
-    parser.add_argument("-l", "--lazy", choices=["false","true","hybrid"], help="Define lazy configuration (default false)", default=f"false")
+    parser.add_argument("-l", "--lazy", type=lazy_type, help="Lazy configuration: 'false', 'true', 'hybrid', or a float in [0,1] (default false)", default=f"false")
     parser.add_argument("-m", "--min-r", choices=[e.value for e in Minimize], help="Define minimization technique (default no minimization)", default=str(Minimize.NO_MINIMIZATION.value))
     parser.add_argument("-lg", "--lang", choices=["cpp", "py"], help="Define the language to use (default cpp)", default="cpp")
     parser.add_argument("-n", "--models", type=int , help="Define the maximum number of models to search for (default 1)", default=1)
