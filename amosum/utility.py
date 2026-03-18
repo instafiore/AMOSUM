@@ -47,7 +47,7 @@ def checkAmomaximize(args: Dict[str, Any]) -> None:
     lastCost = None
     lastMatch = None
     increasingCostFunction = True
-    with open(args["pathOutput"], "r") as f:
+    with open(args['pathOutput'], "r") as f:
         for line in f.readlines():
             matchRegex = re.search(regex, line)
             # print(f"match: {matchRegex}")
@@ -83,12 +83,12 @@ def checkAmomaximize(args: Dict[str, Any]) -> None:
             def onResult(resultC: clingo.SolveResult):
                 nonlocal result
                 result = resultC
-            print(f"% trying with {args["pathOutput"]}, {costInstance}")
+            print(f"% trying with {args['pathOutput']}, {costInstance}")
             ctl.solve(on_finish=lambda x: onResult(x), on_model=lambda x: print(f"% {x}"))
 
             print(f"% Result check: {result}")
             if not result.satisfiable or not increasingCostFunction:
-                print(f"% Error with: {args["pathOutput"]} increasingCostFunction:{increasingCostFunction}, {costInstance}\n{answerset}")
+                print(f"% Error with: {args['pathOutput']} increasingCostFunction:{increasingCostFunction}, {costInstance}\n{answerset}")
                 exit(1)
 
         print("% Check passed")  
@@ -98,7 +98,7 @@ def checkAmosum(args: Dict[str, Any]) -> None:
 
     regex = r"Answer Set \[(?P<answerset>.*)\]"
 
-    with open(args["pathOutput"], "r") as f:
+    with open(args['pathOutput'], "r") as f:
         for line in f.readlines():
             matchRegex = re.search(regex, line)
             # print(f"match: {matchRegex}")
@@ -125,12 +125,12 @@ def checkAmosum(args: Dict[str, Any]) -> None:
                 def onResult(resultC: clingo.SolveResult):
                     nonlocal result
                     result = resultC
-                print(f"% trying with {args["pathOutput"]}")
+                print(f"% trying with {args['pathOutput']}")
                 ctl.solve(on_finish=lambda x: onResult(x), on_model=lambda x: print(f"% {x}"))
 
                 print(f"% Result check: {result}")
                 if not result.satisfiable:
-                    print(f"% Error with: {args["pathOutput"]}")
+                    print(f"% Error with: {args['pathOutput']}")
                     print(f"{instance}")
                     exit(1)
 

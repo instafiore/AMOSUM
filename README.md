@@ -44,9 +44,10 @@ Experiments show **significant performance improvements**, including **orders-of
 
 The following software is required:
 
-- `clingo >= 5.8.0`
+- `clingo = 5.8.0`
 - `g++`
-- `Python >= 3.13`
+- `Python = 3.10`
+- `make`
 
 ---
 
