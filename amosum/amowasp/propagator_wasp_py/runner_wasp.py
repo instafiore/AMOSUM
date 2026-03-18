@@ -31,8 +31,6 @@ class RunnerWasp:
         self.param = parameters
         self.maps_weights_list = [] 
         self.tmp_files = []
-
-        set_debug(self.param.get("d",""))
         
         self.propagators = []
     
@@ -58,10 +56,8 @@ class RunnerWasp:
         
         grounded_program, run_command_ground = ground_program(hidden_location_encoding, hidden_location_instance, return_command=True)
         
-        run = f"{RunnerWasp.SOLVER} {self.n0}"
+        run = f"{RunnerWasp.SOLVER}"
         
-        minimization = self.param.get("min_r", Minimize.NO_MINIMIZATION.value)
-        debug = f" -d {self.param.get('d','')}" if self.param.get("d","") != "" else ""
 
         # preprocessing
         preprocess_map =  preprocess_ground_program(grounded_program)

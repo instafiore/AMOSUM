@@ -18,7 +18,8 @@ def optimized_run():
 
 def run():
     
-    param = init_param(sys.argv)
+    # param = init_param(sys.argv)
+    param = parse_args()
 
     
     runner = RunnerWasp(parameters=param)

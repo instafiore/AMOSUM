@@ -18,6 +18,18 @@
             ]
         },
         {
+            "name": "amowasp",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "amosum.amowasp.__main__",
+            "console": "integratedTerminal",
+            "python": "/opt/homebrew/anaconda3/envs/amosum/bin/python",
+            "args": [
+                "-e=/Users/instafiore/Workspace/AMOSUM/tests/benchmarks/graph_colouring/encoding-amosum-amo.asp",
+                "-i=/Users/instafiore/Workspace/AMOSUM/tests/benchmarks/graph_colouring/instances_light/0001-graph_colouring-125-0.asp"
+            ]
+        },
+        {
             "name": "amosum cpp",
             "type": "cppdbg",
             "request": "launch",
