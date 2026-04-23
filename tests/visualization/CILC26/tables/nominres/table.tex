@@ -1,17 +1,25 @@
 
-    \documentclass{standalone}
-    \usepackage{booktabs}
-    \begin{document}
-
-    \begin{tabular}{llllll}
+            \documentclass{article}
+            \usepackage{booktabs}
+            \usepackage{multirow}
+            \pagestyle{empty}
+            \begin{document}
+            \begin{table}[t]
+\label{tab:results}
+\begin{tabular}{lllllll}
 \toprule
-executable & GC & KC & TSP & WOD & Total \\
+ & \multicolumn{3}{c}{\textsc{{amomaximize}}} & \multicolumn{3}{c}{\textsc{{clingo}}} \\
+ & O & score & win & O & score & win \\
+benchmark &  &  &  &  &  &  \\
 \midrule
-clingo-amomaximize-amo-nomin & \textbf{289} & 21 & \textbf{82} & 53 & \textbf{445} \\
-clingo-plainmaximize-amo & 11 & \textbf{79} & 20 & \textbf{92} & 202 \\
+GC & 0.0 & \textbf{1.0} & \textbf{289.0} & 0.0 & 0.88 & 11.0 \\
+K & 0.0 & 0.91 & 21.0 & 0.0 & \textbf{1.0} & \textbf{79.0} \\
+TSP & \textbf{5.0} & \textbf{0.99} & \textbf{82.0} & 2.0 & 0.94 & 20.0 \\
+WOD & \textbf{6.0} & 0.7 & 53.0 & 0.0 & \textbf{0.97} & \textbf{92.0} \\
+Total & \textbf{11.0} & \textbf{0.93} & \textbf{445.0} & 2.0 & \textbf{0.93} & 202.0 \\
 \bottomrule
 \end{tabular}
+\end{table}
 
-
-    \end{document}
-    
+            \end{document}
+            
