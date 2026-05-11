@@ -117,12 +117,30 @@ This strategy reduces propagation overhead by delaying reasoning until it become
 
 # Example Runs
 
-## Full propagation (AMOSUM-INF-MR)
+## Full propagation with IJCAI reason (AMOSUM-INF)
+
+```bash
+amoclingo \
+    -e tests/benchmarks/graph_colouring/encoding-amosum-amo.asp \
+    -i tests/benchmarks/graph_colouring/instances/0001-graph_colouring-125-0_1200.asp \
+    -m ijcai
+```
+
+## Full propagation (AMOSUM-INF-R)
 
 ```bash
 amoclingo \
     -e tests/benchmarks/graph_colouring/encoding-amosum-amo.asp \
     -i tests/benchmarks/graph_colouring/instances/0001-graph_colouring-125-0_1200.asp
+```
+
+## Full propagation with Minimization (AMOSUM-INF-MR)
+
+```bash
+amoclingo \
+    -e tests/benchmarks/graph_colouring/encoding-amosum-amo.asp \
+    -i tests/benchmarks/graph_colouring/instances/0001-graph_colouring-125-0_1200.asp \
+    -m min
 ```
 
 ## Lazy propagation (AMOSUM-L)
@@ -138,19 +156,19 @@ amoclingo \
 
 # IJCAI Version
 
-## AMOWASP
+## AMOWASP-BASE-PY
 
 ```bash
 bash amosum/ijcai_version/AMOSUM/amowasp-base.sh <encoding> <instance>
 ```
 
-## AMOCLINGO-PY
+## AMOCLINGO-BASE-PY
 
 ```bash
 bash amosum/ijcai_version/AMOSUM/amoclingo-base-py.sh <encoding> <instance>
 ```
 
-## AMOCLINGO-C
+## AMOCLINGO-BASE-C
 
 ```bash
 bash amosum/ijcai_version/AMOSUM/amoclingo-base-c.sh <encoding> <instance>
