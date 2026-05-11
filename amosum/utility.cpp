@@ -859,7 +859,8 @@ void create_reason_falses_ge(AmoSumPropagator* propagator, std::unordered_map<cl
 void create_reason_true_ge(AmoSumPropagator* propagator, clingo_literal_t sml_g, clingo_literal_t derived, Group* g, std::unordered_map<clingo_literal_t, int> &sum_removed_weights){
     if(propagator->dl == 0) return ;
     bool minimizationOnTheFly = propagator->minimization == Minimize::MINIMAL_ON_THE_FLY;
-    int i = sml_g != SETTINGS::NONE ? g->ord_i[sml_g] : 0;
+    bool minimizationIJCAI = propagator->minimization == Minimize::IJCAI;
+    int i = sml_g != SETTINGS::NONE && !minimizationIJCAI ? g->ord_i[sml_g] : 0;
     int j = g->ord_l.size() -1;
     // int j = g->ord_l.size(); 
 

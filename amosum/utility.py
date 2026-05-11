@@ -1142,6 +1142,7 @@ class Minimize(Enum):
     MINIMAL = "min"
     CARDINALITY_MINIMAL = "cmin"
     MINONTHEFLY = "minfly"
+    IJCAI = "ijcai"
 
 def is_true_in_reason(lit, group: GroupFunction):
     '''

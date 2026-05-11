@@ -264,6 +264,7 @@ struct Minimize {
     static constexpr const char* NO_MINIMIZATION = "nomin" ;
     static constexpr const char* MINIMAL = "min" ;
     static constexpr const char* MINIMAL_ON_THE_FLY = "minfly" ;
+    static constexpr const char* IJCAI = "ijcai" ;
     static constexpr const char* CARDINALITY_MINIMAL = "cmin" ;
 };
 
