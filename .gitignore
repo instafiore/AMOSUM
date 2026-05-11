@@ -176,6 +176,9 @@ tests/results/**
 # Ignore all files with 'out' in the filename at any level
 **/*out*
 
+pycache
+vscode
+
 # log files
 *verbose*
 **/*log*
