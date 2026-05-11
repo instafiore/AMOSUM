@@ -1,0 +1,82 @@
+#pragma once
+#include <clingo.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string>
+#include <assert.h>
+#include "../../utility.h"
+#include "../../amosum.h"
+#include <sstream>
+#include <iostream>
+#include <vector>
+#include <limits>
+
+const std::vector<clingo_literal_t>* propagation_phase_ge_eo(const Group* G, AmoSumPropagator* propagator) {
+    propagator->S.clear();
+
+    if (propagator->mps_violated) {
+        
+        if(!propagator->lazy_prop_activated)
+            return &propagator->S ;
+
+        clingo_literal_t l = propagator->current_literal ;
+        propagator->S.push_back(not_(l));
+
+        auto R = get_perfect_hash_with_pointer(propagator->reason.get(), not_(l));
+        R->clear();
+
+        bool derived_true = false;
+        Group* g = propagator->group->get(l);
+        if(g == nullptr){
+            derived_true = true ;
+            g = propagator->group->get(not_(l));
+        }
+        
+        create_reason_falses_ge(propagator, not_(l));
+        
+        if(derived_true){
+            clingo_literal_t sml_g = max_w(g) ;
+            create_reason_true_ge(propagator, sml_g, not_(l), g);
+        }
+
+        propagator->compute_minimal_reason(propagator->S);
+        // print_derivation(propagator->atomNames, propagator->S, false);
+        return &propagator->S;
+    }
+
+    for (Group* g : propagator->groups) {
+        if (g == G || propagator->true_group->get(g) != SETTINGS::NONE) continue;
+        int ml_g = max_w(g);
+        assert((propagator->true_group->get(g) != SETTINGS::NONE || ml_g != SETTINGS::NONE) || propagator->dl == 0 || g->N == 0);
+        if(ml_g == SETTINGS::NONE) continue ;
+
+        for (int l : g->ord_l) {
+            if (propagator->I->get(l) == SETTINGS::NONE) {
+                if (std::get<0>(propagator->mps(g, l, true)) < propagator->lb) {
+                    
+                    if(!propagator->is_true(not_(l))) {
+                        propagator->S.push_back(not_(l));
+                        auto R = get_perfect_hash_with_pointer(propagator->reason.get(), not_(l));
+                        R->clear();
+                    }
+
+                } else {
+                    break;
+                }
+            }
+        }
+
+    }
+
+    
+    if (!propagator->S.empty() && propagator->dl != 0) {
+        create_reason_falses_ge(propagator, SETTINGS::NONE);
+        propagator->compute_minimal_reason(propagator->S);
+    }
+
+    // print_derivation(propagator->atomNames, propagator->S, false);
+    
+    return &propagator->S;
+}
+
+
