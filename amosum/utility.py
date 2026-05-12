@@ -234,11 +234,53 @@ def parse_args():
     
     parser = argparse.ArgumentParser(description='Amosum propagator')
     parser.add_argument("-e", "--encoding", required=True, help="Path to encoding file")
-    parser.add_argument("-i", "--instance", help="Path to instance file (optional)")
-    parser.add_argument("-l", "--lazy", type=lazy_type, help="Lazy configuration: 'false', 'true', 'hybrid', or a float in [0,1] (default false)", default=f"false")
-    parser.add_argument("-m", "--min-r", choices=[e.value for e in Minimize], help="Define minimization technique (default no minimization)", default=str(Minimize.NO_MINIMIZATION.value))
-    parser.add_argument("-lg", "--lang", choices=["cpp", "py"], help="Define the language to use (default cpp)", default="cpp")
-    parser.add_argument("-n", "--models", type=int , help="Define the maximum number of models to search for (default 1)", default=1)
+
+    parser.add_argument(
+        "-i",
+        "--instance",
+        help="Path to instance file (optional)",
+    )
+
+    parser.add_argument(
+        "-l",
+        "--lazy",
+        type=lazy_type,
+        default="false",
+        help=(
+            "Lazy configuration: "
+            "'false', 'true', 'hybrid', or a float in [0,1]. "
+            "Default: false"
+        ),
+    )
+
+    parser.add_argument(
+        "-r",
+        "--reason",
+        choices=[e.value for e in Minimize],
+        default=Minimize.NO_MINIMIZATION.value,
+        help=(
+            "Minimization technique of the reason: nomin (no minimization), "
+            "min (minimization), cmin (cardinality-minimal), "
+            "minfly (on-the-fly), ijcai (IJCAI version). "
+            "Default: nomin."
+        ),
+    )
+
+    parser.add_argument(
+        "-lg",
+        "--lang",
+        choices=["cpp", "py"],
+        default="cpp",
+        help="Language to use (default: cpp)",
+    )
+
+    parser.add_argument(
+        "-n",
+        "--models",
+        type=int,
+        default=1,
+        help="Maximum number of models to search for (default: 1)",
+    )
    
 
     dict_res = vars(parser.parse_args())
