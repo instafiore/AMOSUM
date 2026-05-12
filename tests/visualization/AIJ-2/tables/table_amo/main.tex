@@ -1,0 +1,40 @@
+
+            \documentclass{article}
+            \usepackage{booktabs}
+            \usepackage{multirow}
+            \pagestyle{empty}
+            \begin{document}
+            \begin{table}[t!]
+\label{tab:results}
+\begin{tabular}{lllll}
+\toprule
+problem & GraphColouring & GroupAssignment & Knapsack & Total \\
+ & solved & solved & solved & solved \\
+executable &  &  &  &  \\
+\midrule
+amoclingo-base-lg=c & 102 & 307 & \textbf{77} & 486 \\
+amoclingo-base-lg=py & 95 & 141 & 75 & 311 \\
+amoclingo-lg=c-r=ijcai-l=f & 120 & 307 & \textbf{77} & 504 \\
+amoclingo-lg=c-r=minfly-l=f & 123 & 306 & 75 & 504 \\
+amoclingo-lg=c-r=minfly-l=h & 122 & 310 & 75 & 507 \\
+amoclingo-lg=c-r=minfly-l=t & \textbf{179} & \textbf{314} & 75 & \textbf{568} \\
+amoclingo-lg=c-r=nomin-l=f & 122 & 309 & 76 & 507 \\
+amoclingo-lg=c-r=nomin-l=h & 122 & 308 & 76 & 506 \\
+amoclingo-lg=c-r=nomin-l=t & 165 & 313 & \textbf{77} & 555 \\
+amoclingo-lg=py-r=ijcai-l=f & 118 & 229 & 76 & 423 \\
+amoclingo-lg=py-r=nomin-l=f & 115 & 230 & 75 & 420 \\
+amoclingo-lg=py-r=nomin-l=h & 115 & 232 & 75 & 422 \\
+amoclingo-lg=py-r=nomin-l=t & 120 & 212 & 73 & 405 \\
+amowasp-base-lg=py & 64 & 65 & 71 & 200 \\
+amowasp-lg=py-r=ijcai-l=f & 87 & 105 & 72 & 264 \\
+amowasp-lg=py-r=nomin-l=f & 81 & 99 & 72 & 252 \\
+amowasp-lg=py-r=nomin-l=h & 82 & 99 & 72 & 253 \\
+amowasp-lg=py-r=nomin-l=t & 103 & 118 & 71 & 292 \\
+clingo & 60 & 238 & 48 & 346 \\
+wasp & 60 & 57 & 14 & 131 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+            \end{document}
+            
