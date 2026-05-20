@@ -100,6 +100,6 @@ class RunnerClingoCpp(RunnerWasp):
         result = None
         
         result = self.handleRun(run, totalTime, maximization)
-        print(f"Exit code: {result.exitCode}")
+        # print(f"Exit code: {result.exitCode}")
         
         return result.exitCode if result else 40

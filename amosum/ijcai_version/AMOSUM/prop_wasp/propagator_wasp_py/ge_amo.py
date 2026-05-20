@@ -24,7 +24,7 @@ def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
     # debug(f"Propagate Phase decision level {propagator.dl}", force_print=True)
     if propagator.mps_violated:
 
-        assert propagator.lazy_prop_activated or propagator.dl == 0
+        # assert propagator.lazy_prop_activated or propagator.dl == 0 (IJCAI) With g.count_undef == 1 can happen that some true propagation is not perfomed, leading to a conflict
         l = propagator.current_literal
         propagator.reason[not_(l)] = [] if propagator.solver == AmoSumPropagator.CLINGO or propagator.dl == 0 else [not_(propagator.current_literal)]
         propagator.S = [not_(l)]
@@ -64,6 +64,7 @@ def propagate_phase(G: Group, propagator: AmoSumPropagator, atomNames: dict):
         propagate_to_true = False
         # (IJCAI) added and g.count_undef == 1 to ensure that all literals are falses
         if mps < propagator.lb and g.count_undef == 1:
+        # if mps < propagator.lb:
             propagator.S.append(ml_g)
             derived_true.append(ml_g)
             propagator.reason[ml_g] = [] if propagator.solver == AmoSumPropagator.CLINGO or propagator.dl == 0 else [not_(propagator.current_literal)]
