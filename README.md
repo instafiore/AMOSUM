@@ -48,18 +48,16 @@ Experimental results demonstrate **substantial performance improvements**, inclu
 
 The following software is required:
 
-- `clingo = 5.8.0`
-- `Python = 3.10`
-- `g++`
 - `make`
+- `conda`
 
 ---
 
 # Installation
 
 ```bash
+conda env create -f environment.yml
 bash ./install
-pip install .
 ```
 
 ## Additional build step for the IJCAI version
