@@ -11,6 +11,7 @@
 namespace SETTINGS {
 const std::vector<std::string> PROPAGATORS_NAMES = {"ge_amo", "ge_eo", "le_eo","amomaximize"}; 
 const int NONE = std::numeric_limits<int>::max() ;
+const float NONE_FLOAT = std::numeric_limits<float>::max() ;
 const std::string TRUE_STR = "true" ;
 const std::string FALSE_STR = "false" ;
 const std::string PREDICATE_LB = "__lb__";

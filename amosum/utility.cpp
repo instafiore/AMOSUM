@@ -152,9 +152,9 @@ void print_unordered_map(const std::unordered_map<std::string, std::string>& map
 std::string from_symbol_to_string(clingo_symbol_t symbol){
     size_t symbol_size;
     handle_error(clingo_symbol_to_string_size(symbol, &symbol_size));
-    char symbol_str_c[symbol_size]; 
-    handle_error(clingo_symbol_to_string(symbol, symbol_str_c, symbol_size));
-    std::string symbol_str = std::string(symbol_str_c);
+    std::vector<char> symbol_str_c(symbol_size);
+    handle_error(clingo_symbol_to_string(symbol, symbol_str_c.data(), symbol_size));
+    std::string symbol_str = std::string(symbol_str_c.data());
     return symbol_str ;
 }
 

@@ -75,7 +75,7 @@ struct AmoSumPropagator
     std::string choice_cons; 
 
     // treshold for lazy propagation activation
-    float lazy_perc = SETTINGS::NONE ;
+    float lazy_perc = SETTINGS::NONE_FLOAT ;
 
     // whether the mps is violated
     bool mps_violated = false ; 

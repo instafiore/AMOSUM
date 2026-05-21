@@ -1,4 +1,5 @@
-CC = g++
+# CC = g++
+CC = $(CXX)
 CFLAGS = -Wall -Wextra -std=c++20 -I/opt/homebrew/include -I$(CONDA_PREFIX)/include $(EXTRA_CFLAGS) -Wno-unused-parameter -Wno-unused-variable -Wno-unused-label -Wno-unused-command-line-argument -Wno-unused-but-set-variable -Wno-missing-field-initializers
 LDFLAGS = -L/opt/homebrew/lib -L$(CONDA_PREFIX)/lib -Wl,-rpath,/opt/homebrew/lib -Wl,-rpath,$(CONDA_PREFIX)/lib -lclingo $(EXTRA_LDFLAGS)
 BUILD_DIR = build
@@ -13,6 +14,9 @@ SRCS = $(shell find $(SRC_DIR) -name '*.$(C)')
 OBJS = $(addprefix $(BUILD_DIR)/, $(notdir $(SRCS:.$(C)=.o)))
 
 all: $(TARGET)
+
+print-CC:
+	@echo "Using $(CC)"
 
 BUILD_MODE ?= release
 ifeq ($(BUILD_MODE), test)
