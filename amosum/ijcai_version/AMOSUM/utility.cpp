@@ -39,7 +39,7 @@ std::string get_name(const std::unordered_map<clingo_symbol_t, clingo_literal_t>
         }
     }
 
-    debug(lit, " is not present in atomNames ", atomNames_to_string(atomNames));
+    debug_old(lit, " is not present in atomNames ", atomNames_to_string(atomNames));
     assert(false);
     return SETTINGS::NONE_STR; 
 }
@@ -530,7 +530,7 @@ void print_derivation(const std::unordered_map<clingo_symbol_t, clingo_literal_t
     #endif
     if (not force_print and not debug_b) return ;
 
-    debugf(vector_lit_to_string(atomNames, S, "Derived"));
+    debugf_old(vector_lit_to_string(atomNames, S, "Derived"));
 }
 
 
@@ -543,7 +543,7 @@ void print_reason(const std::unordered_map<clingo_symbol_t, clingo_literal_t>* a
     if (not force_print and not debug_b) return ;
 
     std::string reason_name = "Reason("+std::to_string(lit)+") ";
-    debug(vector_lit_to_string(atomNames, R, reason_name));
+    debug_old(vector_lit_to_string(atomNames, R, reason_name));
 }
 
 
@@ -563,7 +563,7 @@ void print_reduction_reason(const AmoSumPropagator& propagator,
     std::string redundant_lits_str = "from " + std::to_string(reason_c.size()) + " to " + std::to_string(reason.size()) +
         " with p: " + std::to_string(p) + "%";
 
-    debugf(redundant_lits_str);
+    debugf_old(redundant_lits_str);
 }
 
 
@@ -575,7 +575,7 @@ std::chrono::time_point<std::chrono::high_resolution_clock> start_timer(){
 void display_end_timer(const std::chrono::time_point<std::chrono::high_resolution_clock>& start, std::string name){
     auto end = std::chrono::high_resolution_clock::now(); 
     std::chrono::duration<double> elapsed = (end - start);
-    debugf(name," time: ", elapsed.count(), "s");
+    debugf_old(name," time: ", elapsed.count(), "s");
 }
 
 
@@ -615,7 +615,7 @@ void print_propagate(PropagatorClingo* prop, const clingo_literal_t *changes, si
         decision_slit != 1 ? decision_literal_name = get_name(prop->atomNames, plit) : decision_literal_name = "from facts" ;
     else
         decision_literal_name = "non lo so";
-    debugf("[", decision_literal_name,", ",dl,"] propagate ", changes_str," td: ", td);
+    debugf_old("[", decision_literal_name,", ",dl,"] propagate ", changes_str," td: ", td);
 }
 
 void print_undo(PropagatorClingo* prop, const clingo_literal_t *changes, size_t size, clingo_propagate_control_t *control, int dl, int td, bool force_print = false, bool wasp_b = false){
@@ -632,7 +632,7 @@ void print_undo(PropagatorClingo* prop, const clingo_literal_t *changes, size_t 
     else  changes_str = prop->compute_changes_str(changes, size, td) ;
 
 
-    debugf("dl: ",dl," undo ", changes_str," thread_id: ", td);
+    debugf_old("dl: ",dl," undo ", changes_str," thread_id: ", td);
 }
 
 clingo_literal_t max_w(const Group* g) {
@@ -641,9 +641,9 @@ clingo_literal_t max_w(const Group* g) {
     try {
         return g->ord_l[g->max_und]; // Get the literal using max_und
     } catch (const std::out_of_range& e) {
-        debug("Error accessing g.ord_l with max_und. Debug info:");
-        debug(vector_to_string(g->ord_l,"g.ord_l: "));
-        debug("max_und: " + std::to_string(g->max_und));
+        debug_old("Error accessing g.ord_l with max_und. Debug info:");
+        debug_old(vector_to_string(g->ord_l,"g.ord_l: "));
+        debug_old("max_und: " + std::to_string(g->max_und));
         throw; // Re-throw the exception
     }
 }

@@ -73,7 +73,7 @@ bool PropagatorClingo::init(clingo_propagate_init_t *_init){
     if (S_plit.size() == 1 and S_plit[0] == SETTINGS::PLITBOTTOM){ 
         bool result ; 
         handle_error(clingo_propagate_init_add_clause((clingo_propagate_init*) _init, NULL, 0, &result));
-        debugf("added empty clause ", result);
+        debugf_old("added empty clause ", result);
         return true; 
     }// inconsistent
 
@@ -117,7 +117,7 @@ bool PropagatorClingo::add_clauses_propagated_lits(void *control, const std::vec
 
         // propagation must return immediately, there is a conflict
         if (not result_add_clause){
-            debug("conflict add clause");
+            debug_old("conflict add clause");
             return true ;
         }
 
@@ -128,7 +128,7 @@ bool PropagatorClingo::add_clauses_propagated_lits(void *control, const std::vec
         
         if (!result_propagate){ 
             // propagation must return immediately, a conflict has been raised 
-            debug("conflict propagate");
+            debug_old("conflict propagate");
             return true ;
         }   
     }

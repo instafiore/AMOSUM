@@ -180,7 +180,9 @@ std::vector<std::pair<std::string, ParameterMap>> process_sys_parameters(const s
         std::smatch match;
 
         if (!std::regex_match(key, match, regex)) {
-            throw std::runtime_error("Every key has to start with a dash! Ex: -id id");
+            std::stringstream oss;
+            oss<<"Every key has to start with a dash! Ex: -id id. "<<key<<" does not match this regex\n";
+            throw std::runtime_error(oss.str());
         }
         key = match[1];
 
@@ -520,25 +522,25 @@ AnswerSet::AnswerSet(Model* &&model, clingo_solve_result_bitset_t &solve_ret){
     else {
         if (solve_ret & clingo_solve_result_exhausted) {
             exitCode = SETTINGS::SEARCH_SPACE_EXHAUSTED;
-            debugf("ERROR: Search space exhausted.\n");
+            debugf_old("ERROR: Search space exhausted.\n");
         }
         else if (solve_ret & clingo_solve_result_interrupted) {
             exitCode = SETTINGS::TIMEOUT;
-            debugf("timeout: Solving was interrupted.\n");
+            debugf_old("timeout: Solving was interrupted.\n");
         }else {
             exitCode = SETTINGS::ERROR;
-            debugf("ERROR: Unexpected solve result\n");
+            debugf_old("ERROR: Unexpected solve result\n");
         }
         exit(exitCode);
     }
-    debug("exit code: ", exitCode);
+    debug_old("exit code: ", exitCode);
 }
 
 
 AnswerSet::AnswerSet(Model* &&model){
     if(model != nullptr) this->model = model;
     exitCode = SETTINGS::SAT;
-    debug("exit code: ", exitCode);
+    debug_old("exit code: ", exitCode);
 }
 
 void AnswerSet::setOptimum(bool proved){
@@ -994,7 +996,7 @@ void print_derivation(const std::unordered_map<clingo_symbol_t, clingo_literal_t
     #endif
     if (not force_print and not debug_b) return ;
 
-    debugf(vector_lit_to_string(atomNames, S, "Derived"));
+    debugf_old(vector_lit_to_string(atomNames, S, "Derived"));
 }
 
 
@@ -1007,7 +1009,7 @@ void print_reason(const std::unordered_map<clingo_symbol_t, clingo_literal_t>* a
     if (not force_print and not debug_b) return ;
 
     std::string reason_name = "Reason("+std::to_string(lit)+") ";
-    debug(vector_lit_to_string(atomNames, R, reason_name));
+    debug_old(vector_lit_to_string(atomNames, R, reason_name));
 }
 
 
@@ -1027,7 +1029,7 @@ void print_reduction_reason(const AmoSumPropagator& propagator,
     std::string redundant_lits_str = "from " + std::to_string(reason_c.size()) + " to " + std::to_string(reason.size()) +
         " with p: " + std::to_string(p) + "%";
 
-    debugf(redundant_lits_str);
+    debugf_old(redundant_lits_str);
 }
 
 
@@ -1039,7 +1041,7 @@ std::chrono::time_point<std::chrono::high_resolution_clock> start_timer(){
 void display_end_timer(const std::chrono::time_point<std::chrono::high_resolution_clock>& start, std::string name){
     auto end = std::chrono::high_resolution_clock::now(); 
     std::chrono::duration<double> elapsed = (end - start);
-    debugf(name," time: ", elapsed.count(), "s");
+    debugf_old(name," time: ", elapsed.count(), "s");
 }
 
 
@@ -1081,7 +1083,7 @@ void print_propagate(PropagatorClingo* prop, const clingo_literal_t *changes, si
         decision_literal_name = "non lo so";
 
 
-    debugf("[", decision_literal_name,", ",dl,"] propagate ", changes_str, " mps: ", prop->propagators[td]->_mps, " bound: ",prop->propagators[td]->bound," td: ", td);
+    debugf_old("[", decision_literal_name,", ",dl,"] propagate ", changes_str, " mps: ", prop->propagators[td]->_mps, " bound: ",prop->propagators[td]->bound," td: ", td);
 }
 
 void print_undo(PropagatorClingo* prop, const clingo_literal_t *changes, size_t size, clingo_propagate_control_t *control, int dl, int td, bool force_print = false, bool wasp_b = false){
@@ -1100,7 +1102,7 @@ void print_undo(PropagatorClingo* prop, const clingo_literal_t *changes, size_t 
     
     
 
-    debugf("dl: ",dl," undo ", changes_str," thread_id: ", td);
+    debugf_old("dl: ",dl," undo ", changes_str," thread_id: ", td);
 }
 
 clingo_literal_t max_w(const Group* g) {
@@ -1109,9 +1111,9 @@ clingo_literal_t max_w(const Group* g) {
     try {
         return g->ord_l[g->max_und]; // Get the literal using max_und
     } catch (const std::out_of_range& e) {
-        debug("Error accessing g.ord_l with max_und. Debug info:");
-        debug(vector_to_string(g->ord_l,"g.ord_l: "));
-        debug("max_und: " + std::to_string(g->max_und));
+        debug_old("Error accessing g.ord_l with max_und. Debug info:");
+        debug_old(vector_to_string(g->ord_l,"g.ord_l: "));
+        debug_old("max_und: " + std::to_string(g->max_und));
         throw; // Re-throw the exception
     }
 }

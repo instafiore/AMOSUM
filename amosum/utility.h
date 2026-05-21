@@ -8,9 +8,7 @@
 #include <sstream>
 #include <cassert>
 #include <unordered_set>
-#ifdef CHECK_MPS
-#include <nlohmann/json.hpp> 
-#endif
+#include "common_utility.h"
 #include <chrono>
 
 class PropagatorClingo ;
@@ -43,10 +41,10 @@ void print(const Args&... args) {
             debug_print(__VA_ARGS__); \
         }
 #else
-    #define debug(...)
+    #define debug_old(...)
 #endif
 
-#define debugf(...) \
+#define debugf_old(...) \
     debug_print(__VA_ARGS__); \
 
 using ParameterMap = std::unordered_map<std::string, std::string>;

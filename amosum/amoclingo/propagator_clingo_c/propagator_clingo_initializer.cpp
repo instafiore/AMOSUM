@@ -27,7 +27,7 @@ void PropagatorClingoInitializer::init(clingo_propagate_init* _init, PropagatorC
     map_plit_slit.reset(new std::unordered_map<clingo_literal_t, clingo_literal_t>());
     nt = clingo_propagate_init_number_of_threads(_init);
 
-    debug("[init] number of threads ", nt);
+    debug_old("[init] number of threads ", nt);
     clingo_symbolic_atoms_t const *symbolic_atoms;
     clingo_symbolic_atom_iterator_t symbolic_atoms_it, symbolic_atoms_ie;
 

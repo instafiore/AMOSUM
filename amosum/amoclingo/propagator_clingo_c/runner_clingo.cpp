@@ -15,6 +15,7 @@
 #include <sys/signal.h>
 #include "optimizer_clingo.h"
 #include "../../common_constants.h"
+#include "../../logger.h"
 
 
 ParameterMap params;
@@ -61,6 +62,9 @@ int main(int argc, char const *argv[])
     if(params.find("encoding") != params.end()) encoding_path = params.find("encoding")->second;
     std::string instance_path = "" ;
     if(params.find("instance") != params.end()) instance_path = params.find("instance")->second;
+
+    const std::filesystem::path log_file = params.find("logfile")->second;
+    initLogger(log_file, false);
 
     int major, minor, revision;
     clingo_version(&major, &minor, &revision);
@@ -139,10 +143,12 @@ int main(int argc, char const *argv[])
     bool falseLiterals = get_map(params, std::string("falseLiterals"), SETTINGS::FALSE_STR) == SETTINGS::TRUE_STR;
     handle_error(solve(ctl, results, falseLiterals));
     assert(opt == nullptr || results[0]->exitCode == SETTINGS::UNSAT);
+    int exitCode = CONSTANTS::ERROR_CODE;
     if(opt == nullptr){
         for(AnswerSet* result: results){
             if(params.find("serialize") == params.end())  printf("%s\n",result->toString().c_str());
             else  printf("%s\n",result->serialize().c_str());
+            exitCode = result->exitCode;
             delete result;
         }
     }else{
@@ -157,14 +163,14 @@ int main(int argc, char const *argv[])
         if(propagator) delete propagator;
     }
     if(ctl) { clingo_control_free(ctl); }
-    
+    cleanupLogger();
     
 
     AmoSumInitializer::cleanup();
     PropagatorClingoInitializer::cleanup();
     // printf("returning exit code: %d", resultOpt->exitCode);
 
-    return results[0]->exitCode;
+    return exitCode;
 }
 
 PropagatorClingo* register_propagator(clingo_control_t *ctl, clingo_propagator_t prop, 

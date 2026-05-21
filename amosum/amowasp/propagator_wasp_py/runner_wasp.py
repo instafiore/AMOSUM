@@ -35,6 +35,7 @@ class RunnerWasp:
         self.propagators = []
     
         self.num_models = self.param.get("models")  
+        self.log_file = self.param.get("log_file")  
 
         self.encoding = self.param.get("encoding")
         self.instance = self.param.get("instance", None)

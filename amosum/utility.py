@@ -281,6 +281,14 @@ def parse_args():
         default=1,
         help="Maximum number of models to search for (default: 1)",
     )
+
+    parser.add_argument(
+        "-log",
+        "--log-file",
+        type=str,
+        default="log",
+        help="Path to the file where execution logs should be saved (when in test mode)",
+    )
    
 
     dict_res = vars(parser.parse_args())

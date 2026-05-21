@@ -78,6 +78,7 @@ class RunnerClingoCpp(RunnerWasp):
             -encoding={hidden_location_encoding}\
             -instance={hidden_location_instance} \
             -models={self.num_models} \
+            -logfile={self.log_file} \
             -serialize"
 
         preprocess_map =  preprocess_ground_program(grounded_program)

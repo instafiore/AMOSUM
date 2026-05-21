@@ -41,7 +41,7 @@ bool PropagatorClingo::init(clingo_propagate_init_t *_init){
     if (S_plit.size() == 1 and S_plit[0] == BOTTOM){ 
         bool result ; 
         handle_error(clingo_propagate_init_add_clause((clingo_propagate_init*) _init, NULL, 0, &result));
-        debugf("added empty clause ", result);
+        debugf_old("added empty clause ", result);
         return true; 
     }// inconsistent
 

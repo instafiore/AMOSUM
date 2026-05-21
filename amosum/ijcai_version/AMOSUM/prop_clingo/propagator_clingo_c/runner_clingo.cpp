@@ -93,22 +93,22 @@ int main(int argc, char const *argv[])
         auto amosum_prop = prop->propagators[0];
         iterations += amosum_prop->count ;
     }
-    debugf("Iterations: ", iterations);
+    debugf_old("Iterations: ", iterations);
 
     // Interpret the result
     if (solve_ret & clingo_solve_result_satisfiable) {
-        debugf("result: SAT\n");
+        debugf_old("result: SAT\n");
     } 
     else if (solve_ret & clingo_solve_result_unsatisfiable) {
-        debugf("result: UNSAT\n");
+        debugf_old("result: UNSAT\n");
     } 
     else if (solve_ret & clingo_solve_result_exhausted) {
-        debugf("ERROR: Search space exhausted.\n");
+        debugf_old("ERROR: Search space exhausted.\n");
     }
     else if (solve_ret & clingo_solve_result_interrupted) {
-        debugf("timeout: Solving was interrupted.\n");
+        debugf_old("timeout: Solving was interrupted.\n");
     }else {
-        debugf("ERROR: Unexpected solve result\n");
+        debugf_old("ERROR: Unexpected solve result\n");
     }
     
     // FREE
