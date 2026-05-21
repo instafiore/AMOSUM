@@ -63,8 +63,7 @@ bash ./install
 ## Additional build step for the IJCAI version
 
 ```bash
-cd amosum/ijcai_version/AMOSUM/prop_clingo/propagator_clingo_c
-make -j
+bash ./install_ijcai
 ```
 
 ---
