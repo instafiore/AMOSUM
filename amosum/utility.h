@@ -83,7 +83,7 @@ inline int costAtom(bool isTrue,
     auto it = wsign.find(atom);
     if(it != wsign.end()){
         bool sign = it->second;
-        if(sign && isTrue || !sign && !isTrue) cost += wnames.at(atom);
+        if((sign && isTrue) || (!sign && !isTrue)) cost += wnames.at(atom);
     }
 
     return cost;
@@ -190,7 +190,7 @@ class PerfectHash {
     friend AmoSumPropagator ;
 public:
     // Constructor that initializes the hash table
-    PerfectHash(int N, V default_value = V()): N(N), values(2*N,default_value), default_value(default_value){}
+    PerfectHash(size_t N, V default_value = V()): N(N), default_value(default_value), values(2*N,default_value){}
 
     // Getter for index access
     virtual V get(int key) const;
@@ -204,12 +204,16 @@ public:
         }
     }
     
+    virtual ~PerfectHash(){}
+
     // V get_set_default(int lit, const V& invalid_value);
+private:
+    size_t N;  
+    V default_value ;
+
 protected:
     std::vector<V> values;  
-private:
-    V default_value ;
-    int N;                 
+               
 };
 
 class TrueGroupFunction : public PerfectHash<clingo_literal_t> {
@@ -217,16 +221,18 @@ public:
     TrueGroupFunction(int N, int default_value = SETTINGS::NONE) : PerfectHash(N, default_value) {}
 
     // Overriding the setter to use group ID as the key
-    void set(const Group* key, const clingo_literal_t &value) {
+    void setTrueLiteral(const Group* key, const clingo_literal_t &value) {
         int autoincrement = key->id_autoinc;
         this->values[autoincrement] = value ;
     }
 
     // Overriding the getter to use group ID as the key
-    clingo_literal_t get(const Group* group) const {
+    clingo_literal_t getTrueLiteral(const Group* group) const {
         int autoincrement = group->id_autoinc;
         return this->values[autoincrement];
     }
+
+    virtual ~TrueGroupFunction(){}
 };
 
 inline int not_(int literal) { 

@@ -1,4 +1,3 @@
-#pragma once
 #include "amosum_initializer.h"
 #include <regex>
 

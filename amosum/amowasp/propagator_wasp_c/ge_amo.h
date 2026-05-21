@@ -57,7 +57,7 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, Am
     for (Group* g : propagator->groups) {
 
         
-        if (g == G || propagator->true_group->get(g) != SETTINGS::NONE) continue;
+        if (g == G || propagator->true_group->getTrueLiteral(g) != SETTINGS::NONE) continue;
         int ml_g = max_w(g);
         if (ml_g == SETTINGS::NONE) continue;
         

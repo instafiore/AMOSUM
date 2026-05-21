@@ -94,7 +94,7 @@ std::pair<bool, Group*> AmoSumPropagator::update_phase(clingo_literal_t l, int d
         if (aggregate->get(l)) {
             G = group->get(l);
             G->decrease_und();
-            true_group->set(G,l);
+            true_group->setTrueLiteral(G,l);
             w_p = weight->get(m_w(G, ge));
             w_n = weight->get(l);
             tg = true;
@@ -105,7 +105,7 @@ std::pair<bool, Group*> AmoSumPropagator::update_phase(clingo_literal_t l, int d
             auto [new_lit, prev] = G->update(I, ge, false, false, l);
             if (not_(l) == prev) {
                 G->set_max_min(new_lit, ge);
-                if (true_group->get(G) == SETTINGS::NONE) { 
+                if (true_group->getTrueLiteral(G) == SETTINGS::NONE) { 
                     w_n = weight->get(new_lit);
                     w_p = weight->get(prev);
                 }
@@ -141,17 +141,17 @@ std::tuple<int, clingo_literal_t, clingo_literal_t> AmoSumPropagator::mps(Group*
         int mw_g = weight->get(ml_g);
 
         // Ensure true_group[g] is not set
-        if(true_group->get(g) != SETTINGS::NONE){
-            std::string name_tr = get_name(atomNames, true_group->get(g));
+        if(true_group->getTrueLiteral(g) != SETTINGS::NONE){
+            std::string name_tr = get_name(atomNames, true_group->getTrueLiteral(g));
             std::string name_l = get_name(atomNames, l);
             debugf("name_tr: ",name_tr, " name_l: ",name_l);
-            assert(true_group->get(g) == SETTINGS::NONE);
+            assert(true_group->getTrueLiteral(g) == SETTINGS::NONE);
         }
         
         int mps_h = _mps - mw_g + weight->get(l);
         return {mps_h, l, ml_g};
     } else {
-        assert(true_group->get(g) == SETTINGS::NONE);
+        assert(true_group->getTrueLiteral(g) == SETTINGS::NONE);
         // clingo_literal_t ml = m_w(g, ge);
         // if (ml != l) return {_mps, SETTINGS::NONE, ml};
         auto [sml_g, ml_g] = g->update(I, ge, false, false, SETTINGS::NONE);
@@ -258,12 +258,12 @@ void AmoSumPropagator::onLiteralsUndefined(const std::vector<clingo_literal_t>& 
         // Increase the number of undefined literals in the group
         G->increase_und();
 
-        clingo_literal_t tg = true_group->get(G);
+        clingo_literal_t tg = true_group->getTrueLiteral(G);
 
         // Handle the case where the true literal becomes undefined
         int w_l = weight->get(l);
         if (tg == l) {
-            true_group->set(G, SETTINGS::NONE);
+            true_group->setTrueLiteral(G, SETTINGS::NONE);
             current_sum -= w_l;
         }
 

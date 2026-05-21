@@ -1,4 +1,3 @@
-#pragma once
 #include "propagator_clingo_initializer.h"
 
 

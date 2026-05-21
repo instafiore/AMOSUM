@@ -31,7 +31,7 @@ template <typename V>
 void PerfectHash<V>::set(const int& key, const V& value){
     // Determine the index for positive or negative literals
     int i = (key > 0) ? key : (abs(key) + N);
-    if(i < 0 or i >= values.size()){
+    if(i < 0 or ((size_t)i) >= values.size()){
         debugf("overflow: ",i, " key: ",key);
         exit(0) ; 
     }
@@ -167,7 +167,7 @@ V get_map(std::unordered_map<K, V>& umap, K key, V default_value, bool insert = 
 template< typename T>
 void extend_vector(std::vector<T>& to_extend, const std::vector<T>& input, int i = 0, int j = -1){
 
-    if (j == -1 || j > input.size()) j = input.size();
+    if (j == -1 || ((size_t)j) > input.size()) j = input.size();
     if (i < 0) i = 0;
 
     for (; i < j; i++) to_extend.push_back(input[i]);
@@ -249,22 +249,23 @@ public:
         return this->SymmetricFunction::get(lit) ;
     }
     WeightFunction(int N) : SymmetricFunction(N) {}
+    virtual ~WeightFunction(){}
 };
 
 class InterpretationFunction: public SymmetricFunction<int>{
-
-
     int function_negative_lit(int value) const override { 
         if (value == NONE)  return value ;
         return 1 - value ;
     }
 public:
     InterpretationFunction(int N) : SymmetricFunction(N) {}
+    virtual ~InterpretationFunction(){}
 };
 
 class AggregateFunction: public PerfectHash<bool>{
 public:
     AggregateFunction(int N): PerfectHash(N, false){}
+    virtual ~AggregateFunction(){}
 };
 
 class PerfectSet: public PerfectHash<int>{
@@ -291,9 +292,12 @@ public:
     }
 
     inline constexpr void clear(){ ++cont ; }
+
+    virtual ~PerfectSet(){}
 };
 
 class GroupFunction: public PerfectHash<Group*>{
 public:
     GroupFunction(int N): PerfectHash(N, nullptr){}
+    virtual ~GroupFunction(){}
 };

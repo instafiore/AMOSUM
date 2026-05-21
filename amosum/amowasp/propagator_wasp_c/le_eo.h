@@ -49,7 +49,7 @@ const std::vector<clingo_literal_t>* propagation_phase_le_eo(const Group* G, Amo
 
     // Iterate over all groups
     for (Group* g : propagator->groups) {
-        if (g == G || propagator->true_group->get(g) != SETTINGS::NONE) {
+        if (g == G || propagator->true_group->getTrueLiteral(g) != SETTINGS::NONE) {
             continue;
         }
 

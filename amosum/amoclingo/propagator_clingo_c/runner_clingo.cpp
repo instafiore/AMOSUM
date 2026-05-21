@@ -14,6 +14,7 @@
 #include <csignal>
 #include <sys/signal.h>
 #include "optimizer_clingo.h"
+#include "../../common_constants.h"
 
 
 ParameterMap params;
@@ -57,9 +58,9 @@ int main(int argc, char const *argv[])
     opt = nullptr;
 
     std::string encoding_path = "" ;
-    params.find("encoding") != params.end() ? encoding_path = params.find("encoding")->second : NULL ;
+    if(params.find("encoding") != params.end()) encoding_path = params.find("encoding")->second;
     std::string instance_path = "" ;
-    params.find("instance") != params.end() ? instance_path = params.find("instance")->second : NULL ;
+    if(params.find("instance") != params.end()) instance_path = params.find("instance")->second;
 
     int major, minor, revision;
     clingo_version(&major, &minor, &revision);
@@ -68,7 +69,7 @@ int main(int argc, char const *argv[])
     std::string encoding = cat(encoding_path);
     std::string instance = cat(instance_path);
 
-    ParameterMap::iterator it_amosum = params.find("amosum_propagator")  ;
+    ParameterMap::iterator it_amosum = params.find("amosum_propagators");
 
     std::vector<std::string> sys_parameters;
     if (it_amosum != params.end()){
@@ -124,8 +125,7 @@ int main(int argc, char const *argv[])
             opt = new OptimizerClingo(params, propagatorMaximize);
             handle_error(clingo_control_register_propagator(ctl, &optimizer_callback, opt, true));
         }else{
-            propagatorMaximize = register_propagator(ctl, prop_callback, prop_type, param, propagators);
-            // register_propagator(ctl, prop_callback, prop_type, param, propagators);
+            register_propagator(ctl, prop_callback, prop_type, param, propagators);
         }
     }
     

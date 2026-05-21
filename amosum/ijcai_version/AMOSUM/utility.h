@@ -165,16 +165,18 @@ public:
     TrueGroupFunction(int N, int default_value = SETTINGS::NONE) : PerfectHash(N, default_value) {}
 
     // Overriding the setter to use group ID as the key
-    void set(const Group* key, const clingo_literal_t &value) {
+    void setTrueLiteral(const Group* key, const clingo_literal_t &value) {
         int autoincrement = key->id_autoinc;
         this->values[autoincrement] = value ;
     }
 
     // Overriding the getter to use group ID as the key
-    clingo_literal_t get(const Group* group) const {
+    clingo_literal_t getTrueLiteral(const Group* group) const {
         int autoincrement = group->id_autoinc;
         return this->values[autoincrement];
     }
+
+    virtual ~TrueGroupFunction(){}
 };
 
 inline int not_(int literal) { return -literal; }

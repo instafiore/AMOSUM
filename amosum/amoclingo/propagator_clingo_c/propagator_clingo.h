@@ -25,10 +25,10 @@ public:
     bool ge;
     std::string choice_cons;
     std::string solver;
-    int bound ;
     bool first = true;
     bool firstPropagate = true;
     bool maximizer = false ;
+    int bound ;
     std::vector<clingo_literal_t> to_watch_plit;
     // std::vector<clingo_literal_t> to_watch_slit;
 

@@ -96,7 +96,7 @@ bool PropagatorClingo::add_clauses_propagated_lits(void *control, const std::vec
 
     
     AmoSumPropagator* prop = propagators[td];
-    for(int si = 0 ; si < S_plit.size();  ++si){
+    for(size_t si = 0 ; si < S_plit.size();  ++si){
         clingo_literal_t plit = S_plit[si];
         const std::vector<clingo_literal_t>* R_plit = dl > 0 ? prop->getReasonForLiteral(plit) : nullptr;
         size_t clause_size = (dl > 0 ? R_plit->size() : 0) + 1 ;

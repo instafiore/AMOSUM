@@ -62,18 +62,18 @@ struct AmoSumPropagator
     // type of minimization, default no minimization
     std::string minimization = Minimize::NO_MINIMIZATION ;
 
-    // Defining the constraint type, possible values: AMO, EO
-    std::string choice_cons; 
-
-    // defining whether the propagator is for the constraint >=  (ge) or <= (le) 
-    bool ge; 
-
     // decision level
     int dl = 0 ;
 
     // propagate function to implement in propagator file
     const std::vector<clingo_literal_t>* (*propagation_phase)(const Group*, AmoSumPropagator*); // Function pointer for propagation
-    
+
+    // defining whether the propagator is for the constraint >=  (ge) or <= (le) 
+    bool ge; 
+
+    // Defining the constraint type, possible values: AMO, EO
+    std::string choice_cons; 
+
     // treshold for lazy propagation activation
     float lazy_perc = SETTINGS::NONE ;
 
@@ -133,7 +133,7 @@ struct AmoSumPropagator
 
     ~AmoSumPropagator(){
         for(const Group* group : groups)   delete group ;
-        for(int i=0; i< redundant_lits->N; ++i){
+        for(size_t i=0; i< redundant_lits->N; ++i){
             auto ptr_set = redundant_lits->get(i);
             if (ptr_set != nullptr) delete ptr_set ;
             auto ptr_vec = reason->get(i);

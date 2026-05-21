@@ -396,7 +396,7 @@ void create_reason_falses_ge(AmoSumPropagator* propagator, clingo_literal_t flip
     if(propagator->dl == 0) return ;
     
     for (auto* g : propagator->groups) {
-        if (propagator->true_group->get(g) == SETTINGS::NONE) {
+        if (propagator->true_group->getTrueLiteral(g) == SETTINGS::NONE) {
             clingo_literal_t ml_g = m_w(g, propagator->ge);
             int mw_g = propagator->weight->get(ml_g);
 
@@ -414,13 +414,13 @@ void create_reason_falses_ge(AmoSumPropagator* propagator, clingo_literal_t flip
                 }
             }
         } 
-        else if(!equals(propagator->true_group->get(g), flipped)) {
+        else if(!equals(propagator->true_group->getTrueLiteral(g), flipped)) {
             for(auto lit : propagator->S){
                 auto R = get_perfect_hash_with_pointer(propagator->reason.get(), lit);
                 Group* G = propagator->group->get(lit);
                 if (G == nullptr) G = propagator->group->get(not_(lit));
                 if(g == G) continue; 
-                R->push_back(not_(propagator->true_group->get(g)));
+                R->push_back(not_(propagator->true_group->getTrueLiteral(g)));
             }
         }
     }
@@ -432,7 +432,7 @@ void create_reason_falses_le(AmoSumPropagator* propagator, clingo_literal_t flip
     if(propagator->dl == 0) return ;
 
     for (auto* g : propagator->groups) {
-        if (propagator->true_group->get(g) == SETTINGS::NONE) {
+        if (propagator->true_group->getTrueLiteral(g) == SETTINGS::NONE) {
             clingo_literal_t ml_g = m_w(g, propagator->ge); 
             int mw_g = propagator->weight->get(ml_g);
             
@@ -448,13 +448,13 @@ void create_reason_falses_le(AmoSumPropagator* propagator, clingo_literal_t flip
                     }
                 }
             }
-        } else if(!equals(propagator->true_group->get(g), flipped)) {
+        } else if(!equals(propagator->true_group->getTrueLiteral(g), flipped)) {
             for(auto lit : propagator->S){
                 auto R = get_perfect_hash_with_pointer(propagator->reason.get(), lit);
                 Group* G = propagator->group->get(lit);
                 if (G == nullptr) G = propagator->group->get(not_(lit));
                 if(g == G) continue; 
-                R->push_back(not_(propagator->true_group->get(g)));
+                R->push_back(not_(propagator->true_group->getTrueLiteral(g)));
             }
         }
     }

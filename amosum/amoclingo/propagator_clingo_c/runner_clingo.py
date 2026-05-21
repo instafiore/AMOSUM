@@ -86,7 +86,7 @@ class RunnerClingoCpp(RunnerWasp):
 
         prop_run = ""
         if len(preprocess_map["amosum_set"]) > 0:
-            prop_run = f" -amosum_propagator=\"{' '.join(self.propagators)}\" "
+            prop_run = f" -amosum_propagators=\"{' '.join(self.propagators)}\" "
             run += prop_run
 
         # print(f"weights: {str(preprocess_map["amosum_mapweights"])}")

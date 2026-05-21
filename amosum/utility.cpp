@@ -68,7 +68,7 @@ std::map<std::string, clingo_literal_t> create_atomNames_string(const std::unord
     for (const auto& [name, atom] : (*atomNames)) {
         atomNamesString[from_symbol_to_string(name)] = atom ;
     }
-    return std::move(atomNamesString); 
+    return atomNamesString; 
 }
 
 std::vector<clingo_literal_t> create_assumptions_lits(
@@ -314,7 +314,7 @@ bool print_model(clingo_model_t const *model) {
     // retrieve the symbol's string
     if (!clingo_symbol_to_string(*it, str, n)) { goto error; }
  
-    it+1 != ie ? printf("%s, ", str, n) : printf(" %s", str);
+    it+1 != ie ? printf("%s, ", str) : printf(" %s", str);
 
   }
  
@@ -762,7 +762,7 @@ void create_reason_falses_ge(AmoSumPropagator* propagator, std::unordered_map<cl
             if(g == G) continue; 
             assert((propagator->maximizer && propagator->mps_violated && derived == SETTINGS::PLITBOTTOM ) || G != nullptr);
 
-            if (propagator->true_group->get(g) == SETTINGS::NONE) {
+            if (propagator->true_group->getTrueLiteral(g) == SETTINGS::NONE) {
                 
                 clingo_literal_t ml_g = m_w(g, propagator->ge);
 
@@ -794,8 +794,8 @@ void create_reason_falses_ge(AmoSumPropagator* propagator, std::unordered_map<cl
                             
                     }
                 }
-            } else if(!equals(propagator->true_group->get(g), flipped)) {
-                int tr = propagator->true_group->get(g) ;
+            } else if(!equals(propagator->true_group->getTrueLiteral(g), flipped)) {
+                int tr = propagator->true_group->getTrueLiteral(g) ;
                 auto mps_h = propagator->mps_violated ? propagator->_mps : std::get<0>(propagator->mps(G, derived, !derived_true));
 
                 bool redundant = false;
@@ -914,7 +914,7 @@ void create_reason_falses_le(AmoSumPropagator* propagator, clingo_literal_t flip
     if(propagator->dl == 0) return ;
 
     for (auto* g : propagator->groups) {
-        if (propagator->true_group->get(g) == SETTINGS::NONE) {
+        if (propagator->true_group->getTrueLiteral(g) == SETTINGS::NONE) {
             clingo_literal_t ml_g = m_w(g, propagator->ge); 
             int mw_g = propagator->weight->get(ml_g);
             
@@ -930,13 +930,13 @@ void create_reason_falses_le(AmoSumPropagator* propagator, clingo_literal_t flip
                     }
                 }
             }
-        } else if(!equals(propagator->true_group->get(g), flipped)) {
+        } else if(!equals(propagator->true_group->getTrueLiteral(g), flipped)) {
             for(auto lit : propagator->S){
                 auto R = get_perfect_hash_with_pointer(propagator->reason.get(), lit);
                 Group* G = propagator->group->get(lit);
                 if (G == nullptr) G = propagator->group->get(not_(lit));
                 if(g == G) continue; 
-                R->push_back(not_(propagator->true_group->get(g)));
+                R->push_back(not_(propagator->true_group->getTrueLiteral(g)));
             }
         }
     }
@@ -1019,7 +1019,7 @@ void print_reduction_reason(const AmoSumPropagator& propagator,
     bool debug_b = false;
     #ifdef DEBUG
         debug_b = true;
-    #endif;
+    #endif
     
     if (!force_print && !debug_b) return;
     
@@ -1140,7 +1140,7 @@ std::pair<clingo_literal_t, clingo_literal_t> Group::update_max(
     const std::unique_ptr<InterpretationFunction>& I, bool all = false, bool update = true, 
     const clingo_literal_t& assuming_und = SETTINGS::NONE) {
 
-    clingo_literal_t prev_max = (max_und < ord_l.size())? ord_l[max_und]: SETTINGS::NONE;
+    clingo_literal_t prev_max = (((size_t)max_und) < ord_l.size())? ord_l[max_und]: SETTINGS::NONE;
 
     int start = all ? (N - 1) : (max_und != SETTINGS::NONE ? (max_und - 1) : -1);
     if (start < 0) {
@@ -1164,7 +1164,7 @@ std::pair<clingo_literal_t, clingo_literal_t> Group::update_min(
         const std::unique_ptr<InterpretationFunction>& I, bool all = false, bool update = true, 
         const clingo_literal_t& assuming_und = SETTINGS::NONE) {
 
-        clingo_literal_t prev_min = (min_und < ord_l.size()) ? ord_l[min_und] : SETTINGS::NONE;
+        clingo_literal_t prev_min = (((size_t)min_und) < ord_l.size()) ? ord_l[min_und] : SETTINGS::NONE;
 
         int start = all ? 0 : (min_und != SETTINGS::NONE ? (min_und + 1) : N);
         if (start >= N) {
