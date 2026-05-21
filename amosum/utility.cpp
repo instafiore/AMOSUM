@@ -522,25 +522,30 @@ AnswerSet::AnswerSet(Model* &&model, clingo_solve_result_bitset_t &solve_ret){
     else {
         if (solve_ret & clingo_solve_result_exhausted) {
             exitCode = SETTINGS::SEARCH_SPACE_EXHAUSTED;
-            debugf_old("ERROR: Search space exhausted.\n");
+            debug(ERROR,"ERROR: Search space exhausted.\n");
+            // debugf_old("ERROR: Search space exhausted.\n");
         }
         else if (solve_ret & clingo_solve_result_interrupted) {
             exitCode = SETTINGS::TIMEOUT;
-            debugf_old("timeout: Solving was interrupted.\n");
+            // debugf_old("timeout: Solving was interrupted.\n");
+            debug(ERROR, "timeout: Solving was interrupted.\n");
         }else {
             exitCode = SETTINGS::ERROR;
-            debugf_old("ERROR: Unexpected solve result\n");
+            // debugf_old("timeout: Solving was interrupted.\n");
+            debug(ERROR, "ERROR: Unexpected solve result\n");
         }
         exit(exitCode);
     }
-    debug_old("exit code: ", exitCode);
+    debug("exit code: ", exitCode);
+    // debug_old("exit code: ", exitCode);
 }
 
 
 AnswerSet::AnswerSet(Model* &&model){
     if(model != nullptr) this->model = model;
     exitCode = SETTINGS::SAT;
-    debug_old("exit code: ", exitCode);
+    // debug_old("exit code: ", exitCode);
+    debug(DEBUG, "exit code: ", exitCode);
 }
 
 void AnswerSet::setOptimum(bool proved){
@@ -989,27 +994,16 @@ void raise_wasp_not_implemented_exception(){
 
 
 
-void print_derivation(const std::unordered_map<clingo_symbol_t, clingo_literal_t>* atomNames, const std::vector<clingo_literal_t>& S, bool force_print = false){
-    bool debug_b = false ;
-    #ifdef DEBUG
-        debug_b = true ;
-    #endif
-    if (not force_print and not debug_b) return ;
-
-    debugf_old(vector_lit_to_string(atomNames, S, "Derived"));
+void print_derivation(const std::unordered_map<clingo_symbol_t, clingo_literal_t>* atomNames, const std::vector<clingo_literal_t>& S){
+    debug(INFO, vector_lit_to_string(atomNames, S, "Derived"));
 }
 
 
 
-void print_reason(const std::unordered_map<clingo_symbol_t, clingo_literal_t>* atomNames, const std::vector<clingo_literal_t>& R, clingo_literal_t lit, bool force_print = false){
-    bool debug_b = false ;
-    #ifdef DEBUG
-        debug_b = true ;
-    #endif
-    if (not force_print and not debug_b) return ;
-
+void print_reason(const std::unordered_map<clingo_symbol_t, clingo_literal_t>* atomNames, const std::vector<clingo_literal_t>& R, clingo_literal_t lit){
     std::string reason_name = "Reason("+std::to_string(lit)+") ";
-    debug_old(vector_lit_to_string(atomNames, R, reason_name));
+    debug(DEBUG, vector_lit_to_string(atomNames, R, reason_name));
+    // debug_old(vector_lit_to_string(atomNames, R, reason_name));
 }
 
 
@@ -1029,7 +1023,8 @@ void print_reduction_reason(const AmoSumPropagator& propagator,
     std::string redundant_lits_str = "from " + std::to_string(reason_c.size()) + " to " + std::to_string(reason.size()) +
         " with p: " + std::to_string(p) + "%";
 
-    debugf_old(redundant_lits_str);
+    debug(DEBUG, redundant_lits_str);
+    // debugf_old(redundant_lits_str);
 }
 
 
@@ -1041,18 +1036,13 @@ std::chrono::time_point<std::chrono::high_resolution_clock> start_timer(){
 void display_end_timer(const std::chrono::time_point<std::chrono::high_resolution_clock>& start, std::string name){
     auto end = std::chrono::high_resolution_clock::now(); 
     std::chrono::duration<double> elapsed = (end - start);
-    debugf_old(name," time: ", elapsed.count(), "s");
+    // debugf_old(name," time: ", elapsed.count(), "s");
+    debug(INFO, name," time: ", elapsed.count(), "s");
 }
 
 
-void print_propagate(PropagatorClingo* prop, const clingo_literal_t *changes, size_t size, clingo_propagate_control_t *control, int dl, bool force_print = false, bool wasp_b = false){
-    
-    bool debug_b = false ;
-    #ifdef DEBUG
-        debug_b = true ;
-    #endif
-    if (not force_print and not debug_b) return ;
-    
+void print_propagate(PropagatorClingo* prop, const clingo_literal_t *changes, size_t size, clingo_propagate_control_t *control, int dl, bool wasp_b = false){
+        
     int td ;
     wasp_b ? td = 0 : td = clingo_propagate_control_thread_id(control) ; 
     std::string changes_str ;
@@ -1083,26 +1073,15 @@ void print_propagate(PropagatorClingo* prop, const clingo_literal_t *changes, si
         decision_literal_name = "non lo so";
 
 
-    debugf_old("[", decision_literal_name,", ",dl,"] propagate ", changes_str, " mps: ", prop->propagators[td]->_mps, " bound: ",prop->propagators[td]->bound," td: ", td);
+    debug(INFO, "[", decision_literal_name,", ",dl,"] propagate ", changes_str, " mps: ", prop->propagators[td]->_mps, " bound: ",prop->propagators[td]->bound," td: ", td);
 }
 
-void print_undo(PropagatorClingo* prop, const clingo_literal_t *changes, size_t size, clingo_propagate_control_t *control, int dl, int td, bool force_print = false, bool wasp_b = false){
-    bool debug_b = false ;
-    #ifdef DEBUG
-        debug_b = true ;
-    #endif
-    if (not force_print and not debug_b) return ;
-
-
-    std::string changes_str ;
-    
+void print_undo(PropagatorClingo* prop, const clingo_literal_t *changes, size_t size, clingo_propagate_control_t *control, int dl, int td, bool wasp_b = false){
+    std::string changes_str ;    
     if (wasp_b)  raise_wasp_not_implemented_exception() ;
     else  changes_str = prop->compute_changes_str(changes, size, td) ;
 
-    
-    
-
-    debugf_old("dl: ",dl," undo ", changes_str," thread_id: ", td);
+    debug(INFO, "dl: ",dl," undo ", changes_str," thread_id: ", td);
 }
 
 clingo_literal_t max_w(const Group* g) {
@@ -1111,11 +1090,15 @@ clingo_literal_t max_w(const Group* g) {
     try {
         return g->ord_l[g->max_und]; // Get the literal using max_und
     } catch (const std::out_of_range& e) {
-        debug_old("Error accessing g.ord_l with max_und. Debug info:");
-        debug_old(vector_to_string(g->ord_l,"g.ord_l: "));
-        debug_old("max_und: " + std::to_string(g->max_und));
-        throw; // Re-throw the exception
+        // debug_old("Error accessing g.ord_l with max_und. Debug info:");
+        // debug_old(vector_to_string(g->ord_l,"g.ord_l: "));
+        // debug_old("max_und: " + std::to_string(g->max_und));
+        debug(DEBUG, "Error accessing g.ord_l with max_und. Debug info:");
+        debug(DEBUG, vector_to_string(g->ord_l,"g.ord_l: "));
+        debug(DEBUG, "max_und: " + std::to_string(g->max_und));
+        cmn::setExitCode(CONSTANTS::ERROR_CODE, true);
     }
+    return 0;
 }
 
 

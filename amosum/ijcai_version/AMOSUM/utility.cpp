@@ -40,7 +40,7 @@ std::string get_name(const std::unordered_map<clingo_symbol_t, clingo_literal_t>
     }
 
     debug_old(lit, " is not present in atomNames ", atomNames_to_string(atomNames));
-    assert(false);
+    // cmn::setExitCode(CONSTANTS::ERROR_CODE);
     return SETTINGS::NONE_STR; 
 }
 

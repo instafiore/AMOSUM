@@ -43,7 +43,7 @@ const std::vector<clingo_literal_t>* propagation_phase_le_eo(const Group* G, Amo
             create_reason_true_le(propagator, sml_g, not_(l), g);
         }
 
-        print_derivation(propagator->atomNames, propagator->S, false);
+        printDerivation(propagator->atomNames, propagator->S);
         return &propagator->S;
     }
 
@@ -75,6 +75,6 @@ const std::vector<clingo_literal_t>* propagation_phase_le_eo(const Group* G, Amo
         create_reason_falses_le(propagator, SETTINGS::NONE);
     }
 
-    print_derivation(propagator->atomNames, propagator->S, false);
+    printDerivation(propagator->atomNames, propagator->S);
     return &propagator->S;
 }

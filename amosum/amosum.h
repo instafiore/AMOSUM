@@ -4,6 +4,7 @@
 #include "utility.h"
 #include <vector>
 #include <memory>
+#include "logger.h"
 #include <unordered_set>
 using vector_lit_ptr = std::vector<clingo_literal_t>* ;
 

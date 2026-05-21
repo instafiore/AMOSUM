@@ -16,17 +16,16 @@ enum LogLevel { INFO = 0, DEBUG, SIGINTLOGGER, ERROR, CRITICAL, CLINGO, STATS };
 const int NUM_LOG_LEVELS = 7;
 
 // #define NOINFO
-// #define NODEBUG
-// #define STATSCLINGO
+#define NODEBUG
 
 // #define APPEND_MODE_LOG
 
 
 #ifndef NDEBUG
     #define debug(level,...) \
-    Logger::getInstance()->log(level, __VA_ARGS__);
+    Logger::getInstance()->log(level, __VA_ARGS__," @ ", __FILE__,":",__LINE__)
     #define debugf(level,...) \
-    Logger::getInstance()->logf(level, __VA_ARGS__);
+    Logger::getInstance()->logf(level, __VA_ARGS__," @ ", __FILE__,":",__LINE__)
     #define initLogger(logfile, lazy_logger) \
     Logger::init(logfile, lazy_logger);
     #define cleanupLogger() \
@@ -41,14 +40,16 @@ const int NUM_LOG_LEVELS = 7;
     unordered_set_to_string(uset, name)
     #define unorderedSetToStringName(atomNames, uset, name)\
     unordered_set_to_string_name(atomNames, uset, name)
-    #define printPropagate(prop,changes,size,control,dl,force_print)\
-    print_propagate(prop, changes, size, control, dl, force_print)
-    #define printReason(atomNames, reason, false)\
-    print_reason(atomNames, reason->data(), false)
-    #define printUndo(this, changes, size, control, dl, td, false)\
+    #define printPropagate(prop,changes,size,control,dl)\
+    print_propagate(prop, changes, size, control, dl,false)
+    #define printReason(atomNames, reason)\
+    print_reason(atomNames, reason->data())
+    #define printUndo(this, changes, size, control, dl, td)\
     print_undo(this, changes, size, control, dl, td, false);
     #define printClingoStats(stats, key, depth)\
     print_clingo_statistics(stats, key, depth)
+    #define printDerivation(atomNames, S)\
+    print_derivation(atomNames, S)
 class Logger {
 private:
     static Logger* instance;
@@ -151,7 +152,8 @@ public:
     #define arrayToString(vec, size, name)
     #define unorderedSetToString(uset, name)
     #define unorderedSetToStringName(atomNames, uset, name)
-    #define printPropagate(prop,changes,size,control,dl,force_print)
+    #define printPropagate(prop,changes,size,control,dl)
     #define printReason(atomNames, reason, false)
-    #define printUndo(this, changes, size, control, dl, td, false)
+    #define printUndo(this, changes, size, control, dl, td)
+    #define printDerivation(atomNames, S)
 #endif

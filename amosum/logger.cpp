@@ -99,11 +99,11 @@ void Logger::__log__(LogLevel level, const string& message)
 void Logger::setLoggerConfig(){
     #ifdef NOINFO
         config.reset(INFO);
-        print("INFO DEACTIVATED");
+        // print("INFO DEACTIVATED");
     #endif
     #ifdef NODEBUG
         config.reset(DEBUG);
-        print("DEBUG DEACTIVATED");
+        // print("DEBUG DEACTIVATED");
     #endif
 }
 

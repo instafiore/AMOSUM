@@ -73,7 +73,8 @@ bool PropagatorClingo::init(clingo_propagate_init_t *_init){
     if (S_plit.size() == 1 and S_plit[0] == SETTINGS::PLITBOTTOM){ 
         bool result ; 
         handle_error(clingo_propagate_init_add_clause((clingo_propagate_init*) _init, NULL, 0, &result));
-        debugf_old("added empty clause ", result);
+        // debugf_old("added empty clause ", result);
+        debug(INFO, "added empty clause ", result);
         return true; 
     }// inconsistent
 
@@ -117,7 +118,8 @@ bool PropagatorClingo::add_clauses_propagated_lits(void *control, const std::vec
 
         // propagation must return immediately, there is a conflict
         if (not result_add_clause){
-            debug_old("conflict add clause");
+            // debug_old("conflict add clause");
+            debug(DEBUG, "conflict add clause");
             return true ;
         }
 
@@ -128,7 +130,8 @@ bool PropagatorClingo::add_clauses_propagated_lits(void *control, const std::vec
         
         if (!result_propagate){ 
             // propagation must return immediately, a conflict has been raised 
-            debug_old("conflict propagate");
+            debug(DEBUG, "conflict propagate");
+            // debug_old("conflict propagate");
             return true ;
         }   
     }
@@ -145,7 +148,7 @@ bool PropagatorClingo::propagate(clingo_propagate_control_t *control, const clin
     dl == 0 ? td = 0 : td = clingo_propagate_control_thread_id(control) ; 
     AmoSumPropagator* prop = propagators[td];
     prop->control = control ;
-    // print_propagate(this, changes, size, control, dl, false, false);
+    printPropagate(this, changes, size, control, dl);
 
     for (size_t i = 0; i < size; i++)
     {

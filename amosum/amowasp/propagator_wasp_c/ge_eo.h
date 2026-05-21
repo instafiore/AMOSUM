@@ -42,7 +42,7 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_eo(const Group* G, Amo
         }
 
         propagator->compute_minimal_reason(propagator->S);
-        // print_derivation(propagator->atomNames, propagator->S, false);
+        // printDerivation(propagator->atomNames, propagator->S, false);
         return &propagator->S;
     }
 
@@ -75,7 +75,7 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_eo(const Group* G, Amo
         propagator->compute_minimal_reason(propagator->S);
     }
 
-    // print_derivation(propagator->atomNames, propagator->S, false);
+    // printDerivation(propagator->atomNames, propagator->S, false);
     
     return &propagator->S;
 }

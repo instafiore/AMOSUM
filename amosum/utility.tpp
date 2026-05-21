@@ -32,8 +32,9 @@ void PerfectHash<V>::set(const int& key, const V& value){
     // Determine the index for positive or negative literals
     int i = (key > 0) ? key : (abs(key) + N);
     if(i < 0 or ((size_t)i) >= values.size()){
-        debugf_old("overflow: ",i, " key: ",key);
-        exit(0) ; 
+        // debugf_old("overflow: ",i, " key: ",key);
+        // debug(ERROR, "overflow: ",i, " key: ",key);
+        cmn::setExitCode(CONSTANTS::ERROR_CODE);
     }
     values[i] = value;
 }

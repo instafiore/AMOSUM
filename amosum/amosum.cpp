@@ -25,12 +25,14 @@ void AmoSumPropagator::updateBound(int bound){
 
 const std::vector<clingo_literal_t> AmoSumPropagator::simplifyAtLevelZero(const bool& delete_lits=false){ 
 
-        debug_old("simplifyAtLevelZero for ", unordered_map_to_string(params), " with mps: ",_mps," and bound: ",bound);
+        // debug_old("simplifyAtLevelZero for ", unordered_map_to_string(params), " with mps: ",_mps," and bound: ",bound);
+        debug(DEBUG, "simplifyAtLevelZero for ", unordered_map_to_string(params), " with mps: ",_mps," and bound: ",bound);
 
         
         std::string error_string = ge ? (std::to_string(_mps) + " < " + std::to_string(lb) + " !!!") : (std::to_string(_mps) + " > " + std::to_string(ub) + " !!!");
         if ((ge && _mps < lb) || (!ge && _mps > ub)) {
-                debugf_old(error_string)
+                // debugf_old(error_string)
+                debug(ERROR, error_string);
                 return {SETTINGS::PLITBOTTOM};
         }
         
@@ -169,8 +171,9 @@ std::tuple<int, clingo_literal_t, clingo_literal_t> AmoSumPropagator::mps(Group*
         if(true_group->getTrueLiteral(g) != SETTINGS::NONE){
             std::string name_tr = get_name(atomNames, true_group->getTrueLiteral(g));
             std::string name_l = get_name(atomNames, l);
-            debugf_old("name_tr: ",name_tr, " name_l: ",name_l);
-            assert(true_group->getTrueLiteral(g) == SETTINGS::NONE);
+            // debugf_old("name_tr: ",name_tr, " name_l: ",name_l);
+            debug(ERROR, "name_tr: ",name_tr, " name_l: ",name_l);
+            cmn::setExitCode(CONSTANTS::ERROR_CODE);
         }
         
         int mps_h = _mps - mw_g + weight->get(l);
@@ -204,7 +207,7 @@ const std::vector<clingo_literal_t>* AmoSumPropagator::getReasonForLiteral(const
         rl->clear();
     }
 
-    print_reason(atomNames, R, lit, false);
+    print_reason(atomNames, R, lit);
     return &R; 
 }
 

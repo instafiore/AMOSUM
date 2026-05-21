@@ -621,7 +621,7 @@ class Result:
                 # resultJson = json.loads(realAnswerset)
                 resultPython = ast.literal_eval(realAnswerset)
             else:
-                print(f"Not valid: {serialized}")
+                print(f"{serialized}")
                 return None
   
 

@@ -48,8 +48,9 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, Am
 
         
         propagator->compute_minimal_reason(propagator->S);
-        debug_old("MPS VIOLATED");
-        print_derivation(propagator->atomNames, propagator->S, false);
+        debug(DEBUG, "MPS VIOLATED");
+        // debug_old("MPS VIOLATED");
+        printDerivation(propagator->atomNames, propagator->S);
         return &propagator->S;
     }
 
@@ -99,7 +100,7 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, Am
         }
     }
 
-    print_derivation(propagator->atomNames, propagator->S, false);
+    printDerivation(propagator->atomNames, propagator->S);
 
 
     if (!propagator->S.empty() && propagator->dl != 0) {

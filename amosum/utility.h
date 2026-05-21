@@ -11,6 +11,7 @@
 #include "common_utility.h"
 #include <chrono>
 
+
 class PropagatorClingo ;
 class InterpretationFunction;
 class AggregateFunction;
@@ -34,18 +35,6 @@ void print(const Args&... args) {
     (oss << ... << args); 
     std::cout << oss.str() << std::endl;
 }
-
-#ifdef DEBUG
-    #define debug(...) \
-        if ((DEBUG)) { \
-            debug_print(__VA_ARGS__); \
-        }
-#else
-    #define debug_old(...)
-#endif
-
-#define debugf_old(...) \
-    debug_print(__VA_ARGS__); \
 
 using ParameterMap = std::unordered_map<std::string, std::string>;
 
@@ -246,10 +235,10 @@ void create_reason_true_le(AmoSumPropagator* propagator, clingo_literal_t sml_g,
 std::tuple<bool, const std::vector<clingo_literal_t>* (*)(const Group*, AmoSumPropagator*), std::string>  get_propagator_variables(std::string prop_type);
 // Function to get the name
 std::string get_name(const std::unordered_map<clingo_symbol_t, clingo_literal_t>* atomNames, clingo_literal_t lit);
-void print_propagate(PropagatorClingo* prop, const clingo_literal_t *changes, size_t size, clingo_propagate_control_t *control, int dl, bool force_print, bool wasp_b);
-void print_derivation(const std::unordered_map<clingo_symbol_t, clingo_literal_t>* atomNames, const std::vector<clingo_literal_t>& S, bool force_print);
+void print_propagate(PropagatorClingo* prop, const clingo_literal_t *changes, size_t size, clingo_propagate_control_t *control, int dl, bool wasp_b);
+void print_derivation(const std::unordered_map<clingo_symbol_t, clingo_literal_t>* atomNames, const std::vector<clingo_literal_t>& S);
 void print_undo(PropagatorClingo* prop, const clingo_literal_t *changes, size_t size, clingo_propagate_control_t *control, int dl, int td, bool force_print , bool wasp_b );
-void print_reason(const std::unordered_map<clingo_symbol_t, clingo_literal_t>* atomNames, const std::vector<clingo_literal_t>& R, clingo_literal_t lit, bool force_print );
+void print_reason(const std::unordered_map<clingo_symbol_t, clingo_literal_t>* atomNames, const std::vector<clingo_literal_t>& R, clingo_literal_t lit);
 void print_reduction_reason(const AmoSumPropagator& propagator, const std::vector<clingo_literal_t>& reason_c, const std::vector<clingo_literal_t>& reason, clingo_literal_t lit, float p, bool force_print);
 std::string atomNames_to_string(const std::unordered_map<clingo_symbol_t, clingo_literal_t>* atomNames);
 std::vector<std::string> convert_assparam_to_assarray(const std::string& assumptions);
