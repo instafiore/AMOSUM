@@ -1011,13 +1011,7 @@ void print_reduction_reason(const AmoSumPropagator& propagator,
                             const std::vector<clingo_literal_t>& reason_c,
                             const std::vector<clingo_literal_t>& reason,
                             clingo_literal_t lit, float p,
-                            bool force_print = false) {
-    bool debug_b = false;
-    #ifdef DEBUG
-        debug_b = true;
-    #endif
-    
-    if (!force_print && !debug_b) return;
+                            bool force_print = false) {    
     
     // Generate redundant literals string for the first message
     std::string redundant_lits_str = "from " + std::to_string(reason_c.size()) + " to " + std::to_string(reason.size()) +
