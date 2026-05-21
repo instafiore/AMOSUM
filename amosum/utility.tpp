@@ -236,6 +236,8 @@ public:
         if (lit < 0) value = function_negative_lit(value);
         data_structure[i] = value;
     }
+
+    virtual ~SymmetricFunction(){}
 };
 
 class WeightFunction: public SymmetricFunction<int>{

@@ -178,9 +178,6 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
         amosum_propagator->lazy_prop_activated = lazy_param != SETTINGS::FALSE_STR;
         bool lazy_hybrid = lazy_param == SETTINGS::LAZY_HYBRID ;
 
-        #ifdef CHECK_MPS
-        weights_names_log(ID, generic_data_map[ID]->weights_names);
-        #endif
 
         for(auto &[group_id, lits_group]: generic_data_map[ID]->groups_raw){
                 std::vector<std::pair<int, int>> lits_ord;
@@ -199,16 +196,18 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
 
                 Group* G = new Group(ord_l,ord_i,group_id) ;
                 
-                clingo_literal_t ml = m_w(G, amosum_propagator->ge) ;
+                clingo_literal_t ml = m_w(G, true) ;
+                // clingo_literal_t ml = m_w(G, amosum_propagator->ge) ;
                 int max_w = amosum_propagator->weight->get(ml);
-                int min_w = amosum_propagator->lazy_prop_activated || !amosum_propagator->ge ? amosum_propagator->weight->get(m_w(G, !amosum_propagator->ge)) : 0 ;
+                int min_w = lazy_hybrid ? amosum_propagator->weight->get(m_w(G, false)) : 0 ;
+                // int min_w = amosum_propagator->lazy_prop_activated || !amosum_propagator->ge ? amosum_propagator->weight->get(m_w(G, !amosum_propagator->ge)) : 0 ;
 
 
                 amosum_propagator->_mps = amosum_propagator->_mps + max_w;
 
                 int diff = std::abs(max_w - min_w) ;
                 bool is_aux = equals(generic_data_map[ID]->aux_lit, ml);
-                if (max_diff < diff && !is_aux)  max_diff = diff ;
+                if (max_diff < diff && !is_aux)  max_diff = diff;
 
                 amosum_propagator->groups.push_back(G);
                 
@@ -233,16 +232,14 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
                 amosum_propagator->inconsistent_at_level_0 = true;
             }
         }
-  
-
-        // debugf("max_diff: ", max_diff); 
+        debug(INFO, "max_diff: ", max_diff); 
         
         amosum_propagator->lazy_perc = amosum_propagator->lazy_prop_activated && lazy_param != SETTINGS::TRUE_STR && !lazy_hybrid ? std::stof(lazy_param) : amosum_propagator->lazy_perc ;
         amosum_propagator->lazy_condition = !amosum_propagator->lazy_prop_activated;
         if(lazy_param == SETTINGS::TRUE_STR) amosum_propagator->lazy_perc = 1 ;
         else if (lazy_hybrid || !amosum_propagator->lazy_prop_activated) amosum_propagator->lazy_perc = amosum_propagator->ge ? amosum_propagator->lb / static_cast<float>(amosum_propagator->lb + max_diff) :  (amosum_propagator->ub - max_diff) / static_cast<float>(amosum_propagator->ub);
         std::string lazy_perc_str = amosum_propagator->lazy_prop_activated ? " lazy threshold " + std::to_string(amosum_propagator->lazy_perc) : SETTINGS::NONE_STR;
-        // debugf("Starting c propagator with param ",unordered_map_to_string(amosum_propagator->params), lazy_perc_str);
+        debug(INFO, "Starting c propagator with param ",unordered_map_to_string(amosum_propagator->params), lazy_perc_str);
 
         // Set facts to literals starting from index 1
         amosum_propagator->facts.assign(lits.begin() + 1, lits.end());

@@ -995,7 +995,7 @@ void raise_wasp_not_implemented_exception(){
 
 
 void print_derivation(const std::unordered_map<clingo_symbol_t, clingo_literal_t>* atomNames, const std::vector<clingo_literal_t>& S){
-    debug(INFO, vector_lit_to_string(atomNames, S, "Derived"));
+    debug(DEBUG, vector_lit_to_string(atomNames, S, "Derived"));
 }
 
 
@@ -1075,7 +1075,7 @@ void print_undo(PropagatorClingo* prop, const clingo_literal_t *changes, size_t 
     if (wasp_b)  raise_wasp_not_implemented_exception() ;
     else  changes_str = prop->compute_changes_str(changes, size, td) ;
 
-    debug(INFO, "dl: ",dl," undo ", changes_str," thread_id: ", td);
+    debug(DEBUG, "dl: ",dl," undo ", changes_str," thread_id: ", td);
 }
 
 clingo_literal_t max_w(const Group* g) {

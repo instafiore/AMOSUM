@@ -16,7 +16,7 @@ enum LogLevel { INFO = 0, DEBUG, SIGINTLOGGER, ERROR, CRITICAL, CLINGO, STATS };
 const int NUM_LOG_LEVELS = 7;
 
 // #define NOINFO
-#define NODEBUG
+// #define NODEBUG
 
 // #define APPEND_MODE_LOG
 

@@ -68,25 +68,23 @@ bool PropagatorClingo::init(clingo_propagate_init_t *_init){
     std::vector<clingo_literal_t> S_plit ;
 
     // for (size_t i = 0; i < PropagatorClingoInitializer::get_instance()->nt; i++) S_plit = propagators[i]->simplifyAtLevelZero(false);
-    for (size_t i = 0; i < PropagatorClingoInitializer::get_instance()->nt; i++) S_plit = propagators[i]->simplifyAtLevelZero(true);
-    
-    if (S_plit.size() == 1 and S_plit[0] == SETTINGS::PLITBOTTOM){ 
-        bool result ; 
-        handle_error(clingo_propagate_init_add_clause((clingo_propagate_init*) _init, NULL, 0, &result));
-        // debugf_old("added empty clause ", result);
-        debug(INFO, "added empty clause ", result);
-        return true; 
-    }// inconsistent
-
-    add_clauses_propagated_lits(_init, S_plit, 0, true);
-    
-    bool result_propagate;
-    clingo_propagate_init_propagate(_init, &result_propagate) ;
-    
-    if (!result_propagate){ // inconsistent 
+    for (size_t i = 0; i < PropagatorClingoInitializer::get_instance()->nt; i++){
+        S_plit = propagators[i]->simplifyAtLevelZero(true);
+        if(S_plit.size() == 1 && S_plit[0] == SETTINGS::PLITBOTTOM) break; // Unsat at level 0
     }
-        
+    
     first = false ;
+
+    if(add_clauses_propagated_lits(_init, S_plit, 0, true)){
+        return true;
+    }
+    
+    // bool result_propagate;
+    // clingo_propagate_init_propagate(_init, &result_propagate) ;
+    
+    // if (!result_propagate){ // inconsistent 
+    // }
+        
     return true ;
 }
 

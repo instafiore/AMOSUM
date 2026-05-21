@@ -188,7 +188,7 @@ class AmoSumInitializer:
         nGroup = Group.autoincrement
         amosum_propagator.true_group = TrueGroupFunction(nGroup)
 
-        # debug(f"max_diff: {max_diff} lazy_prop_activated: {amosum_propagator.lazy_prop_activated}", force_print=True)
+        debug(f"max_diff: {max_diff} lazy_prop_activated: {amosum_propagator.lazy_prop_activated}", force_print=True)
 
         amosum_propagator.lazy_perc = float(lazy_param) if amosum_propagator.lazy_prop_activated and not re.search(lazy_param,settings.TRUE, re.IGNORECASE) and not lazy_hybrid else None
         if re.search(lazy_param,settings.TRUE, re.IGNORECASE) : amosum_propagator.lazy_perc = 1

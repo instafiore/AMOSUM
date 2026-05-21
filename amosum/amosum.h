@@ -73,7 +73,7 @@ struct AmoSumPropagator
     bool ge; 
 
     // Defining the constraint type, possible values: AMO, EO
-    std::string choice_cons; 
+    std::string constraint; 
 
     // treshold for lazy propagation activation
     float lazy_perc = SETTINGS::NONE_FLOAT ;
@@ -127,7 +127,7 @@ struct AmoSumPropagator
           params(std::move(params)),
           propagation_phase(propagation_phase),
           ge(ge),
-          choice_cons(std::move(choice_cons)),
+          constraint(std::move(choice_cons)),
           solver(std::move(solver)),
           maximizer(maximizer)
           {}

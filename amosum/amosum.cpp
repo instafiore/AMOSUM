@@ -94,7 +94,7 @@ void AmoSumPropagator::update_lazy_propagation() {
             p = _mps / static_cast<float>(bound);
         }
 
-        lazy_condition = p >= this->lazy_perc ;
+        lazy_condition = p >= this->lazy_perc;
         if (mps_violated) {
             lazy_condition = true;
         }
@@ -135,12 +135,12 @@ std::pair<bool, Group*> AmoSumPropagator::update_phase(clingo_literal_t l, int d
                     w_n = weight->get(new_lit);
                     w_p = weight->get(prev);
                 }
-                if (choice_cons == "AMO") {
+                if (constraint == "AMO") {
                     amo_condition = true;
                 }
             } else if (not_(l) != new_lit) {
                 return {false, nullptr};
-            } else if (choice_cons == "AMO") {
+            } else if (constraint == "AMO") {
                 amo_condition = true;
             } else {
                 return {false, nullptr};
@@ -154,7 +154,7 @@ std::pair<bool, Group*> AmoSumPropagator::update_phase(clingo_literal_t l, int d
         update_lazy_propagation();
 
     
-        G = (choice_cons == "EO") ? G : nullptr;
+        G = (constraint == "EO") ? G : nullptr;
         bool current_sum_condition = !ge || current_sum < bound;
         bool next_phase = current_sum_condition && (w_p != w_n || amo_condition) && lazy_condition;
         // if(dl >= 5000) debugf("ID: ",ID," mps: ",_mps, " next_phase: ", next_phase, " lazy_condition: ",lazy_condition);
@@ -299,7 +299,7 @@ void AmoSumPropagator::onLiteralsUndefined(const std::vector<clingo_literal_t>& 
             ge ? G->set_max(l) :  G->set_min(l); 
 
             if (tg == SETTINGS::NONE) {
-                if (choice_cons == "AMO") {
+                if (constraint == "AMO") {
                     _mps += w_l;
                 } else {
                     assert(false);
