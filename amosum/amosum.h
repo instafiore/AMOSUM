@@ -96,6 +96,7 @@ struct AmoSumPropagator
 
     int lb = SETTINGS::NONE;      // lower bound
     int _mps;    // max/min possible sum
+    int _max_ps;    // max possible sum
     int ub = SETTINGS::NONE;      // upper bound
     int bound = SETTINGS::NONE ; // either lb or ub depending on ge
     
@@ -112,6 +113,8 @@ struct AmoSumPropagator
     void updateBound(int bound);
 
     bool maximizer;
+
+    size_t mpc; // maximum possible change of mps
 
     
     AmoSumPropagator(){}

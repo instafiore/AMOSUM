@@ -51,8 +51,27 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
         gd = get_map(generic_data_map, amosum_propagator->ID, gd);
 
         if(gd->bind.size() > 0) specific_phase(lits, amosum_propagator);
-        
-        
+
+
+        if(amosum_propagator->ge) return gd->bind; // As before
+
+        // Remove watch for unnecessary lits
+        // std::vector<int> &watched = gd->bind;
+        // std::vector<int> toWatch;
+
+        // while(watched.size() > 0){
+        //     int l = watched.back();
+        //     watched.pop_back();
+        //     bool toKeep = true;
+        //     Group* g = amosum_propagator->group->get(l);
+        //     if(g == nullptr && amosum_propagator->constraint == "AMO"){
+        //         // We do not care of falsity, given that 
+        //     }
+        //     int max_ps = amosum_propagator->_max_ps;
+        //     if(toKeep) toWatch.push_back(l);
+        // }
+        // return toWatch;
+
         return gd->bind;
         
     }
@@ -199,11 +218,12 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
                 clingo_literal_t ml = m_w(G, true) ;
                 // clingo_literal_t ml = m_w(G, amosum_propagator->ge) ;
                 int max_w = amosum_propagator->weight->get(ml);
-                int min_w = lazy_hybrid ? amosum_propagator->weight->get(m_w(G, false)) : 0 ;
+                int min_w = lazy_hybrid || amosum_propagator->constraint == "EO" ? amosum_propagator->weight->get(m_w(G, false)) : 0 ;
                 // int min_w = amosum_propagator->lazy_prop_activated || !amosum_propagator->ge ? amosum_propagator->weight->get(m_w(G, !amosum_propagator->ge)) : 0 ;
 
 
-                amosum_propagator->_mps = amosum_propagator->_mps + max_w;
+                amosum_propagator->_mps = amosum_propagator->_mps + (amosum_propagator->ge ? max_w : amosum_propagator->constraint == "EO" ? min_w : 0);
+                amosum_propagator->_max_ps = amosum_propagator->_mps + max_w;
 
                 int diff = std::abs(max_w - min_w) ;
                 bool is_aux = equals(generic_data_map[ID]->aux_lit, ml);

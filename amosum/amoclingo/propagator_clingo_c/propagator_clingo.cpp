@@ -60,7 +60,7 @@ bool PropagatorClingo::init(clingo_propagate_init_t *_init){
         clingo_literal_t slit = (*map_plit_slit)[plit];
         update_map_value_vector(map_slit_plit_watched, slit, plit);
         handle_error(clingo_propagate_init_add_watch(_init, slit));
-        handle_error(clingo_propagate_init_freeze_literal(_init, slit));
+        // handle_error(clingo_propagate_init_freeze_literal(_init, slit));
         // to_watch_slit.push_back(slit);
     }
 

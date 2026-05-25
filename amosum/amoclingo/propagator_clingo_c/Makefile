@@ -22,9 +22,12 @@ BUILD_MODE ?= release
 ifeq ($(BUILD_MODE), test)
     EXTRA_CFLAGS  = -fsanitize=address -g -O0
     EXTRA_LDFLAGS = -fsanitize=address
+else ifeq ($(BUILD_MODE), pprof)
+    EXTRA_CFLAGS  = -O2 -g -DNDEBUG
+    EXTRA_LDFLAGS = -lprofiler -ltcmalloc
 else
     EXTRA_CFLAGS  = -O3 -DNDEBUG
-    EXTRA_LDFLAGS =
+    EXTRA_LDFLAGS = 
 endif
 	
 test:
@@ -32,6 +35,10 @@ test:
 
 release:
 	@$(MAKE) BUILD_MODE=release
+
+pprof:
+	@$(MAKE) BUILD_MODE=pprof
+
 
 $(TARGET): $(OBJS)
 	@echo "Linking $@"

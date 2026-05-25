@@ -22,6 +22,9 @@ ParameterMap params;
 OptimizerClingo* opt;
 
 void signalHandler(int signum) {
+    if(opt == nullptr){
+        exit(CONSTANTS::UNKOWN_CODE);
+    }
     AnswerSet* optAnswer = opt->currentAnswerSet;
     optAnswer->setOptimum(false);
     if(params.find("serialize") == params.end())  printf("%s\n",optAnswer->toString().c_str());
