@@ -67,7 +67,7 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, Am
         
         
 
-        auto [mps_h, sml_g, ml_g_res] = propagator->mps(g, ml_g, false);
+        auto [mps_h, sml_g, ml_g_res] = propagator->mps(ml_g, false);
         
         bool propagate_to_true = false;
         if (mps_h < propagator->lb) {
@@ -84,7 +84,7 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, Am
         if (!propagate_to_true) {
             for (int l : g->ord_l) {
                 if (propagator->I->get(l) == SETTINGS::NONE) {
-                    if (std::get<0>(propagator->mps(g, l, true)) < propagator->lb) {
+                    if (std::get<0>(propagator->mps(l, true)) < propagator->lb) {
     
                         if(!propagator->is_true(not_(l))) {
                             propagator->S.push_back(not_(l));

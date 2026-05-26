@@ -783,7 +783,7 @@ void create_reason_falses_ge(AmoSumPropagator* propagator, std::unordered_map<cl
                         
                         bool redundant = false;
                         if(minimizationOnTheFly){
-                            auto mps_h = propagator->mps_violated ? propagator->_mps : std::get<0>(propagator->mps(G, derived, !derived_true));
+                            auto mps_h = propagator->mps_violated ? propagator->_mps : std::get<0>(propagator->mps(derived, !derived_true));
                             int s = propagator->lb - mps_h - 1;
                             int weight = propagator->weight->get(l);
                             int inc = weight - mw_g;
@@ -803,11 +803,11 @@ void create_reason_falses_ge(AmoSumPropagator* propagator, std::unordered_map<cl
                 }
             } else if(!equals(propagator->true_group->getTrueLiteral(g), flipped)) {
                 int tr = propagator->true_group->getTrueLiteral(g) ;
-                auto mps_h = propagator->mps_violated ? propagator->_mps : std::get<0>(propagator->mps(G, derived, !derived_true));
+                auto mps_h = propagator->mps_violated ? propagator->_mps : std::get<0>(propagator->mps(derived, !derived_true));
 
                 bool redundant = false;
                 if(minimizationOnTheFly){
-                    auto mps_h = propagator->mps_violated ? propagator->_mps : std::get<0>(propagator->mps(G, derived, !derived_true));
+                    auto mps_h = propagator->mps_violated ? propagator->_mps : std::get<0>(propagator->mps(derived, !derived_true));
                     int s = propagator->lb - mps_h - 1;
                     int w = propagator->weight->get(tr); 
                     int w_mw_g = g->ord_l.size() > 0 ? propagator->weight->get(g->ord_l.back()) : s + 1 + w; 
@@ -876,7 +876,7 @@ void create_reason_true_ge(AmoSumPropagator* propagator, clingo_literal_t sml_g,
     assert(i <= j);
     assert(derived != SETTINGS::NONE);
 
-    auto mps_h = propagator->mps_violated ? propagator->_mps : std::get<0>(propagator->mps(g, derived, false));
+    auto mps_h = propagator->mps_violated ? propagator->_mps : std::get<0>(propagator->mps(derived, false));
     int s = propagator->lb - mps_h - 1 ;
     // for (int k = i; k < j; ++k) {
     for (int k = j; k >= i; --k) {
@@ -1107,6 +1107,35 @@ clingo_literal_t min_w(const Group* g) {
 // Function to select between max_w and min_w
 clingo_literal_t m_w(const Group* g, bool max) {
     return max ? max_w(g) : min_w(g) ; 
+}
+
+
+
+clingo_literal_t max_w(InterpretationFunction* I, const Group* g, std::unordered_set<int> L) {
+    int start = (g->N - 1);
+    for (int i = start; i >= 0; --i) {
+        clingo_literal_t l = g->ord_l[i];
+        if (I->get(l) == SETTINGS::NONE && L.find(not_(l)) == L.end()) {
+            return g->ord_l[i];
+        }
+    }
+    return SETTINGS::NONE;
+}
+
+// Function to return the min undefined literal
+clingo_literal_t min_w(InterpretationFunction* I, const Group* g, std::unordered_set<int> L) {
+    for (size_t i = 0; i < g->ord_l.size(); ++i) {
+        clingo_literal_t l = g->ord_l[i];
+        if (I->get(l) == SETTINGS::NONE && L.find(not_(l)) == L.end()) {
+            return g->ord_l[i];
+        }
+    }
+    return SETTINGS::NONE;
+}
+
+// Function to select between max_w and min_w
+clingo_literal_t m_w(InterpretationFunction* I, const Group* g, bool max, std::unordered_set<int> L) {
+    return max ? max_w(I, g, L) : min_w(I, g, L) ; 
 }
 
 bool equals(const clingo_literal_t& l1, const clingo_literal_t& l2){

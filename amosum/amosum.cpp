@@ -162,7 +162,13 @@ std::pair<bool, Group*> AmoSumPropagator::update_phase(clingo_literal_t l, int d
 }
 
 
-std::tuple<int, clingo_literal_t, clingo_literal_t> AmoSumPropagator::mps(Group* g, clingo_literal_t l, bool assumed) {
+std::tuple<int, clingo_literal_t, clingo_literal_t> AmoSumPropagator::mps(clingo_literal_t l, bool assumed) {
+    
+    Group* g = this->group->get(l);
+    if(g == nullptr){
+        g = this->group->get(not_(l));
+    }
+    
     if (assumed) {
         clingo_literal_t ml_g = m_w(g, ge);
         int mw_g = weight->get(ml_g);
@@ -190,6 +196,39 @@ std::tuple<int, clingo_literal_t, clingo_literal_t> AmoSumPropagator::mps(Group*
         return {mps_h, sml_g, ml_g};
     
     }
+}
+
+int AmoSumPropagator::maxPossibleSum(clingo_literal_t l){
+    bool lInAggr=true; // assuming l \in \lits|_s or \not l \in \lits|_s
+    Group* gl = group->get(l);
+    if(gl == nullptr){
+        gl = group->get(not_(l));
+        lInAggr=false;
+    }
+
+    int maxPossibleSum = 0;
+    for (Group* g : groups){
+        if(g != gl){
+            // g != gl
+            maxPossibleSum += weight->get(max_w(I.get(), g));
+        }else{
+            // g = gl
+            if(lInAggr) maxPossibleSum += weight->get(l);
+            else{
+                int tg = true_group->getTrueLiteral(g);
+                if(tg != SETTINGS::NONE) maxPossibleSum += weight->get(tg);
+                else maxPossibleSum += weight->get(max_w(I.get(), g, {l}));
+            }
+        }
+    }
+
+    return maxPossibleSum;
+}
+
+
+int AmoSumPropagator::minPossibleSum(clingo_literal_t l){
+    int minPossibleSum=0;
+    return minPossibleSum;
 }
 
 const std::vector<clingo_literal_t>* AmoSumPropagator::getReasonForLiteral(const clingo_literal_t& lit){
@@ -228,7 +267,7 @@ void AmoSumPropagator::compute_minimal_reason(const std::vector<clingo_literal_t
         }
         assert(g != nullptr);
 
-        auto mps_h = mps_violated ? _mps : std::get<0>(mps(g, l, !derived_true));
+        auto mps_h = mps_violated ? _mps : std::get<0>(mps(l, !derived_true));
         int s = lb - mps_h - 1;
         auto rd = get_perfect_hash_with_pointer(redundant_lits.get(), l);
         auto R = get_perfect_hash_with_pointer(reason.get(), l);
@@ -365,8 +404,8 @@ bool AmoSumPropagator::is_true(clingo_literal_t l){
         clingo_literal_t slit = (*map_plit_slit)[l];
         clingo_assignment_is_true(assignment, slit, &res);
     }else{
-        // NOT IMPLEMENTED
         assert(false);
+        // NOT IMPLEMENTED
     }
     return res ;
 }

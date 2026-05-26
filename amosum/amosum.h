@@ -155,7 +155,9 @@ struct AmoSumPropagator
 
     void update_lazy_propagation();
     std::pair<bool, Group*> update_phase(clingo_literal_t l, int dl);
-    std::tuple<int, clingo_literal_t, clingo_literal_t> mps(Group* g, clingo_literal_t l, bool assumed);
+    std::tuple<int, clingo_literal_t, clingo_literal_t> mps(clingo_literal_t l, bool assumed);
+    int maxPossibleSum(clingo_literal_t l);
+    int minPossibleSum(clingo_literal_t l);
     void updated_dl(int lit, int new_dl);
     inline bool is_in_aggregate(clingo_literal_t lit){ return aggregate->get(lit) || aggregate->get(not_(lit));}
     void compute_minimal_reason(const std::vector<clingo_literal_t>& to_minimize);

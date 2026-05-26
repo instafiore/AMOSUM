@@ -250,6 +250,11 @@ clingo_literal_t max_w(const Group* g);
 clingo_literal_t min_w(const Group* g);
 // Function to select between max_w and min_w
 clingo_literal_t m_w(const Group* g, bool max);
+clingo_literal_t max_w(InterpretationFunction* I, const Group* g, std::unordered_set<int> L = {});
+// Function to return the min undefined literal
+clingo_literal_t min_w(InterpretationFunction* I, const Group* g, std::unordered_set<int> L = {});
+// Function to select between max_w and min_w
+clingo_literal_t m_w(InterpretationFunction* I, const Group* g, bool max, std::unordered_set<int> L = {});
 bool equals(const clingo_literal_t& l1, const clingo_literal_t& l2);
     
 

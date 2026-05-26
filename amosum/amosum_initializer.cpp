@@ -56,25 +56,43 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
 
         if(amosum_propagator->ge) return gd->bind; // As before
 
-        // Remove watch for unnecessary lits
-        // std::vector<int> &watched = gd->bind;
-        // std::vector<int> toWatch;
+        // [Remove] watch for unnecessary lits
+        std::vector<int> &watched = gd->bind;
+        std::vector<int> toWatch;
+        while(watched.size() > 0){
+            int l = watched.back();
+            watched.pop_back();
+            bool toKeep = true;
+            Group* g = amosum_propagator->group->get(l);
+            if(g == nullptr && amosum_propagator->constraint == "AMO"){
+                // We do not care of falsity, given that if l is false in the amo case the current sum is not affected from it and l does not appear in the reason
+                continue;  
+            }  
+            if(amosum_propagator->constraint == "EO" && g == nullptr){
+                // If it is an amo, we always care about falsity, given that it increases the minimum possible sum (only in case of EO)
+                toWatch.push_back(l);
+                continue;
+            }
+            int maxPossibleSum = amosum_propagator->maxPossibleSum(l);
+            toKeep = maxPossibleSum > amosum_propagator->bound;
+            if(toKeep){ 
+                #ifndef NDEBUG
+                    debug(DEBUG, "[Watching] Watching ", get_name(amosum_propagator->atomNames, l), " because mps: ",maxPossibleSum, " and bound: ",amosum_propagator->bound);
+                #endif 
+                toWatch.push_back(l);
+            }
+            else{
+                #ifndef NDEBUG
+                    debug(DEBUG, "[Watching] Not watching ", get_name(amosum_propagator->atomNames, l), " because mps: ",maxPossibleSum, " and bound: ",amosum_propagator->bound);
+                #endif 
+            }
+        }
 
-        // while(watched.size() > 0){
-        //     int l = watched.back();
-        //     watched.pop_back();
-        //     bool toKeep = true;
-        //     Group* g = amosum_propagator->group->get(l);
-        //     if(g == nullptr && amosum_propagator->constraint == "AMO"){
-        //         // We do not care of falsity, given that 
-        //     }
-        //     int max_ps = amosum_propagator->_max_ps;
-        //     if(toKeep) toWatch.push_back(l);
-        // }
-        // return toWatch;
-
-        return gd->bind;
-        
+        #ifndef NDEBUG
+            debug(DEBUG, "[Watching] Propagator ",amosum_propagator->ID," watches: ", vector_lit_to_string(amosum_propagator->atomNames, toWatch, ""));
+        #endif
+        return toWatch;
+        // return gd->bind;
     }
 
     void AmoSumInitializer::common_phase(AmoSumPropagator* amosum_propagator){
@@ -242,7 +260,7 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
         amosum_propagator->true_group.reset(new TrueGroupFunction(nGroup)) ;
         
         
-        for (size_t i = 1; i < lits.size(); ++i) { // Start from index 1
+        for(size_t i = 1; i < lits.size(); ++i) { // Start from index 1
             
             clingo_literal_t l = lits[i];
  
