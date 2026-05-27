@@ -178,7 +178,7 @@ std::tuple<int, clingo_literal_t, clingo_literal_t> AmoSumPropagator::mps(clingo
             std::string name_tr = get_name(atomNames, true_group->getTrueLiteral(g));
             std::string name_l = get_name(atomNames, l);
             // debugf_old("name_tr: ",name_tr, " name_l: ",name_l);
-            debug(ERROR, "name_tr: ",name_tr, " name_l: ",name_l);
+            debug(ERROR, "There is already a true literal in the group, name_tr: ",name_tr, " name_l: ",name_l);
             cmn::setExitCode(CONSTANTS::ERROR_CODE);
         }
         

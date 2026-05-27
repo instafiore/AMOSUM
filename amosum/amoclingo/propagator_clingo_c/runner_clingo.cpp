@@ -71,7 +71,17 @@ int main(int argc, char const *argv[])
 
     int major, minor, revision;
     clingo_version(&major, &minor, &revision);
-    // printf("Clingo version: %d.%d.%d\n", major, minor, revision);
+    printf("Clingo version: %d.%d.%d\n", major, minor, revision);
+    #ifdef NDEBUG
+        static constexpr bool test_mode    = false;
+    #else
+        static constexpr bool test_mode    = true;
+    #endif
+
+    static constexpr bool release_mode = !test_mode;
+    std::cout << "amosum cpp version 2.0 mode: "
+            << (release_mode ? "release" : "test")
+            << "\n";
 
     std::string encoding = cat(encoding_path);
     std::string instance = cat(instance_path);
