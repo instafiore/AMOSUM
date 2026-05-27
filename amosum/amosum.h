@@ -114,7 +114,7 @@ struct AmoSumPropagator
 
     bool maximizer;
 
-    size_t mpc; // maximum possible change of mps
+    Group* mpc; // maximum possible change of mps (Defined by a group)
 
     
     AmoSumPropagator(){}

@@ -211,6 +211,7 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
 
     void AmoSumInitializer::specific_phase(const std::vector<clingo_literal_t>& lits, AmoSumPropagator* amosum_propagator){
         int max_change = 0 ;
+        Group* mpc = nullptr ;
         std::string ID = amosum_propagator->ID ;
         std::string lazy_param = get_map(amosum_propagator->params, std::string("lazy"), DEFAULT_LAZY) ;
         amosum_propagator->lazy_prop_activated = lazy_param != SETTINGS::FALSE_STR;
@@ -234,10 +235,11 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
 
                 Group* G = new Group(ord_l,ord_i,group_id) ;
                 
-                clingo_literal_t ml = m_w(G, true) ;
+                clingo_literal_t max_l = m_w(G, true) ;
+                clingo_literal_t min_l = m_w(G, false) ;
                 // clingo_literal_t ml = m_w(G, amosum_propagator->ge) ;
-                int max_w = amosum_propagator->weight->get(ml);
-                int min_w = lazy_hybrid || amosum_propagator->constraint == "EO" ? amosum_propagator->weight->get(m_w(G, false)) : 0 ;
+                int max_w = amosum_propagator->weight->get(max_l);
+                int min_w = lazy_hybrid || amosum_propagator->constraint == "EO" ? amosum_propagator->weight->get(min_l) : 0 ;
                 // int min_w = amosum_propagator->lazy_prop_activated || !amosum_propagator->ge ? amosum_propagator->weight->get(m_w(G, !amosum_propagator->ge)) : 0 ;
 
 
@@ -245,15 +247,18 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
                 amosum_propagator->_max_ps = amosum_propagator->_mps + max_w;
 
                 int diff = std::abs(max_w - min_w) ;
-                bool is_aux = equals(generic_data_map[ID]->aux_lit, ml);
-                if (max_change < diff && !is_aux)  max_change = diff;
+                bool is_aux = equals(generic_data_map[ID]->aux_lit, max_l);
+                if ((mpc == nullptr || max_change < diff) && !is_aux){  
+                    max_change = diff;
+                    mpc = G;
+                }
 
                 amosum_propagator->groups.push_back(G);
                 
                 for(const clingo_literal_t& lit: lits_group)  amosum_propagator->group->set(lit, G);
         }
 
-        amosum_propagator->mpc = max_change;
+        amosum_propagator->mpc = mpc;
        
 
         size_t nGroup = Group::autoincrement ;

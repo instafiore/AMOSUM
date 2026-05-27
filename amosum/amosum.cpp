@@ -128,35 +128,73 @@ std::pair<bool, Group*> AmoSumPropagator::update_phase(clingo_literal_t l, int d
         } else if (aggregate->get(not_(l))) {
             G = group->get(not_(l));
             G->decrease_und();
-            auto [new_lit, prev] = G->update(I, ge, false, false, l);
-            if (not_(l) == prev) {
-                G->set_max_min(new_lit, ge);
+            // auto [new_lit, prev] = G->update(I, ge, false, false, l);
+            // --MPC--
+            auto [second_max_und, max_und] = G->update(I, true, false, false, l);
+            auto [second_min_und, min_und] = G->update(I, false, false, false, l);
+            // --MPC--
+
+
+            // if (not_(l) == prev) {
+            //     G->set_max_min(new_lit, ge);
+            //     if (true_group->getTrueLiteral(G) == SETTINGS::NONE) { 
+            //         w_n = weight->get(new_lit);
+            //         w_p = weight->get(prev);
+            //     }
+            //     if (constraint == "AMO") {
+            //         amo_condition = true;
+            //     }
+            // } else if (not_(l) != new_lit) {
+            //     return {false, nullptr};
+            // } else if (constraint == "AMO") {
+            //     amo_condition = true;
+            // } else {
+            //     return {false, nullptr};
+            // }
+            
+            // --MPC--
+            if (not_(l) == max_und || not_(l) == min_und) {
+                if(not_(l) == max_und) G->set_max(second_max_und);
+                else G->set_min(second_min_und);
                 if (true_group->getTrueLiteral(G) == SETTINGS::NONE) { 
-                    w_n = weight->get(new_lit);
-                    w_p = weight->get(prev);
+                    w_n = weight->get(ge ? second_max_und: second_min_und);
+                    w_p = weight->get(ge ? max_und: min_und);
                 }
                 if (constraint == "AMO") {
                     amo_condition = true;
                 }
-            } else if (not_(l) != new_lit) {
+            } else if ((ge && not_(l) != second_max_und) || (!ge && not_(l) != second_min_und)) {
                 return {false, nullptr};
             } else if (constraint == "AMO") {
                 amo_condition = true;
             } else {
                 return {false, nullptr};
             }
+            // --MPC--
         } else {
             return {false, nullptr};
         }
 
         _mps = _mps - w_p + w_n;
+        // --MPC-- MPC update
+        if(G == mpc){
+            mpc = nullptr;
+            for(Group* group: groups){
+                if(true_group->getTrueLiteral(group) != SETTINGS::NONE) continue;
+                if(mpc == nullptr || mpc->pc(ge, constraint, weight.get()) < group->pc(ge, constraint, weight.get())){
+                    mpc = group;
+                }
+            }
+        }
+        bool mpcCondition = (constraint == "AMO" && !ge) ? current_sum + mpc->pc(ge, constraint, weight.get()) > bound : _mps + mpc->pc(ge, constraint, weight.get()); 
+        // --MPC--
         
         update_lazy_propagation();
 
     
         G = (constraint == "EO") ? G : nullptr;
         bool current_sum_condition = !ge || current_sum < bound;
-        bool next_phase = current_sum_condition && (w_p != w_n || amo_condition) && lazy_condition;
+        bool next_phase = current_sum_condition && (w_p != w_n || amo_condition) && lazy_condition && mpcCondition;
         // if(dl >= 5000) debugf("ID: ",ID," mps: ",_mps, " next_phase: ", next_phase, " lazy_condition: ",lazy_condition);
         return {next_phase, G};
 }
@@ -332,44 +370,94 @@ void AmoSumPropagator::onLiteralsUndefined(const std::vector<clingo_literal_t>& 
             current_sum -= w_l;
         }
 
-        clingo_literal_t m_und = m_w(G, ge);
 
-        if (m_und == SETTINGS::NONE) {
-            ge ? G->set_max(l) :  G->set_min(l); 
+        // clingo_literal_t m_und = m_w(G, ge);
+        // --MPC--
+        clingo_literal_t max_und = m_w(G, true);
+        clingo_literal_t min_und = m_w(G, false);
+        // --MPC--
+
+        // if (m_und == SETTINGS::NONE) {
+        // --MPC--
+        if (max_und == SETTINGS::NONE) {
+            assert(min_und == SETTINGS::NONE);
+        // --MPC--
+            // ge ? G->set_max(l) :  G->set_min(l); 
+            // --MPC--
+            G->set_max(l);
+            G->set_min(l);
+            // --MPC--
 
             if (tg == SETTINGS::NONE) {
-                if (constraint == "AMO") {
+                if (constraint == "AMO" && ge) {
                     _mps += w_l;
                 } else {
                     assert(false);
                 }
             }
+            // --MPC-- MPC update
+            if(tg == SETTINGS::NONE && G->pc(ge, constraint, weight.get()) > mpc->pc(ge, constraint, weight.get())) mpc = G;
+            // --MPC--
             continue;
         }
 
-        int pos_m = G->ord_i[m_und];
+        assert(max_und != SETTINGS::NONE);
+        assert(min_und != SETTINGS::NONE);
+
+        // int pos_m = G->ord_i[m_und];
+        // int pos_l = G->ord_i[l];
+        // int m_weight = weight->get(m_und);
+
+        // --MPC--
         int pos_l = G->ord_i[l];
-        int m_weight = weight->get(m_und);
+        int pos_max = G->ord_i[max_und];
+        int max_weight = weight->get(max_und);
+        int pos_min = G->ord_i[min_und];
+        int min_weight = weight->get(min_und);
+        // --MPC--
+
+
 
         if (tg == l) {
             // Update the _mps
-            if ((m_weight > w_l && ge) || (m_weight < w_l && !ge)) {
-                _mps = _mps - w_l + m_weight;
+            // if ((m_weight > w_l && ge) || (m_weight < w_l && !ge)) {
+            //     _mps = _mps - w_l + m_weight;
+            // }
+            // --MPC--
+            if ((max_weight > w_l && ge) || (min_weight < w_l && !ge)) {
+                _mps = _mps - w_l + (max_weight ? ge : min_weight);
             }
+            // --MPC--
 
             // Update max or min undefined
-            if ((ge && pos_m < pos_l) || (!ge && pos_m > pos_l)) {
-                ge ? G->set_max(l) :  G->set_min(l); 
-            }
+            // if ((ge && pos_m < pos_l) || (!ge && pos_m > pos_l)) {
+            //     ge ? G->set_max(l) :  G->set_min(l); 
+            // }
+            // --MPC--
+            if(pos_max < pos_l) G->set_max(l);
+            if(pos_min > pos_l) G->set_min(l);
+            // --MPC--
         } else {
-            if ((ge && w_l >= m_weight && pos_l > pos_m) || (!ge && w_l <= m_weight && pos_l < pos_m)) {
-                ge ? G->set_max(l) :  G->set_min(l); 
+            // if ((ge && w_l >= m_weight && pos_l > pos_m) || (!ge && w_l <= m_weight && pos_l < pos_m)) {
+            //     ge ? G->set_max(l) :  G->set_min(l); 
 
-                if (tg == SETTINGS::NONE) {
-                    _mps = _mps - m_weight + w_l;
-                }
+            //     if (tg == SETTINGS::NONE) {
+            //         _mps = _mps - m_weight + w_l;
+            //     }
+            // }
+            // --MPC--
+            if(pos_max < pos_l) G->set_max(l);
+            if(pos_min > pos_l) G->set_min(l);
+            if ((tg == SETTINGS::NONE) && (ge && w_l >= max_weight && pos_l > pos_max) || (!ge && w_l <= min_weight && pos_l < pos_min)) {
+                _mps = _mps - (ge ? max_weight : min_weight) + w_l;
             }
+            // --MPC--
         }
+
+        // --MPC-- MPC update
+        if(tg == SETTINGS::NONE && G->pc(ge, constraint, weight.get()) > mpc->pc(ge, constraint, weight.get())) mpc = G;
+        // --MPC--
+
     }
 
 }

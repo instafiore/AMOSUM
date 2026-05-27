@@ -143,6 +143,8 @@ public:
     void set_max(int l) { max_und = (l != SETTINGS::NONE) ? ord_i[l] : SETTINGS::NONE; }
     void set_min(int l) { min_und = (l != SETTINGS::NONE) ? ord_i[l] : SETTINGS::NONE; }
 
+    inline size_t pc(const bool& ge, const std::string& constraint, const WeightFunction* w) noexcept { !ge && constraint == "AMO" || max_und == min_und ? w->get(max_und): std::abs(w->get(max_und) - w->get(min_und)); }
+    
     void set_max_min(int l, bool max) {
         if (max) set_max(l);
         else set_min(l);
