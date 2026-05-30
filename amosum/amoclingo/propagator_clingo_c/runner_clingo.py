@@ -7,7 +7,7 @@ from typing import Dict, List
 import re
 import sys
 import os
-import amosum_parser
+import amosum.amosum_parser as amosum_parser
 from amosum import *
 import signal
 
@@ -15,7 +15,7 @@ import signal
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import ast
-from amowasp.propagator_wasp_py.runner_wasp import RunnerWasp
+from amosum.amowasp.propagator_wasp_py.runner_wasp import RunnerWasp
 from  utility import *
 import utility
 import settings
@@ -37,10 +37,10 @@ class RunnerClingoCpp(RunnerWasp):
     def __init__(self, parameters: Dict[str, str]) -> None:
         super().__init__(parameters)
 
-    def handleRun(self, run, totalTime, maximizationProblem = False) -> Result:
+    def handleRun(self, run, totalTime, maximizationProblem = False) -> List[Result]:
         eachModelTime = totalTime
         generator = run_and_stream(run)
-        result: Result = None
+        results: List[Result] = []
     
 
         for line in generator:
@@ -56,10 +56,14 @@ class RunnerClingoCpp(RunnerWasp):
                 result.timeModel = round(endCurrentModelTime - eachModelTime, 3)
                 eachModelTime = endCurrentModelTime            
             print(result)
-        
-        return result
+            results.append(result)
+
+        if len(results) == 0:
+                results.append(Result(None, 20))
+
+        return results
     
-    def run(self):
+    def run(self) -> Result:
         
         location_encoding = self.encoding
         location_instance = self.instance
@@ -103,4 +107,4 @@ class RunnerClingoCpp(RunnerWasp):
         result = self.handleRun(run, totalTime, maximization)
         # print(f"Exit code: {result.exitCode}")
         
-        return result.exitCode if result else 40
+        return result

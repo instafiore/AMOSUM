@@ -9,7 +9,7 @@
 #include <clingo.h>
 
 namespace SETTINGS {
-const std::vector<std::string> PROPAGATORS_NAMES = {"ge_amo", "ge_eo", "le_eo","amomaximize"}; 
+const std::vector<std::string> PROPAGATORS_NAMES = {"ge_amo", "ge_eo", "le_eo", "le_amo", "amomaximize"}; 
 const int NONE = std::numeric_limits<int>::max() ;
 const float NONE_FLOAT = std::numeric_limits<float>::max() ;
 const std::string TRUE_STR = "true" ;

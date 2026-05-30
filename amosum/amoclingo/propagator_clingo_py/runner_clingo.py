@@ -34,7 +34,7 @@ class RunnerClingoPython(RunnerWasp):
     def __init__(self, parameters: Dict[str, str]) -> None:
         super().__init__(parameters)
     
-    def run(self):
+    def run(self) -> List[Result]:
         
         location_encoding = self.encoding
         location_instance = self.instance
@@ -66,22 +66,25 @@ class RunnerClingoPython(RunnerWasp):
         for amosum in preprocess_map["amosum_set"]:
             self.registerPropagator(prop_type=amosum.prop_type, id=amosum.id)
 
+        results: List[Result] = None
         model : Model = None
         def on_model(modelClingo):
             nonlocal model
+            nonlocal results
             model = Model(None, [str(atom) for atom in modelClingo.symbols(shown=True)])
+            results.append(Result(model, 10))
 
     
-        result: Result = None
         def on_finish(x: SolveResult):
             nonlocal result
             if x.unsatisfiable:
                 exitCode = 20
+                results.append(Result(model, exitCode))
             elif x.satisfiable:
                 exitCode = 10
             else:
                 exitCode = 1
-            result = Result(model, exitCode)
+           
 
         try:
             handle : clingo.SolveHandle = self.ctl.solve(on_finish=on_finish ,on_model=on_model, async_ = True)
@@ -94,7 +97,7 @@ class RunnerClingoPython(RunnerWasp):
 
         print(f"Exit code: {result.exitCode}")
         
-        return result.exitCode
+        return results
     
     def registerPropagator(self, prop_type: str, id: str):
         ge, propagate_phase, choice_cons = get_propagator_variables(prop_type=prop_type)

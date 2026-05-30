@@ -92,7 +92,7 @@ class AspFactory():
             prop_type = "ge_amo" if amo else "ge_eo"
         elif op.type == "LESS_OR_EQ":
             predicate_name = PREDICATE_UB
-            prop_type = "le_eo"
+            prop_type = "le_amo" if amo else "le_eo"
         else:
             assert False
         return prop_type, predicate_name

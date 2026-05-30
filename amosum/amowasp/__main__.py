@@ -23,8 +23,8 @@ def run():
 
     
     runner = RunnerWasp(parameters=param)
-    exitCode = runner.run()
-    exit(exitCode)
+    result = runner.run()
+    exit(result.exitCode if result else ERROR_CODE)
 
 
 if __name__ == '__main__':

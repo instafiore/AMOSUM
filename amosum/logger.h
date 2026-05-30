@@ -42,10 +42,10 @@ const int NUM_LOG_LEVELS = 7;
     unordered_set_to_string_name(atomNames, uset, name)
     #define printPropagate(prop,changes,size,control,dl)\
     print_propagate(prop, changes, size, control, dl,false)
-    #define printReason(atomNames, reason)\
-    print_reason(atomNames, reason->data())
-    #define printUndo(this, changes, size, control, dl, td)\
-    print_undo(this, changes, size, control, dl, td, false);
+    #define printReason(atomNames, reason, l)\
+    print_reason(atomNames, reason, l)
+    #define printUndo(prop, changes, size, control, dl, td)\
+    print_undo(prop, changes, size, control, dl, td, false);
     #define printClingoStats(stats, key, depth)\
     print_clingo_statistics(stats, key, depth)
     #define printDerivation(atomNames, S)\

@@ -1,6 +1,6 @@
 import sys
 from amosum.amowasp.propagator_wasp_py.wasp import *
-from settings import *
+from amosum.settings import *
 
 class amosum_aggregate:
     id : str # id aggregate

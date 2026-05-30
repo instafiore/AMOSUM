@@ -14,6 +14,7 @@
 #include "amowasp/propagator_wasp_c/ge_amo.h" 
 #include "amowasp/propagator_wasp_c/ge_eo.h" 
 #include "amowasp/propagator_wasp_c/le_eo.h" 
+#include "amowasp/propagator_wasp_c/le_amo.h" 
 #include "amoclingo/propagator_clingo_c/propagator_clingo.h"
 #include "utility.tpp"
 #include <chrono>
@@ -705,26 +706,30 @@ bool solve(clingo_control_t *ctl, std::vector<AnswerSet*> &results, bool falseLi
 std::tuple<bool, const std::vector<clingo_literal_t>* (*)(const Group*, AmoSumPropagator*), std::string>  get_propagator_variables(std::string prop_type){
     
     bool ge;
-    std::string choice_cons;
+    std::string constraint;
     const std::vector<clingo_literal_t>* (*propagation_phase)(const Group*, AmoSumPropagator*);
 
     if (prop_type == "ge_amo") {
         ge = true;
-        choice_cons = "AMO";
+        constraint = "AMO";
         propagation_phase = propagation_phase_ge_amo ;
     } else if (prop_type == "le_eo") {
         ge = false;
-        choice_cons = "EO";
+        constraint = "EO";
         propagation_phase = propagation_phase_le_eo ;
     } else if (prop_type == "ge_eo") {
         ge = true;
-        choice_cons = "EO";
+        constraint = "EO";
         propagation_phase = propagation_phase_ge_eo ;
+    } else if (prop_type == "le_amo") {
+        ge = false;
+        constraint = "AMO";
+        propagation_phase = propagation_phase_le_amo ;
     } else {
         assert(false && "Unexpected prop_type!");
     }
 
-    return std::make_tuple(ge, propagation_phase, choice_cons);
+    return std::make_tuple(ge, propagation_phase, constraint);
 }
 
 void create_reason_falses(AmoSumPropagator* propagator, bool ge, std::unordered_map<clingo_literal_t, int> &sum_removed_weights, clingo_literal_t flipped = SETTINGS::NONE) {
@@ -767,7 +772,7 @@ void create_reason_falses_ge(AmoSumPropagator* propagator, std::unordered_map<cl
             }
             //
             if(g == G) continue; 
-            assert((propagator->maximizer && propagator->mps_violated && derived == SETTINGS::PLITBOTTOM ) || G != nullptr);
+            assert((propagator->maximizer && propagator->sum_violated && derived == SETTINGS::PLITBOTTOM ) || G != nullptr);
 
             if (propagator->true_group->getTrueLiteral(g) == SETTINGS::NONE) {
                 
@@ -783,7 +788,7 @@ void create_reason_falses_ge(AmoSumPropagator* propagator, std::unordered_map<cl
                         
                         bool redundant = false;
                         if(minimizationOnTheFly){
-                            auto mps_h = propagator->mps_violated ? propagator->_mps : std::get<0>(propagator->mps(derived, !derived_true));
+                            auto mps_h = propagator->sum_violated ? propagator->_mps : std::get<0>(propagator->mpsH(derived, !derived_true));
                             int s = propagator->lb - mps_h - 1;
                             int weight = propagator->weight->get(l);
                             int inc = weight - mw_g;
@@ -803,11 +808,11 @@ void create_reason_falses_ge(AmoSumPropagator* propagator, std::unordered_map<cl
                 }
             } else if(!equals(propagator->true_group->getTrueLiteral(g), flipped)) {
                 int tr = propagator->true_group->getTrueLiteral(g) ;
-                auto mps_h = propagator->mps_violated ? propagator->_mps : std::get<0>(propagator->mps(derived, !derived_true));
+                auto mps_h = propagator->sum_violated ? propagator->_mps : std::get<0>(propagator->mpsH(derived, !derived_true));
 
                 bool redundant = false;
                 if(minimizationOnTheFly){
-                    auto mps_h = propagator->mps_violated ? propagator->_mps : std::get<0>(propagator->mps(derived, !derived_true));
+                    auto mps_h = propagator->sum_violated ? propagator->_mps : std::get<0>(propagator->mpsH(derived, !derived_true));
                     int s = propagator->lb - mps_h - 1;
                     int w = propagator->weight->get(tr); 
                     int w_mw_g = g->ord_l.size() > 0 ? propagator->weight->get(g->ord_l.back()) : s + 1 + w; 
@@ -876,7 +881,7 @@ void create_reason_true_ge(AmoSumPropagator* propagator, clingo_literal_t sml_g,
     assert(i <= j);
     assert(derived != SETTINGS::NONE);
 
-    auto mps_h = propagator->mps_violated ? propagator->_mps : std::get<0>(propagator->mps(derived, false));
+    auto mps_h = propagator->sum_violated ? propagator->_mps : std::get<0>(propagator->mpsH(derived, false));
     int s = propagator->lb - mps_h - 1 ;
     // for (int k = i; k < j; ++k) {
     for (int k = j; k >= i; --k) {
@@ -938,6 +943,22 @@ void create_reason_falses_le(AmoSumPropagator* propagator, clingo_literal_t flip
                 }
             }
         } else if(!equals(propagator->true_group->getTrueLiteral(g), flipped)) {
+            for(auto lit : propagator->S){
+                auto R = get_perfect_hash_with_pointer(propagator->reason.get(), lit);
+                Group* G = propagator->group->get(lit);
+                if (G == nullptr) G = propagator->group->get(not_(lit));
+                if(g == G) continue; 
+                R->push_back(not_(propagator->true_group->getTrueLiteral(g)));
+            }
+        }
+    }
+}
+
+void create_reason_le_amo(AmoSumPropagator* propagator, clingo_literal_t flipped = SETTINGS::NONE) {
+    if(propagator->dl == 0) return ;
+
+    for (auto* g : propagator->groups) {
+        if(propagator->true_group->getTrueLiteral(g) != SETTINGS::NONE && !equals(propagator->true_group->getTrueLiteral(g), flipped)) {
             for(auto lit : propagator->S){
                 auto R = get_perfect_hash_with_pointer(propagator->reason.get(), lit);
                 Group* G = propagator->group->get(lit);
@@ -1064,32 +1085,32 @@ void print_propagate(PropagatorClingo* prop, const clingo_literal_t *changes, si
     if(decision_slit != -1)
         decision_slit != 1 ? decision_literal_name = get_name(prop->atomNames, plit) : decision_literal_name = "from facts" ;
     else
-        decision_literal_name = "non lo so";
+        decision_literal_name = "aux";
 
 
-    debug(INFO, "[", decision_literal_name,", ",dl,"] propagate ", changes_str, " mps: ", prop->propagators[td]->_mps, " bound: ",prop->propagators[td]->bound," td: ", td);
+    debug(INFO, "[", decision_literal_name,", ",dl,"] propagate ", changes_str, " mps: ", prop->propagators[td]->mps(), " bound: ",prop->propagators[td]->bound," td: ", td, " id: ", prop->propagators[td]->ID);
 }
 
-void print_undo(PropagatorClingo* prop, const clingo_literal_t *changes, size_t size, clingo_propagate_control_t *control, int dl, int td, bool wasp_b = false){
+void print_undo(PropagatorClingo* prop, const clingo_literal_t *changes, size_t size, clingo_propagate_control_t *control, int dl, int td, bool wasp_b){
     std::string changes_str ;    
     if (wasp_b)  raise_wasp_not_implemented_exception() ;
     else  changes_str = prop->compute_changes_str(changes, size, td) ;
 
-    debug(DEBUG, "dl: ",dl," undo ", changes_str," thread_id: ", td);
+    debug(INFO, "id: ", prop->propagators[td]->ID, " dl: ",dl," undo ", changes_str," thread_id: ", td, " mps: ", prop->propagators[td]->mps());
 }
 
 clingo_literal_t max_w(const Group* g) {
-    if (g->max_und == SETTINGS::NONE) return SETTINGS::NONE; // No max undefined value 
+    if (g->max_und_i == SETTINGS::NONE) return SETTINGS::NONE; // No max undefined value 
 
     try {
-        return g->ord_l[g->max_und]; // Get the literal using max_und
+        return g->ord_l[g->max_und_i]; // Get the literal using max_und
     } catch (const std::out_of_range& e) {
         // debug_old("Error accessing g.ord_l with max_und. Debug info:");
         // debug_old(vector_to_string(g->ord_l,"g.ord_l: "));
         // debug_old("max_und: " + std::to_string(g->max_und));
         debug(DEBUG, "Error accessing g.ord_l with max_und. Debug info:");
         debug(DEBUG, vector_to_string(g->ord_l,"g.ord_l: "));
-        debug(DEBUG, "max_und: " + std::to_string(g->max_und));
+        debug(DEBUG, "max_und: " + std::to_string(g->max_und_i));
         cmn::setExitCode(CONSTANTS::ERROR_CODE, true);
     }
     return 0;
@@ -1100,14 +1121,15 @@ clingo_literal_t max_w(const Group* g) {
 
 // Function to return the min undefined literal
 clingo_literal_t min_w(const Group* g) {
-    if (g->min_und == SETTINGS::NONE) return SETTINGS::NONE; // No max undefined value 
-    return g->ord_l[g->min_und]; // Get the literal using min_und
+    if (g->min_und_i == SETTINGS::NONE) return SETTINGS::NONE; // No max undefined value 
+    return g->ord_l[g->min_und_i]; // Get the literal using min_und
 }
 
 // Function to select between max_w and min_w
 clingo_literal_t m_w(const Group* g, bool max) {
     return max ? max_w(g) : min_w(g) ; 
 }
+size_t Group::pc(const bool& ge, const std::string& constraint, const WeightFunction* w) noexcept { return (!ge || max_und_i == min_und_i) && constraint == "AMO" ? w->get(this->max_und()): std::abs(w->get(this->max_und()) - w->get(this->min_und())); }
 
 
 
@@ -1148,23 +1170,23 @@ std::pair<clingo_literal_t, clingo_literal_t> Group::update_max(
     const std::unique_ptr<InterpretationFunction>& I, bool all = false, bool update = true, 
     const clingo_literal_t& assuming_und = SETTINGS::NONE) {
 
-    clingo_literal_t prev_max = (((size_t)max_und) < ord_l.size())? ord_l[max_und]: SETTINGS::NONE;
+    clingo_literal_t prev_max = (((size_t)max_und_i) < ord_l.size())? ord_l[max_und_i]: SETTINGS::NONE;
 
-    int start = all ? (N - 1) : (max_und != SETTINGS::NONE ? (max_und - 1) : -1);
+    int start = all ? (N - 1) : (max_und_i != SETTINGS::NONE ? (max_und_i - 1) : -1);
     if (start < 0) {
-        if (update) max_und = SETTINGS::NONE;
+        if (update) max_und_i = SETTINGS::NONE;
         return {SETTINGS::NONE, prev_max};
     }
 
     for (int i = start; i >= 0; --i) {
         clingo_literal_t l = ord_l[i];
         if (I->get(l) == SETTINGS::NONE || equals(l, assuming_und)) {
-            if (update) max_und = i;
+            if (update) max_und_i = i;
             return {l, prev_max};
         }
     }
 
-    if (update) max_und = SETTINGS::NONE;
+    if (update) max_und_i = SETTINGS::NONE;
     return {SETTINGS::NONE, prev_max};
 }
 
@@ -1172,23 +1194,23 @@ std::pair<clingo_literal_t, clingo_literal_t> Group::update_min(
         const std::unique_ptr<InterpretationFunction>& I, bool all = false, bool update = true, 
         const clingo_literal_t& assuming_und = SETTINGS::NONE) {
 
-        clingo_literal_t prev_min = (((size_t)min_und) < ord_l.size()) ? ord_l[min_und] : SETTINGS::NONE;
+        clingo_literal_t prev_min = (((size_t)min_und_i) < ord_l.size()) ? ord_l[min_und_i] : SETTINGS::NONE;
 
-        int start = all ? 0 : (min_und != SETTINGS::NONE ? (min_und + 1) : N);
+        int start = all ? 0 : (min_und_i != SETTINGS::NONE ? (min_und_i + 1) : N);
         if (start >= N) {
-            if (update) min_und = SETTINGS::NONE;
+            if (update) min_und_i = SETTINGS::NONE;
             return {SETTINGS::NONE, prev_min};
         }
 
         for (int i = start; i < N; ++i) {
             clingo_literal_t l = ord_l[i];
             if (I->get(l) == SETTINGS::NONE || equals(l, assuming_und)) {
-                if (update) min_und = i;
+                if (update) min_und_i = i;
                 return {l, prev_min};
             }
         }
 
-        if (update) min_und = SETTINGS::NONE;
+        if (update) min_und_i = SETTINGS::NONE;
         return {SETTINGS::NONE, prev_min};
     }
 
@@ -1262,6 +1284,7 @@ void simplifyLiterals(
 
         // Updating max_und/min_und
         G->update(I, max, true);
+        G->update(I, !max, true);
 
         // Removing from aggregate
         aggregate->set(l,false);

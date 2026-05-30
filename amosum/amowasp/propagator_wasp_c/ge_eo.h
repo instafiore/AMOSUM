@@ -16,7 +16,7 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_eo(const Group* G, Amo
     propagator->S.clear();
     std::unordered_map<clingo_literal_t, int> sum_removed_weights;
 
-    if (propagator->mps_violated) {
+    if (propagator->sum_violated) {
         
         if(!propagator->lazy_prop_activated)
             return &propagator->S ;
@@ -54,7 +54,8 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_eo(const Group* G, Amo
 
         for (int l : g->ord_l) {
             if (propagator->I->get(l) == SETTINGS::NONE) {
-                if (std::get<0>(propagator->mps(l, true)) < propagator->lb) {
+                int mpsH = std::get<0>(propagator->mpsH(l, true));
+                if (mpsH < propagator->lb) {
                     
                     if(!propagator->is_true(not_(l))) {
                         propagator->S.push_back(not_(l));
@@ -75,7 +76,7 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_eo(const Group* G, Amo
         propagator->compute_minimal_reason(propagator->S);
     }
 
-    // printDerivation(propagator->atomNames, propagator->S, false);
+    printDerivation(propagator->atomNames, propagator->S);
     
     return &propagator->S;
 }

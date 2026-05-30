@@ -113,8 +113,8 @@ public:
     std::vector<int> ord_l;        // Ordered literals by weight
     std::vector<int> ord_l_origin; // Original order of literals
     std::unordered_map<int, int> ord_i;      // Inverse map for ord_l (literal -> index in ord_l)
-    int max_und;                   // Index of the maximum undefined literal in ord_l
-    int min_und;                   // Index of the minimum undefined literal in ord_l
+    int max_und_i;                   // Index of the maximum undefined literal in ord_l
+    int min_und_i;                   // Index of the minimum undefined literal in ord_l
     std::vector<int> falses_facts; // All false fact literals of the group
     std::string id;                        // Group ID
     int id_autoinc;                // Auto-incremented ID for the group
@@ -125,8 +125,8 @@ public:
         N = this->ord_l.size();
         count_undef = N;
         ord_l_origin = this->ord_l;  // Copy original order
-        max_und = N - 1;
-        min_und = 0;
+        max_und_i = N - 1;
+        min_und_i = 0;
     }
 
     // Methods for increasing and decreasing undefined literals count
@@ -140,15 +140,20 @@ public:
     }
 
     // Setting max and min undefined literals
-    void set_max(int l) { max_und = (l != SETTINGS::NONE) ? ord_i[l] : SETTINGS::NONE; }
-    void set_min(int l) { min_und = (l != SETTINGS::NONE) ? ord_i[l] : SETTINGS::NONE; }
+    void set_max(int l) { 
+        max_und_i = (l != SETTINGS::NONE) ? ord_i[l] : SETTINGS::NONE; }
+    void set_min(int l) { 
+        min_und_i = (l != SETTINGS::NONE) ? ord_i[l] : SETTINGS::NONE; }
 
-    inline size_t pc(const bool& ge, const std::string& constraint, const WeightFunction* w) noexcept { !ge && constraint == "AMO" || max_und == min_und ? w->get(max_und): std::abs(w->get(max_und) - w->get(min_und)); }
+    size_t pc(const bool& ge, const std::string& constraint, const WeightFunction* w) noexcept;
     
     void set_max_min(int l, bool max) {
         if (max) set_max(l);
         else set_min(l);
     }
+
+    inline clingo_literal_t max_und() noexcept { return max_und_i == SETTINGS::NONE ? SETTINGS::NONE : this->ord_l[max_und_i]; }
+    inline clingo_literal_t min_und() noexcept { return min_und_i == SETTINGS::NONE ? SETTINGS::NONE : this->ord_l[min_und_i]; }
 
     // Getting the most undefined literal
     int get_most_undefined(bool max);
@@ -171,6 +176,9 @@ public:
         return id == other.id;
     }
 };
+
+
+
 
 
 
@@ -231,15 +239,16 @@ inline int not_(int literal) {
 
 void create_reason_falses(AmoSumPropagator* propagator, bool ge, std::unordered_map<clingo_literal_t, int> &sum_removed_weights, clingo_literal_t flipped);
 void create_reason_falses_ge(AmoSumPropagator* propagator, std::unordered_map<clingo_literal_t, int> &sum_removed_weights, clingo_literal_t flipped);
-void create_reason_falses_le(AmoSumPropagator* propagator, clingo_literal_t flipped);
 void create_reason_true_ge(AmoSumPropagator* propagator, clingo_literal_t sml_g, clingo_literal_t derived, Group* g, std::unordered_map<clingo_literal_t, int> &sum_removed_weights);
+void create_reason_falses_le(AmoSumPropagator* propagator, clingo_literal_t flipped);
+void create_reason_le_amo(AmoSumPropagator* propagator, clingo_literal_t flipped);
 void create_reason_true_le(AmoSumPropagator* propagator, clingo_literal_t sml_g, clingo_literal_t derived, Group* g);
 std::tuple<bool, const std::vector<clingo_literal_t>* (*)(const Group*, AmoSumPropagator*), std::string>  get_propagator_variables(std::string prop_type);
 // Function to get the name
 std::string get_name(const std::unordered_map<clingo_symbol_t, clingo_literal_t>* atomNames, clingo_literal_t lit);
 void print_propagate(PropagatorClingo* prop, const clingo_literal_t *changes, size_t size, clingo_propagate_control_t *control, int dl, bool wasp_b);
 void print_derivation(const std::unordered_map<clingo_symbol_t, clingo_literal_t>* atomNames, const std::vector<clingo_literal_t>& S);
-void print_undo(PropagatorClingo* prop, const clingo_literal_t *changes, size_t size, clingo_propagate_control_t *control, int dl, int td, bool force_print , bool wasp_b );
+void print_undo(PropagatorClingo* prop, const clingo_literal_t *changes, size_t size, clingo_propagate_control_t *control, int dl, int td, bool wasp_b);
 void print_reason(const std::unordered_map<clingo_symbol_t, clingo_literal_t>* atomNames, const std::vector<clingo_literal_t>& R, clingo_literal_t lit);
 void print_reduction_reason(const AmoSumPropagator& propagator, const std::vector<clingo_literal_t>& reason_c, const std::vector<clingo_literal_t>& reason, clingo_literal_t lit, float p, bool force_print);
 std::string atomNames_to_string(const std::unordered_map<clingo_symbol_t, clingo_literal_t>* atomNames);

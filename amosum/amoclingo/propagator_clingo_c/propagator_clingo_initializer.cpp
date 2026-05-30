@@ -55,7 +55,7 @@ void PropagatorClingoInitializer::init(clingo_propagate_init* _init, PropagatorC
 
         if (plit > max_plit) { max_plit = plit; }
 
-        // debugf("[init] symbol: ", symbol_str, " symbol: ", symbol, " plit: ", plit, " slit: ", slit)
+        debug(INFO, "[init] symbol: ", symbol_str, " symbol: ", symbol, " plit: ", plit, " slit: ", slit);
 
         atomNames->emplace(symbol, plit);
         (*map_plit_slit)[plit] = slit ; 

@@ -33,8 +33,8 @@ def run():
         runner = RunnerClingoCpp(parameters=params)
     else:
         assert False
-    exitCode = runner.run()
-    exit(exitCode)
+    results = runner.run()
+    exit(results[0].exitCode if results else ERROR_CODE)
 
 if __name__ == '__main__':
     run()

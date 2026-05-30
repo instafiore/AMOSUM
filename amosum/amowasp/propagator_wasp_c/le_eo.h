@@ -18,7 +18,7 @@ const std::vector<clingo_literal_t>* propagation_phase_le_eo(const Group* G, Amo
     propagator->S.clear();
 
     // Handle case when mps_violated is true
-    if (propagator->mps_violated) {
+    if (propagator->sum_violated) {
 
         if(!propagator->lazy_prop_activated)
             return &propagator->S ;
@@ -56,7 +56,8 @@ const std::vector<clingo_literal_t>* propagation_phase_le_eo(const Group* G, Amo
         for (int i = g->ord_l.size() - 1; i >= 0; --i) {
             clingo_literal_t l = g->ord_l[i];
             if (propagator->I->get(l) == SETTINGS::NONE) {
-                if (std::get<0>(propagator->mps(l, true)) > propagator->ub) {
+                int mpsH = std::get<0>(propagator->mpsH(l, true));
+                if (mpsH > propagator->ub) {
                     // Infer l as false
                     if (!propagator->is_true(not_(l))) {
                         propagator->S.push_back(not_(l));

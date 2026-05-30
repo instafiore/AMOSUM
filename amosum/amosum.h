@@ -79,7 +79,7 @@ struct AmoSumPropagator
     float lazy_perc = SETTINGS::NONE_FLOAT ;
 
     // whether the mps is violated
-    bool mps_violated = false ; 
+    bool sum_violated = false ; 
 
     int current_sum ;
 
@@ -94,11 +94,10 @@ struct AmoSumPropagator
     // inverse of map_slit_plit
     std::unordered_map<clingo_literal_t, clingo_literal_t>* map_plit_slit ;
 
-    int lb = SETTINGS::NONE;      // lower bound
-    int _mps;    // max/min possible sum
-    int _max_ps;    // max possible sum
-    int ub = SETTINGS::NONE;      // upper bound
-    int bound = SETTINGS::NONE ; // either lb or ub depending on ge
+    int lb = SETTINGS::NONE;        // lower bound
+    int _mps;                       // max/min possible sum
+    int ub = SETTINGS::NONE;        // upper bound
+    int bound = SETTINGS::NONE ;    // either lb or ub depending on ge
     
     std::string solver; 
     static constexpr const char* CLINGO = "clingo";
@@ -113,11 +112,12 @@ struct AmoSumPropagator
     void updateBound(int bound);
 
     bool maximizer;
+    const bool dynamicMPC;
 
     Group* mpc; // maximum possible change of mps (Defined by a group)
 
     
-    AmoSumPropagator(){}
+    // AmoSumPropagator(){}
     AmoSumPropagator(
         std::unordered_map<clingo_symbol_t, clingo_literal_t>* atomNames,
         std::unordered_map<std::string, std::string> params,
@@ -132,7 +132,8 @@ struct AmoSumPropagator
           ge(ge),
           constraint(std::move(choice_cons)),
           solver(std::move(solver)),
-          maximizer(maximizer)
+          maximizer(maximizer),
+          dynamicMPC(this->params["static_mpc"] == CONSTANTS::FALSE_STR)
           {}
 
     ~AmoSumPropagator(){
@@ -152,10 +153,15 @@ struct AmoSumPropagator
     const std::vector<clingo_literal_t>* onLiteralTrue(const clingo_literal_t& lit, const int& dl);
     void onLiteralsUndefined(const std::vector<clingo_literal_t> &plit_list, bool wasp);
 
+    void updateMPC() noexcept;
+    
+    // Min/Max possible sum in case EO or >= otherwise it represents the current sum
+    inline int mps(){ return (constraint == "AMO" && !ge) ? current_sum : _mps; }
+
 
     void update_lazy_propagation();
     std::pair<bool, Group*> update_phase(clingo_literal_t l, int dl);
-    std::tuple<int, clingo_literal_t, clingo_literal_t> mps(clingo_literal_t l, bool assumed);
+    std::tuple<int, clingo_literal_t, clingo_literal_t> mpsH(clingo_literal_t l, bool assumed);
     int maxPossibleSum(clingo_literal_t l);
     int minPossibleSum(clingo_literal_t l);
     void updated_dl(int lit, int new_dl);

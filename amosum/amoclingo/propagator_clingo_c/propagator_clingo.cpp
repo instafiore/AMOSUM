@@ -209,7 +209,8 @@ void PropagatorClingo::undo(clingo_propagate_control_t *control, const clingo_li
         clingo_literal_t slit = changes[i];
         extend_vector(plit_list, map_slit_plit_watched[slit]);
     }
-    // print_undo(this, changes, size, control, dl, td, false, false);
+
+    printUndo(this, changes, size, control, dl, td);
     prop->onLiteralsUndefined(plit_list, false);
 }
 

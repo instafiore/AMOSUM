@@ -18,6 +18,7 @@ DEBUG = False
 # focusing print for a particular group
 FOCUSED_GROUP = 2
 FOCUSING = False
+ERROR_CODE = 1
 
 # assumptions
 SEPARATOR_ASSUMPTIONS = ":"
@@ -230,10 +231,10 @@ def lazy_type(value):
     )
 
 
-def parse_args():
+def parse_args(checkCorrectness: bool = False):
     
     parser = argparse.ArgumentParser(description='Amosum propagator')
-    parser.add_argument("-e", "--encoding", required=True, help="Path to encoding file")
+    parser.add_argument("-e", "--encoding", required=not checkCorrectness, help="Path to encoding file")
 
     parser.add_argument(
         "-i",
@@ -289,11 +290,101 @@ def parse_args():
         default="log",
         help="Path to the file where execution logs should be saved (when in test mode)",
     )
+
+    parser.add_argument(
+        "-smpc",
+        "--static-mpc",
+        type=str,
+        default="false",
+        help=(
+            "Enable or disable static(true)/dynamic(false) propagation for the "
+            "Maximum Possible Change of the Maximum Possible Sum (default: false)"
+        ),
+    )
+
+    if checkCorrectness:
+        subparsers = parser.add_subparsers(
+            dest="check",
+            required=True,
+            help="Check mode: 'all' checks all answer sets, 'unsat' checks unsatisfiable results in exp file, 'instance' checks a single computed answer set",
+        )
+
+        parser_all = subparsers.add_parser("all", help="Check all answer sets")
+        parser_all.add_argument(
+            "-s", "--solver",
+            required=False,
+            default="clingo",
+            help="Solver to use (default: clingo)",
+        )
+
+        parser_unsat = subparsers.add_parser("unsat", help="Check unsatisfiable results in exp file")
+        parser_unsat.add_argument(
+            "-uf", "--unsatfile",
+            required=True,
+            help="Path to the experiments file (.exp)",
+        )
+
+        parser_unsat_clown = subparsers.add_parser("unsat-clown", help="Check unsatisfiable results in exp file using the Clown server")
+        parser_unsat_clown.add_argument(
+            "-uf", "--unsatfile",
+            required=True,
+            help="Path to the experiments file (.exp)",
+        )
+
+        parser_instance = subparsers.add_parser("instance", help="Check a single computed answer set")
+        parser_instance.add_argument(
+            "-f", "--file_answerset",
+            required=True,
+            help="Path to the output file containing the answer set",
+        )
    
 
     dict_res = vars(parser.parse_args())
    
     return dict_res
+
+def run_clingo(args: Dict):
+    """
+    Runs clingo with the given encoding and instance to enumerate models.
+
+    Parameters:
+    encoding (str): Path to the encoding file.
+    instance (str): Path to the instance file [not mandatory].
+    n (int): Number of models to enumerate (0 for all models). Default is 1.
+
+    Returns:
+    list of sets of strings: Each set represents an answer set.
+    or
+    str: 'UNSAT' if the program is unsatisfiable.
+    """
+    ctl = clingo.Control()
+
+    # Load the encoding file
+    encoding: str = args["encoding"]
+    encoding = encoding.replace(r"encoding-amosum-", "encoding-plainsum-")
+    ctl.load(encoding)
+
+    # If an instance is provided, add it as a fact
+    if args["instance"]:
+        ctl.load(args["instance"])
+
+    ctl.ground([("base", [])])
+
+    # Set the number of models to enumerate
+    ctl.configuration.solve.models = args["num_models"]
+
+    answer_sets = []
+
+    def on_model(model: clingo.Model):
+        answer_sets.append(set(str(atom) for atom in model.symbols(shown=True)))
+
+    result = ctl.solve(on_model=on_model)
+
+    # If no answer sets were found, return 'UNSAT'
+    if not answer_sets:
+        return "UNSAT"
+
+    return answer_sets
 
 def init_param(argv):
     param = {}

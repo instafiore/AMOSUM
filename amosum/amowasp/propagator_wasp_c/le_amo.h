@@ -18,10 +18,7 @@ const std::vector<clingo_literal_t>* propagation_phase_le_amo(const Group* G, Am
     propagator->S.clear();
 
     // Handle case when mps_violated is true
-    if (propagator->mps_violated) {
-
-        if(!propagator->lazy_prop_activated)
-            return &propagator->S ;
+    if (propagator->sum_violated) {
 
         clingo_literal_t l = propagator->current_literal;
         propagator->S.push_back(not_(l));
@@ -29,19 +26,12 @@ const std::vector<clingo_literal_t>* propagation_phase_le_amo(const Group* G, Am
         auto R = get_perfect_hash_with_pointer(propagator->reason.get(), not_(l));
         R->clear();
 
-        bool derived_true = false;
         Group* g = propagator->group->get(l);
         if (g == nullptr) {
-            derived_true = true;
             g = propagator->group->get(not_(l));
         }
 
-        create_reason_falses_le(propagator, not_(l));
-
-        if (derived_true) {
-            clingo_literal_t sml_g = min_w(g);
-            create_reason_true_le(propagator, sml_g, not_(l), g);
-        }
+        create_reason_le_amo(propagator, not_(l));
 
         printDerivation(propagator->atomNames, propagator->S);
         return &propagator->S;
@@ -55,14 +45,13 @@ const std::vector<clingo_literal_t>* propagation_phase_le_amo(const Group* G, Am
 
         for (int i = g->ord_l.size() - 1; i >= 0; --i) {
             clingo_literal_t l = g->ord_l[i];
-            if (propagator->I->get(l) == SETTINGS::NONE) {
-                if (std::get<0>(propagator->mps(l, true)) > propagator->ub) {
+            // We need to add !propagator->is_true(not_(l))) because we do not know the real truth value of l given that we may do not watch it
+            if (propagator->I->get(l) == SETTINGS::NONE && !propagator->is_true(not_(l))) {
+                if (std::get<0>(propagator->mpsH(l, true)) > propagator->ub) {
                     // Infer l as false
-                    if (!propagator->is_true(not_(l))) {
-                        propagator->S.push_back(not_(l));
-                        auto R = get_perfect_hash_with_pointer(propagator->reason.get(), not_(l));
-                        R->clear();
-                    }
+                    propagator->S.push_back(not_(l));
+                    auto R = get_perfect_hash_with_pointer(propagator->reason.get(), not_(l));
+                    R->clear();
                 } else {
                     break;
                 }
@@ -72,7 +61,7 @@ const std::vector<clingo_literal_t>* propagation_phase_le_amo(const Group* G, Am
 
     // Update reason if necessary
     if (!propagator->S.empty() && propagator->dl != 0) {
-        create_reason_falses_le(propagator, SETTINGS::NONE);
+        create_reason_le_amo(propagator, SETTINGS::NONE);
     }
 
     printDerivation(propagator->atomNames, propagator->S);

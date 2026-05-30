@@ -26,18 +26,18 @@ void AmoSumPropagator::updateBound(int bound){
 const std::vector<clingo_literal_t> AmoSumPropagator::simplifyAtLevelZero(const bool& delete_lits=false){ 
 
         // debug_old("simplifyAtLevelZero for ", unordered_map_to_string(params), " with mps: ",_mps," and bound: ",bound);
-        debug(DEBUG, "simplifyAtLevelZero for ", unordered_map_to_string(params), " with mps: ",_mps," and bound: ",bound);
+        debug(DEBUG, "simplifyAtLevelZero for ", unordered_map_to_string(params), " with mps: ",mps()," and bound: ",bound);
 
         
-        std::string error_string = ge ? (std::to_string(_mps) + " < " + std::to_string(lb) + " !!!") : (std::to_string(_mps) + " > " + std::to_string(ub) + " !!!");
-        if ((ge && _mps < lb) || (!ge && _mps > ub)) {
+        std::string error_string = ge ? (std::to_string(mps()) + " < " + std::to_string(lb) + " !!!") : (std::to_string(mps()) + " > " + std::to_string(ub) + " !!!");
+        if ((ge && mps() < lb) || (!ge && mps() > ub)) {
                 // debugf_old(error_string)
                 debug(ERROR, error_string);
                 return {SETTINGS::PLITBOTTOM};
         }
         
         
-        assert(!mps_violated);
+        assert(!sum_violated);
 
         
         update_lazy_propagation();
@@ -87,15 +87,15 @@ const std::vector<clingo_literal_t>* AmoSumPropagator::onLiteralTrue(const cling
 void AmoSumPropagator::update_lazy_propagation() {
         float p;
         if (ge) {
-            mps_violated = _mps < lb;
-            p = bound / static_cast<float>(_mps);
+            sum_violated = mps() < lb;
+            p = bound / static_cast<float>(mps());
         } else {
-            mps_violated = _mps > ub;
-            p = _mps / static_cast<float>(bound);
+            sum_violated = mps() > ub;
+            p = mps() / static_cast<float>(bound);
         }
 
         lazy_condition = p >= this->lazy_perc;
-        if (mps_violated) {
+        if (sum_violated) {
             lazy_condition = true;
         }
 
@@ -108,12 +108,14 @@ std::pair<bool, Group*> AmoSumPropagator::update_phase(clingo_literal_t l, int d
         I->set(l, true);
         bool tg = false;
         Group* G = nullptr;
-        mps_violated = false;
+        sum_violated = false;
         ++count;
 
         bool amo_condition = false;
-
+        bool sumChanged = false;
         bool insideAggr = aggregate->get(l) ;
+        bool amo_le = constraint == "AMO" && !ge;
+
 
         if (insideAggr) {
             
@@ -124,14 +126,28 @@ std::pair<bool, Group*> AmoSumPropagator::update_phase(clingo_literal_t l, int d
             w_n = weight->get(l);
             tg = true;
             current_sum += w_n;
+            if(amo_le) sumChanged = w_n > 0;
+
+            if(G->count_undef == 0){
+                if(l == G->max_und()) G->set_max(SETTINGS::NONE);
+                if(l == G->min_und()) G->set_min(SETTINGS::NONE);
+            }else{
+
+            }
             
         } else if (aggregate->get(not_(l))) {
             G = group->get(not_(l));
             G->decrease_und();
             // auto [new_lit, prev] = G->update(I, ge, false, false, l);
             // --MPC--
-            auto [second_max_und, max_und] = G->update(I, true, false, false, l);
-            auto [second_min_und, min_und] = G->update(I, false, false, false, l);
+            auto [second_max_und, max_und] = G->update(I, dynamicMPC ? true: ge, false, false, l);
+            clingo_literal_t second_min_und = 0;
+            clingo_literal_t min_und = 0;
+            if(dynamicMPC){ 
+                std::pair<clingo_literal_t, clingo_literal_t> updatePair = G->update(I, false, false, false, l);
+                second_min_und = updatePair.first;
+                min_und = updatePair.second;
+            }
             // --MPC--
 
 
@@ -151,19 +167,32 @@ std::pair<bool, Group*> AmoSumPropagator::update_phase(clingo_literal_t l, int d
             // } else {
             //     return {false, nullptr};
             // }
-            
+
+            bool ge_or_staticMPC = ge || !dynamicMPC;
+            bool affects_second_max = (ge_or_staticMPC && not_(l) == second_max_und) || (!ge_or_staticMPC && not_(l) == second_min_und);
             // --MPC--
-            if (not_(l) == max_und || not_(l) == min_und) {
-                if(not_(l) == max_und) G->set_max(second_max_und);
-                else G->set_min(second_min_und);
-                if (true_group->getTrueLiteral(G) == SETTINGS::NONE) { 
-                    w_n = weight->get(ge ? second_max_und: second_min_und);
-                    w_p = weight->get(ge ? max_und: min_und);
+            if (not_(l) == max_und || (dynamicMPC && not_(l) == min_und)) {
+                if(not_(l) == max_und) (dynamicMPC ? G->set_max(second_max_und): G->set_max_min(second_max_und, ge));
+                if(dynamicMPC && not_(l) == min_und) G->set_min(second_min_und);
+                bool affect_mps = !dynamicMPC || (ge && not_(l) == max_und) || (!ge && not_(l) == min_und);
+                // if (affect_mps && true_group->getTrueLiteral(G) == SETTINGS::NONE) { 
+                //     w_n = weight->get(ge || !dynamicMPC ? second_max_und: second_min_und);
+                //     w_p = weight->get(ge || !dynamicMPC ? max_und: min_und);
+                //     amo_condition = true;
+                // }else if(true_group->getTrueLiteral(G) == SETTINGS::NONE && affects_second_max && constraint == "AMO"){
+                //     amo_condition = true;
+                // }
+
+                if(true_group->getTrueLiteral(G) == SETTINGS::NONE){
+                    if((affect_mps || affects_second_max) && constraint == "AMO")
+                        amo_condition = true;
+                    if(affect_mps){
+                        w_n = weight->get(ge || !dynamicMPC ? second_max_und: second_min_und);
+                        w_p = weight->get(ge || !dynamicMPC ? max_und: min_und);
+                    }
                 }
-                if (constraint == "AMO") {
-                    amo_condition = true;
-                }
-            } else if ((ge && not_(l) != second_max_und) || (!ge && not_(l) != second_min_und)) {
+
+            } else if (!affects_second_max) {
                 return {false, nullptr};
             } else if (constraint == "AMO") {
                 amo_condition = true;
@@ -176,35 +205,60 @@ std::pair<bool, Group*> AmoSumPropagator::update_phase(clingo_literal_t l, int d
         }
 
         _mps = _mps - w_p + w_n;
+
+        bool mpcCondition = true; // true by default
         // --MPC-- MPC update
-        if(G == mpc){
-            mpc = nullptr;
-            for(Group* group: groups){
-                if(true_group->getTrueLiteral(group) != SETTINGS::NONE) continue;
-                if(mpc == nullptr || mpc->pc(ge, constraint, weight.get()) < group->pc(ge, constraint, weight.get())){
-                    mpc = group;
-                }
+        if(dynamicMPC){
+            if(G == mpc || G->count_undef <= 1) updateMPC();
+            if(mpc != nullptr){
+                size_t mpcValue = mpc->pc(ge, constraint, weight.get());
+                mpcCondition =  ge ? ((size_t)mps()) - mpcValue < (size_t)this->bound : ((size_t)mps()) + mpcValue > (size_t)this->bound; 
+            }else{
+                mpcCondition  = false;
             }
         }
-        bool mpcCondition = (constraint == "AMO" && !ge) ? current_sum + mpc->pc(ge, constraint, weight.get()) > bound : _mps + mpc->pc(ge, constraint, weight.get()); 
         // --MPC--
         
         update_lazy_propagation();
 
-    
+        if(!amo_le) sumChanged = w_p != w_n;
         G = (constraint == "EO") ? G : nullptr;
         bool current_sum_condition = !ge || current_sum < bound;
-        bool next_phase = current_sum_condition && (w_p != w_n || amo_condition) && lazy_condition && mpcCondition;
+        bool next_phase = current_sum_condition && (sumChanged || amo_condition) && lazy_condition && mpcCondition;
+        // bool next_phase = sum_violated || (current_sum_condition && (sumChanged || amo_condition) && lazy_condition && mpcCondition);
         // if(dl >= 5000) debugf("ID: ",ID," mps: ",_mps, " next_phase: ", next_phase, " lazy_condition: ",lazy_condition);
         return {next_phase, G};
 }
 
+void AmoSumPropagator::updateMPC() noexcept{
+    mpc = nullptr;
+    for(Group* group: groups){
+        if(true_group->getTrueLiteral(group) != SETTINGS::NONE || group->count_undef == 0) continue;
+        if(mpc == nullptr) mpc = group;
+        else{
+            int currentMpc = mpc->pc(ge, constraint, weight.get());
+            int groupMpc = group->pc(ge, constraint, weight.get());
+            if(currentMpc < groupMpc){
+                mpc = group;
+            }
+        }  
+    }
+}
 
-std::tuple<int, clingo_literal_t, clingo_literal_t> AmoSumPropagator::mps(clingo_literal_t l, bool assumed) {
+
+std::tuple<int, clingo_literal_t, clingo_literal_t> AmoSumPropagator::mpsH(clingo_literal_t l, bool assumed) {
     
     Group* g = this->group->get(l);
+    bool inAggr = true;
     if(g == nullptr){
         g = this->group->get(not_(l));
+        inAggr = false;
+        assert(g != nullptr);
+    }
+
+    if(constraint == "AMO" && !ge){
+        if(inAggr & assumed || !inAggr & !assumed) return {mps() + weight->get(l), l, SETTINGS::NONE};
+        return {mps(), SETTINGS::NONE, SETTINGS::NONE};
     }
     
     if (assumed) {
@@ -283,8 +337,7 @@ const std::vector<clingo_literal_t>* AmoSumPropagator::getReasonForLiteral(const
         remove_elements(R, *rl);    
         rl->clear();
     }
-
-    print_reason(atomNames, R, lit);
+    printReason(atomNames, R, lit);
     return &R; 
 }
 
@@ -305,7 +358,7 @@ void AmoSumPropagator::compute_minimal_reason(const std::vector<clingo_literal_t
         }
         assert(g != nullptr);
 
-        auto mps_h = mps_violated ? _mps : std::get<0>(mps(l, !derived_true));
+        auto mps_h = sum_violated ? mps() : std::get<0>(mpsH(l, !derived_true));
         int s = lb - mps_h - 1;
         auto rd = get_perfect_hash_with_pointer(redundant_lits.get(), l);
         auto R = get_perfect_hash_with_pointer(reason.get(), l);
@@ -337,6 +390,7 @@ void AmoSumPropagator::onLiteralsUndefined(const std::vector<clingo_literal_t>& 
 
         // Handle early stop in propagation phase
 
+
         // Update interpretation
         if (I->get(l) == SETTINGS::NONE) {
             continue;
@@ -351,6 +405,7 @@ void AmoSumPropagator::onLiteralsUndefined(const std::vector<clingo_literal_t>& 
             G = group->get(not_(l));
             l = not_(l);
         }
+
 
         
         assert(G != nullptr);
@@ -373,36 +428,43 @@ void AmoSumPropagator::onLiteralsUndefined(const std::vector<clingo_literal_t>& 
 
         // clingo_literal_t m_und = m_w(G, ge);
         // --MPC--
-        clingo_literal_t max_und = m_w(G, true);
-        clingo_literal_t min_und = m_w(G, false);
+        clingo_literal_t max_und = m_w(G, dynamicMPC ? true: ge);
+        clingo_literal_t min_und = 0;
+        if(dynamicMPC) min_und = m_w(G, false);
         // --MPC--
 
         // if (m_und == SETTINGS::NONE) {
         // --MPC--
-        if (max_und == SETTINGS::NONE) {
-            assert(min_und == SETTINGS::NONE);
+        if (max_und == SETTINGS::NONE || (dynamicMPC && min_und == SETTINGS::NONE)) {
+            max_und = SETTINGS::NONE;
+            min_und = SETTINGS::NONE;
+            assert(!dynamicMPC || min_und == SETTINGS::NONE);
         // --MPC--
-            // ge ? G->set_max(l) :  G->set_min(l); 
+            // G->set_max_min(l, ge);
             // --MPC--
-            G->set_max(l);
-            G->set_min(l);
+            if(dynamicMPC){
+                G->set_max(l);
+                G->set_min(l);
+            }else{
+                G->set_max_min(l, ge);
+            }
             // --MPC--
 
             if (tg == SETTINGS::NONE) {
                 if (constraint == "AMO" && ge) {
                     _mps += w_l;
                 } else {
-                    assert(false);
+                    assert(constraint == "AMO");
                 }
             }
             // --MPC-- MPC update
-            if(tg == SETTINGS::NONE && G->pc(ge, constraint, weight.get()) > mpc->pc(ge, constraint, weight.get())) mpc = G;
+            if(dynamicMPC && (tg == SETTINGS::NONE || tg == l) && (mpc == nullptr || G->pc(ge, constraint, weight.get()) > mpc->pc(ge, constraint, weight.get()))) mpc = G;
             // --MPC--
             continue;
         }
 
         assert(max_und != SETTINGS::NONE);
-        assert(min_und != SETTINGS::NONE);
+        assert(!dynamicMPC || min_und != SETTINGS::NONE);
 
         // int pos_m = G->ord_i[m_und];
         // int pos_l = G->ord_i[l];
@@ -412,8 +474,12 @@ void AmoSumPropagator::onLiteralsUndefined(const std::vector<clingo_literal_t>& 
         int pos_l = G->ord_i[l];
         int pos_max = G->ord_i[max_und];
         int max_weight = weight->get(max_und);
-        int pos_min = G->ord_i[min_und];
-        int min_weight = weight->get(min_und);
+        int pos_min = SETTINGS::NONE; 
+        int min_weight =  SETTINGS::NONE;
+        if(dynamicMPC){
+            pos_min = G->ord_i[min_und];
+            min_weight = weight->get(min_und);
+        }
         // --MPC--
 
 
@@ -424,8 +490,11 @@ void AmoSumPropagator::onLiteralsUndefined(const std::vector<clingo_literal_t>& 
             //     _mps = _mps - w_l + m_weight;
             // }
             // --MPC--
-            if ((max_weight > w_l && ge) || (min_weight < w_l && !ge)) {
-                _mps = _mps - w_l + (max_weight ? ge : min_weight);
+            if (
+                (((max_weight > w_l && ge) || (min_weight < w_l && !ge)) && dynamicMPC) ||
+                (((max_weight > w_l && ge) || (max_weight < w_l && !ge)) && !dynamicMPC)
+            ) {
+                _mps = _mps - w_l + (ge || !dynamicMPC ? max_weight : min_weight);
             }
             // --MPC--
 
@@ -434,8 +503,14 @@ void AmoSumPropagator::onLiteralsUndefined(const std::vector<clingo_literal_t>& 
             //     ge ? G->set_max(l) :  G->set_min(l); 
             // }
             // --MPC--
-            if(pos_max < pos_l) G->set_max(l);
-            if(pos_min > pos_l) G->set_min(l);
+            if(dynamicMPC){
+                if(pos_max < pos_l) G->set_max(l);
+                if(pos_min > pos_l) G->set_min(l);
+            }else{
+                if ((ge && pos_max < pos_l) || (!ge && pos_max > pos_l)) {
+                    G->set_max_min(l, ge);
+                }
+            }
             // --MPC--
         } else {
             // if ((ge && w_l >= m_weight && pos_l > pos_m) || (!ge && w_l <= m_weight && pos_l < pos_m)) {
@@ -446,16 +521,25 @@ void AmoSumPropagator::onLiteralsUndefined(const std::vector<clingo_literal_t>& 
             //     }
             // }
             // --MPC--
-            if(pos_max < pos_l) G->set_max(l);
-            if(pos_min > pos_l) G->set_min(l);
-            if ((tg == SETTINGS::NONE) && (ge && w_l >= max_weight && pos_l > pos_max) || (!ge && w_l <= min_weight && pos_l < pos_min)) {
-                _mps = _mps - (ge ? max_weight : min_weight) + w_l;
+            if(dynamicMPC){
+                if(pos_l > pos_max) G->set_max(l);
+                if(pos_l < pos_min) G->set_min(l);
+            }else{
+                if((ge && pos_l > pos_max) || (!ge && pos_l < pos_max)) G->set_max_min(l, ge);
+            }
+            if (tg == SETTINGS::NONE && 
+                (
+                    (dynamicMPC &&  ((ge && w_l >= max_weight && pos_l > pos_max) || (!ge && w_l <= min_weight && pos_l < pos_min))) ||
+                    (!dynamicMPC && ((ge && w_l >= max_weight && pos_l > pos_max) || (!ge && w_l <= max_weight && pos_l < pos_max)))
+                )
+            ) {
+                _mps = _mps - (ge || !dynamicMPC ? max_weight : min_weight) + w_l;
             }
             // --MPC--
         }
 
         // --MPC-- MPC update
-        if(tg == SETTINGS::NONE && G->pc(ge, constraint, weight.get()) > mpc->pc(ge, constraint, weight.get())) mpc = G;
+        if(dynamicMPC && (tg == SETTINGS::NONE || tg == l) && (mpc == nullptr || G->pc(ge, constraint, weight.get()) > mpc->pc(ge, constraint, weight.get()))) mpc = G;
         // --MPC--
 
     }

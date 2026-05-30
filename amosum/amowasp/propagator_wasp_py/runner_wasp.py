@@ -5,9 +5,8 @@ import re
 import sys
 import os
 import ast
-from  utility import *
-import utility
-from preprocess import *
+from  amosum.utility import *
+from amosum.preprocess import *
 from amosum.amosum_parser.__main__ import run as run_rewriter
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import settings
@@ -42,8 +41,12 @@ class RunnerWasp:
 
 
 
-    def run(self):
+    def run(self) -> List[Result]:
 
+        raise NotImplementedError(
+            "WASP solver is no longer supported due to infrastructure issues. "
+            "Please use an alternative solver CLINGO."
+        )
 
         # encoding
         location_encoding = self.encoding
