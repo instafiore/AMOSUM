@@ -295,10 +295,10 @@ def parse_args(checkCorrectness: bool = False):
         "-smpc",
         "--static-mpc",
         type=str,
-        default="false",
+        default="true",
         help=(
             "Enable or disable static(true)/dynamic(false) propagation for the "
-            "Maximum Possible Change of the Maximum Possible Sum (default: false)"
+            "Maximum Possible Change of the Maximum Possible Sum (default: true)"
         ),
     )
 
