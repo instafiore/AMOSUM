@@ -67,10 +67,10 @@ struct AmoSumPropagator
     int dl = 0 ;
 
     // propagate function to implement in propagator file
-    const std::vector<clingo_literal_t>* (*propagation_phase)(const Group*, AmoSumPropagator*); // Function pointer for propagation
+    const std::vector<clingo_literal_t>* (*propagation_phase)(const Group*, AmoSumPropagator*) = nullptr; // Function pointer for propagation
 
     // defining whether the propagator is for the constraint >=  (ge) or <= (le) 
-    bool ge; 
+    bool ge = false; 
 
     // Defining the constraint type, possible values: AMO, EO
     std::string constraint; 

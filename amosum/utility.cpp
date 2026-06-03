@@ -705,9 +705,9 @@ bool solve(clingo_control_t *ctl, std::vector<AnswerSet*> &results, bool falseLi
 
 std::tuple<bool, const std::vector<clingo_literal_t>* (*)(const Group*, AmoSumPropagator*), std::string>  get_propagator_variables(std::string prop_type){
     
-    bool ge;
+    bool ge = false;
     std::string constraint;
-    const std::vector<clingo_literal_t>* (*propagation_phase)(const Group*, AmoSumPropagator*);
+    const std::vector<clingo_literal_t>* (*propagation_phase)(const Group*, AmoSumPropagator*) = nullptr;
 
     if (prop_type == "ge_amo") {
         ge = true;
