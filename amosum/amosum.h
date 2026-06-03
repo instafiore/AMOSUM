@@ -133,7 +133,7 @@ struct AmoSumPropagator
           constraint(std::move(choice_cons)),
           solver(std::move(solver)),
           maximizer(maximizer),
-          dynamicMPC(this->params["static_mpc"] == CONSTANTS::FALSE_STR)
+          dynamicMPC(this->params["static_mpc"] == CONSTANTS::FALSE_STR && this->params["lazy"] != CONSTANTS::TRUE_STR)
           {}
 
     ~AmoSumPropagator(){

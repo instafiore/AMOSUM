@@ -334,7 +334,7 @@ def parse_args(checkCorrectness: bool = False):
         parser_instance = subparsers.add_parser("instance", help="Check a single computed answer set")
         parser_instance.add_argument(
             "-f", "--file_answerset",
-            required=True,
+            required=False,
             help="Path to the output file containing the answer set",
         )
    
@@ -371,7 +371,7 @@ def run_clingo(args: Dict):
     ctl.ground([("base", [])])
 
     # Set the number of models to enumerate
-    ctl.configuration.solve.models = args["num_models"]
+    ctl.configuration.solve.models = args["models"]
 
     answer_sets = []
 
