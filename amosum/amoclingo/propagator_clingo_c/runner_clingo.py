@@ -59,7 +59,7 @@ class RunnerClingoCpp(RunnerWasp):
             results.append(result)
 
         if len(results) == 0:
-                results.append(Result(None, 20))
+                results.append(Result(None, TIMEOUT_CODE))
 
         return results
     
