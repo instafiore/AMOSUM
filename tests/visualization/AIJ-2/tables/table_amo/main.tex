@@ -6,32 +6,32 @@
             \begin{document}
             \begin{table}[t!]
 \label{tab:results}
-\begin{tabular}{lllll}
+\begin{tabular}{llllll}
 \toprule
-problem & GraphColouring & GroupAssignment & Knapsack & Total \\
- & solved & solved & solved & solved \\
-executable &  &  &  &  \\
+problem & GraphColouring & GroupAssignment & Knapsack & Nurse & Total \\
+ & solved & solved & solved & solved & solved \\
+executable &  &  &  &  &  \\
 \midrule
-amoclingo-base-lg=c & 102 & 307 & \textbf{77} & 486 \\
-amoclingo-base-lg=py & 95 & 141 & 75 & 311 \\
-amoclingo-lg=c-r=ijcai-l=f & 120 & 307 & \textbf{77} & 504 \\
-amoclingo-lg=c-r=minfly-l=f & 123 & 306 & 75 & 504 \\
-amoclingo-lg=c-r=minfly-l=h & 122 & 310 & 75 & 507 \\
-amoclingo-lg=c-r=minfly-l=t & \textbf{179} & \textbf{314} & 75 & \textbf{568} \\
-amoclingo-lg=c-r=nomin-l=f & 122 & 309 & 76 & 507 \\
-amoclingo-lg=c-r=nomin-l=h & 122 & 308 & 76 & 506 \\
-amoclingo-lg=c-r=nomin-l=t & 165 & 313 & \textbf{77} & 555 \\
-amoclingo-lg=py-r=ijcai-l=f & 118 & 229 & 76 & 423 \\
-amoclingo-lg=py-r=nomin-l=f & 115 & 230 & 75 & 420 \\
-amoclingo-lg=py-r=nomin-l=h & 115 & 232 & 75 & 422 \\
-amoclingo-lg=py-r=nomin-l=t & 120 & 212 & 73 & 405 \\
-amowasp-base-lg=py & 64 & 65 & 71 & 200 \\
-amowasp-lg=py-r=ijcai-l=f & 87 & 105 & 72 & 264 \\
-amowasp-lg=py-r=nomin-l=f & 81 & 99 & 72 & 252 \\
-amowasp-lg=py-r=nomin-l=h & 82 & 99 & 72 & 253 \\
-amowasp-lg=py-r=nomin-l=t & 103 & 118 & 71 & 292 \\
-clingo & 60 & 238 & 48 & 346 \\
-wasp & 60 & 57 & 14 & 131 \\
+amoclingo-base-lg=c & 102 & 307 & \textbf{77} & 1 & 487 \\
+amoclingo-base-lg=py & 95 & 141 & 75 & 0 & 311 \\
+amoclingo-lg=c-r=ijcai-l=f-smpc=t & 120 & 307 & \textbf{77} & 2 & 506 \\
+amoclingo-lg=c-r=minfly-l=f-smpc=t & 123 & 306 & 75 & 1 & 505 \\
+amoclingo-lg=c-r=minfly-l=h-smpc=t & 122 & 310 & 75 & 0 & 507 \\
+amoclingo-lg=c-r=minfly-l=t-smpc=t & \textbf{179} & \textbf{314} & 75 & 1 & \textbf{569} \\
+amoclingo-lg=c-r=nomin-l=f-smpc=t & 122 & 309 & 76 & 2 & 509 \\
+amoclingo-lg=c-r=nomin-l=h-smpc=t & 122 & 308 & 76 & 2 & 508 \\
+amoclingo-lg=c-r=nomin-l=t-smpc=t & 165 & 313 & \textbf{77} & \textbf{3} & 558 \\
+amoclingo-lg=py-r=ijcai-l=f-smpc=t & 118 & 229 & 76 & -1 & 423 \\
+amoclingo-lg=py-r=nomin-l=f-smpc=t & 115 & 230 & 75 & -1 & 420 \\
+amoclingo-lg=py-r=nomin-l=h-smpc=t & 115 & 232 & 75 & -1 & 422 \\
+amoclingo-lg=py-r=nomin-l=t-smpc=t & 120 & 212 & 73 & -1 & 405 \\
+amowasp-base-lg=py & 64 & 65 & 71 & 0 & 200 \\
+amowasp-lg=py-r=ijcai-l=f-smpc=t & 87 & 105 & 72 & -1 & 264 \\
+amowasp-lg=py-r=nomin-l=f-smpc=t & 81 & 99 & 72 & -1 & 252 \\
+amowasp-lg=py-r=nomin-l=h-smpc=t & 82 & 99 & 72 & -1 & 253 \\
+amowasp-lg=py-r=nomin-l=t-smpc=t & 103 & 118 & 71 & -1 & 292 \\
+clingo & 60 & 238 & 48 & -1 & 346 \\
+wasp & 60 & 57 & 14 & -1 & 131 \\
 \bottomrule
 \end{tabular}
 \end{table}

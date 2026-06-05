@@ -1,4 +1,4 @@
-# s: amoclingo-lg=c-r=minfly-l=f-smpc=t.bash
+# s: eoclingo-lg=c-r=ijcai-l=f-smpc=t-smpc=t-smpc=t.bash
 #!/bin/bash
 
 trap ":" 24 15
@@ -16,7 +16,7 @@ if [[ $FILENAME == *encoding* || $FILENAME == *checker* ]]; then
 fi
 
 lazy=false
-reason=minfly
+reason=ijcai
 lang=cpp
 static_mpc=true
 

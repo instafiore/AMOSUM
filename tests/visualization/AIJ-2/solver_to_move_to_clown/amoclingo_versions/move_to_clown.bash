@@ -1,1 +1,0 @@
-scp amoclingo* clown:/home/mazzotta/Experiments/solvers/

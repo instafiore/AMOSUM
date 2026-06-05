@@ -1,4 +1,4 @@
-# s: amoclingo-lg=c-r=nomin-l=t-smpc=t.bash
+# s: eoclingo-lg=c-r=nomin-l=h-smpc=t-smpc=t-smpc=t.bash
 #!/bin/bash
 
 trap ":" 24 15
@@ -15,7 +15,7 @@ if [[ $FILENAME == *encoding* || $FILENAME == *checker* ]]; then
         exit 0
 fi
 
-lazy=true
+lazy=hybrid
 reason=nomin
 lang=cpp
 static_mpc=true
