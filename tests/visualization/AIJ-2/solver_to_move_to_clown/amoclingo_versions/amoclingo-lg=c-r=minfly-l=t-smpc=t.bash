@@ -16,7 +16,7 @@ if [[ $FILENAME == *encoding* || $FILENAME == *checker* ]]; then
 fi
 
 lazy=true
-reason=nomin
+reason=minfly
 lang=cpp
 static_mpc=true
 

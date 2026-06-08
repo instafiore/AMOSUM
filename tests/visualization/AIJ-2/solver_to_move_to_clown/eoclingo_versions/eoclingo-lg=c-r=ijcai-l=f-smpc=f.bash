@@ -1,4 +1,4 @@
-# s: amoclingo-lg=c-r=minfly-l=h-smpc=t.bash
+# s: eoclingo-lg=c-r=ijcai-l=f-smpc=f.bash
 #!/bin/bash
 
 trap ":" 24 15
@@ -7,7 +7,7 @@ FILENAME=$1
 INSTANCE_FOLD=`dirname $1`
 
 
-e="encoding-amosum-amo"
+e="encoding-amosum-eo"
 ENCODING=$INSTANCE_FOLD/$e.asp
 
 if [[ $FILENAME == *encoding* || $FILENAME == *checker* ]]; then
@@ -15,10 +15,10 @@ if [[ $FILENAME == *encoding* || $FILENAME == *checker* ]]; then
         exit 0
 fi
 
-lazy=hybrid
-reason=minfly
+lazy=false
+reason=ijcai
 lang=cpp
-static_mpc=true
+static_mpc=false
 
 instance_basename=$(basename "$FILENAME")
 

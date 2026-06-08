@@ -1,4 +1,4 @@
-# s: amoclingo-lg=c-r=minfly-l=h-smpc=t.bash
+# s: amoclingo-lg=c-r=nomin-l=h-smpc=f.bash
 #!/bin/bash
 
 trap ":" 24 15
@@ -16,9 +16,9 @@ if [[ $FILENAME == *encoding* || $FILENAME == *checker* ]]; then
 fi
 
 lazy=hybrid
-reason=minfly
+reason=nomin
 lang=cpp
-static_mpc=true
+static_mpc=false
 
 instance_basename=$(basename "$FILENAME")
 

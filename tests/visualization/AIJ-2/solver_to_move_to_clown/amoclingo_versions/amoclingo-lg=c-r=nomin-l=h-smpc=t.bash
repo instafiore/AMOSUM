@@ -15,7 +15,7 @@ if [[ $FILENAME == *encoding* || $FILENAME == *checker* ]]; then
         exit 0
 fi
 
-lazy=true
+lazy=hybrid
 reason=nomin
 lang=cpp
 static_mpc=true

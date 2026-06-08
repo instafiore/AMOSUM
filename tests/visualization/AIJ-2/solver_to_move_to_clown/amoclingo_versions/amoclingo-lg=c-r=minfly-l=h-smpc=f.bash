@@ -1,4 +1,4 @@
-# s: amoclingo-lg=c-r=minfly-l=h-smpc=t.bash
+# s: amoclingo-lg=c-r=minfly-l=h-smpc=f.bash
 #!/bin/bash
 
 trap ":" 24 15
@@ -18,7 +18,7 @@ fi
 lazy=hybrid
 reason=minfly
 lang=cpp
-static_mpc=true
+static_mpc=false
 
 instance_basename=$(basename "$FILENAME")
 
