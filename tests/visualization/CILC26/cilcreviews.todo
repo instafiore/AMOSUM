@@ -1,6 +1,8 @@
-[] ⁠Could you comment on how to compute the maximum possible sum, map_\sigma (I)?: lo posso fare
-[] ⁠⁠Is the notation I({\cal l}) (2nd line below the title of section 2.3) defined: lo posso fare
+[M] However, it would also be useful to report the computational costs associated with the preparation steps (Megan)
+[X] ⁠Could you comment on how to compute the maximum possible sum, map_\sigma (I)?: lo posso fare
+[X] ⁠⁠Is the notation I({\cal l}) (2nd line below the title of section 2.3) defined: lo posso fare
 [] ⁠AMO Rule (AMR).  reason({\bar l}) is expressed as a pair. Before this point, reason was only remarked in terms of a "reason clause" to derive deterministic consequences. What if there are multiple reasons?: questo non ho capito che dice 
-[] ⁠⁠⁠⁠Could you comment on how to compute the maximum possible sum, map_\sigma (I)?: lo posso fare
-[] ⁠⁠Amosum Rule (ASR). Is the notation "bnd_\sigma" defined? Is "J is a first prefix of I" defined?: lo posso fare
-[] ⁠⁠Reason Minimization. What is the complexity of computing it?: lo posso scrivere
+[X] ⁠⁠Amosum Rule (ASR). Is the notation "bnd_\sigma" defined? Is "J is a first prefix of I" defined?: lo posso fare
+[X] ⁠⁠Reason Minimization. What is the complexity of computing it?: lo posso scrivere
+[M] ⁠I am curious about the role of the representation of the problem in ASP (apart from SUM and AMO constraints) in such an ML-assisted instance-specific method for selecting the most effective propagator, configuration, solver.  Some discussions from this perspective would be useful. (Non ho capito)
+[X] Minor point in Section 2.3: the sentence “reduces the search space via backward resolution at conflict time” is a bit cryptic.

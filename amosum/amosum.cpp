@@ -224,7 +224,7 @@ std::pair<bool, Group*> AmoSumPropagator::update_phase(clingo_literal_t l, int d
         if(!amo_le) sumChanged = w_p != w_n;
         G = (constraint == "EO") ? G : nullptr;
         bool current_sum_condition = !ge || current_sum < bound;
-        bool next_phase = current_sum_condition && (sumChanged || amo_condition) && lazy_condition && mpcCondition;
+        bool next_phase = (current_sum_condition && (sumChanged || amo_condition) && lazy_condition && mpcCondition) || sum_violated;
         // bool next_phase = sum_violated || (current_sum_condition && (sumChanged || amo_condition) && lazy_condition && mpcCondition);
         // if(dl >= 5000) debugf("ID: ",ID," mps: ",_mps, " next_phase: ", next_phase, " lazy_condition: ",lazy_condition);
         return {next_phase, G};
