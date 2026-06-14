@@ -1,0 +1,53 @@
+
+            \documentclass{article}
+            \usepackage{booktabs}
+            \usepackage{multirow}
+            \pagestyle{empty}
+            \begin{document}
+            \begin{table}[t!]
+\label{tab:results}
+\begin{tabular}{llllll}
+\toprule
+problem & GraphColouring & GroupAssignment & Knapsack & Nurse & Total \\
+ & solved & solved & solved & solved & solved \\
+executable &  &  &  &  &  \\
+\midrule
+clingo & 95 & \textbf{350} & 47 & \textbf{4} & 496 \\
+eoclingo-base-lg=c:sub\_enc & 101 & \textbf{350} & 77 & 1 & 529 \\
+eoclingo-base-lg=py:sub\_enc & 79 & 280 & 74 & 0 & 433 \\
+eoclingo-lg=c-r=ijcai-l=f-smpc=t:le\_enc & <NA> & \textbf{350} & 82 & 1 & 433 \\
+eoclingo-lg=c-r=ijcai-l=f-smpc=t:sub\_enc & 153 & \textbf{350} & 77 & 1 & 581 \\
+eoclingo-lg=c-r=minfly-l=f-smpc=f:le\_enc & <NA> & \textbf{350} & 82 & 0 & 432 \\
+eoclingo-lg=c-r=minfly-l=f-smpc=t:le\_enc & <NA> & \textbf{350} & 82 & 0 & 432 \\
+eoclingo-lg=c-r=minfly-l=f-smpc=t:sub\_enc & 131 & \textbf{350} & 74 & 0 & 555 \\
+eoclingo-lg=c-r=minfly-l=h-smpc=f:le\_enc & <NA> & \textbf{350} & 81 & 0 & 431 \\
+eoclingo-lg=c-r=minfly-l=h-smpc=t:le\_enc & <NA> & \textbf{350} & 81 & 0 & 431 \\
+eoclingo-lg=c-r=minfly-l=h-smpc=t:sub\_enc & 132 & \textbf{350} & 74 & 0 & 556 \\
+eoclingo-lg=c-r=minfly-l=t-smpc=f:le\_enc & <NA> & \textbf{350} & 85 & 1 & 436 \\
+eoclingo-lg=c-r=minfly-l=t-smpc=t:le\_enc & <NA> & \textbf{350} & \textbf{86} & 1 & 437 \\
+eoclingo-lg=c-r=minfly-l=t-smpc=t:sub\_enc & 169 & \textbf{350} & 75 & 1 & 595 \\
+eoclingo-lg=c-r=nomin-l=f-smpc=f:le\_enc & <NA> & \textbf{350} & 83 & 1 & 434 \\
+eoclingo-lg=c-r=nomin-l=f-smpc=t:le\_enc & <NA> & \textbf{350} & 84 & 1 & 435 \\
+eoclingo-lg=c-r=nomin-l=f-smpc=t:sub\_enc & 157 & \textbf{350} & 77 & 1 & 585 \\
+eoclingo-lg=c-r=nomin-l=h-smpc=f:le\_enc & <NA> & \textbf{350} & 83 & 1 & 434 \\
+eoclingo-lg=c-r=nomin-l=h-smpc=t:le\_enc & <NA> & \textbf{350} & 84 & 1 & 435 \\
+eoclingo-lg=c-r=nomin-l=h-smpc=t:sub\_enc & 160 & \textbf{350} & 77 & 1 & 588 \\
+eoclingo-lg=c-r=nomin-l=t-smpc=f:le\_enc & <NA> & \textbf{350} & 76 & 2 & 428 \\
+eoclingo-lg=c-r=nomin-l=t-smpc=t:le\_enc & <NA> & \textbf{350} & 77 & 2 & 429 \\
+eoclingo-lg=c-r=nomin-l=t-smpc=t:sub\_enc & \textbf{172} & \textbf{350} & 77 & 3 & \textbf{602} \\
+eoclingo-lg=py-r=ijcai-l=f-smpc=t:sub\_enc & 101 & <NA> & <NA> & 1 & 102 \\
+eoclingo-lg=py-r=nomin-l=f-smpc=t:sub\_enc & 96 & <NA> & <NA> & 1 & 97 \\
+eoclingo-lg=py-r=nomin-l=h-smpc=t:sub\_enc & 99 & <NA> & <NA> & 1 & 100 \\
+eoclingo-lg=py-r=nomin-l=t-smpc=t:sub\_enc & 100 & <NA> & <NA> & 1 & 101 \\
+eowasp-base-lg=py:sub\_enc & 50 & 258 & 73 & 0 & 381 \\
+eowasp-lg=py-r=ijcai-l=f-smpc=t:sub\_enc & 86 & <NA> & <NA> & 0 & 86 \\
+eowasp-lg=py-r=nomin-l=f-smpc=t:sub\_enc & 86 & <NA> & <NA> & 0 & 86 \\
+eowasp-lg=py-r=nomin-l=h-smpc=t:sub\_enc & 86 & <NA> & <NA> & 0 & 86 \\
+eowasp-lg=py-r=nomin-l=t-smpc=t:sub\_enc & 85 & <NA> & <NA> & 0 & 85 \\
+wasp & 32 & 139 & 16 & 0 & 187 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+            \end{document}
+            
