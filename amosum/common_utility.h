@@ -175,6 +175,8 @@ struct Hasher {
     } 
     size_t operator()(const Mapping2Integer* map2Int) const noexcept { return this->operator()(*map2Int); } 
     size_t operator()(const int32_t map2Int) const noexcept { return std::hash<int32_t>{}(map2Int); } 
+    size_t operator()(const int64_t map2Int) const noexcept { return std::hash<int64_t>{}(map2Int); } 
+    size_t operator()(const size_t map2Int) const noexcept { return map2Int; } 
 };
 
 struct Literal: public Mapping2Integer{
@@ -439,7 +441,8 @@ public:
 
     virtual std::string toString(MapInterface<K,VMapper>* mapperToPrintable = nullptr, bool printDefault = false) const noexcept;
     inline const V& at(const K& key) const { return this->getUsingHash(this->hasher(key)); }
-    inline V& get(const K& key) { 
+    inline V& get(const K& keyInput) { 
+        const size_t& key = this->hasher(keyInput);
         assert(key < this->N);
         if constexpr (std::is_same_v<D, std::unordered_map<size_t, V>>) {
             auto& umap = *this->_data;
