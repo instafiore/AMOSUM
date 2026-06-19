@@ -1,5 +1,3 @@
 [] add temporary files
 [] add positional arguments instead of --encoding  and --instance
-
-
-
+[] to handle same literal in different groups and/or different weights
