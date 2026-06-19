@@ -152,7 +152,7 @@ std::string cmn::NHash<K,V,D,VMapper, DMapper>::toString(MapInterface<K,VMapper>
         outKey.flush();
         dictStringLiteralToValue[stringKey] = element;
     }
-    out<<dictStringLiteralToValue;
+    ::operator<<(out, dictStringLiteralToValue);
     return out.str();
 }
 

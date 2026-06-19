@@ -237,9 +237,11 @@ inline int not_(int literal) {
     return -literal; 
 }
 
-void create_reason_falses(AmoSumPropagator* propagator, bool ge, std::unordered_map<clingo_literal_t, int> &sum_removed_weights, clingo_literal_t flipped);
-void create_reason_falses_ge(AmoSumPropagator* propagator, std::unordered_map<clingo_literal_t, int> &sum_removed_weights, clingo_literal_t flipped);
-void create_reason_true_ge(AmoSumPropagator* propagator, clingo_literal_t sml_g, clingo_literal_t derived, Group* g, std::unordered_map<clingo_literal_t, int> &sum_removed_weights);
+// void create_reason_falses(AmoSumPropagator* propagator, bool ge, std::unordered_map<clingo_literal_t, int> &sum_removed_weights, clingo_literal_t flipped);
+void create_reason_falses_ge(AmoSumPropagator* propagator, cmn::PerfectNHash<clingo_literal_t, int> &sum_removed_weights, clingo_literal_t flipped);
+void create_reason_true_ge(AmoSumPropagator* propagator, clingo_literal_t sml_g, clingo_literal_t derived, Group* g, cmn::PerfectNHash<clingo_literal_t, int> &sum_removed_weights);
+// void create_reason_falses_ge(AmoSumPropagator* propagator, std::unordered_map<clingo_literal_t, int> &sum_removed_weights, clingo_literal_t flipped);
+// void create_reason_true_ge(AmoSumPropagator* propagator, clingo_literal_t sml_g, clingo_literal_t derived, Group* g, std::unordered_map<clingo_literal_t, int> &sum_removed_weights);
 void create_reason_falses_le(AmoSumPropagator* propagator, clingo_literal_t flipped);
 void create_reason_le_amo(AmoSumPropagator* propagator, clingo_literal_t flipped);
 void create_reason_true_le(AmoSumPropagator* propagator, clingo_literal_t sml_g, clingo_literal_t derived, Group* g);

@@ -17,7 +17,9 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, Am
 
     
     propagator->S.clear();
-    std::unordered_map<clingo_literal_t, int> sum_removed_weights;
+    // std::unordered_map<clingo_literal_t, int> sum_removed_weights;
+    cmn::PerfectNHash<clingo_literal_t, int>& sum_removed_weights = *propagator->sum_removed_weights.get();
+
 
     if (propagator->sum_violated) {
         clingo_literal_t l =  (propagator->maximizer ? SETTINGS::PLITBOTTOM : propagator->current_literal);
@@ -26,6 +28,7 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, Am
         assert(propagator->maximizer || propagator->lazy_prop_activated);
         
         propagator->S.push_back(not_(l));
+        propagator->sum_removed_weights->set(not_(l), 0);
 
         auto R = get_perfect_hash_with_pointer(propagator->reason.get(), not_(l));
         R->clear();
@@ -43,6 +46,7 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, Am
             if(derived_true){
                 clingo_literal_t sml_g = max_w(g) ;
                 create_reason_true_ge(propagator, sml_g, not_(l), g, sum_removed_weights);
+
             }
         }
 
@@ -72,6 +76,7 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, Am
         bool propagate_to_true = false;
         if (mps_h < propagator->lb) {
             propagator->S.push_back(ml_g_res);
+            propagator->sum_removed_weights->set(ml_g_res, 0);
             auto R = get_perfect_hash_with_pointer(propagator->reason.get(), ml_g_res);
             R->clear();
             create_reason_true_ge(propagator, sml_g, ml_g, g, sum_removed_weights);
@@ -88,6 +93,7 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, Am
     
                         if(!propagator->is_true(not_(l))) {
                             propagator->S.push_back(not_(l));
+                            propagator->sum_removed_weights->set(not_(l), 0);
                             auto R = get_perfect_hash_with_pointer(propagator->reason.get(), not_(l));
                             R->clear();
                         }

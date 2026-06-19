@@ -23,6 +23,7 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
         amosum_propagator->strategy = get_map(amosum_propagator->params, std::string("strategy"), amosum_propagator->strategy);
         amosum_propagator->I.reset(new InterpretationFunction(amosum_propagator->N));
         amosum_propagator->group.reset(new GroupFunction(amosum_propagator->N));
+        amosum_propagator->sum_removed_weights.reset(new cmn::PerfectNHash<clingo_literal_t, int>(amosum_propagator->N, 0));
 
         amosum_propagator->reason.reset(new PerfectHash<std::vector<clingo_literal_t>*> (amosum_propagator->N, nullptr));
 
@@ -199,6 +200,7 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
         if(gd == nullptr) return;
         WeightFunction* weight = gd->weight;
         amosum_propagator->weight.reset(weight);
+        
         if(amosum_propagator->bound == SETTINGS::NONE)  amosum_propagator->bound = generic_data_map[ID]->bound;
         amosum_propagator->ge ? amosum_propagator->lb = amosum_propagator->bound : amosum_propagator->ub = amosum_propagator->bound ;
 

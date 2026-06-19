@@ -34,6 +34,8 @@ struct AmoSumPropagator
     // A function from literals -> groups
     std::unique_ptr<TrueGroupFunction> true_group ;
 
+    std::unique_ptr<cmn::PerfectNHash<clingo_literal_t, int>> sum_removed_weights;
+
     // A list of group
     std::vector<Group*> groups ;
 
@@ -49,6 +51,8 @@ struct AmoSumPropagator
     // Redundant literals in reason of a literal l
     // it is a funtion lits -> 2^(lits)
     std::unique_ptr<PerfectHash<std::unordered_set<clingo_literal_t>*>> redundant_lits ;
+
+    
     
 
     // assumptions as a list of atom names [json notation]

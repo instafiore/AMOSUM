@@ -14,15 +14,17 @@
 const std::vector<clingo_literal_t>* propagation_phase_ge_eo(const Group* G, AmoSumPropagator* propagator) {
 
     propagator->S.clear();
-    std::unordered_map<clingo_literal_t, int> sum_removed_weights;
+    // std::unordered_map<clingo_literal_t, int> sum_removed_weights;
+    cmn::PerfectNHash<clingo_literal_t, int>& sum_removed_weights = *propagator->sum_removed_weights.get();
 
-    if (propagator->sum_violated) {
+    if (propagator->sum_violated){
         
         if(!propagator->lazy_prop_activated)
             return &propagator->S ;
 
         clingo_literal_t l = propagator->current_literal ;
         propagator->S.push_back(not_(l));
+        propagator->sum_removed_weights->set(not_(l), 0);
 
         auto R = get_perfect_hash_with_pointer(propagator->reason.get(), not_(l));
         R->clear();
@@ -35,7 +37,7 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_eo(const Group* G, Amo
         }
         
         create_reason_falses_ge(propagator, sum_removed_weights, not_(l));
-        
+    
         if(derived_true){
             clingo_literal_t sml_g = max_w(g) ;
             create_reason_true_ge(propagator, sml_g, not_(l), g, sum_removed_weights);
@@ -59,6 +61,7 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_eo(const Group* G, Amo
                     
                     if(!propagator->is_true(not_(l))) {
                         propagator->S.push_back(not_(l));
+                        propagator->sum_removed_weights->set(not_(l), 0);
                         auto R = get_perfect_hash_with_pointer(propagator->reason.get(), not_(l));
                         R->clear();
                     }
