@@ -76,6 +76,7 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, Am
         bool propagate_to_true = false;
         if (mps_h < propagator->lb) {
             propagator->S.push_back(ml_g_res);
+            propagator->mpsHDuringPropagation->set(ml_g_res, mps_h);
             propagator->sum_removed_weights->set(ml_g_res, 0);
             auto R = get_perfect_hash_with_pointer(propagator->reason.get(), ml_g_res);
             R->clear();
@@ -89,10 +90,11 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, Am
         if (!propagate_to_true) {
             for (int l : g->ord_l) {
                 if (propagator->I->get(l) == SETTINGS::NONE) {
-                    if (std::get<0>(propagator->mpsH(l, true)) < propagator->lb) {
-    
+                    int mps_h_l_true = std::get<0>(propagator->mpsH(l, true));
+                    if (mps_h_l_true < propagator->lb) {
                         if(!propagator->is_true(not_(l))) {
                             propagator->S.push_back(not_(l));
+                            propagator->mpsHDuringPropagation->set(not_(l), mps_h_l_true);
                             propagator->sum_removed_weights->set(not_(l), 0);
                             auto R = get_perfect_hash_with_pointer(propagator->reason.get(), not_(l));
                             R->clear();

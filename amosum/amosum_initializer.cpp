@@ -24,6 +24,7 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
         amosum_propagator->I.reset(new InterpretationFunction(amosum_propagator->N));
         amosum_propagator->group.reset(new GroupFunction(amosum_propagator->N));
         amosum_propagator->sum_removed_weights.reset(new cmn::PerfectNHash<clingo_literal_t, int>(amosum_propagator->N, 0));
+        amosum_propagator->mpsHDuringPropagation.reset(new cmn::PerfectNHash<clingo_literal_t, int>(amosum_propagator->N, 0));
 
         amosum_propagator->reason.reset(new PerfectHash<std::vector<clingo_literal_t>*> (amosum_propagator->N, nullptr));
 

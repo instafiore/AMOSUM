@@ -789,7 +789,8 @@ void create_reason_falses_ge(AmoSumPropagator* propagator, cmn::PerfectNHash<cli
                         
                         bool redundant = false;
                         if(minimizationOnTheFly){
-                            auto mps_h = propagator->sum_violated ? propagator->_mps : std::get<0>(propagator->mpsH(derived, !derived_true));
+                            // auto mps_h = propagator->sum_violated ? propagator->_mps : std::get<0>(propagator->mpsH(derived, !derived_true));
+                            auto mps_h = propagator->sum_violated ? propagator->_mps : propagator->mpsHDuringPropagation->get(derived);
                             int s = propagator->lb - mps_h - 1;
                             int weight = propagator->weight->get(l);
                             int inc = weight - mw_g;
@@ -809,11 +810,10 @@ void create_reason_falses_ge(AmoSumPropagator* propagator, cmn::PerfectNHash<cli
                 }
             } else if(!equals(propagator->true_group->getTrueLiteral(g), flipped)) {
                 int tr = propagator->true_group->getTrueLiteral(g) ;
-                auto mps_h = propagator->sum_violated ? propagator->_mps : std::get<0>(propagator->mpsH(derived, !derived_true));
-
                 bool redundant = false;
                 if(minimizationOnTheFly){
-                    auto mps_h = propagator->sum_violated ? propagator->_mps : std::get<0>(propagator->mpsH(derived, !derived_true));
+                    // auto mps_h = propagator->sum_violated ? propagator->_mps : std::get<0>(propagator->mpsH(derived, !derived_true));
+                    auto mps_h = propagator->sum_violated ? propagator->_mps : propagator->mpsHDuringPropagation->get(derived);
                     int s = propagator->lb - mps_h - 1;
                     int w = propagator->weight->get(tr); 
                     int w_mw_g = g->ord_l.size() > 0 ? propagator->weight->get(g->ord_l.back()) : s + 1 + w; 
@@ -995,7 +995,8 @@ void create_reason_true_ge(AmoSumPropagator* propagator, clingo_literal_t sml_g,
     assert(i <= j);
     assert(derived != SETTINGS::NONE);
 
-    auto mps_h = propagator->sum_violated ? propagator->_mps : std::get<0>(propagator->mpsH(derived, false));
+    // auto mps_h = propagator->sum_violated ? propagator->_mps : std::get<0>(propagator->mpsH(derived, false));
+    auto mps_h = propagator->sum_violated ? propagator->_mps : propagator->mpsHDuringPropagation->get(derived);
     int s = propagator->lb - mps_h - 1 ;
     // for (int k = i; k < j; ++k) {
     for (int k = j; k >= i; --k) {

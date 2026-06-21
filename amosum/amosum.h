@@ -35,6 +35,7 @@ struct AmoSumPropagator
     std::unique_ptr<TrueGroupFunction> true_group ;
 
     std::unique_ptr<cmn::PerfectNHash<clingo_literal_t, int>> sum_removed_weights;
+    std::unique_ptr<cmn::PerfectNHash<clingo_literal_t, int>> mpsHDuringPropagation;
 
     // A list of group
     std::vector<Group*> groups ;
