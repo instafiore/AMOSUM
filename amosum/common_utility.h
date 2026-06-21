@@ -174,7 +174,6 @@ struct Hasher {
         return k; 
     } 
     size_t operator()(const Mapping2Integer* map2Int) const noexcept { return this->operator()(*map2Int); } 
-    size_t operator()(const int32_t map2Int) const noexcept { return std::hash<int32_t>{}(map2Int); } 
     size_t operator()(const int64_t map2Int) const noexcept { return std::hash<int64_t>{}(map2Int); } 
     size_t operator()(const size_t map2Int) const noexcept { return map2Int; } 
 };
