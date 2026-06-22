@@ -61,6 +61,7 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_eo(const Group* G, Amo
                     
                     if(!propagator->is_true(not_(l))) {
                         propagator->S.push_back(not_(l));
+                        propagator->mpsHDuringPropagation->set(not_(l), mpsH);
                         propagator->sum_removed_weights->set(not_(l), 0);
                         auto R = get_perfect_hash_with_pointer(propagator->reason.get(), not_(l));
                         R->clear();
