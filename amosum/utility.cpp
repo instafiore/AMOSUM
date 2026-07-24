@@ -784,7 +784,8 @@ void create_reason_falses_ge(AmoSumPropagator* propagator, cmn::PerfectNHash<cli
                 for (int i = static_cast<int>(g->ord_l.size()) - 1; i >= 0; --i) {
                     clingo_literal_t l = g->ord_l[i];
                     
-                    if (propagator->weight->get(l) < mw_g) break;
+                    // if (propagator->weight->get(l) < mw_g) break;
+                    if (propagator->weight->get(l) <= mw_g) break;
                     if (!propagator->I->get(l) && !equals(l, flipped)) {
                         
                         bool redundant = false;
@@ -1004,6 +1005,7 @@ void create_reason_true_ge(AmoSumPropagator* propagator, clingo_literal_t sml_g,
         int weight = propagator->weight->get(lit);
         int w_sml = propagator->weight->get(sml_g);
         int inc = weight - w_sml ;
+        if(weight <= w_sml) break;
         if (!propagator->I->get(lit) && !equals(derived, lit)) {
             bool redundant = false;
             if(minimizationOnTheFly){
