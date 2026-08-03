@@ -1116,7 +1116,7 @@ def create_reason_falses_ge(propagator, sum_removed_weights: Dict, flipped = Non
             mw_g = propagator.weight[max_w(g)]
             for i in range(len(ord_l) - 1, -1, -1):
                 l = ord_l[i]
-                if propagator.weight[l] < mw_g:
+                if propagator.weight[l] <= mw_g:
                     break
                 if propagator.I[l] == False and not equals(l, flipped):
                     for derived in propagator.S:
@@ -1241,6 +1241,7 @@ def create_reason_true_ge(propagator, sml_g, derived, g, sum_removed_weights):
         weight = propagator.weight[lit]
         w_sml = propagator.weight[sml_g]
         inc = weight - w_sml
+        if weight <= w_sml: break
         if propagator.I[lit] == False and not equals(derived, lit):
             sum_removed_weights.setdefault(derived, 0)
             if(sum_removed_weights[derived] + inc <= s):
