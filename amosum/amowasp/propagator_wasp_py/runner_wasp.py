@@ -43,10 +43,10 @@ class RunnerWasp:
 
     def run(self) -> List[Result]:
 
-        raise NotImplementedError(
-            "WASP solver is no longer supported due to infrastructure issues. "
-            "Please use an alternative solver CLINGO."
-        )
+        # raise NotImplementedError(
+        #     "WASP solver is no longer supported due to infrastructure issues. "
+        #     "Please use an alternative solver CLINGO."
+        # )
 
         # encoding
         location_encoding = self.encoding
