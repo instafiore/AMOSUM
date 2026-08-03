@@ -68,45 +68,16 @@ bash ./install_ijcai
 
 ---
 
-<<<<<<< HEAD
-## Running AMOSUM
-
-### AMOCLINGO — C++ propagator
-
-```bash
-python ./prop_clingo/run.py -enc <encoding> -i <instance> -exp -lang c 
-```
-
-### AMOCLINGO — Python propagator
-
-```bash
-python ./prop_clingo/run.py -enc <encoding> -i <instance> -exp -lang py 
-```
-
-### AMOWASP — Python propagator
-
-```bash
-python ./prop_wasp/run.py -enc <encoding> -i <instance> -exp
-=======
 # Usage
 
 ## Show help
 
 ```bash
 amoclingo -h
->>>>>>> master
 ```
 
 ---
 
-<<<<<<< HEAD
-## Lazy Propagation
-
-Enable lazy propagation with:
-
-```bash
--lang c -lazy
-=======
 # Running AMOSUM
 
 ## AMOCLINGO — C++ propagator
@@ -125,33 +96,10 @@ amoclingo -e <encoding> -i <instance> -l py
 
 ```bash
 amowasp -e <encoding> -i <instance>
->>>>>>> master
 ```
 
 ---
 
-<<<<<<< HEAD
-## Example Runs
-
-### AMOCLINGO-INF-MR (Full propagation with minimization)
-
-```bash
-./prop_clingo/run.py \
-    -enc tests/benchmarks/graph_colouring/encoding-amosum-amo.asp \
-    -i tests/benchmarks/graph_colouring/instances/0001-graph_colouring-125-0_1200.asp \
-    -exp -lang c
-```
-
-### AMOCLINGO-L (Lazy propagation)
-
-```bash
-./prop_clingo/run.py \
-    -enc tests/benchmarks/graph_colouring/encoding-amosum-amo.asp \
-    -i tests/benchmarks/graph_colouring/instances/0001-graph_colouring-125-0_1200.asp \
-    -exp -lang c -lazy
-```
-
-=======
 # Lazy Propagation
 
 Lazy propagation can be enabled with:
@@ -245,4 +193,3 @@ If you use AMOSUM in your research, please cite:
   url          = {https://www.ijcai.org/proceedings/2024/356}
 }
 ```
->>>>>>> master
