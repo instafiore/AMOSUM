@@ -1,0 +1,1474 @@
+# utility module
+import argparse
+import ast
+from enum import Enum
+import re
+import signal
+import subprocess
+import sys
+from typing import Any, Dict, List
+import sys
+from amosum.settings import *
+import time
+import clingo 
+
+# Debug mode
+DEBUG = False
+
+# focusing print for a particular group
+FOCUSED_GROUP = 2
+FOCUSING = False
+ERROR_CODE = 1
+TIMEOUT_CODE = 143
+
+# assumptions
+SEPARATOR_ASSUMPTIONS = ":"
+NOT = "~"
+REGEX_LIT = rf"{NOT}?(\w+(\(\w+({SEPARATOR_ASSUMPTIONS}\w+)*\))?)" 
+REGEX_ASSUMPTIONS = rf"^\[{REGEX_LIT}({SEPARATOR_ASSUMPTIONS}{NOT}?{REGEX_LIT})*\]$"
+VALID_VALUES_ASS = f"[[{NOT}]<atom_name>[(param1,parm2,...)]:...] "
+
+
+def parse_args_check():
+    parser = argparse.ArgumentParser(description="Checker for AMOSUM")
+    parser.add_argument("--checkerPath", required=True, help="Path to file checker")
+    parser.add_argument("--pathOutput", required=True, help="Path to file pathOutput")
+
+    return vars(parser.parse_args())
+
+def parse_args_check_unsat():
+    parser = argparse.ArgumentParser(description="Checker for AMOSUM (Unsat case)")
+    parser.add_argument("--file", required=True, help="Path to file results")
+
+    return vars(parser.parse_args())
+
+def checkAmomaximize(args: Dict[str, Any]) -> None:
+
+    regex = r"Cumulative Time \d+\.\d+s\s+Time \d+\.\d+s\s*\w*\s*cost: (?P<cost>\d+) Answer Set \[(?P<answerset>.*)\]"
+
+    lastCost = None
+    lastMatch = None
+    increasingCostFunction = True
+    with open(args['pathOutput'], "r") as f:
+        for line in f.readlines():
+            matchRegex = re.search(regex, line)
+            # print(f"match: {matchRegex}")
+            if matchRegex:
+                instance = ""
+                cost = int(matchRegex.group("cost"))
+                if not lastCost is None and lastCost > cost:
+                    increasingCostFunction = False
+                    break
+                lastCost = cost
+                lastMatch = matchRegex
+
+
+        if lastMatch:
+            answerset = lastMatch.group("answerset").split(", ")
+            print(f"% answerset: {answerset}")
+            for atom in answerset:
+                atom = atom.replace("'","")
+                # instance += f":- not {atom}.\n"
+                instance += f"{atom}.\n"
+            costInstance = f"expectedCost({cost})."
+            # print(f"{instance}")
+            # print(f"{costInstance}")
+            ctl = clingo.Control()
+            ctl.load(args["checkerPath"])
+            try:
+                ctl.add(instance)
+            except RuntimeError as e:
+                exit(13)
+            ctl.add(f"{costInstance}\n")
+            ctl.ground()
+            result: clingo.SolveResult
+            def onResult(resultC: clingo.SolveResult):
+                nonlocal result
+                result = resultC
+            print(f"% trying with {args['pathOutput']}, {costInstance}")
+            ctl.solve(on_finish=lambda x: onResult(x), on_model=lambda x: print(f"% {x}"))
+
+            print(f"% Result check: {result}")
+            if not result.satisfiable or not increasingCostFunction:
+                print(f"% Error with: {args['pathOutput']} increasingCostFunction:{increasingCostFunction}, {costInstance}\n{answerset}")
+                exit(1)
+
+        print("% Check passed")  
+        exit(0)
+
+def checkAmosum(args: Dict[str, Any]) -> None:
+
+    regex = r"Answer Set \[(?P<answerset>.*)\]"
+
+    with open(args['pathOutput'], "r") as f:
+        for line in f.readlines():
+            matchRegex = re.search(regex, line)
+            # print(f"match: {matchRegex}")
+            if matchRegex:
+                instance = ""
+                answerset = matchRegex.group("answerset").split(", ")
+                print(f"% answerset: {answerset}")
+                for atom in answerset:
+                    atom = atom.replace("'","")
+                    # instance += f":- not {atom}.\n"
+                    instance += f"{atom}.\n"
+                
+                # print(f"{instance}")
+        
+                ctl = clingo.Control()
+                ctl.load(args["checkerPath"])
+                try:
+                    ctl.add(instance)
+                except RuntimeError as e:
+                    exit(13)
+    
+                ctl.ground()
+                result: clingo.SolveResult
+                def onResult(resultC: clingo.SolveResult):
+                    nonlocal result
+                    result = resultC
+                print(f"% trying with {args['pathOutput']}")
+                ctl.solve(on_finish=lambda x: onResult(x), on_model=lambda x: print(f"% {x}"))
+
+                print(f"% Result check: {result}")
+                if not result.satisfiable:
+                    print(f"% Error with: {args['pathOutput']}")
+                    print(f"{instance}")
+                    exit(1)
+
+        print("% Check passed")  
+        exit(0)
+
+def set_debug(debug):
+    global DEBUG
+    DEBUG = debug if debug != "" else DEBUG
+
+def print_err(*message: str, end ="\n"):
+    print(message, end=end, file=sys.stderr)
+
+# clingo.PropagateControl
+def print_propagate(propagator, changes: List[int], control = None, dl = 0, force_print = False, wasp_b = False):
+    if not force_print and not DEBUG:
+        return 
+    changes_str  = propagator.compute_changes_str(changes=changes, thread_id=control.thread_id) if not wasp_b else \
+        f"[{get_name(lit=changes[0], atomNames=propagator.atomNames)}, {changes[0]}]"
+    decision_slit = control.assignment.decision(dl) if not wasp_b else propagator.last_decision_lit
+    plit: int = 0
+    if not wasp_b and decision_slit != 1:
+        plit = propagator.map_slit_plit[decision_slit][0]
+    elif wasp_b:
+        plit = propagator.last_decision_lit 
+    decision_literal_name = get_name(atomNames = propagator.atomNames, lit = plit) if decision_slit != 1 else "from facts"
+    debug(f"[{decision_literal_name}, {dl}] propagate {changes_str} thread_id: {control.thread_id if not wasp_b else 0}", force_print=force_print)
+   
+def print_clause(propagator, clause, force_print = False, conflict = False):
+    if not force_print and not DEBUG:
+        return
+    clause_names = [get_name(atomNames=propagator.atomNames, lit=propagator.map_slit_plit[literal][0]) for literal in clause]
+    confict_str = "Conflict with " if conflict else ""
+    debug(f"{confict_str}clause_names {clause_names} clause_slits {clause}", force_print=force_print)
+
+def equals(l1, l2):
+    if l1 is None or l2 is None:
+        return l1 is None and l2 is None
+    return abs(l1) == abs(l2)
+
+def print_undo(propagator, changes, thread_id, force_print = False, wasp_b = False):
+    if not force_print and not DEBUG:
+        return 
+    if wasp_b:
+        changes = changes[1::]
+    changes_str = propagator.compute_changes_str(changes=changes, thread_id=thread_id)
+    debug(f"undo {changes_str} thread_id: {thread_id}", file = sys.stderr, force_print=force_print)
+
+def print_starting_propagation(propagator, lit, next_phase, force_print = False):
+    if not force_print and not DEBUG:
+        return 
+    name = get_name(lit=lit, atomNames=propagator.atomNames) 
+    debug(f"[{next_phase}] Propagation phase of {name} {'not' if not next_phase else ''} started [{propagator._mps}]:", force_print=force_print)
+
+def print_derivation(atomNames, S, force_print = False):
+    if not force_print and not DEBUG:
+            return 
+    S_str = convert_array_to_string(name="Derived", array=S, atomNames=atomNames)
+    debug(S_str, file=sys.stderr, force_print=force_print)
+
+def print_reason(atomNames, R, literal, force_print = False):
+    if not force_print and not DEBUG:
+        return 
+    R_str = convert_array_to_string(name=f"Reason({get_name(atomNames=atomNames, lit=literal)})", array=R, atomNames=atomNames)
+    debug(R_str, file=sys.stderr, force_print=force_print)
+
+def print_reduction_reason(propagator, reason_c, reason, lit, force_print = False):
+    if not force_print and not DEBUG:
+        return 
+    propagator.redundant_lits_str = convert_array_to_string(name=f"from {len(reason_c)} to {len(reason)} removed from reason of {get_name(atomNames=propagator.atomNames, lit=lit)} lit {lit}", array=propagator.redundant_lits[lit], atomNames=propagator.atomNames)
+    debug(propagator.redundant_lits_str, force_print=force_print)
+    propagator.redundant_lits_str = convert_array_to_string(name=f"removed from reason of {get_name(atomNames=propagator.atomNames, lit=lit)} ", array=propagator.redundant_lits[lit], atomNames=propagator.atomNames)
+    debug(propagator.redundant_lits_str, force_print=force_print)
+
+def debug(*message: str, G: 'Group' = None , end ="\n", force_print = False, file = sys.stderr):
+    if force_print or (DEBUG and ( G is None or G.id == FOCUSED_GROUP or not FOCUSING)):
+        print(message, end=end, file=file)
+        sys.stderr.flush()
+
+def lazy_type(value):
+    allowed = {"false", "true", "hybrid"}
+    
+    # case 1: string options
+    if value in allowed:
+        return value
+    
+    # case 2: numeric value in [0,1]
+    try:
+        num = float(value)
+        if 0.0 <= num <= 1.0:
+            return num
+    except ValueError:
+        pass
+    
+    raise argparse.ArgumentTypeError(
+        "lazy must be 'false', 'true', 'hybrid', or a float between 0 and 1"
+    )
+
+
+def parse_args(checkCorrectness: bool = False):
+    
+    parser = argparse.ArgumentParser(description='Amosum propagator')
+    parser.add_argument("-e", "--encoding", required=not checkCorrectness, help="Path to encoding file")
+
+    parser.add_argument(
+        "-i",
+        "--instance",
+        help="Path to instance file (optional)",
+    )
+
+    parser.add_argument(
+        "-l",
+        "--lazy",
+        type=lazy_type,
+        default="false",
+        help=(
+            "Lazy configuration: "
+            "'false', 'true', 'hybrid', or a float in [0,1]. "
+            "Default: false"
+        ),
+    )
+
+    parser.add_argument(
+        "-r",
+        "--reason",
+        choices=[e.value for e in Minimize],
+        default=Minimize.NO_MINIMIZATION.value,
+        help=(
+            "Minimization technique of the reason: nomin (no minimization), "
+            "min (minimization), cmin (cardinality-minimal), "
+            "minfly (on-the-fly), ijcai (IJCAI version). "
+            "Default: nomin."
+        ),
+    )
+
+    parser.add_argument(
+        "-lg",
+        "--lang",
+        choices=["cpp", "py"],
+        default="cpp",
+        help="Language to use (default: cpp)",
+    )
+
+    parser.add_argument(
+        "-n",
+        "--models",
+        type=int,
+        default=1,
+        help="Maximum number of models to search for (default: 1)",
+    )
+
+    parser.add_argument(
+        "-log",
+        "--log-file",
+        type=str,
+        default="log",
+        help="Path to the file where execution logs should be saved (when in test mode)",
+    )
+
+    parser.add_argument(
+        "-smpc",
+        "--static-mpc",
+        type=str,
+        default="true",
+        help=(
+            "Enable or disable static(true)/dynamic(false) propagation for the "
+            "Maximum Possible Change of the Maximum Possible Sum (default: true)"
+        ),
+    )
+
+    if checkCorrectness:
+        subparsers = parser.add_subparsers(
+            dest="check",
+            required=True,
+            help="Check mode: 'all' checks all answer sets, 'unsat' checks unsatisfiable results in exp file, 'instance' checks a single computed answer set",
+        )
+
+        parser_all = subparsers.add_parser("all", help="Check all answer sets")
+        parser_all.add_argument(
+            "-s", "--solver",
+            required=False,
+            default="clingo",
+            help="Solver to use (default: clingo)",
+        )
+
+        parser_unsat = subparsers.add_parser("unsat", help="Check unsatisfiable results in exp file")
+        parser_unsat.add_argument(
+            "-uf", "--unsatfile",
+            required=True,
+            help="Path to the experiments file (.exp)",
+        )
+
+        parser_unsat_clown = subparsers.add_parser("unsat-clown", help="Check unsatisfiable results in exp file using the Clown server")
+        parser_unsat_clown.add_argument(
+            "-uf", "--unsatfile",
+            required=True,
+            help="Path to the experiments file (.exp)",
+        )
+
+        parser_instance = subparsers.add_parser("instance", help="Check a single computed answer set")
+        parser_instance.add_argument(
+            "-f", "--file_answerset",
+            required=False,
+            help="Path to the output file containing the answer set",
+        )
+   
+
+    dict_res = vars(parser.parse_args())
+   
+    return dict_res
+
+def run_clingo(args: Dict):
+    """
+    Runs clingo with the given encoding and instance to enumerate models.
+
+    Parameters:
+    encoding (str): Path to the encoding file.
+    instance (str): Path to the instance file [not mandatory].
+    n (int): Number of models to enumerate (0 for all models). Default is 1.
+
+    Returns:
+    list of sets of strings: Each set represents an answer set.
+    or
+    str: 'UNSAT' if the program is unsatisfiable.
+    """
+    ctl = clingo.Control()
+
+    # Load the encoding file
+    encoding: str = args["encoding"]
+    encoding = encoding.replace(r"encoding-amosum-", "encoding-plainsum-")
+    ctl.load(encoding)
+
+    # If an instance is provided, add it as a fact
+    if args["instance"]:
+        ctl.load(args["instance"])
+
+    ctl.ground([("base", [])])
+
+    # Set the number of models to enumerate
+    ctl.configuration.solve.models = args["models"]
+
+    answer_sets = []
+
+    def on_model(model: clingo.Model):
+        answer_sets.append(set(str(atom) for atom in model.symbols(shown=True)))
+
+    result = ctl.solve(on_model=on_model)
+
+    # If no answer sets were found, return 'UNSAT'
+    if not answer_sets:
+        return "UNSAT"
+
+    return answer_sets
+
+def init_param(argv):
+    param = {}
+    regex = r"^-(.+)" 
+    
+    i = 1
+    while i < len(argv):
+        
+        # creating the key
+        key = argv[i] 
+        res_regex = re.match(regex, key)
+        if res_regex is None:
+            raise Exception("Every key has to start with a dash! Ex: -problem knapsack")
+        key = res_regex.group(1)
+
+        if i + 1 >= len(argv) :
+            param[key] = True
+            break
+        
+        value = argv[i+1] 
+        res_regex = re.match(regex, value)
+        if res_regex is None:
+            i += 2
+            param[key] = value
+            
+        else:
+            i += 1
+            param[key] = True
+
+    return param
+
+def create_assumptions_lits(assumptions, atomNames):
+
+    if not assumptions:
+        return []
+
+    res = []
+    
+    r2 = rf"^{NOT}.+$" 
+    for ass in assumptions:
+        atom = re.match(REGEX_LIT,ass).group(1)
+        if not atom in atomNames:
+            continue
+        lit = atomNames[atom]
+        if re.match(r2,ass):
+            lit *= -1
+        res.append(lit)
+
+    return res
+
+def cat(path):
+    return subprocess.run(f"cat {path}", shell=True, capture_output=True).stdout.decode()
+
+def delete_file(path):
+    subprocess.run(f"rm {path}", shell=True, capture_output=True).stdout.decode()
+
+def read_file(path):
+    with open(path, "r") as file:
+        input = file.read()
+    return input
+
+def write_file(path, string):
+    with open(path, "w") as file:
+        file.write(string)
+
+def ground_program(*paths, return_command = False):
+    ground_program_run = f"clingo {' '.join([path for path in paths if not path is None])} --output=smodels "
+    grounded_program = subprocess.run(ground_program_run, shell=True, capture_output=True).stdout.decode()
+    return (grounded_program, ground_program_run) if return_command else grounded_program
+
+def process_sys_parameters(sys_parameters):
+
+    # debug(sys_parameters)
+
+    params = []
+    regex = r"^-(.+)" 
+    i = 1
+    prop_type = sys_parameters[i]
+    param = {}
+    i += 1
+
+    while i < len(sys_parameters):
+
+        # creating the key
+        key = sys_parameters[i]
+        # print(f"key: {key}")
+        res_regex = re.match(regex, key)
+        if res_regex is None:
+            raise Exception("Every key has to start with a dash! Ex: -id id")
+        key = res_regex.group(1)
+
+        if i + 1 >= len(sys_parameters) :
+            param[key] = True
+            i +=1
+        else:    
+            value = sys_parameters[i+1] 
+            res_regex = re.match(regex, value)
+            
+
+            if res_regex is None and value not in PROPAGATORS_NAMES:
+                i += 2
+                param[key] = value
+                # print(f"value: {value}")
+                
+            else:
+                i += 1
+                param[key] = True
+                # print(f"value: {True}")
+        
+        if i >= len(sys_parameters) or sys_parameters[i] in PROPAGATORS_NAMES:
+            params.append((prop_type, param))
+            if i < len(sys_parameters):
+                prop_type  = sys_parameters[i] 
+                param = {}
+                i += 1
+
+    return params
+
+def convert_assparam_to_assarray(assumptions):
+ 
+    # Strip the square brackets
+    stripped_string = assumptions.strip("[]")
+
+    # Split the string by comma
+    array = stripped_string.split(SEPARATOR_ASSUMPTIONS)
+
+    # If there might be extra spaces around the elements, you can also strip each element
+    array = [element.strip() for element in array]
+
+    return array
+
+class SymmetricFunction:
+    
+    def __init__(self, N) -> None:
+        # interpretation
+        self.intepretation : List[Any] = [None] * N
+
+    def function_negative_lit(self, value):
+        return not value
+
+    def __getitem__(self, lit: int) -> Any:
+        i = abs(lit) 
+        value = self.intepretation[i]
+        if value is None:
+            return None
+        if lit < 0:
+            value = self.function_negative_lit(value)
+        return value
+    
+    def __setitem__(self, lit: int, value: Any):
+        i = abs(lit)
+        if lit < 0 :
+            if not value is None:
+                value = self.function_negative_lit(value)
+            else:
+                value = None
+        self.intepretation[i] = value
+
+
+
+def run_and_stream(cmd):
+
+    stop_requested = False
+
+    def on_sigterm(signum, frame):
+        nonlocal stop_requested
+        stop_requested = True
+        print("Received SIGTERM, forwarding to subprocess amosum cpp")
+        
+
+    signal.signal(signal.SIGTERM, on_sigterm)
+    signal.signal(signal.SIGINT, on_sigterm)
+
+
+    # try:
+    proc = subprocess.Popen(
+        cmd,
+        shell=True,
+        stdout=subprocess.PIPE,
+        # stderr=subprocess.STDOUT,
+        text=True,
+        bufsize=1,              
+    )
+
+    for line in proc.stdout: 
+        line = line.rstrip("\n")
+        yield line   
+
+    if stop_requested:
+        print("Interrupted!!!")
+        proc.send_signal(signal.SIGINT)
+        for line in proc.stdout: 
+            line = line.rstrip("\n")
+            yield line
+
+    # except KeyboardInterrupt as e:
+
+    #     print("Interrupted! Getting remaining output...")
+
+    #     # Try to let the subprocess finish gracefully
+    #     try:
+    #         proc.send_signal(signal.SIGINT)
+    #     except Exception as e:
+    #         print(e)
+
+    #     for line in proc.stdout: 
+    #         line = line.rstrip("\n")
+    #         yield line 
+
+    #     raise KeyboardInterrupt()
+    # finally:
+    #     try:
+    #         proc.wait(timeout=3)
+    #     except Exception:
+    #         proc.kill()
+    #         proc.wait()
+
+import json
+class Model:
+
+    def __init__(self, cost: int,  assignment : List):
+        self.cost = cost 
+        self.assigment : List[str] = assignment
+
+    def __str__(self):
+        costStr = f"cost: {self.cost} " if not self.cost is None else ""
+        return f"{costStr}Answer Set {self.assigment}"
+
+    @staticmethod
+    def parse(serialized: str) -> "Result":
+        # print(f"serialized: {serialized}")
+        modelJson = json.loads(serialized)
+        assigmnet = modelJson[0]
+        cost = modelJson[1] if len(modelJson) > 1 else None
+
+        model = Model(cost, assigmnet)
+        return model
+
+class Result:
+
+    model : Model
+    exitCode : int 
+    isOptimum: bool
+    timeModel: float
+    cumulativeTime: float
+
+
+
+    def __init__(self, model: Model, exitCode: int):
+        self.model : Model = model
+        self.exitCode : int = exitCode
+        # self.isOptimum: bool = exitCode == 30
+        # self.isUnknown: bool = exitCode == 29
+        self.timeModel: float = None
+        self.cumulativeTime: float = None
+
+    @property
+    def isOptimum(self):
+        return self.exitCode == 30
+    
+    @property
+    def isUnknown(self):
+        return self.exitCode == 29
+
+    def __str__(self):
+        isOptimumString = "Optimum " if self.isOptimum else ""
+        isUnkownString = "Unkown " if self.isUnknown else ""
+        timeModelString = f"Time {self.timeModel}s " if not self.timeModel is None else ""
+        cumulativeTimeString = f"Cumulative Time {self.cumulativeTime}s " if not self.cumulativeTime is None else ""
+        if self.model:
+            strModel = str(self.model)
+        else:
+            if self.exitCode == 20:
+                strModel = "UNSAT"
+            else:
+                strModel = str(self.exitCode)
+
+        return f"{cumulativeTimeString}{timeModelString}{isOptimumString}{isUnkownString}{strModel}"
+
+    @staticmethod
+    # def parse(serialized: str, weights: Dict[str, Dict] = None) -> "Result":
+    #     try:
+    #         resultJson = json.loads(serialized)
+    #     except Exception as e:
+    #         regexTrunckedAnswerset = r"\[\[.*(?P<finalAnswerset>\[\[.*\]\s*,\s*\[.+\])"
+    #         matchTrunched = re.search(regexTrunckedAnswerset, serialized)
+    #         if matchTrunched:
+    #             realAnswerset = matchTrunched.group("finalAnswerset")
+    #             resultJson = json.loads(realAnswerset)
+    #         else:
+    #             print(f"Not valid: {serialized}")
+    #             return None
+    #     modelJson = resultJson[0]
+
+    #     # TODO: TO HANDLE NEGATIVE LITERALS
+    #     if modelJson:
+    #         assigment  = modelJson
+    #         if not weights is None:
+    #             cost = 0
+    #             for atom in assigment:
+    #                 if atom in weights:
+    #                     cost += weights[atom]["weight"] if weights[atom]["sign"] == "+" else 0
+    #                     # cost += weights[atom]["weight"]
+    #                     # print(f"atom: {atom} weight: {weights[atom]["weight"]} sign: {weights[atom]["sign"]} cost: {cost}")
+    #             # cost = sum(weights[atom]["weight"] for atom in assigment if atom in weights) if weights else None
+    #         else:
+    #             cost = None
+    #         model = Model(cost, assigment)
+    #     else:
+    #         model = None
+        
+    #     otherString = resultJson[1]
+    #     exitCode = int(otherString[0])
+    #     return Result(model, exitCode)
+
+    def parse(serialized: str) -> "Result":
+        try:
+            resultPython = ast.literal_eval(serialized)
+            # resultJson = json.loads(realAnswerset)
+        except Exception as e:
+            regexTrunckedAnswerset = r"\[\[.*(?P<finalAnswerset>\[\[.*\]\s*,\s*\[.+\])"
+            matchTrunched = re.search(regexTrunckedAnswerset, serialized)
+            if matchTrunched:
+                realAnswerset = matchTrunched.group("finalAnswerset")
+                # resultJson = json.loads(realAnswerset)
+                resultPython = ast.literal_eval(realAnswerset)
+            else:
+                print(f"{serialized}")
+                return None
+  
+
+        modelDict = resultPython["model"]
+
+        if modelDict:
+            model = Model(modelDict["cost"] if "cost" in modelDict else None, modelDict["answerset"])
+        else:
+            model = None
+    
+        exitCode = int(resultPython["exitCode"])
+        return Result(model, exitCode)
+
+
+class WeightFunction(SymmetricFunction):
+    
+    def __getitem__(self, lit: int) -> any:
+        if lit is None:
+            return 0
+        return super().__getitem__(lit)
+
+    def function_negative_lit(self, value):
+        return value    
+
+
+class Group:
+    
+    autoincrement = 0 
+
+    def __init__(self, ord_l, ord_i, id) -> None:
+        # number of literals
+        self.N = len(ord_l)
+
+        # number of undefined literals
+        self.count_undef = self.N
+
+        #  ord_l[i] = l 
+        #  is the i-th literal orderded by weight
+        self.ord_l : List[int] = ord_l
+        #  it is a copy of ord_l, for now it is useless
+        self.ord_l_origin : List[int] = ord_l.copy()
+
+
+        # a function literals -> int that takes in input the literal l and gives as output the index of l in ord_lit:
+        #   ord_i[l] = i 
+        #   it is the inverse of ord_l function
+        self.ord_i : dict[int, int] = ord_i
+
+        # It is the index of the maximum (weight) undefined literal in ord_l 
+        # if self.ge = True:
+        #   max_und represents the classical max undefined 
+        # else:
+        #   max_und represents the max undefined of the min k undefined
+        self.max_und : int = self.N - 1
+        self.max_und_set : set[int]
+
+        # It is the index of the minimum (weight) undefined literal in ord_l
+        # if self.ge = True:
+        #   min_und represents the min undefined of the max k undefined
+        # else:
+        #   min_und represents the classical min undefined 
+        self.min_und : int = 0 
+        self.min_und_set : set[int]
+
+
+        # all falses facts literals of the group
+        self.falses_facts : List[int] = []
+
+
+        # id of the group
+        self.id = id
+        self.id_autoinc = Group.autoincrement 
+        Group.autoincrement += 1
+
+    def increase_und(self):
+        self.count_undef += 1
+    
+    def decrease_und(self):
+        self.count_undef -= 1
+
+    def add_false_lit(self, lit: int):
+        self.falses_facts.append(lit)
+
+    def remove_false_lit(self, lit: int):
+        self.falses_facts.remove(lit)
+
+    def set_max(self, l: int):
+        self.max_und = self.ord_i[l] if not l is None else None
+
+    def set_min(self, l: int):
+        self.min_und = self.ord_i[l] if not l is None else None
+
+    def set_max_min(self, l: int, max: bool):
+        if max:
+            self.set_max(l)
+        else:
+            self.set_min(l)
+
+    def get_most_undefined(self, max):
+        raise NotImplementedError()
+
+
+    def update_max(self, I: SymmetricFunction, all = False, update = True, assuming_und = None):
+        '''
+        return: new max, prev max
+        '''
+        prev_max = self.ord_l[self.max_und] if not self.max_und is None and self.max_und < len(self.ord_l) else None
+        
+        if all:
+            start = self.N - 1
+        else:
+            start = self.max_und - 1 if not self.max_und is None else -1
+            # All are defined
+            if start < 0:
+                self.max_und = None if update else self.max_und
+                return (None, prev_max)
+            
+        for i in range(start, -1, -1):
+            l = self.ord_l[i]
+            if I[l] is None or equals(l, assuming_und):
+                self.max_und = i if update else self.max_und
+                new_max = l
+                return (new_max, prev_max)
+        
+        # All are defined
+        self.max_und = None if update else self.max_und
+        return (None, prev_max)
+    
+    def update_min(self, I: SymmetricFunction, all = False, update=True, assuming_und = None):
+        prev_min = self.ord_l[self.min_und] if not self.min_und is None and self.min_und < len(self.ord_l) else None
+        
+        if all:
+            start = 0
+        else:
+            start = self.min_und + 1 if not self.min_und is None else self.N
+            # All are defined
+            if start >= self.N:
+                self.min_und = None  if update else self.min_und
+                return (None, prev_min)
+
+        for i in range(start, self.N, +1):
+            l = self.ord_l[i]
+            if I[l] is None or equals(l, assuming_und):
+                self.min_und = i if update else self.min_und
+                new_min = l
+                return (new_min, prev_min)
+        
+        # All are defined
+        self.min_und = None if update else self.min_und
+        return (None, prev_min)
+
+    def update(self, I: SymmetricFunction, max, all = False, update = True, assuming_und = None):
+        if max: 
+            return self.update_max(I,all=all, update=update, assuming_und = assuming_und)
+        else:
+            return self.update_min(I,all=all, update=update, assuming_und = assuming_und)
+
+
+    def print_group(self, atomNames):
+        lit_names = ""
+        for l in self.ord_l:
+            lit_names += " " + get_name(atomNames,l) + " "
+        debug(str(self), f"[{lit_names}]")
+
+    def __str__(self) -> str:
+        return str(self.id)
+
+# removes useless literals
+def simplifyLiterals(lits, aggregate: 'AggregateFunction', group: 'GroupFunction', max, I: SymmetricFunction ):
+    '''
+    Invariants: all literals inside lits must be already assigned to a truth value
+    '''
+    
+    G : Group = None
+    
+    for l in lits:
+        if aggregate[l]:
+            G = group[l]
+            G.add_false_lit(not_(l))
+        elif aggregate[not_(l)]:
+            G = group[not_(l)]
+            G.add_false_lit(l)
+            l = not_(l)
+        else:
+            continue
+
+    
+        n = len(G.ord_l)
+        li = G.ord_i[l]
+        G.ord_i[l] = -1
+        # updating position of next literals (shifting)
+        for lit_i in range(li+1,n):
+            lit = G.ord_l[lit_i]
+            G.ord_i[lit] -= 1
+
+        # removing literal
+        G.ord_l.remove(l)
+        G.N = len(G.ord_l)
+
+        # updating max_und/min_und 
+        G.update(I, max=max, all=True)
+
+        # removing from aggregate
+        aggregate[l] = False
+        aggregate[not_(l)] = False
+
+        assert G.count_undef >= 0
+
+  
+            
+
+# This function returns the max UNDEFINED literal
+def max_w(g: Group):
+
+    max_und = g.max_und
+
+    if(max_und is None):
+        return None
+    try:
+        return g.ord_l[max_und]
+    except Exception as e:
+        debug(f"g.ord_l {g.ord_l} max_und {max_und}", force_print=True)
+        raise e
+
+# This function returns the min UNDEFINED literal
+def min_w(g: Group):
+    min_und = g.min_und
+    if(min_und is None):
+        return None
+    return g.ord_l[min_und]
+
+def m_w(g: Group, max : bool, second = False):
+    if max: 
+        return max_w(g)
+    else:
+        return min_w(g)
+
+def not_(l: int):
+    return l * -1
+
+def remove_elements(original, to_remove):
+    return [element for element in original if element not in to_remove]
+
+class PerfectHash:
+
+    def __getitem__(self, lit: int) -> Any:
+        if lit > 0:
+            i = lit
+        else:
+            i = abs(lit) + self.N
+        return self.values[i]
+    
+    def __setitem__(self, lit, value) -> None:
+        if lit > 0:
+            i = lit
+        else:
+            i = abs(lit) + self.N
+        self.values[i] = value
+
+    def __init__(self, N: int,  default = None) -> None:
+        # it is a (N * 2) vector where:
+        #   values[:N-1]    are the values for the positive literals
+        #   values[N:]      are the values for the negative literals
+        self.values = [default] * (N * 2)
+        self.N = N
+
+class AggregateFunction(PerfectHash):
+    pass
+
+class PerfectSet(PerfectHash):
+    
+    def __init__(self, N):
+        super().__init__(N, -1)
+        self.count = 0
+
+
+    def __getitem__(self, lit: int) -> Any:
+        value = super().__getitem__(lit)
+        res = value == self.count
+        return res
+    
+    def __setitem__(self, lit, value) -> None:
+        if value == True: super().__setitem__(lit, self.count)
+        elif value == False: super().__setitem__(lit, self.count-1)
+        else: assert False
+
+    def clear(self): self.count+=1
+    
+
+class GroupFunction(PerfectHash):
+    
+    def __getitem__(self, lit: int) -> Group:
+        return super().__getitem__(lit)
+
+class TrueGroupFunction(PerfectHash):
+    
+    def __setitem__(self, group: Group, value) -> None:
+        autoincrement = group.id_autoinc
+        return super().__setitem__(autoincrement, value)
+    
+    def __getitem__(self, group: Group) -> any:
+        autoincrement = group.id_autoinc
+        return super().__getitem__(autoincrement)
+
+# utility function for debugging
+def get_name(atomNames, lit):
+    prefix = ""
+    if lit is None:
+        return "None"
+    if lit < 0:
+        prefix = "not "
+    for a in atomNames:
+        if atomNames[a] == abs(lit):
+            return prefix + a
+    debug(f"{lit} is not present in atomNames")
+    assert False
+
+def convert_array_to_string(name, array, atomNames, array_of_lits = True):
+
+    res = ""
+    res += f"{name} [ "
+    for l in array:
+        ln = get_name(atomNames=atomNames, lit = l) if array_of_lits else l
+        res+= f"{ln} {l}, "
+    res += "]"
+    return res
+
+def print_I(I, atomNames, aggregate, G = None, group = None, force_print = False, file=sys.stderr, none_atom = True, map_plit_slit : dict = None, specific_list_literals_slits = None, supplementaty_str = ""):
+    if not DEBUG and not force_print:
+        return
+    assert (G is None and group is None) or (not G is None and not group is None) 
+    if G is None:
+        debug(f"Interpretation {supplementaty_str} ", end=" ", force_print=force_print, file=file)
+    else:
+        debug(f"Intepretation {supplementaty_str} for group: " + str(G), end=" ", force_print=force_print, file=file)
+    for l in range(len(I.intepretation)):
+        if I[l] is None and not none_atom:
+            continue
+        if (aggregate[l] or  aggregate[not_(l)]) and (G is None or group[l] == G) and \
+            (specific_list_literals_slits is None or (map_plit_slit[l] in specific_list_literals_slits or map_plit_slit[-l] in specific_list_literals_slits)):
+            debug(f"{get_name(atomNames,l)}[{l}]{f'[{map_plit_slit[l]}]' if map_plit_slit else ''}: {I[l]}",end=" ", force_print=force_print, file=file)
+    debug("", force_print=force_print, file=file)
+
+def print_perfect_hash(ph: PerfectHash, atomNames, aggregate: AggregateFunction):
+    if not DEBUG:
+        return
+    
+    for i in range(len(ph.values)):
+        l = i
+        if l >= ph.N:
+            l = not_(l - ph.N)
+        if aggregate[l] or aggregate[not_(l)]:
+            debug(get_name(atomNames,l), str(ph[l]))
+
+def print_weights(weight: WeightFunction, atomNames, aggregate: AggregateFunction):
+    debug("Weights")
+    print_perfect_hash(weight, atomNames, aggregate)
+
+def print_groups(group: GroupFunction, atomNames, aggregate):
+    debug("Groups")
+    print_perfect_hash(group, atomNames, aggregate)
+
+def get_increment_name(increment: dict, atomNames: dict):
+    increment_name = {}
+    for i in increment:
+        increment_name[f"{get_name(atomNames=atomNames,lit=i)}"] = increment[i]
+    return increment_name
+
+def get_propagator_variables(prop_type):
+    if prop_type == "ge_amo":
+        ge = True
+        choice_cons = "AMO"
+        from amowasp.propagator_wasp_py.ge_amo import propagate_phase
+    elif prop_type == "le_eo":    
+        ge = False
+        choice_cons = "EO"
+        from amowasp.propagator_wasp_py.le_eo import propagate_phase
+    elif prop_type == "ge_eo":       
+        ge = True
+        choice_cons = "EO"
+        from amowasp.propagator_wasp_py.ge_eo import propagate_phase
+    else: 
+        assert False
+    return ge, propagate_phase, choice_cons
+
+def create_reason_falses(propagator, ge):
+    if ge:
+        return create_reason_falses_ge(propagator=propagator)
+    else:
+        return create_reason_falses_le(propagator=propagator)
+
+def create_reason_falses_ge(propagator, sum_removed_weights: Dict, flipped = None):
+
+    if propagator.dl == 0: return 
+    
+    for g in propagator.groups:
+        breaks = {}
+        ord_l = g.ord_l
+        if propagator.true_group[g] is None:
+            mw_g = propagator.weight[max_w(g)]
+            for i in range(len(ord_l) - 1, -1, -1):
+                l = ord_l[i]
+                if propagator.weight[l] < mw_g:
+                    break
+                if propagator.I[l] == False and not equals(l, flipped):
+                    for derived in propagator.S:
+                        # ADDED
+                        if breaks.get(derived, False): continue
+                        derived_true = True
+                        G = propagator.group[derived]
+                        if G is None:
+                            G = propagator.group[not_(derived)]
+                            derived_true = False
+                        assert not G is None
+                        if(g == G):
+                            continue
+
+                        mps_h = propagator._mps if propagator.mps_violated else propagator.mps(G, derived, not derived_true)
+                        s = propagator.lb - mps_h - 1
+                        weight = propagator.weight[l]
+                        inc = weight - mw_g
+
+                        sum_removed_weights.setdefault(derived, 0)
+                        if(sum_removed_weights[derived] + inc <= s):
+                            sum_removed_weights[derived] += inc 
+                            breaks[derived] = True
+                        else:
+                            propagator.reason[derived].append(l) 
+        elif not equals(propagator.true_group[g], flipped):
+            tr = propagator.true_group[g]
+            for derived in propagator.S:
+                G = propagator.group[derived]
+                derived_true = True
+                if G is None:
+                    G = propagator.group[not_(derived)]
+                    derived_true = False
+                if(g == G):
+                    continue
+
+                mps_h = propagator._mps if propagator.mps_violated else propagator.mps(G, derived, not derived_true)
+                s = propagator.lb - mps_h - 1
+                w = propagator.weight[tr]
+                w_mw_g =  propagator.weight[g.ord_l[-1]] if len(g.ord_l) > 0 else s + 1 + w 
+                inc = w_mw_g - w
+                assert inc >= 0 
+
+                sum_removed_weights.setdefault(derived, 0)
+                if(sum_removed_weights[derived] + inc <= s):
+                    sum_removed_weights[derived] += inc 
+                else:
+                    propagator.reason[derived].append(not_(tr)) 
+
+
+    # if propagator.dl == 0: return 
+    
+    # for g in propagator.groups:
+    #     ord_l = g.ord_l
+    #     if propagator.true_group[g] is None:
+    #         mw_g = propagator.weight[max_w(g)]
+    #         for i in range(len(ord_l) - 1, -1, -1):
+    #             l = ord_l[i]
+    #             if propagator.weight[l] < mw_g:
+    #                 break
+    #             if propagator.I[l] == False and not equals(l, flipped):
+    #                 for s_lit in propagator.S:
+    #                     G = propagator.group[s_lit]
+    #                     if G is None:
+    #                         G = propagator.group[not_(s_lit)]
+    #                     if(g == G):
+    #                         continue
+    #                     propagator.reason[s_lit].append(l) 
+    #     elif not equals(propagator.true_group[g], flipped):
+    #         for s_lit in propagator.S:
+    #             G = propagator.group[s_lit]
+    #             if G is None:
+    #                 G = propagator.group[not_(s_lit)]
+    #             if(g == G):
+    #                 continue
+    #             propagator.reason[s_lit].append(not_(propagator.true_group[g])) 
+
+def create_reason_falses_le(propagator, flipped=None):
+    if propagator.dl == 0: return 
+    
+    for g in propagator.groups:
+        ord_l = g.ord_l
+        if propagator.true_group[g] is None:
+            mw_g = propagator.weight[min_w(g)]
+            for l in ord_l:
+                if propagator.weight[l] > mw_g:
+                    break
+                if propagator.I[l] == False and not equals(l, flipped):
+                    for s_lit in propagator.S:
+                        G = propagator.group[s_lit]
+                        if G is None:
+                            G = propagator.group[not_(s_lit)]
+                        if(g == G):
+                            continue
+                        propagator.reason[s_lit].append(l) 
+        elif not equals(propagator.true_group[g], flipped):
+            for s_lit in propagator.S:
+                G = propagator.group[s_lit]
+                if G is None:
+                    G = propagator.group[not_(s_lit)]
+                if(g == G):
+                    continue
+                propagator.reason[s_lit].append(not_(propagator.true_group[g])) 
+
+def create_reason_true_ge(propagator, sml_g, derived, g, sum_removed_weights):
+    if propagator.dl == 0: return 
+
+    i = g.ord_i[sml_g] if sml_g is not None else 0
+    j = len(g.ord_l) - 1
+    # j = len(g.ord_l)
+
+ 
+    assert i <= j, "Index i must be less than or equal to j"
+    assert derived is not None, "Derived literal must not be None"
+
+    mps_h = propagator._mps if propagator.mps_violated else propagator.mps(g, derived, False)
+    s = propagator.lb - mps_h - 1
+    
+    # for k in range(i, j):
+    for k in range(j, i-1, -1):
+        lit = g.ord_l[k]
+        weight = propagator.weight[lit]
+        w_sml = propagator.weight[sml_g]
+        inc = weight - w_sml
+        if propagator.I[lit] == False and not equals(derived, lit):
+            sum_removed_weights.setdefault(derived, 0)
+            if(sum_removed_weights[derived] + inc <= s):
+                sum_removed_weights[derived] += inc 
+            else:
+                propagator.reason[derived].append(lit) 
+
+    # if propagator.dl == 0: return 
+
+    # i = g.ord_i[sml_g] if sml_g is not None else 0
+    # j = len(g.ord_l)
+
+ 
+    # assert i <= j, "Index i must be less than or equal to j"
+    # assert derived is not None, "Derived literal must not be None"
+
+    # for k in range(i, j):
+    #     lit = g.ord_l[k]
+    #     if propagator.I[lit] == False and not equals(derived, lit):
+    #         propagator.reason[derived].append(lit)
+
+def create_reason_true_le(propagator, sml_g, derived, g):
+    if propagator.dl == 0: return 
+
+    i = g.ord_i[sml_g] if sml_g is not None else len(g.ord_l) - 1
+    j = 0
+
+    assert i >= j, "Index i must be less than or equal to j"
+    assert derived is not None, "Derived literal must not be None"
+
+    for k in range(j, i-1, -1):
+        lit = g.ord_l[k]
+        if propagator.I[lit] == False and not equals(derived, lit):
+            propagator.reason[derived].append(lit)
+            
+
+# MINIMIZING REASON 
+#################################################################################################################################################
+class Minimize(Enum):
+    NO_MINIMIZATION = "nomin"
+    MINIMAL = "min"
+    CARDINALITY_MINIMAL = "cmin"
+    MINONTHEFLY = "minfly"
+    IJCAI = "ijcai"
+
+def is_true_in_reason(lit, group: GroupFunction):
+    '''
+    invariants: the literal is in the reason and it has been flipped (if true)
+    '''
+    g = group[lit]
+    return g is None
+
+def increment_f(derived_true: bool, l: int, current_subset_maximal, weight: WeightFunction, group: GroupFunction, head_reason, I: SymmetricFunction, max_b):
+
+    g = group[l] 
+    tr = False # true in reason
+    if g is None:
+        l = not_(l)
+        g = group[l]
+        tr = True # it means that it has been flipped, so it is true in reason (is the true_group[g])
+
+    if len(g.ord_l) <= 1:
+        return 0
+    
+    w = weight[l]
+    if tr:  
+        # TODO: FIX -> fixed putting w if len(g.ord_l) = 0  
+        w_mw_g = 0
+        w_mw_g = weight[g.ord_l[-1]] if len(g.ord_l) > 0 else w
+        return w_mw_g - w
+    else:
+        i = len(g.ord_l) - 1
+        # maximum weight
+        mw_g: int 
+        head_group = group[head_reason]
+        if head_group is None:
+            head_group = group[not_(head_reason)]
+        if g == head_group:
+            if not derived_true: return 0 
+            sml_g, ml_g = g.update(I, max_b, update=False)
+            mw_g = weight[sml_g]
+        else:
+            mw_g = weight[max_w(g)]
+        current_l = g.ord_l[i]
+        increment = w - mw_g
+        while mw_g < weight[current_l]:
+            if current_l in current_subset_maximal:
+                increment = max(0,w - weight[current_l])
+                # if it 0 means that in the current minimal subset is already present some literal of the same group
+                #  but higher weight
+                break
+            i -= 1
+            if i <= 0:
+                break
+            current_l = g.ord_l[i]
+        return increment
+
+
+def maximal_subset_sum_less_than_s_with_groups(derived_true: bool, literals: List[int], s: int, weight: WeightFunction,  group: GroupFunction, head_reason, I: SymmetricFunction, max):
+
+    current_subset_maximal = []
+    current_sum = 0
+
+    for l in literals:
+        inc = increment_f(derived_true, l, current_subset_maximal, weight, group, head_reason, I, max)  
+        if current_sum + inc <= s:
+                # debug(f"{l} has been removed from reason because inc: {inc} is not enougth to arrive above {s} with current_sum {current_sum} ")
+                current_sum += inc
+                current_subset_maximal.append(l)
+
+    
+    
+    return current_subset_maximal
+
+def compute_increment_literals(literals: List[int], group: GroupFunction, weight: WeightFunction):
+    increment = {}
+    for l in literals:
+        g : Group
+        g = group[l] 
+        tg = False
+        if g is None:
+            g = group[not_(l)]
+            tg = True
+            # l = not_(l)
+        assert not g is None 
+        mw_g = max_w(g)
+        w_mw_g = weight[mw_g]
+        
+        w = weight[l]
+        assert not w is None
+        i : int
+        if tg:  
+            w_mw_g = weight[g.ord_l[-1]]
+            # print_err(f"w_mw_g {w_mw_g} l {l} w {w}" )
+            # l is true: if it was false in the worst case the maxiumum literal of the group could be true
+            i = w_mw_g - w
+        else:
+            # l is false: if it was true it would be the true_group[g] 
+            i = w - w_mw_g
+        increment[l] = i
+
+    return increment
+
+def get_all_lit_below_you(lit: int, group: GroupFunction, I: SymmetricFunction, reason: List[int]):
+
+    lit_c = lit
+    res = []
+    res.append(lit_c)
+    g = group[lit]
+    if g is None:
+        g = group[not_(lit)]
+        lit = not_(lit)
+        return set(res) # it is true so there are no literals below it
+
+    start = g.ord_i[lit]
+    for i in range(start-1,-1,-1):
+        l = g.ord_l[i]
+        if I[l] is None:
+            # you found the maximum undefined
+            break
+        if l in reason:
+            res.append(l)
+    return set(res)
+
+
+def maximum_subset_sum_less_than_s_with_groups(literals : List[int], s: int, group: GroupFunction, weight: dict, I: SymmetricFunction):
+    
+    n = len(literals)
+    subset = [[None for _ in range(n + 1)]
+                    for _ in range (s + 1)]
+
+    # If sum is 0, then the maximal subset is empty 
+    for i in range (n + 1):
+        subset[0][i] = set([])
+        if i == 0: 
+            continue
+        l = literals[i-1]
+        cell = set([l]) if weight[l] == 0 else set()
+        subset[0][i] = subset[0][i-1].union(cell)
+
+    # Fill the subset table in bottom up manner 
+    for i in range (1, s + 1): 
+        for j in range (1, n + 1):
+            lit = literals[j - 1]
+            w = weight[lit]
+            subset[i][j] = subset[i][j - 1]
+            if (i >= w) :
+                sum_got = not subset[i][j] is None or not subset[i - w ][j - 1] is None
+                if (sum_got):
+                    correct_subset = True
+                    k = j
+                    while True:
+                        if not subset[i - w][k - 1] is None:
+                            # it is sufficient to controll that lit is not in subset[i - w][k - 1] and instead of also checking that 
+                            # some literals of the same group are in the subset[i - w][k - 1] because since the literals are grouped and 
+                            # ordered by weight if some literal before lit has been choose implies that also lit is already in subset[i - w][k - 1]
+                            # and viceversa
+                            if not lit in subset[i - w][k - 1]:
+                                break
+                        else:
+                            correct_subset = False
+                            break
+                        k -= 1
+                        if k <= 0:
+                            break
+                    with_lit_subset = subset[i - w][k - 1].union(get_all_lit_below_you(lit=lit, group=group, I=I, reason=literals)) if correct_subset else None
+                    subset[i][j] = max( 
+                            subset[i][j - 1], 
+                            with_lit_subset,
+                            key= lambda x: len(x) if not x is None else -1
+                        )
+                    
+    maximum_subset = subset[s][n]
+
+    # print(subset[:][n], file = sys.stderr)
+
+    len_subset_max = len(maximum_subset) if subset[i][n] else -1
+    for i in range(s+1):
+        len_subset_max = len(maximum_subset) if not maximum_subset is None else -1
+        len_subset = len(subset[i][n]) if not subset[i][n] is None  else -1
+        # print("len_subset_max", len_subset_max)
+        # print("len_subset", len_subset)
+        if len_subset > len_subset_max:
+            maximum_subset = subset[i][n]
+        # print(f"mio dio come bestemmio {subset[i][n]}", file = sys.stderr)
+    
+    return list(maximum_subset)
+
+
+#################################################################################################################################################
+# END MINIMIZING REASON

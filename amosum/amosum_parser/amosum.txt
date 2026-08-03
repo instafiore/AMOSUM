@@ -1,0 +1,31 @@
+(4a + b) + (4a + c) + (4a + d) >= 4
+
+
+(12a + b) + (c) + (d) >= 4
+
+mps = 14
+
+
+- AMO >= 
+- EO >= 
+- EO <=
+
+k :- 4a + 3b + 3c + 4d >= 6
+
+-k * 6 + 4a + 3b + 3c + 4d >= 6
+6(~k) + 4a + 3b + 3c + 4d >= 6
+
+
+k v -4a -3b -3c -4d >= -6+1
+k v 4(~a) + 3(~b) + 3(~c) + 4(~d) >= -6 (bound) +1 + 14 (mps)
+9k + 4(~a) + 3(~b) + 3(~c) + 4(~d) >= 9
+
+
+aux(B, X2,X3) :- bound(B), t(X2), t(X3).
+#amosum{W,X1: weight(W,X1,X2,X3) [X1]} >= B : aux(B, X2,X3). # Tutte le variabili globali nell'id (id è progressivo + concatenazione ground)
+
+__group__((id, (X2, X3)), X) :- t(X2), t(X3).
+__group__((aux(B, X2,X3), (X2, X3)), X) :- t(X2), t(X3).
+
+%id_aux(nurse(N), minHoursPerYear(MIN)) :- nurse(N), minHoursPerYear(MIN).
+%group(id_aux(nurse(N), minHoursPerYear(MIN)), MIN, (nurse(N), minHoursPerYear(MIN)), (0, nurse(N), minHoursPerYear(MIN)), ge_amo) :- id_aux(nurse(N), minHoursPerYear(MIN)).

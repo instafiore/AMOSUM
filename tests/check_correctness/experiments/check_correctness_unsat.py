@@ -5,8 +5,8 @@ import subprocess
 from typing import List
 import xml.etree.ElementTree as ET
 import sys
-
-from experiments.setup import *
+from amosum.utility import *
+from amosum.utility import parse_args_check
 from pathlib import Path
 import pandas as pd
 
@@ -35,4 +35,19 @@ def check_unsatisfability(file):
     
     return success  
 
+  
+def main():
+    param = parse_args_check_unsat()
+    print("checking correctness for unsatisfability..")
+    file = param["file"]
+    unsat = check_unsatisfability(file)
+    if not unsat:
+        print(f"failed unsatness for {file}")
+        exit(1)
+    else:
+        print(f"Success unsatness for {file} :)") 
+        exit(0)
+
+if __name__ == "__main__":
+    main()
     

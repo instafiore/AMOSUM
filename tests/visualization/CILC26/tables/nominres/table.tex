@@ -1,0 +1,25 @@
+
+            \documentclass{article}
+            \usepackage{booktabs}
+            \usepackage{multirow}
+            \pagestyle{empty}
+            \begin{document}
+            \begin{table}[t]
+\label{tab:results}
+\begin{tabular}{lllllll}
+\toprule
+ & \multicolumn{3}{c}{\textsc{{amomaximize}}} & \multicolumn{3}{c}{\textsc{{clingo}}} \\
+ & O & score & win & O & score & win \\
+benchmark &  &  &  &  &  &  \\
+\midrule
+GC & 0 & \textbf{1.0} & \textbf{289} & 0 & 0.885 & 11 \\
+K & 0 & 0.912 & 21 & 0 & \textbf{0.996} & \textbf{79} \\
+TSP & \textbf{5} & \textbf{0.995} & \textbf{82} & 2 & 0.942 & 20 \\
+WOD & \textbf{6} & 0.703 & 53 & 0 & \textbf{0.969} & \textbf{92} \\
+Total & \textbf{11} & \textbf{0.935} & \textbf{445} & 2 & 0.927 & 202 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+            \end{document}
+            

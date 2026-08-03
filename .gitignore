@@ -2,7 +2,11 @@
 __pycache__/
 *.py[cod]
 *$py.class
-.vscode
+
+.*
+todo
+tests/check_correctness/test_suite
+
 # C extensions
 *.so
 
@@ -176,8 +180,16 @@ tests/results/**
 # Ignore all files with 'out' in the filename at any level
 **/*out*
 
+pycache
+vscode
+
 # log files
 *verbose*
 **/*log*
 
+
+!logger.h
+!logger.cpp
+
+tests/benchmarks/*
 

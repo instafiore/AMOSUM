@@ -1,0 +1,29 @@
+what packages are needed for:
+\begin{figure}[t]
+\centering       
+    \begin{tikzpicture}[scale=0.7]
+        \pgfkeys{%
+            /pgf/number format/set thousands separator = {}}
+        \begin{axis}[
+        scale only axis
+        , xlabel={Solved instances}
+        , ylabel={Time (s)}    
+        , xmin=0, xmax=755
+        , ymin=0, ymax=1220
+        , legend style={at={(1.25,1.0)},anchor=north,fill=none}
+        , legend columns=1
+        , width=0.65\textwidth
+        , height=0.40\textwidth
+        , major tick length=2pt
+        , title= {Catctus Plot}
+        ]
+
+        \addplot [mark size=2pt, color=blue, mark=o] [unbounded coords=jump] table[col sep=comma, y index=1] {./cactus-eo.txt};
+        \addlegendentry{\eoclingoijc}
+
+        \end{axis}
+    \end{tikzpicture}%
+    \caption{
+        TODO.
+    }\label{fig:todo}
+\end{figure}

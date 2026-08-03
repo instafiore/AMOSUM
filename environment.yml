@@ -1,0 +1,12 @@
+name: amosum
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - compilers        
+  - cxx-compiler
+  - clingo=5.8
+  - python=3.14.3
+  - pip
+  - pip:
+      - .

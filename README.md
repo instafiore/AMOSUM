@@ -1,70 +1,74 @@
 # AMOSUM
 
-**AMOSUM** introduces a new class of constraints for **Answer Set Programming (ASP)** that tightly integrates the propagation power of **sum aggregates** and **at-most-one (AMO)** constraints.  
+**AMOSUM** introduces a novel class of constraints for **Answer Set Programming (ASP)** that tightly integrates the propagation capabilities of **sum aggregates** and **at-most-one (AMO)** constraints.
 
-ASP already provides expressive modeling capabilities, but many real-world applications require stronger inference during solving. Aggregates such as `sum` and `count`, and exclusivity constraints such as `amo`, are heavily used, yet their independent propagation often leaves useful deterministic consequences undiscovered.
+ASP provides highly expressive modeling features, but many real-world applications require stronger inference during solving. Aggregates such as `sum` and `count`, together with exclusivity constraints like `amo`, are widely used in practical encodings. However, when these constraints are handled independently, propagation often misses deterministic consequences that emerge from their interaction.
 
-**AMOSUM addresses this gap.**
+**AMOSUM overcomes this limitation by unifying both forms of reasoning into a single constraint framework.**
 
 ---
 
-## Overview
+# Overview
 
-- **AMOSUM constraints** combine additive information from `sum` aggregates with exclusivity information from `amo`, enabling propagation that is impossible when the constraints are treated independently.
-- We introduce a **generalized notion of maximum possible sum**, extending inference beyond previously studied cases.
-- We formalize new **sound propagation rules**, including propagation on false literals, and propose **efficient algorithms** for constructing **minimal reasons**, thereby improving clause learning and pruning the search space.
-- The work provides both a complete **theoretical framework** and **practical solver integration**.
+AMOSUM constraints exploit the synergy between:
 
-AMOSUM is implemented in both **WASP** and **Clingo**, and includes:
+- the additive reasoning of `sum` aggregates, and
+- the exclusivity reasoning of `amo` constraints.
+
+This integration enables significantly stronger propagation than treating the constraints separately.
+
+This repository provides:
+
+- A **novel constraint class** combining `sum` and `amo`
+- A **generalized notion of maximum achievable sum**, extending propagation beyond previously studied approaches
+- **Sound propagation rules**, including propagation on false literals
+- Efficient algorithms for computing **minimal reasons**, improving clause learning and reducing the search space
+- A complete **theoretical framework** together with **practical solver implementations**
+
+---
+
+# Features
+
+AMOSUM includes:
 
 - Native language extensions:
-  - `amosum` — at-most-sum constraints  
-  - `eosum` — exactly-one-sum constraints
-- Python-based and C-based propagators
-- Lazy propagation options for improved runtime efficiency
-- Extensive experimental evaluation showing **significant performance improvements**, including orders-of-magnitude speedups on selected benchmarks
+  - `amosum` — **at-most-sum constraints**
+  - `eosum` — **exactly-one-sum constraints**
+- Implementations for both **Clingo** and **WASP**
+- **C++ propagators**
+- **Python propagators**
+- **Lazy propagation support**
+- An **experimental evaluation framework**
+
+Experimental results demonstrate **substantial performance improvements**, including **orders-of-magnitude speedups** on several benchmark domains.
 
 ---
 
-## Selection Branch
-- If you are not in branch ```amosum``` type:
-    - git switch amosum
-    
-## Dependencies
+# Dependencies
 
-- `clingo >= 5.8.0`  
-- `g++`  
-- Python 3.13
+The following software is required:
+
+- `make`
+- `conda`
 
 ---
 
-## Installation
-
-Install requirements:
+# Installation
 
 ```bash
-
-pip install -r requirements.txt
+conda env create -f environment.yml
+bash ./install
 ```
 
-Update the submodules:
+## Additional build step for the IJCAI version
 
 ```bash
-git submodule init 
-git submodule update --remote --merge
-```
-
-Build the C-based Clingo propagator:
-
-```bash
-cd prop_clingo/propagator_clingo_c
-make clean
-make
-cd ../../
+bash ./install_ijcai
 ```
 
 ---
 
+<<<<<<< HEAD
 ## Running AMOSUM
 
 ### AMOCLINGO — C++ propagator
@@ -83,20 +87,50 @@ python ./prop_clingo/run.py -enc <encoding> -i <instance> -exp -lang py
 
 ```bash
 python ./prop_wasp/run.py -enc <encoding> -i <instance> -exp
+=======
+# Usage
+
+## Show help
+
+```bash
+amoclingo -h
+>>>>>>> master
 ```
 
 ---
 
+<<<<<<< HEAD
 ## Lazy Propagation
 
 Enable lazy propagation with:
 
 ```bash
 -lang c -lazy
+=======
+# Running AMOSUM
+
+## AMOCLINGO — C++ propagator
+
+```bash
+amoclingo -e <encoding> -i <instance> -l cpp
+```
+
+## AMOCLINGO — Python propagator
+
+```bash
+amoclingo -e <encoding> -i <instance> -l py
+```
+
+## AMOWASP — Python propagator
+
+```bash
+amowasp -e <encoding> -i <instance>
+>>>>>>> master
 ```
 
 ---
 
+<<<<<<< HEAD
 ## Example Runs
 
 ### AMOCLINGO-INF-MR (Full propagation with minimization)
@@ -117,3 +151,98 @@ Enable lazy propagation with:
     -exp -lang c -lazy
 ```
 
+=======
+# Lazy Propagation
+
+Lazy propagation can be enabled with:
+
+```bash
+--l=cpp --lazy=true
+```
+
+This strategy reduces propagation overhead by delaying reasoning until it becomes necessary during search.
+
+---
+
+# Example Runs
+
+## Full propagation with IJCAI reason (AMOSUM-INF)
+
+```bash
+amoclingo \
+    -e tests/benchmarks/graph_colouring/encoding-amosum-amo.asp \
+    -i tests/benchmarks/graph_colouring/instances/0001-graph_colouring-125-0_1200.asp \
+    -m ijcai
+```
+
+## Full propagation (AMOSUM-INF-R)
+
+```bash
+amoclingo \
+    -e tests/benchmarks/graph_colouring/encoding-amosum-amo.asp \
+    -i tests/benchmarks/graph_colouring/instances/0001-graph_colouring-125-0_1200.asp
+```
+
+## Full propagation with Minimization (AMOSUM-INF-MR)
+
+```bash
+amoclingo \
+    -e tests/benchmarks/graph_colouring/encoding-amosum-amo.asp \
+    -i tests/benchmarks/graph_colouring/instances/0001-graph_colouring-125-0_1200.asp \
+    -m min
+```
+
+## Lazy propagation (AMOSUM-L)
+
+```bash
+amoclingo \
+    -e tests/benchmarks/graph_colouring/encoding-amosum-amo.asp \
+    -i tests/benchmarks/graph_colouring/instances/0001-graph_colouring-125-0_1200.asp \
+    --lazy=true
+```
+
+---
+
+# IJCAI Version
+
+## AMOWASP-BASE-PY
+
+```bash
+bash amosum/ijcai_version/AMOSUM/amowasp-base.sh <encoding> <instance>
+```
+
+## AMOCLINGO-BASE-PY
+
+```bash
+bash amosum/ijcai_version/AMOSUM/amoclingo-base-py.sh <encoding> <instance>
+```
+
+## AMOCLINGO-BASE-C
+
+```bash
+bash amosum/ijcai_version/AMOSUM/amoclingo-base-c.sh <encoding> <instance>
+```
+
+---
+
+# Publication
+
+If you use AMOSUM in your research, please cite:
+
+```bibtex
+@inproceedings{DBLP:conf/ijcai/AlvianoDFM24,
+  author       = {Mario Alviano and
+                  Carmine Dodaro and
+                  Salvatore Fiorentino and
+                  Marco Maratea},
+  title        = {AMO-aware Aggregates in Answer Set Programming},
+  booktitle    = {Proceedings of the Thirty-Third International Joint Conference on
+                  Artificial Intelligence, {IJCAI} 2024, Jeju, South Korea, August 3-9,
+                  2024},
+  pages        = {3215--3223},
+  publisher    = {ijcai.org},
+  year         = {2024},
+  url          = {https://www.ijcai.org/proceedings/2024/356}
+}
+```
+>>>>>>> master
