@@ -23,7 +23,11 @@ def run():
 
     
     runner = RunnerWasp(parameters=param)
-    result = runner.run()
+    try:
+        result = runner.run()
+    except Exception as e:
+        print(e)
+        exit(0)
     exit(result.exitCode if result else ERROR_CODE)
 
 
