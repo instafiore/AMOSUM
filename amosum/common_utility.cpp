@@ -45,13 +45,6 @@ char const *const * cmn::fromVecStr2VecCstring(std::vector<std::string>& vecStri
 
 
 
-template<typename V, typename Checker, typename Indexer>
-inline cmn::IndexedVector<const V*, Checker, Indexer>* copyPerfectVector(const cmn::IndexedVector<std::unique_ptr<V>, Checker, Indexer>& vec) noexcept{
-    cmn::IndexedVector<const V*, Checker, Indexer>* vecNew = new cmn::IndexedVector<const V*, Checker, Indexer>(vec.N);
-    for(const std::unique_ptr<V>& elem: vec) vecNew->add(elem.get());
-    return vecNew;
-}
-
 inline std::string cmn::MapLiteralId2Literal::toString() const{ 
     std::ostringstream oss; ::operator<<(oss,map) ; return oss.str();
 }
@@ -61,4 +54,3 @@ void cmn::addArgControl(std::vector<std::string>& arguments, std::string key, st
     std::string arg = "--"+key+valueStr;
     arguments.push_back(arg);
 }
-

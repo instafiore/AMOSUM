@@ -74,7 +74,7 @@ template <typename V>
 inline std::ostream& operator<<(std::ostream& out, const std::unique_ptr<V>& value){ return out<<value.get();}
 
 template<typename V, typename Checker, typename Indexer>
-std::ostream& operator<<(std::ostream& out, const cmn::IndexedVector<V, Checker, Indexer>& vec){ return out<<vec.data; }
+std::ostream& operator<<(std::ostream& out, const cmn::ContiguousSet<V, Checker, Indexer>& vec){ return out<<vec.data; }
 
 
 template<typename V>
@@ -152,7 +152,7 @@ std::string cmn::NHash<K,V,D,VMapper, DMapper>::toString(MapInterface<K,VMapper>
         outKey.flush();
         dictStringLiteralToValue[stringKey] = element;
     }
-    ::operator<<(out, dictStringLiteralToValue);
+    ::operator<<(out,dictStringLiteralToValue);
     return out.str();
 }
 

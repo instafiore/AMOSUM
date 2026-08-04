@@ -57,7 +57,7 @@ The following software is required:
 
 ```bash
 conda env create -f environment.yml
-bash ./install
+source ./install
 ```
 
 ## Additional build step for the IJCAI version

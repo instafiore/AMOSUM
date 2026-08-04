@@ -28,6 +28,7 @@ def run():
     except Exception as e:
         print(e)
         exit(0)
+    print(result)
     exit(result.exitCode if result else ERROR_CODE)
 
 

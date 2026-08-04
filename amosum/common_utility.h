@@ -1,6 +1,5 @@
 #pragma once
 #include <vector>
-// #include "args-parser/args-parser/all.hpp"
 #include <chrono>
 #include <clingo.h>
 #include <clingo.hh>
@@ -16,7 +15,6 @@
 #include <cmath>
 #include <functional>
 #include <random>
-
 
 
 namespace cmn
@@ -120,13 +118,9 @@ inline std::string negateLiteralName(std::string literalName) noexcept {
     return std::regex_match(literalName, not_prefix) ? std::regex_replace(literalName, not_prefix, "") :  "not " + literalName ;;
 }
 
-// void checkArguments();
 
 template<typename V>
 void sliceVecInPlace(std::vector<V>& data,  size_t i = 0, size_t j = 0){ data = sliceVec(data, i, j);}
-
-// void sliceVecInPlace(std::vector<std::pair<size_t, int>>& data,  size_t i = 0, size_t j = 0);
-
 
 inline std::string createLiteralString(int32_t literalId)noexcept{ return std::string(literalId < 0 ? "not " : "") + "a" + std::to_string(abs(literalId)); }
 using Clock = std::chrono::steady_clock;
@@ -139,7 +133,7 @@ inline double elapsedTime(const Clock::time_point& start)noexcept{
 
 
 // Enum
-enum Event{AddedPBConstraint};
+enum Event{};
 
 
 
@@ -176,6 +170,7 @@ struct Hasher {
     size_t operator()(const Mapping2Integer* map2Int) const noexcept { return this->operator()(*map2Int); } 
     size_t operator()(const int64_t map2Int) const noexcept { return std::hash<int64_t>{}(map2Int); } 
     size_t operator()(const size_t map2Int) const noexcept { return map2Int; } 
+    size_t operator()(const unsigned int map2Int) const noexcept { return map2Int; }
 };
 
 struct Literal: public Mapping2Integer{
@@ -202,18 +197,6 @@ struct SolvingLiteral: public Literal{
     isCallIdLiteral(isCallIdLiteral)
     {}
 };
-
-// struct TOP: public SolvingLiteral{
-//     TOP()noexcept:
-//     SolvingLiteral(CONSTANTS::TOP){}
-// };
-
-// struct BOTTOM: public SolvingLiteral{
-//     BOTTOM()noexcept:
-//     SolvingLiteral(CONSTANTS::BOTTOM){}
-// };
-
-
 
 struct ClingoResult{
 
@@ -273,13 +256,6 @@ inline void extendVector(std::vector<V>& toExtend, const std::vector<V>& input, 
     if (j >= n ) j = n;
     for (; i < j; i++) toExtend.push_back(input[i]);
 }
-
-// template< typename V>
-// inline void insertIntoVector(std::vector<V>& toModify, const std::vector<V>& toInsert, size_t i = 0, size_t j = CONSTANTS::INFPlus)noexcept{
-//     const size_t& n = toInsert.size();
-//     if (j >= n ) j = n;
-//     for (; i < j; i++) toModify.push_back(toInsert[i]);
-// }
 
 template <typename V>
 inline std::string vector2String(const std::vector<V>& vec, std::string name)noexcept{
@@ -442,7 +418,6 @@ public:
     inline const V& at(const K& key) const { return this->getUsingHash(this->hasher(key)); }
     inline V& get(const K& keyInput) { 
         const size_t& key = this->hasher(keyInput);
-        assert(key < this->N);
         if constexpr (std::is_same_v<D, std::unordered_map<size_t, V>>) {
             auto& umap = *this->_data;
             auto it = umap.find(key);
@@ -575,35 +550,6 @@ struct PerfectNHash: public NHash<K, V, std::vector<V>, VMapper, DMapper>{
 
 void addArgControl(std::vector<std::string>& arguments, std::string key, std::string value = "") noexcept;
 
-
-// struct MapLiteralId2Literal: public MapLiteralId2LiteralInterface, public Hash<int32_t, const Literal*, std::unordered_map<int32_t, const Literal*>, std::hash<int32_t>, const Literal*, std::unordered_map<int32_t, const Literal*>>{
-
-//     MapLiteralId2Literal(const size_t& N = 0) noexcept: Hash<int32_t, const Literal*, std::unordered_map<int32_t, const Literal*>, std::hash<int32_t>, const Literal*, std::unordered_map<int32_t, const Literal*>>(N, nullptr){}
-
-//     const Literal* const& literal(const int32_t& literalId)override{
-//         return this->getUsingHash(key);
-//     }
-
-//     inline const Literal* const& getUsingHash(const size_t& key) const override{ 
-//         assert(key < this->N); 
-//         auto it = this->data().find(key);
-//         assert(it != this->data().end());
-//         return it->second;
-//     }
-
-//     inline virtual void addLiteral(const Literal* literal)noexcept override{this->set(literal->id, literal);}
-//     inline virtual void addFreshLiteral(const Literal* literal)noexcept override{literalsNotInMap.emplace(literal->id, literal);}
-
-//     ~MapLiteralId2Literal(){
-//         for(auto&[key, value] : this->data())if(value != nullptr) delete value;
-//         for(auto&[key, value] : literalsNotInMap) if(value != nullptr) delete value;
-//     }
-
-// private:
-//     mutable std::unordered_map<int32_t, const Literal*> literalsNotInMap;
-// };
-
-
 struct MapLiteralId2Literal: public MapLiteralId2LiteralInterface{
     std::unordered_map<int32_t, const cmn::Literal*> map;
     mutable std::unordered_map<int32_t, const cmn::Literal*> literalsNotInMap;
@@ -649,43 +595,6 @@ struct MapLiteralId2Literal: public MapLiteralId2LiteralInterface{
     }
 };
 
-
-
-// struct MapLiteralId2Literal: public PerfectNHash<int32_t, const Literal*>{
-
-//     MapLiteralId2Literal(const size_t& N) noexcept: PerfectNHash<int32_t, const Literal*>(N, nullptr){}
-
-//     const Literal* const& literal(const int32_t& literalId){
-//         const size_t key = this->hasher(literalId);
-//         return this->getUsingHash(key);
-//     }
-
-//     inline const Literal* const& getUsingHash(const size_t& key) const override{ 
-//         assert(key < this->N); 
-//         const int32_t literalId = key < originalSize ? key : originalSize - key;
-//         const Literal* &literal = (*this->_data)[key];
-//         if(literal == nullptr){
-//             std::string name = createLiteralString(literalId);
-//             if(literalId == CONSTANTS::BOTTOM || literalId == CONSTANTS::TOP)
-//                 name = literalId == CONSTANTS::BOTTOM ? "F" : "T";
-//             if(literalsNotInMap.find(literalId) == literalsNotInMap.end()) 
-//                 literalsNotInMap[literalId] = new Literal(literalId, name);
-//             return literalsNotInMap[literalId];
-//         }
-//         return literal;
-//     }
-
-//     inline virtual void addLiteral(const Literal* literal)noexcept{this->set(literal->id, literal);}
-//     inline virtual void addFreshLiteral(const Literal* literal)noexcept{literalsNotInMap.emplace(literal->id, literal);}
-
-//     ~MapLiteralId2Literal(){
-//         for(auto& value : this->data()) if(value != nullptr) delete value;
-//         for(auto&[key, value] : literalsNotInMap) if(value != nullptr) delete value;
-//     }
-
-// private:
-//     mutable std::unordered_map<int32_t, const Literal*> literalsNotInMap;
-// };
 
 template<typename K, typename V, typename D, typename VMapper = V, typename DMapper = D>
 struct SymmetricFunction: public Hash<K, V, D, HasherHandlingNegatives, VMapper, DMapper>{
@@ -841,7 +750,7 @@ struct UMNSet: public NSet<V, std::vector<int>>{
 };
 
 template<typename V, typename Checker, typename Indexer>
-struct IndexedVector;
+struct ContiguousSet;
 
 
 template<typename V>
@@ -855,11 +764,11 @@ struct Vector{
 
     inline bool contains(const V& elem) const { return std::find(this->data.begin(), this->data.end(), elem) != this->data.end(); }
 
-    void add(const V& elem)noexcept{
+    virtual void add(const V& elem)noexcept{
         data.push_back(elem);
     }
 
-    void remove(const V& elem){
+    virtual void remove(const V& elem){
         // ! It does not maintain order
         const size_t& n = this->data.size();
         const auto& d = this->data;
@@ -873,7 +782,7 @@ struct Vector{
         }
     }
 
-    inline size_t index(const V& elem) const noexcept{
+    virtual inline size_t index(const V& elem) const noexcept{
         size_t i = 0;
         const size_t& n = this->data.size();
         const auto& d = this->data;
@@ -891,12 +800,12 @@ struct Vector{
     }
 
 
-    void removeOrdered(const V& elem){
+    virtual void removeOrdered(const V& elem){
         auto it = std::find(this->data.begin(), this->data.end(), elem);
         if(it != this->data.end()) this->data.erase(it);
     }
     
-    void sort(bool (*key)(V, V) = nullptr)noexcept{
+    virtual void sort(bool (*key)(V, V) = nullptr)noexcept{
         if(key == nullptr) std::sort(data.begin(), data.end());
         else std::sort(data.begin(), data.end(), key);
     }
@@ -906,27 +815,28 @@ struct Vector{
         std::sort(data.begin(), data.end(), key);
     }
 
-    void clear()noexcept{
+    virtual void clear()noexcept{
         data.clear();
     }
 
-    const V& get(size_t index) const{
+    virtual const V& get(size_t index) const{
         return data[index];
     }
 
    inline const std::vector<V> slice(size_t i = 0, size_t j = 0) const noexcept{ return sliceVec(data,i,j);}
-   inline void sliceInPlace(size_t i = 0, size_t j = 0) noexcept{ return sliceVecInPlace<V>(data,i,j);}
    
-    void set(const size_t& i, const V& elem){
+// to handle removed items (efficiently) //   inline void sliceInPlace(size_t i = 0, size_t j = 0) noexcept{ return sliceVecInPlace<V>(data,i,j);}
+   
+    virtual void set(const size_t& i, const V& elem){
         // self.checker[old] = False Perchè era commentato nella versione py ?
         this->data[i] = elem;
     }
 
 
-    inline void push_back(const V& elem){ add(elem); }
-    inline const V& back()const{ return data[data.size()-1]; }
+    virtual inline void push_back(const V& elem){ add(elem); }
+    virtual inline const V& back()const{ return data[data.size()-1]; }
 
-    void reverse(){
+    virtual void reverse(){
         std::vector<V> res;
         const int& n = data.size();
         for(int i = n-1; i >= 0 ; --i) 
@@ -947,158 +857,138 @@ struct Vector{
 
     inline const std::vector<V>& getData()noexcept{ return data;}
 
-private:
+protected:
     std::vector<V> data;
 };
 
 
-// TODO: To integrate with vector
-// template<typename V, typename Checker, typename Indexer>
-// struct IndexedVector{
+template<typename V, typename Checker, typename Indexer>
+struct ContiguousSet: public Vector<V>{
 
-//     IndexedVector(const size_t N): N(N), checker(N), indexer(N) {}
-//     IndexedVector(const std::vector<V>& elements, bool (*key)(V a, V b) = nullptr)noexcept;
-//     // PerfectVector(const PerfectVector<std::unique_ptr<T>& elements, bool (*key)(T a, T b) = nullptr)noexcept;
-//     // PerfectVector& operator=() noexcept;
+    ContiguousSet(const size_t N): Vector<V>(N), checker(N), indexer(N) {}
+    inline bool contains(const V& elem) { return checker.contains(elem); }
 
-//     inline bool contains(const V& elem) { return checker.contains(elem); }
+    void add(const V& elem)noexcept override{
+        if(!contains(elem)){
+            checker.add(elem);
+            size_t i = this->data.size();
+            indexer.set(elem, i);
+            this->data.push_back(elem);
+        }
+    }
 
-//     void add(const V& elem)noexcept{
-//         if(!contains(elem)){
-//             checker.add(elem);
-//             size_t i = data.size();
-//             indexer.set(elem, i);
-//             data.push_back(elem);
-//         }
-//     }
+    void remove(const V& elem) override{
+        // ! It does not maintain order
+        if(contains(elem)){
+            const size_t &i = indexer.get(elem);
+            V x = this->data[i];
+            size_t n = this->data.size();
+            V &last =  this->data[n-1];
+            indexer.set(last, i);
+            this->data[i] = last;
+            this->data[n-1] = x;
+            this->pop();
+        }
+    }
 
-//     void remove(const V& elem){
-//         // ! It does not maintain order
-//         if(contains(elem)){
-//             const size_t &i = indexer.get(elem);
-//             V x = data[i];
-//             size_t n = data.size();
-//             V &last =  data[n-1];
-//             indexer.set(last, i);
-//             data[i] = last;
-//             data[n-1] = x;
-//             this->pop();
-//         }
-//     }
-
-//     void removeOrdered(const V& elem){
-//         // ! It does not maintain order
-//         if(contains(elem)){
-//             const size_t &index = indexer.get(elem);
-//             size_t n = data.size();
-//             for(size_t i = index; i < n-1; ++i){
-//                 const V& elem =  data[i+1];
-//                 data[i] = elem;
-//                 indexer.set(elem, i);
-//             }
-//             checker.remove(elem);
-//         }
-//     }
+    void removeOrdered(const V& elem) override{
+        // ! It does maintain order
+        if(contains(elem)){
+            const size_t &index = indexer.get(elem);
+            size_t n = this->data.size();
+            for(size_t i = index; i < n-1; ++i){
+                const V& e =  this->data[i+1];
+                this->data[i] = e;
+                indexer.set(e, i);
+            }
+            this->data.pop();
+            checker.remove(elem);
+        }
+    }
     
-//     void sort(bool (*key)(V, V) = nullptr)noexcept{
-//         if(key == nullptr) std::sort(data.begin(), data.end());
-//         else std::sort(data.begin(), data.end(), key);
-//         for(size_t i = 0; i < data.size(); ++i){
-//             const V& elem = data[i];
-//             indexer.set(elem, i);
-//         }
-//     }
+    void sort(bool (*key)(V, V) = nullptr)noexcept override{
+        if(key == nullptr) std::sort(this->data.begin(), this->data.end());
+        else std::sort(this->data.begin(), this->data.end(), key);
+        for(size_t i = 0; i < this->data.size(); ++i){
+            const V& elem = this->data[i];
+            indexer.set(elem, i);
+        }
+    }
 
-//     template<typename Compare>
-//     void sort(Compare key)noexcept{
-//         std::sort(data.begin(), data.end(), key);
-//         for(size_t i = 0; i < data.size(); ++i){
-//             const V& elem = data[i];
-//             indexer.set(elem, i);
-//         }
-//     }
+    template<typename Compare>
+    void sortWithCompareObj(Compare key)noexcept{
+        std::sort(this->data.begin(), this->data.end(), key);
+        for(size_t i = 0; i < this->data.size(); ++i){
+            const V& elem = this->data[i];
+            indexer.set(elem, i);
+        }
+    }
 
-//     void clear()noexcept{
-//         data.clear();
-//         checker.clear();
-//     }
+    void clear()noexcept override{
+        this->data.clear();
+        checker.clear();
+    }
 
-//     const V& get(size_t index) const{
-//         return data[index];
-//     }
+    const V& get(size_t index) const override{
+        return this->data[index];
+    }
 
-//    inline const std::vector<V> slice(size_t i = 0, size_t j = 0) const noexcept{ return sliceVec(data,i,j);}
-//    inline void sliceInPlace(size_t i = 0, size_t j = 0) noexcept{ return sliceVecInPlace<V>(data,i,j);}
-   
-//     void set(const size_t& i, const V& elem){
-//         const V& old = data[i];
-//         if(old == elem) return;
-//         data[i] = elem;
-//         indexer.set(elem, i);
-//         checker.add(elem);
-//         checker.remove(old);
-//         // self.checker[old] = False Perchè era commentato nella versione py ?
-//     }
+   inline const std::vector<V> slice(size_t i = 0, size_t j = 0) const noexcept override{ return sliceVec(this->data,i,j);}
+
+    void set(const size_t& i, const V& elem) override{
+        const V& old = this->data[i];
+        const size_t iElem = indexer.get(elem);
+        if(iElem == i || old == elem || contains(elem)) return;
+        this->data[i] = elem;
+        indexer.set(elem, i);
+        checker.add(elem);
+        checker.remove(old);
+    }
 
 
-//     inline void push_back(const V& elem){ add(elem); }
-//     inline const V& back()const{ return data[data.size()-1]; }
+    inline void push_back(const V& elem) override { add(elem); }
+    inline const V& back()const override{ return this->data[this->data.size()-1]; }
 
-//     void reverse(){
-//         std::vector<V> res;
-//         size_t n = data.size();
-//         for(size_t i = n-1; i >= 0 ; ++i){
-//             const V& element = data[i];
-//             res.push_back(element);
-//             // self.index[n-1-i] = element Ma cosa facevo prima ???
-//             indexer.set(element, n-1-i);
-//         }
-//         data = std::move(res);
-//     }
+    void reverse() override{
+        std::vector<V> res;
+        size_t n = this->data.size();
+        for(size_t i = n-1; i >= 0 ; --i){
+            const V& element = this->data[i];
+            res.push_back(element);
+            indexer.set(element, n-1-i);
+        }
+        this->data = std::move(res);
+    }
 
-//     inline size_t size()const { return data.size(); }
-//     inline bool empty()const{ return data.empty();}
+    const size_t N;
 
-//     auto begin() { return data.begin(); }
-//     auto end()   { return data.end(); }
-
-//     auto begin() const { return data.begin(); }
-//     auto end()   const { return data.end(); }
-
-//     friend std::ostream& operator<<<V, Checker, Indexer>(std::ostream& out, const IndexedVector<V, Checker, Indexer>& vec);
-
-//     const size_t N;
-
-//     inline const std::vector<V>& getData()noexcept{ return data;}
-
-// private:
-//     Checker checker;
-//     Indexer indexer;
-//     std::vector<V> data;
-// };
-
-template<typename V>
-struct PerfectVector: public IndexedVector<V, PerfectSet<V> , PerfectHash<V,size_t>>{
-    PerfectVector(const size_t N): IndexedVector<V, PerfectSet<V> , PerfectHash<V,size_t>>(N){}
-    PerfectVector(const std::vector<V>& elements, bool (*key)(V a, V b) = nullptr)noexcept: IndexedVector<V, PerfectSet<V> , PerfectHash<V,size_t>>(elements, key){}
+private:
+    Checker checker;
+    Indexer indexer;
 };
 
 template<typename V>
-struct PerfectNVector: public IndexedVector<V, PerfectNSet<V> , PerfectNHash<V,size_t>>{
-    PerfectNVector(const size_t N): IndexedVector<V, PerfectNSet<V> , PerfectNHash<V,size_t>>(N){}
-    PerfectNVector(const std::vector<V>& elements, bool (*key)(V a, V b) = nullptr)noexcept: IndexedVector<V, PerfectNSet<V> , PerfectNHash<V,size_t>>(elements, key){}
+struct PerfectContiguousSet: public ContiguousSet<V, PerfectSet<V> , PerfectHash<V,size_t>>{
+    PerfectContiguousSet(const size_t N): ContiguousSet<V, PerfectSet<V> , PerfectHash<V,size_t>>(N){}
+    PerfectContiguousSet(const std::vector<V>& elements, bool (*key)(V a, V b) = nullptr)noexcept: ContiguousSet<V, PerfectSet<V> , PerfectHash<V,size_t>>(elements, key){}
 };
 
 template<typename V>
-struct UMector: public IndexedVector<V, UMSet<V> , UMHash<V,size_t>>{
-    UMector(const size_t N): IndexedVector<V, UMSet<V> , UMHash<V,size_t>>(N){}
-    UMector(const std::vector<V>& elements, bool (*key)(V a, V b) = nullptr)noexcept: IndexedVector<V, UMSet<V> , UMHash<V,size_t>>(elements, key){}
+struct PerfectNContiguousSet: public ContiguousSet<V, PerfectNSet<V> , PerfectNHash<V,size_t>>{
+    PerfectNContiguousSet(const size_t N): ContiguousSet<V, PerfectNSet<V> , PerfectNHash<V,size_t>>(N){}
+    PerfectNContiguousSet(const std::vector<V>& elements, bool (*key)(V a, V b) = nullptr)noexcept: ContiguousSet<V, PerfectNSet<V> , PerfectNHash<V,size_t>>(elements, key){}
 };
 
 template<typename V>
-struct UMNVector: public IndexedVector<V, UMNSet<V> , UMNHash<V,size_t>>{
-    UMNVector(const size_t N): IndexedVector<V, UMNSet<V> , UMNHash<V,size_t>>(N){}
-    UMNVector(const std::vector<V>& elements, bool (*key)(V a, V b) = nullptr)noexcept: IndexedVector<V, UMNSet<V> , UMNHash<V,size_t>>(elements, key){}
+struct UMContiguousSet: public ContiguousSet<V, UMSet<V> , UMHash<V,size_t>>{
+    UMContiguousSet(const size_t N): ContiguousSet<V, UMSet<V> , UMHash<V,size_t>>(N){}
+    UMContiguousSet(const std::vector<V>& elements, bool (*key)(V a, V b) = nullptr)noexcept: ContiguousSet<V, UMSet<V> , UMHash<V,size_t>>(elements, key){}
+};
+
+template<typename V>
+struct UMNContiguousSet: public ContiguousSet<V, UMNSet<V> , UMNHash<V,size_t>>{
+    UMNContiguousSet(const size_t N): ContiguousSet<V, UMNSet<V> , UMNHash<V,size_t>>(N){}
+    UMNContiguousSet(const std::vector<V>& elements, bool (*key)(V a, V b) = nullptr)noexcept: ContiguousSet<V, UMNSet<V> , UMNHash<V,size_t>>(elements, key){}
 };
 
 
@@ -1106,7 +996,7 @@ struct UMNVector: public IndexedVector<V, UMNSet<V> , UMNHash<V,size_t>>{
 
 std::ostream& operator<<(std::ostream& out, const cmn::MapLiteralId2Literal map);
 template<typename V, typename Checker, typename Indexer>
-std::ostream& operator<<(std::ostream& out, const cmn::IndexedVector<V, Checker, Indexer>& vec);
+std::ostream& operator<<(std::ostream& out, const cmn::ContiguousSet<V, Checker, Indexer>& vec);
 
 template<typename V>
 std::ostream& operator<<(std::ostream& out, const cmn::Vector<V>& vec);
