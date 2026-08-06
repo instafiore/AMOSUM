@@ -126,7 +126,8 @@ class RunnerClingoPython(RunnerWasp):
             sat = False
 
         def on_finish(x: SolveResult):
-            debug(f"result: {x}", force_print=True)
+            # debug(f"result: {x}", force_print=True)
+            pass
 
         try:
             handle : clingo.SolveHandle = self.ctl.solve(on_finish=on_finish ,on_model=on_model, on_unsat=on_unsat, async_ = True)
@@ -137,12 +138,12 @@ class RunnerClingoPython(RunnerWasp):
 
         end_time = time.time()  # End time
 
-        iterations = 0 
-        for prop in self.propagators:
-            amosum_prop = prop.propagators[0]
-            iterations += amosum_prop.count 
+        # iterations = 0 
+        # for prop in self.propagators:
+        #     amosum_prop = prop.propagators[0]
+        #     iterations += amosum_prop.count 
         
-        debug(f"iterations: {iterations}", force_print=True)
+        # debug(f"iterations: {iterations}", force_print=True)
 
         for propagator in self.propagators:
             amosum_propagator = propagator.propagators[0]

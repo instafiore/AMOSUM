@@ -48,23 +48,34 @@ Experimental results demonstrate **substantial performance improvements**, inclu
 
 The following software is required:
 
-- `make`
-- `conda`
+* `make`
+* `conda`
+* [`wasp`](https://alviano.github.io/wasp/index.html), compiled with `SCRIPT=python38`
 
 ---
 
 # Installation
 
+Create the Conda environment and install the required components:
+
 ```bash
 conda env create -f environment.yml
-bash ./install
+source ./install_amoclingo.sh
+source ./install_amowasp.sh <path_to_wasp_exe>
 ```
+
+where `<path_to_wasp_exe>` is the path to the `wasp` executable.
 
 ## Additional build step for the IJCAI version
 
+To build the IJCAI version, run:
+
 ```bash
-bash ./install_ijcai
+source ./install_ijcai.sh [<path_to_wasp_exe>]
 ```
+
+The `<path_to_wasp_exe>` argument is optional if the executable is already available through the environment configuration.
+
 
 ---
 

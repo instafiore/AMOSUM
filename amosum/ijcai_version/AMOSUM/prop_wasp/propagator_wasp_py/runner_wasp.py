@@ -19,8 +19,9 @@ class RunnerWasp:
     '''
 
     # the solver that you are using
-    SOLVER = "wasp_python"
+    # SOLVER = "wasp_python"
     # SOLVER = "wasp"
+    SOLVER = os.getenv("WASP_EXE")
 
     # whether or not running a test for the correctness
     CHECKING_CORRECTNESS = False
@@ -276,7 +277,7 @@ class RunnerWasp:
         print(f"Time: {time}, found {len(answer_sets)} models:")
         for i, model in enumerate(answer_sets):
             mps_str = self.compute_mps(model)
-            print(f"Model {i+1}: {model} {mps_str}")
+            print(f"AnswerSet {i+1}: {model} {mps_str}")
             
     def compute_mps(self, ans):
 
@@ -584,5 +585,5 @@ class RunnerWasp:
     
     def __del__(self):
         for file in self.tmp_files:
-            debug(f"removing file {file}", force_print=True)
+            # debug(f"removing file {file}", force_print=True)
             os.remove(file)
