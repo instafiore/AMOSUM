@@ -60,7 +60,8 @@ Create the Conda environment and install the required components:
 
 ```bash
 conda env create -f environment.yml
-bash ./install
+source ./install_amoclingo.sh
+source ./install_amowasp.sh <path_to_wasp_exe>
 ```
 
 where `<path_to_wasp_exe>` is the path to the `wasp` executable.
