@@ -637,6 +637,7 @@ def create_reason_falses_ge(propagator, flipped = None):
     for g in propagator.groups:
         ord_l = g.ord_l
         if propagator.true_group[g] is None:
+            breaks = {}
             mw_g = propagator.weight[max_w(g)]
             for i in range(len(ord_l) - 1, -1, -1):
                 l = ord_l[i]
