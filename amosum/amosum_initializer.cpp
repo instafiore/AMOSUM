@@ -1,4 +1,5 @@
 #include "amosum_initializer.h"
+#include "common_utility.h"
 #include <regex>
 
 
@@ -21,7 +22,8 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
         amosum_propagator->N = lits[0] + 1;
         amosum_propagator->minimization = get_map(amosum_propagator->params, std::string("reason"), std::string(Minimize::MINIMAL_ON_THE_FLY)) ;
         amosum_propagator->strategy = get_map(amosum_propagator->params, std::string("strategy"), amosum_propagator->strategy);
-        amosum_propagator->I.reset(new InterpretationFunction(amosum_propagator->N));
+        // amosum_propagator->I.reset(new InterpretationFunction(amosum_propagator->N));
+        amosum_propagator->I.reset(new cmn::PerfectInterpretation(amosum_propagator->N));
         amosum_propagator->group.reset(new GroupFunction(amosum_propagator->N));
         amosum_propagator->sum_removed_weights.reset(new cmn::PerfectNHash<clingo_literal_t, int>(amosum_propagator->N, 0));
         amosum_propagator->mpsHDuringPropagation.reset(new cmn::PerfectNHash<clingo_literal_t, int>(amosum_propagator->N, 0));

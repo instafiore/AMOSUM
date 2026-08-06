@@ -70,8 +70,10 @@ const std::vector<clingo_literal_t>* AmoSumPropagator::onLiteralTrue(const cling
     updated_dl(lit, dl);
     current_literal = lit ;
 
-    if(I->get(lit) == true) return nullptr ; // If lit is already true then no progation will take place
-    assert(I->get(lit) != false);
+    if(I->isTrue(lit)) return nullptr ; // If lit is already true then no progation will take place
+    // if(I->get(lit) == true) return nullptr ; // If lit is already true then no progation will take place
+    // assert(I->get(lit) != false);
+    assert(!I->isFalse(lit));
 
     auto [next_phase, G] = update_phase(lit, dl);
     
@@ -392,11 +394,12 @@ void AmoSumPropagator::onLiteralsUndefined(const std::vector<clingo_literal_t>& 
 
 
         // Update interpretation
-        if (I->get(l) == SETTINGS::NONE) {
+        // if (I->get(l) == SETTINGS::NONE) {
+        if (I->isUndef(l)) {
             continue;
         }
 
-        I->set(l, SETTINGS::NONE);
+        I->set(l, True);
 
 
         // Update the group and max weight

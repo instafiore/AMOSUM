@@ -6,6 +6,8 @@
 #include <memory>
 #include "logger.h"
 #include <unordered_set>
+#include "common_utility.h"
+
 using vector_lit_ptr = std::vector<clingo_literal_t>* ;
 
 struct AmoSumPropagator
@@ -18,7 +20,8 @@ struct AmoSumPropagator
 
     size_t N ; // number of atoms in the amo sum aggregate
 
-    std::unique_ptr<InterpretationFunction> I ; // A function from literals -> {true, false, NONE}
+    // std::uque_ptr<InterpretationFunction> I ; // A function from literals -> {true, false, NONE}
+    std::unique_ptr<cmn::PerfectInterpretation> I ; // A function from literals -> {true, false, NONE}
 
     // A function from literals -> weights
     // assuming that the aggregate does not contain the to literal l and !l

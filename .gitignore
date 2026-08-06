@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 
 .*
+synthetic
 todo
 tests/check_correctness/test_suite
 
