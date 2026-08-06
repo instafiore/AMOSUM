@@ -22,7 +22,8 @@ class RunnerWasp:
     '''
 
     # the solver that you are using
-    SOLVER = "wasp_python"
+    # SOLVER = "wasp"
+    SOLVER = os.getenv("WASP_EXE")
     
 
     def __init__(self, parameters: Dict[str,str]) -> None:
@@ -43,10 +44,6 @@ class RunnerWasp:
 
     def run(self) -> List[Result]:
 
-        # raise NotImplementedError(
-        #     "WASP solver is no longer supported due to infrastructure issues. "
-        #     "Please use an alternative solver CLINGO."
-        # )
 
         # encoding
         location_encoding = self.encoding

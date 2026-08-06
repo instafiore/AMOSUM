@@ -19,8 +19,9 @@ class RunnerWasp:
     '''
 
     # the solver that you are using
-    SOLVER = "wasp_python"
+    # SOLVER = "wasp_python"
     # SOLVER = "wasp"
+    SOLVER = os.getenv("WASP_EXE")
 
     # whether or not running a test for the correctness
     CHECKING_CORRECTNESS = False
