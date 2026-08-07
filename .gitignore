@@ -4,8 +4,6 @@ __pycache__/
 *$py.class
 
 .*
-todo
-tests/check_correctness/test_suite
 
 # C extensions
 *.so
