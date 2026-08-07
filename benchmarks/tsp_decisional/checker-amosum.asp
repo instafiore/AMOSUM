@@ -1,0 +1,1 @@
+:- #sum{R, X, Y: tour(X,Y), revenue(X,Y,R)} < B, lb(B).

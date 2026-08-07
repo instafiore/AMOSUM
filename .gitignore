@@ -3,6 +3,10 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+weighted_operator_dispatch
+test
+tsp
+
 .*
 synthetic
 todo
