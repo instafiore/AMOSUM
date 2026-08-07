@@ -3,6 +3,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+test
 .*
 todo
 tests/check_correctness/test_suite
