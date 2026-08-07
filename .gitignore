@@ -8,9 +8,8 @@ weighted_operator_dispatch
 tsp
 
 .*
-synthetic
-todo
-tests/check_correctness/test_suite
+
+
 
 # C extensions
 *.so
