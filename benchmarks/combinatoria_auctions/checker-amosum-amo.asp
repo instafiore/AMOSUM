@@ -1,1 +1,0 @@
-:- #sum{ Value, I : x(I), bid(I, Value) } < B, lb(B).
