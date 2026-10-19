@@ -3,8 +3,8 @@ import sys
 from lark import Lark
 from amosum.amosum_parser.AmoSumTransformer import AmoSumTransformer # type: ignore
 from amosum.amosum_parser.AmoSumGrammar import grammar as gr
-from amosum.amosum_parser.utils import *
-from amosum.utility import *
+from amosum.amosum_parser.utils import toString
+from amosum.utility import read_file
 
 
 
@@ -24,15 +24,14 @@ def run(input):
     return toString(parsed=amoSumParsed)
 
 
-def main(argv = []):
-    files_contents = []
-    for f in argv:
-        if os.path.isfile(f): 
-            with open(f, "r") as file:
-                files_contents.append(file.readline())
-    input = "\n".join(files_contents + [sys.stdin.read()])
+def main(argv = None):
+    argv = sys.argv[1:] if argv is None else argv
+    files_contents = [read_file(f) for f in argv if os.path.isfile(f)]
+    if not sys.stdin.isatty():
+        files_contents.append(sys.stdin.read())
+    input = "\n".join(files_contents)
     output = run(input=input)
     print(output)
 
 if __name__ == "__main__":
-    main(sys.argv)
+    main()
