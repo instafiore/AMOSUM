@@ -46,7 +46,8 @@ const std::vector<clingo_literal_t>* propagation_phase_le_amo(const Group* G, Am
         for (int i = g->ord_l.size() - 1; i >= 0; --i) {
             clingo_literal_t l = g->ord_l[i];
             // We need to add !propagator->is_true(not_(l))) because we do not know the real truth value of l given that we may do not watch it
-            if (propagator->I->get(l) == SETTINGS::NONE && !propagator->is_true(not_(l))) {
+            // if (propagator->I->get(l) == SETTINGS::NONE && !propagator->is_true(not_(l))) {
+            if (propagator->I->isUndef(l) && !propagator->is_true(not_(l))) {
                 if (std::get<0>(propagator->mpsH(l, true)) > propagator->ub) {
                     // Infer l as false
                     propagator->S.push_back(not_(l));

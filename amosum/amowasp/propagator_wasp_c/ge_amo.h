@@ -89,7 +89,8 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, Am
         
         if (!propagate_to_true) {
             for (int l : g->ord_l) {
-                if (propagator->I->get(l) == SETTINGS::NONE) {
+                // if (propagator->I->get(l) == SETTINGS::NONE) {
+                if (propagator->I->isUndef(l)) {
                     int mps_h_l_true = std::get<0>(propagator->mpsH(l, true));
                     if (mps_h_l_true < propagator->lb) {
                         if(!propagator->is_true(not_(l))) {

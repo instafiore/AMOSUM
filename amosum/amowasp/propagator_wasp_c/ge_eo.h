@@ -55,7 +55,8 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_eo(const Group* G, Amo
         if(ml_g == SETTINGS::NONE) continue ;
 
         for (int l : g->ord_l) {
-            if (propagator->I->get(l) == SETTINGS::NONE) {
+            // if (propagator->I->get(l) == SETTINGS::NONE) {
+            if (propagator->I->isUndef(l)) {
                 int mpsH = std::get<0>(propagator->mpsH(l, true));
                 if (mpsH < propagator->lb) {
                     

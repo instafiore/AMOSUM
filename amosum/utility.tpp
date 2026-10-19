@@ -255,15 +255,15 @@ public:
     virtual ~WeightFunction(){}
 };
 
-class InterpretationFunction: public SymmetricFunction<int>{
-    int function_negative_lit(int value) const override { 
-        if (value == NONE)  return value ;
-        return 1 - value ;
-    }
-public:
-    InterpretationFunction(int N) : SymmetricFunction(N) {}
-    virtual ~InterpretationFunction(){}
-};
+// class InterpretationFunction: public SymmetricFunction<int>{
+//     int function_negative_lit(int value) const override { 
+//         if (value == NONE)  return value ;
+//         return 1 - value ;
+//     }
+// public:
+//     InterpretationFunction(int N) : SymmetricFunction(N) {}
+//     virtual ~InterpretationFunction(){}
+// };
 
 class AggregateFunction: public PerfectHash<bool>{
 public:

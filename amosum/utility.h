@@ -13,7 +13,7 @@
 
 
 class PropagatorClingo ;
-class InterpretationFunction;
+// class InterpretationFunction;
 class AggregateFunction;
 class GroupFunction;
 class WeightFunction ;
@@ -159,9 +159,12 @@ public:
     int get_most_undefined(bool max);
 
     // Update max or min undefined literal based on some condition
-    std::pair<clingo_literal_t, clingo_literal_t> update_max(const std::unique_ptr<InterpretationFunction>& I, bool all, bool update, const clingo_literal_t& assuming_und);
-    std::pair<clingo_literal_t, clingo_literal_t> update_min(const std::unique_ptr<InterpretationFunction>& I, bool all , bool update, const clingo_literal_t& assuming_und);
-    std::pair<clingo_literal_t, clingo_literal_t> update(const std::unique_ptr<InterpretationFunction>& I, bool max, bool all, bool update, const clingo_literal_t& assuming_und);
+    // std::pair<clingo_literal_t, clingo_literal_t> update_max(const std::unique_ptr<InterpretationFunction>& I, bool all, bool update, const clingo_literal_t& assuming_und);
+    std::pair<clingo_literal_t, clingo_literal_t> update_max(const std::unique_ptr<fiore::PerfectInterpretation>& I, bool all, bool update, const clingo_literal_t& assuming_und);
+    // std::pair<clingo_literal_t, clingo_literal_t> update_min(const std::unique_ptr<InterpretationFunction>& I, bool all , bool update, const clingo_literal_t& assuming_und);
+    std::pair<clingo_literal_t, clingo_literal_t> update_min(const std::unique_ptr<fiore::PerfectInterpretation>& I, bool all , bool update, const clingo_literal_t& assuming_und);
+    // std::pair<clingo_literal_t, clingo_literal_t> update(const std::unique_ptr<InterpretationFunction>& I, bool max, bool all, bool update, const clingo_literal_t& assuming_und);
+    std::pair<clingo_literal_t, clingo_literal_t> update(const std::unique_ptr<fiore::PerfectInterpretation>& I, bool max, bool all, bool update, const clingo_literal_t& assuming_und);
 
     // Print the group
     void print_group(const std::unordered_map<int, std::string>* atomNames) const;
@@ -275,11 +278,14 @@ clingo_literal_t max_w(const Group* g);
 clingo_literal_t min_w(const Group* g);
 // Function to select between max_w and min_w
 clingo_literal_t m_w(const Group* g, bool max);
-clingo_literal_t max_w(InterpretationFunction* I, const Group* g, std::unordered_set<int> L = {});
+// clingo_literal_t max_w(InterpretationFunction* I, const Group* g, std::unordered_set<int> L = {});
+clingo_literal_t max_w(fiore::PerfectInterpretation* I, const Group* g, std::unordered_set<int> L = {});
 // Function to return the min undefined literal
-clingo_literal_t min_w(InterpretationFunction* I, const Group* g, std::unordered_set<int> L = {});
+// clingo_literal_t min_w(InterpretationFunction* I, const Group* g, std::unordered_set<int> L = {});
+clingo_literal_t min_w(fiore::PerfectInterpretation* I, const Group* g, std::unordered_set<int> L = {});
 // Function to select between max_w and min_w
-clingo_literal_t m_w(InterpretationFunction* I, const Group* g, bool max, std::unordered_set<int> L = {});
+// clingo_literal_t m_w(InterpretationFunction* I, const Group* g, bool max, std::unordered_set<int> L = {});
+clingo_literal_t m_w(fiore::PerfectInterpretation* I, const Group* g, bool max, std::unordered_set<int> L = {});
 bool equals(const clingo_literal_t& l1, const clingo_literal_t& l2);
     
 
@@ -291,19 +297,22 @@ struct Minimize {
     static constexpr const char* CARDINALITY_MINIMAL = "cmin" ;
 };
 
-void simplifyLiterals(std::vector<clingo_literal_t>& lits, AggregateFunction* aggregate, GroupFunction* group, bool max, const std::unique_ptr<InterpretationFunction>& I); 
+// void simplifyLiterals(std::vector<clingo_literal_t>& lits, AggregateFunction* aggregate, GroupFunction* group, bool max, const std::unique_ptr<InterpretationFunction>& I); 
+void simplifyLiterals(std::vector<clingo_literal_t>& lits, AggregateFunction* aggregate, GroupFunction* group, bool max, const std::unique_ptr<fiore::PerfectInterpretation>& I); 
 
 
 // Increment function
 int increment_f(bool derived_true, clingo_literal_t l, const std::unordered_set<clingo_literal_t>& current_subset_maximal,
                 const WeightFunction*& weight, const GroupFunction*& group,
-                int head_reason, const std::unique_ptr<InterpretationFunction>& I, int max_b);
+                // int head_reason, const std::unique_ptr<InterpretationFunction>& I, int max_b);
+                int head_reason, const std::unique_ptr<fiore::PerfectInterpretation>& I, int max_b);
 
 // Maximal subset with groups
 void maximal_subset_sum_less_than_s_with_groups(bool derived_true, const std::vector<clingo_literal_t>& literals, int s,
                                                            const WeightFunction* weight,
                                                            const GroupFunction* group,
-                                                           int head_reason, const std::unique_ptr<InterpretationFunction>& I, int max,
+                                                           // int head_reason, const std::unique_ptr<InterpretationFunction>& I, int max,
+                                                           int head_reason, const std::unique_ptr<fiore::PerfectInterpretation>& I, int max,
                                                            std::unordered_set<clingo_literal_t>& subset_maximal);
 
 // Compute increment literals
@@ -313,13 +322,15 @@ std::unordered_map<int, int> compute_increment_literals(const std::vector<int>& 
 
 // Get all literals below a literal
 std::vector<clingo_literal_t> get_all_lit_below_you(int lit, const GroupFunction* group,
-                                    const InterpretationFunction* I, const std::vector<int>& reason);
+                                    // const InterpretationFunction* I, const std::vector<int>& reason);
+                                    const fiore::PerfectInterpretation* I, const std::vector<int>& reason);
 
 // Maximum subset sum with groups
 std::unordered_set<clingo_literal_t> maximum_subset_sum_less_than_s_with_groups(const std::vector<clingo_literal_t>& literals, int s,
                                                             const GroupFunction* group,
                                                             const WeightFunction* weight,
-                                                            const InterpretationFunction* I);
+                                                            // const InterpretationFunction* I);
+                                                            const fiore::PerfectInterpretation* I);
 
 #include "utility.tpp"  // Include the template implementation file
 

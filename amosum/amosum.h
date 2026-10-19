@@ -18,7 +18,8 @@ struct AmoSumPropagator
 
     size_t N ; // number of atoms in the amo sum aggregate
 
-    std::unique_ptr<InterpretationFunction> I ; // A function from literals -> {true, false, NONE}
+    // std::unique_ptr<InterpretationFunction> I ; // A function from literals -> {true, false, NONE}
+    std::unique_ptr<fiore::PerfectInterpretation> I ; // A function from literals -> {true, false, NONE}
 
     // A function from literals -> weights
     // assuming that the aggregate does not contain the to literal l and !l

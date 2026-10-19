@@ -55,7 +55,8 @@ const std::vector<clingo_literal_t>* propagation_phase_le_eo(const Group* G, Amo
 
         for (int i = g->ord_l.size() - 1; i >= 0; --i) {
             clingo_literal_t l = g->ord_l[i];
-            if (propagator->I->get(l) == SETTINGS::NONE) {
+            // if (propagator->I->get(l) == SETTINGS::NONE) {
+            if (propagator->I->isUndef(l)) {
                 int mpsH = std::get<0>(propagator->mpsH(l, true));
                 if (mpsH > propagator->ub) {
                     // Infer l as false

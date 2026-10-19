@@ -786,7 +786,8 @@ void create_reason_falses_ge(AmoSumPropagator* propagator, fiore::PerfectNHash<c
                     
                     // if (propagator->weight->get(l) < mw_g) break;
                     if (propagator->weight->get(l) <= mw_g) break;
-                    if (!propagator->I->get(l) && !equals(l, flipped)) {
+                    // if (!propagator->I->get(l) && !equals(l, flipped)) {
+                    if (propagator->I->isFalse(l) && !equals(l, flipped)) {
                         
                         bool redundant = false;
                         if(minimizationOnTheFly){
@@ -1006,7 +1007,8 @@ void create_reason_true_ge(AmoSumPropagator* propagator, clingo_literal_t sml_g,
         int w_sml = propagator->weight->get(sml_g);
         int inc = weight - w_sml ;
         if(weight <= w_sml) break;
-        if (!propagator->I->get(lit) && !equals(derived, lit)) {
+        // if (!propagator->I->get(lit) && !equals(derived, lit)) {
+        if (propagator->I->isFalse(lit) && !equals(derived, lit)) {
             bool redundant = false;
             if(minimizationOnTheFly){
                 int& ci = sum_removed_weights.get(derived);
@@ -1102,7 +1104,8 @@ void create_reason_falses_le(AmoSumPropagator* propagator, clingo_literal_t flip
             
             for (clingo_literal_t l : g->ord_l) {
                 if (propagator->weight->get(l) > mw_g) break;
-                if (!propagator->I->get(l) && !equals(l, flipped)) {
+                // if (!propagator->I->get(l) && !equals(l, flipped)) {
+                if (propagator->I->isFalse(l) && !equals(l, flipped)) {
                     for(auto lit : propagator->S){
                         auto R = get_perfect_hash_with_pointer(propagator->reason.get(), lit);
                         Group* G = propagator->group->get(lit);
@@ -1167,7 +1170,8 @@ void create_reason_true_le(AmoSumPropagator* propagator, clingo_literal_t sml_g,
     
     for (int k = i; k >= j; --k) {
         clingo_literal_t lit = g->ord_l[k];
-        if (!propagator->I->get(lit) && !equals(derived, lit)) {
+        // if (!propagator->I->get(lit) && !equals(derived, lit)) {
+        if (propagator->I->isFalse(lit) && !equals(derived, lit)) {
             R->push_back(lit);
         }
     }
@@ -1303,11 +1307,13 @@ size_t Group::pc(const bool& ge, const std::string& constraint, const WeightFunc
 
 
 
-clingo_literal_t max_w(InterpretationFunction* I, const Group* g, std::unordered_set<int> L) {
+// clingo_literal_t max_w(InterpretationFunction* I, const Group* g, std::unordered_set<int> L) {
+clingo_literal_t max_w(fiore::PerfectInterpretation* I, const Group* g, std::unordered_set<int> L) {
     int start = (g->N - 1);
     for (int i = start; i >= 0; --i) {
         clingo_literal_t l = g->ord_l[i];
-        if (I->get(l) == SETTINGS::NONE && L.find(not_(l)) == L.end()) {
+        // if (I->get(l) == SETTINGS::NONE && L.find(not_(l)) == L.end()) {
+        if (I->isUndef(l) && L.find(not_(l)) == L.end()) {
             return g->ord_l[i];
         }
     }
@@ -1315,10 +1321,12 @@ clingo_literal_t max_w(InterpretationFunction* I, const Group* g, std::unordered
 }
 
 // Function to return the min undefined literal
-clingo_literal_t min_w(InterpretationFunction* I, const Group* g, std::unordered_set<int> L) {
+// clingo_literal_t min_w(InterpretationFunction* I, const Group* g, std::unordered_set<int> L) {
+clingo_literal_t min_w(fiore::PerfectInterpretation* I, const Group* g, std::unordered_set<int> L) {
     for (size_t i = 0; i < g->ord_l.size(); ++i) {
         clingo_literal_t l = g->ord_l[i];
-        if (I->get(l) == SETTINGS::NONE && L.find(not_(l)) == L.end()) {
+        // if (I->get(l) == SETTINGS::NONE && L.find(not_(l)) == L.end()) {
+        if (I->isUndef(l) && L.find(not_(l)) == L.end()) {
             return g->ord_l[i];
         }
     }
@@ -1326,7 +1334,8 @@ clingo_literal_t min_w(InterpretationFunction* I, const Group* g, std::unordered
 }
 
 // Function to select between max_w and min_w
-clingo_literal_t m_w(InterpretationFunction* I, const Group* g, bool max, std::unordered_set<int> L) {
+// clingo_literal_t m_w(InterpretationFunction* I, const Group* g, bool max, std::unordered_set<int> L) {
+clingo_literal_t m_w(fiore::PerfectInterpretation* I, const Group* g, bool max, std::unordered_set<int> L) {
     return max ? max_w(I, g, L) : min_w(I, g, L) ; 
 }
 
@@ -1337,7 +1346,8 @@ bool equals(const clingo_literal_t& l1, const clingo_literal_t& l2){
 }
 
 std::pair<clingo_literal_t, clingo_literal_t> Group::update_max(
-    const std::unique_ptr<InterpretationFunction>& I, bool all = false, bool update = true, 
+    // const std::unique_ptr<InterpretationFunction>& I, bool all = false, bool update = true, 
+    const std::unique_ptr<fiore::PerfectInterpretation>& I, bool all = false, bool update = true, 
     const clingo_literal_t& assuming_und = SETTINGS::NONE) {
 
     clingo_literal_t prev_max = (((size_t)max_und_i) < ord_l.size())? ord_l[max_und_i]: SETTINGS::NONE;
@@ -1350,7 +1360,8 @@ std::pair<clingo_literal_t, clingo_literal_t> Group::update_max(
 
     for (int i = start; i >= 0; --i) {
         clingo_literal_t l = ord_l[i];
-        if (I->get(l) == SETTINGS::NONE || equals(l, assuming_und)) {
+        // if (I->get(l) == SETTINGS::NONE || equals(l, assuming_und)) {
+        if (I->isUndef(l) || equals(l, assuming_und)) {
             if (update) max_und_i = i;
             return {l, prev_max};
         }
@@ -1361,7 +1372,8 @@ std::pair<clingo_literal_t, clingo_literal_t> Group::update_max(
 }
 
 std::pair<clingo_literal_t, clingo_literal_t> Group::update_min(
-        const std::unique_ptr<InterpretationFunction>& I, bool all = false, bool update = true, 
+        // const std::unique_ptr<InterpretationFunction>& I, bool all = false, bool update = true, 
+        const std::unique_ptr<fiore::PerfectInterpretation>& I, bool all = false, bool update = true, 
         const clingo_literal_t& assuming_und = SETTINGS::NONE) {
 
         clingo_literal_t prev_min = (((size_t)min_und_i) < ord_l.size()) ? ord_l[min_und_i] : SETTINGS::NONE;
@@ -1374,7 +1386,8 @@ std::pair<clingo_literal_t, clingo_literal_t> Group::update_min(
 
         for (int i = start; i < N; ++i) {
             clingo_literal_t l = ord_l[i];
-            if (I->get(l) == SETTINGS::NONE || equals(l, assuming_und)) {
+            // if (I->get(l) == SETTINGS::NONE || equals(l, assuming_und)) {
+            if (I->isUndef(l) || equals(l, assuming_und)) {
                 if (update) min_und_i = i;
                 return {l, prev_min};
             }
@@ -1385,7 +1398,8 @@ std::pair<clingo_literal_t, clingo_literal_t> Group::update_min(
     }
 
     std::pair<clingo_literal_t, clingo_literal_t> Group::update(
-        const std::unique_ptr<InterpretationFunction>& I, bool max, bool all = false, bool update = true, 
+        // const std::unique_ptr<InterpretationFunction>& I, bool max, bool all = false, bool update = true, 
+        const std::unique_ptr<fiore::PerfectInterpretation>& I, bool max, bool all = false, bool update = true, 
         const clingo_literal_t& assuming_und = SETTINGS::NONE) {
 
         if (max) {
@@ -1418,7 +1432,8 @@ void simplifyLiterals(
     AggregateFunction* aggregate,
     GroupFunction* group,
     bool max,
-    const std::unique_ptr<InterpretationFunction>& I
+    // const std::unique_ptr<InterpretationFunction>& I
+    const std::unique_ptr<fiore::PerfectInterpretation>& I
 ) {
     Group* G = nullptr;
 
@@ -1465,7 +1480,8 @@ void simplifyLiterals(
 }
 
 
-int increment_f(bool derived_true, clingo_literal_t l, const std::unordered_set<clingo_literal_t>& current_subset_maximal, const WeightFunction*& weight, const GroupFunction*& group, int head_reason, const std::unique_ptr<InterpretationFunction>& I, int max_b) {
+// int increment_f(bool derived_true, clingo_literal_t l, const std::unordered_set<clingo_literal_t>& current_subset_maximal, const WeightFunction*& weight, const GroupFunction*& group, int head_reason, const std::unique_ptr<InterpretationFunction>& I, int max_b) {
+int increment_f(bool derived_true, clingo_literal_t l, const std::unordered_set<clingo_literal_t>& current_subset_maximal, const WeightFunction*& weight, const GroupFunction*& group, int head_reason, const std::unique_ptr<fiore::PerfectInterpretation>& I, int max_b) {
     Group* g = group->get(l);
     bool tr = false;
 
@@ -1541,7 +1557,8 @@ void remove_elements(std::vector<clingo_literal_t>& original, const std::unorder
 }
 
 // Maximal subset with groups
-void maximal_subset_sum_less_than_s_with_groups(bool derived_true, const std::vector<clingo_literal_t>& literals, int s,const WeightFunction* weight, const GroupFunction* group, int head_reason, const std::unique_ptr<InterpretationFunction>& I, int max, std::unordered_set<clingo_literal_t>& current_subset_maximal) {
+// void maximal_subset_sum_less_than_s_with_groups(bool derived_true, const std::vector<clingo_literal_t>& literals, int s,const WeightFunction* weight, const GroupFunction* group, int head_reason, const std::unique_ptr<InterpretationFunction>& I, int max, std::unordered_set<clingo_literal_t>& current_subset_maximal) {
+void maximal_subset_sum_less_than_s_with_groups(bool derived_true, const std::vector<clingo_literal_t>& literals, int s,const WeightFunction* weight, const GroupFunction* group, int head_reason, const std::unique_ptr<fiore::PerfectInterpretation>& I, int max, std::unordered_set<clingo_literal_t>& current_subset_maximal) {
     int current_sum = 0;
     current_subset_maximal.clear();
     for (int l : literals) {
@@ -1580,7 +1597,8 @@ std::unordered_map<int, int> compute_increment_literals(const std::vector<int>& 
 
 // Get all literals below a literal
 std::vector<clingo_literal_t> get_all_lit_below_you(int lit, const GroupFunction* group,
-                                    const InterpretationFunction* I, const std::vector<int>& reason) {
+                                    // const InterpretationFunction* I, const std::vector<int>& reason) {
+                                    const fiore::PerfectInterpretation* I, const std::vector<int>& reason) {
     std::vector<clingo_literal_t> res{lit};
     Group* g = group->get(lit);
 
@@ -1593,7 +1611,8 @@ std::vector<clingo_literal_t> get_all_lit_below_you(int lit, const GroupFunction
 
     for (int i = start - 1; i >= 0; --i) {
         int l = g->ord_l[i];
-        if (I->get(l) == 0) break;
+        // if (I->get(l) == 0) break;
+        if (I->isFalse(l)) break;
         if (std::find(reason.begin(), reason.end(), l) != reason.end()) {
             res.push_back(l);
         }
@@ -1605,7 +1624,8 @@ std::vector<clingo_literal_t> get_all_lit_below_you(int lit, const GroupFunction
 std::unordered_set<clingo_literal_t> maximum_subset_sum_less_than_s_with_groups(const std::vector<clingo_literal_t>& literals, int s,
                                                             const GroupFunction* group,
                                                             const WeightFunction* weight,
-                                                            const InterpretationFunction* I) {
+                                                            // const InterpretationFunction* I) {
+                                                            const fiore::PerfectInterpretation* I) {
     int n = literals.size();
     std::vector<std::vector<std::vector<clingo_literal_t>>> subset(s + 1, std::vector<std::vector<clingo_literal_t>>(n + 1));
 
