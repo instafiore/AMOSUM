@@ -14,8 +14,9 @@
 #include <csignal>
 #include <sys/signal.h>
 #include "optimizer_clingo.h"
-#include "../../common_constants.h"
-#include "../../logger.h"
+#include "fiore/utils/constants.h"
+#include "fiore/utils/logger.h"
+#include "fiore/utils/utility.h"
 
 
 ParameterMap params;
@@ -23,7 +24,7 @@ OptimizerClingo* opt;
 
 void signalHandler(int signum) {
     if(opt == nullptr){
-        exit(CONSTANTS::UNKOWN_CODE);
+        exit(fiore::CONSTANTS::UNKOWN_CODE);
     }
     AnswerSet* optAnswer = opt->currentAnswerSet;
     optAnswer->setOptimum(false);
@@ -67,7 +68,10 @@ int main(int argc, char const *argv[])
     if(params.find("instance") != params.end()) instance_path = params.find("instance")->second;
 
     const std::filesystem::path log_file = params.find("logfile")->second;
-    initLogger(log_file, false);
+    fiore::startWallTime();
+    #ifdef __debug__
+        fiore::Logger::init(log_file, false, fiore::LogLevel::DEBUG);   // all levels, as before
+    #endif
 
     int major, minor, revision;
     clingo_version(&major, &minor, &revision);
@@ -156,7 +160,7 @@ int main(int argc, char const *argv[])
     bool falseLiterals = get_map(params, std::string("falseLiterals"), SETTINGS::FALSE_STR) == SETTINGS::TRUE_STR;
     handle_error(solve(ctl, results, falseLiterals));
     assert(opt == nullptr || results[0]->exitCode == SETTINGS::UNSAT);
-    int exitCode = CONSTANTS::ERROR_CODE;
+    int exitCode = fiore::CONSTANTS::ERROR_CODE;
     if(opt == nullptr){
         for(AnswerSet* result: results){
             if(params.find("serialize") == params.end())  printf("%s\n",result->toString().c_str());
@@ -176,7 +180,9 @@ int main(int argc, char const *argv[])
         if(propagator) delete propagator;
     }
     if(ctl) { clingo_control_free(ctl); }
-    cleanupLogger();
+    #ifdef __debug__
+        fiore::Logger::cleanup();
+    #endif
     
 
     AmoSumInitializer::cleanup();

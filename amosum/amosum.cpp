@@ -26,13 +26,13 @@ void AmoSumPropagator::updateBound(int bound){
 const std::vector<clingo_literal_t> AmoSumPropagator::simplifyAtLevelZero(const bool& delete_lits=false){ 
 
         // debug_old("simplifyAtLevelZero for ", unordered_map_to_string(params), " with mps: ",_mps," and bound: ",bound);
-        debug(DEBUG, "simplifyAtLevelZero for ", unordered_map_to_string(params), " with mps: ",mps()," and bound: ",bound);
+        LOG(fiore::LogLevel::DEBUG, "simplifyAtLevelZero for ", unordered_map_to_string(params), " with mps: ",mps()," and bound: ",bound);
 
         
         std::string error_string = ge ? (std::to_string(mps()) + " < " + std::to_string(lb) + " !!!") : (std::to_string(mps()) + " > " + std::to_string(ub) + " !!!");
         if ((ge && mps() < lb) || (!ge && mps() > ub)) {
                 // debugf_old(error_string)
-                debug(ERROR, error_string);
+                LOG(fiore::LogLevel::CRITICAL, error_string);
                 return {SETTINGS::PLITBOTTOM};
         }
         
@@ -270,8 +270,8 @@ std::tuple<int, clingo_literal_t, clingo_literal_t> AmoSumPropagator::mpsH(cling
             std::string name_tr = get_name(atomNames, true_group->getTrueLiteral(g));
             std::string name_l = get_name(atomNames, l);
             // debugf_old("name_tr: ",name_tr, " name_l: ",name_l);
-            debug(ERROR, "There is already a true literal in the group, name_tr: ",name_tr, " name_l: ",name_l);
-            cmn::setExitCode(CONSTANTS::ERROR_CODE);
+            LOG(fiore::LogLevel::CRITICAL, "There is already a true literal in the group, name_tr: ",name_tr, " name_l: ",name_l);
+            fiore::setExitCode(fiore::CONSTANTS::ERROR_CODE);
         }
         
         int mps_h = _mps - mw_g + weight->get(l);

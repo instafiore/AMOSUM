@@ -23,8 +23,8 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
         amosum_propagator->strategy = get_map(amosum_propagator->params, std::string("strategy"), amosum_propagator->strategy);
         amosum_propagator->I.reset(new InterpretationFunction(amosum_propagator->N));
         amosum_propagator->group.reset(new GroupFunction(amosum_propagator->N));
-        amosum_propagator->sum_removed_weights.reset(new cmn::PerfectNHash<clingo_literal_t, int>(amosum_propagator->N, 0));
-        amosum_propagator->mpsHDuringPropagation.reset(new cmn::PerfectNHash<clingo_literal_t, int>(amosum_propagator->N, 0));
+        amosum_propagator->sum_removed_weights.reset(new fiore::PerfectNHash<clingo_literal_t, int>(amosum_propagator->N, 0));
+        amosum_propagator->mpsHDuringPropagation.reset(new fiore::PerfectNHash<clingo_literal_t, int>(amosum_propagator->N, 0));
 
         amosum_propagator->reason.reset(new PerfectHash<std::vector<clingo_literal_t>*> (amosum_propagator->N, nullptr));
 
@@ -78,19 +78,19 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
             toKeep = maxPossibleSum > amosum_propagator->bound;
             if(toKeep){ 
                 #ifndef NDEBUG
-                    debug(DEBUG, "[Watching] Watching ", get_name(amosum_propagator->atomNames, l), " because mps: ",maxPossibleSum, " and bound: ",amosum_propagator->bound);
+                    LOG(fiore::LogLevel::DEBUG, "[Watching] Watching ", get_name(amosum_propagator->atomNames, l), " because mps: ",maxPossibleSum, " and bound: ",amosum_propagator->bound);
                 #endif 
                 toWatch.push_back(l);
             }
             else{
                 #ifndef NDEBUG
-                    debug(DEBUG, "[Watching] Not watching ", get_name(amosum_propagator->atomNames, l), " because mps: ",maxPossibleSum, " and bound: ",amosum_propagator->bound);
+                    LOG(fiore::LogLevel::DEBUG, "[Watching] Not watching ", get_name(amosum_propagator->atomNames, l), " because mps: ",maxPossibleSum, " and bound: ",amosum_propagator->bound);
                 #endif 
             }
         }
 
         #ifndef NDEBUG
-            debug(DEBUG, "[Watching] Propagator ",amosum_propagator->ID," watches: ", vector_lit_to_string(amosum_propagator->atomNames, toWatch, ""));
+            LOG(fiore::LogLevel::DEBUG, "[Watching] Propagator ",amosum_propagator->ID," watches: ", vector_lit_to_string(amosum_propagator->atomNames, toWatch, ""));
         #endif
         return toWatch;
         // return gd->bind;
@@ -99,7 +99,12 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
     void AmoSumInitializer::common_phase(AmoSumPropagator* amosum_propagator){
         std::regex pattern_aux(SETTINGS::REGEX_AUX);
         atomNamesString = create_atomNames_string(amosum_propagator->atomNames);
-        std::map<clingo_symbol_t, clingo_literal_t> atomNamesTmp(amosum_propagator->atomNames->begin(), amosum_propagator->atomNames->end());
+        std::vector<std::pair<clingo_symbol_t, clingo_literal_t>> atomNamesTmp(amosum_propagator->atomNames->begin(), amosum_propagator->atomNames->end());
+        // deterministic order: clingo_symbol_t values of compound terms are addresses, so ordering by them changes between runs
+        std::sort(atomNamesTmp.begin(), atomNamesTmp.end(), [](const auto& a, const auto& b){
+                if(a.second != b.second) return a.second < b.second;
+                return from_symbol_to_string(a.first) < from_symbol_to_string(b.first);
+        });
         const size_t N = amosum_propagator->N;
         for(auto &[symbolic_atom, literal]: atomNamesTmp){
                 
@@ -218,12 +223,12 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
         amosum_propagator->lazy_prop_activated = lazy_param != SETTINGS::FALSE_STR;
         bool lazy_hybrid = lazy_param == SETTINGS::LAZY_HYBRID ;
 
-
+        
         for(auto &[group_id, lits_group]: generic_data_map[ID]->groups_raw){
                 std::vector<std::pair<int, int>> lits_ord;
                 for (int lit : lits_group) lits_ord.emplace_back(lit, amosum_propagator->weight->get(lit));
                 std::sort(lits_ord.begin(), lits_ord.end(), [](const std::pair<int, int>& a, const std::pair<int, int>& b) {
-                        return a.second < b.second; 
+                        return a.second < b.second || (a.second == b.second && a.first < b.first);
                 });
                 std::vector<clingo_literal_t> ord_l(lits_ord.size(), SETTINGS::NONE);
                 std::unordered_map<int, int> ord_i; 
@@ -235,6 +240,7 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
                 }
 
                 Group* G = new Group(ord_l,ord_i,group_id) ;
+                LOG(fiore::LogLevel::DEBUG, "group ", group_id, " ord_l: ", ord_l);
                 
                 // clingo_literal_t max_l = m_w(G, true) ;
                 // clingo_literal_t min_l = m_w(G, false) ;
@@ -288,14 +294,15 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
                 amosum_propagator->inconsistent_at_level_0 = true;
             }
         }
-        debug(INFO, "max_diff: ", max_diff); 
+        
+        LOG(fiore::LogLevel::INFO, "max_diff: ", max_diff); 
         
         amosum_propagator->lazy_perc = amosum_propagator->lazy_prop_activated && lazy_param != SETTINGS::TRUE_STR && !lazy_hybrid ? std::stof(lazy_param) : amosum_propagator->lazy_perc ;
         amosum_propagator->lazy_condition = !amosum_propagator->lazy_prop_activated;
         if(lazy_param == SETTINGS::TRUE_STR) amosum_propagator->lazy_perc = 1 ;
         else if (lazy_hybrid || !amosum_propagator->lazy_prop_activated) amosum_propagator->lazy_perc = amosum_propagator->ge ? amosum_propagator->lb / static_cast<float>(amosum_propagator->lb + max_diff) :  (amosum_propagator->ub - max_diff) / static_cast<float>(amosum_propagator->ub);
         std::string lazy_perc_str = amosum_propagator->lazy_prop_activated ? " lazy threshold " + std::to_string(amosum_propagator->lazy_perc) : SETTINGS::NONE_STR;
-        debug(INFO, "Starting c propagator with param ",unordered_map_to_string(amosum_propagator->params), lazy_perc_str);
+        LOG(fiore::LogLevel::INFO, "Starting c propagator with param ",unordered_map_to_string(amosum_propagator->params), lazy_perc_str);
 
         // Set facts to literals starting from index 1
         amosum_propagator->facts.assign(lits.begin() + 1, lits.end());

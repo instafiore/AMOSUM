@@ -15,7 +15,7 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_eo(const Group* G, Amo
 
     propagator->S.clear();
     // std::unordered_map<clingo_literal_t, int> sum_removed_weights;
-    cmn::PerfectNHash<clingo_literal_t, int>& sum_removed_weights = *propagator->sum_removed_weights.get();
+    fiore::PerfectNHash<clingo_literal_t, int>& sum_removed_weights = *propagator->sum_removed_weights.get();
 
     if (propagator->sum_violated){
         

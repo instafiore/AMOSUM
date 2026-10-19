@@ -18,7 +18,7 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, Am
     
     propagator->S.clear();
     // std::unordered_map<clingo_literal_t, int> sum_removed_weights;
-    cmn::PerfectNHash<clingo_literal_t, int>& sum_removed_weights = *propagator->sum_removed_weights.get();
+    fiore::PerfectNHash<clingo_literal_t, int>& sum_removed_weights = *propagator->sum_removed_weights.get();
 
 
     if (propagator->sum_violated) {
@@ -52,7 +52,7 @@ const std::vector<clingo_literal_t>* propagation_phase_ge_amo(const Group* G, Am
 
         
         propagator->compute_minimal_reason(propagator->S);
-        debug(DEBUG, "MPS VIOLATED");
+        LOG(fiore::LogLevel::DEBUG, "MPS VIOLATED");
         // debug_old("MPS VIOLATED");
         printDerivation(propagator->atomNames, propagator->S);
         return &propagator->S;

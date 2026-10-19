@@ -13,6 +13,11 @@ amowasp = $(SRC_DIR)/amowasp/propagator_wasp_c
 SRCS = $(shell find $(SRC_DIR) -name '*.$(C)')
 OBJS = $(addprefix $(BUILD_DIR)/, $(notdir $(SRCS:.$(C)=.o)))
 
+# fiore (repository root): the generic utilities (logger, ...), compiled from source into build/fiore/
+include ../../../fiore/fiore.mk
+CFLAGS += $(FIORE_CPPFLAGS)
+FIORE_OBJS = $(patsubst $(FIORE_DIR)/%.$(C),$(BUILD_DIR)/fiore/%.o,$(FIORE_UTILS_SRCS))
+
 all: $(TARGET)
 
 print-CC:
@@ -40,10 +45,15 @@ pprof:
 	@$(MAKE) BUILD_MODE=pprof
 
 
-$(TARGET): $(OBJS)
+$(TARGET): $(OBJS) $(FIORE_OBJS)
 	@echo "Linking $@"
 	@mkdir -p $(BIN_DIR)
 	$(CC) $^ $(LDFLAGS) -o $(BIN_DIR)/$@
+
+$(BUILD_DIR)/fiore/%.o: $(FIORE_DIR)/%.$(C)
+	@mkdir -p $(dir $@)
+	@echo "Compiling $< -> $@"
+	$(CC) $(CFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.$(C)
 	@mkdir -p $(BUILD_DIR) # Create build directory if not exists

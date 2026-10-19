@@ -8,7 +8,7 @@
 #include <sstream>
 #include <cassert>
 #include <unordered_set>
-#include "common_utility.h"
+#include "fiore/utils/utilityCommon.h"
 #include <chrono>
 
 
@@ -238,8 +238,8 @@ inline int not_(int literal) {
 }
 
 // void create_reason_falses(AmoSumPropagator* propagator, bool ge, std::unordered_map<clingo_literal_t, int> &sum_removed_weights, clingo_literal_t flipped);
-void create_reason_falses_ge(AmoSumPropagator* propagator, cmn::PerfectNHash<clingo_literal_t, int> &sum_removed_weights, clingo_literal_t flipped);
-void create_reason_true_ge(AmoSumPropagator* propagator, clingo_literal_t sml_g, clingo_literal_t derived, Group* g, cmn::PerfectNHash<clingo_literal_t, int> &sum_removed_weights);
+void create_reason_falses_ge(AmoSumPropagator* propagator, fiore::PerfectNHash<clingo_literal_t, int> &sum_removed_weights, clingo_literal_t flipped);
+void create_reason_true_ge(AmoSumPropagator* propagator, clingo_literal_t sml_g, clingo_literal_t derived, Group* g, fiore::PerfectNHash<clingo_literal_t, int> &sum_removed_weights);
 // void create_reason_falses_ge(AmoSumPropagator* propagator, std::unordered_map<clingo_literal_t, int> &sum_removed_weights, clingo_literal_t flipped);
 // void create_reason_true_ge(AmoSumPropagator* propagator, clingo_literal_t sml_g, clingo_literal_t derived, Group* g, std::unordered_map<clingo_literal_t, int> &sum_removed_weights);
 void create_reason_falses_le(AmoSumPropagator* propagator, clingo_literal_t flipped);
@@ -252,6 +252,18 @@ void print_propagate(PropagatorClingo* prop, const clingo_literal_t *changes, si
 void print_derivation(const std::unordered_map<clingo_symbol_t, clingo_literal_t>* atomNames, const std::vector<clingo_literal_t>& S);
 void print_undo(PropagatorClingo* prop, const clingo_literal_t *changes, size_t size, clingo_propagate_control_t *control, int dl, int td, bool wasp_b);
 void print_reason(const std::unordered_map<clingo_symbol_t, clingo_literal_t>* atomNames, const std::vector<clingo_literal_t>& R, clingo_literal_t lit);
+// debug output of the propagators, compiled only in debug builds
+#ifndef NDEBUG
+    #define printPropagate(prop,changes,size,control,dl) print_propagate(prop, changes, size, control, dl,false)
+    #define printReason(atomNames, reason, l) print_reason(atomNames, reason, l)
+    #define printUndo(prop, changes, size, control, dl, td) print_undo(prop, changes, size, control, dl, td, false);
+    #define printDerivation(atomNames, S) print_derivation(atomNames, S)
+#else
+    #define printPropagate(prop,changes,size,control,dl)
+    #define printReason(atomNames, reason, l)
+    #define printUndo(prop, changes, size, control, dl, td)
+    #define printDerivation(atomNames, S)
+#endif
 void print_reduction_reason(const AmoSumPropagator& propagator, const std::vector<clingo_literal_t>& reason_c, const std::vector<clingo_literal_t>& reason, clingo_literal_t lit, float p, bool force_print);
 std::string atomNames_to_string(const std::unordered_map<clingo_symbol_t, clingo_literal_t>* atomNames);
 std::vector<std::string> convert_assparam_to_assarray(const std::string& assumptions);

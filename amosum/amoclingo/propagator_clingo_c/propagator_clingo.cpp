@@ -117,7 +117,7 @@ bool PropagatorClingo::add_clauses_propagated_lits(void *control, const std::vec
         // propagation must return immediately, there is a conflict
         if (not result_add_clause){
             // debug_old("conflict add clause");
-            debug(DEBUG, "conflict add clause");
+            LOG(fiore::LogLevel::DEBUG, "conflict add clause");
             return true ;
         }
 
@@ -128,7 +128,7 @@ bool PropagatorClingo::add_clauses_propagated_lits(void *control, const std::vec
         
         if (!result_propagate){ 
             // propagation must return immediately, a conflict has been raised 
-            debug(DEBUG, "conflict propagate");
+            LOG(fiore::LogLevel::DEBUG, "conflict propagate");
             // debug_old("conflict propagate");
             return true ;
         }   

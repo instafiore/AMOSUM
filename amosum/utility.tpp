@@ -33,8 +33,8 @@ void PerfectHash<V>::set(const int& key, const V& value){
     int i = (key > 0) ? key : (abs(key) + N);
     if(i < 0 or ((size_t)i) >= values.size()){
         // debugf_old("overflow: ",i, " key: ",key);
-        // debug(ERROR, "overflow: ",i, " key: ",key);
-        cmn::setExitCode(CONSTANTS::ERROR_CODE);
+        // LOG(fiore::LogLevel::CRITICAL, "overflow: ",i, " key: ",key);
+        fiore::setExitCode(fiore::CONSTANTS::ERROR_CODE);
     }
     values[i] = value;
 }

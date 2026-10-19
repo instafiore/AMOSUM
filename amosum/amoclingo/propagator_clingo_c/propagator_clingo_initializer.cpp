@@ -28,7 +28,7 @@ void PropagatorClingoInitializer::init(clingo_propagate_init* _init, PropagatorC
     nt = clingo_propagate_init_number_of_threads(_init);
 
     // debug_old("[init] number of threads ", nt);
-    debug(DEBUG, "[init] number of threads ", nt);
+    LOG(fiore::LogLevel::DEBUG, "[init] number of threads ", nt);
     clingo_symbolic_atoms_t const *symbolic_atoms;
     clingo_symbolic_atom_iterator_t symbolic_atoms_it, symbolic_atoms_ie;
 
@@ -55,7 +55,7 @@ void PropagatorClingoInitializer::init(clingo_propagate_init* _init, PropagatorC
 
         if (plit > max_plit) { max_plit = plit; }
 
-        debug(INFO, "[init] symbol: ", symbol_str, " symbol: ", symbol, " plit: ", plit, " slit: ", slit);
+        LOG(fiore::LogLevel::DEBUG, "[init] symbol: ", symbol_str, " symbol: ", symbol, " plit: ", plit, " slit: ", slit);
 
         atomNames->emplace(symbol, plit);
         (*map_plit_slit)[plit] = slit ; 

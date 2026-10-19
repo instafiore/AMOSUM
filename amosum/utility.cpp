@@ -523,21 +523,21 @@ AnswerSet::AnswerSet(Model* &&model, clingo_solve_result_bitset_t &solve_ret){
     else {
         if (solve_ret & clingo_solve_result_exhausted) {
             exitCode = SETTINGS::SEARCH_SPACE_EXHAUSTED;
-            debug(ERROR,"ERROR: Search space exhausted.\n");
+            LOG(fiore::LogLevel::CRITICAL,"ERROR: Search space exhausted.\n");
             // debugf_old("ERROR: Search space exhausted.\n");
         }
         else if (solve_ret & clingo_solve_result_interrupted) {
             exitCode = SETTINGS::TIMEOUT;
             // debugf_old("timeout: Solving was interrupted.\n");
-            debug(ERROR, "timeout: Solving was interrupted.\n");
+            LOG(fiore::LogLevel::CRITICAL, "timeout: Solving was interrupted.\n");
         }else {
             exitCode = SETTINGS::ERROR;
             // debugf_old("timeout: Solving was interrupted.\n");
-            debug(ERROR, "ERROR: Unexpected solve result\n");
+            LOG(fiore::LogLevel::CRITICAL, "ERROR: Unexpected solve result\n");
         }
         exit(exitCode);
     }
-    debug("exit code: ", exitCode);
+    LOG(fiore::LogLevel::DEBUG, "exit code: ", exitCode);
     // debug_old("exit code: ", exitCode);
 }
 
@@ -546,7 +546,7 @@ AnswerSet::AnswerSet(Model* &&model){
     if(model != nullptr) this->model = model;
     exitCode = SETTINGS::SAT;
     // debug_old("exit code: ", exitCode);
-    debug(DEBUG, "exit code: ", exitCode);
+    LOG(fiore::LogLevel::DEBUG, "exit code: ", exitCode);
 }
 
 void AnswerSet::setOptimum(bool proved){
@@ -749,13 +749,13 @@ void weights_names_log(const std::string& ID, const std::unordered_map<std::stri
     nlohmann::json json_weights = weights_names; // Convert weights_names to JSON
     std::ostringstream oss;
     oss << "id: " << ID << " total_weight_names: " << json_weights.dump();
-    debugf(oss.str());
+    LOG(fiore::LogLevel::ALWAYS, oss.str());
     
 }
 #endif
 
 
-void create_reason_falses_ge(AmoSumPropagator* propagator, cmn::PerfectNHash<clingo_literal_t, int> &sum_removed_weights, clingo_literal_t flipped = SETTINGS::NONE) {
+void create_reason_falses_ge(AmoSumPropagator* propagator, fiore::PerfectNHash<clingo_literal_t, int> &sum_removed_weights, clingo_literal_t flipped = SETTINGS::NONE) {
 
     if(propagator->dl == 0) return ;
 
@@ -983,7 +983,7 @@ void create_reason_falses_ge(AmoSumPropagator* propagator, cmn::PerfectNHash<cli
 
 // }
 
-void create_reason_true_ge(AmoSumPropagator* propagator, clingo_literal_t sml_g, clingo_literal_t derived, Group* g, cmn::PerfectNHash<clingo_literal_t, int> &sum_removed_weights){
+void create_reason_true_ge(AmoSumPropagator* propagator, clingo_literal_t sml_g, clingo_literal_t derived, Group* g, fiore::PerfectNHash<clingo_literal_t, int> &sum_removed_weights){
     if(propagator->dl == 0) return ;
     bool minimizationOnTheFly = propagator->minimization == Minimize::MINIMAL_ON_THE_FLY;
     bool minimizationIJCAI = propagator->minimization == Minimize::IJCAI;
@@ -1186,14 +1186,14 @@ void raise_wasp_not_implemented_exception(){
 
 
 void print_derivation(const std::unordered_map<clingo_symbol_t, clingo_literal_t>* atomNames, const std::vector<clingo_literal_t>& S){
-    debug(DEBUG, vector_lit_to_string(atomNames, S, "Derived"));
+    LOG(fiore::LogLevel::DEBUG, vector_lit_to_string(atomNames, S, "Derived"));
 }
 
 
 
 void print_reason(const std::unordered_map<clingo_symbol_t, clingo_literal_t>* atomNames, const std::vector<clingo_literal_t>& R, clingo_literal_t lit){
     std::string reason_name = "Reason("+std::to_string(lit)+") ";
-    debug(DEBUG, vector_lit_to_string(atomNames, R, reason_name));
+    LOG(fiore::LogLevel::DEBUG, vector_lit_to_string(atomNames, R, reason_name));
     // debug_old(vector_lit_to_string(atomNames, R, reason_name));
 }
 
@@ -1208,7 +1208,7 @@ void print_reduction_reason(const AmoSumPropagator& propagator,
     std::string redundant_lits_str = "from " + std::to_string(reason_c.size()) + " to " + std::to_string(reason.size()) +
         " with p: " + std::to_string(p) + "%";
 
-    debug(DEBUG, redundant_lits_str);
+    LOG(fiore::LogLevel::DEBUG, redundant_lits_str);
     // debugf_old(redundant_lits_str);
 }
 
@@ -1222,7 +1222,7 @@ void display_end_timer(const std::chrono::time_point<std::chrono::high_resolutio
     auto end = std::chrono::high_resolution_clock::now(); 
     std::chrono::duration<double> elapsed = (end - start);
     // debugf_old(name," time: ", elapsed.count(), "s");
-    debug(INFO, name," time: ", elapsed.count(), "s");
+    LOG(fiore::LogLevel::INFO, name," time: ", elapsed.count(), "s");
 }
 
 
@@ -1258,7 +1258,7 @@ void print_propagate(PropagatorClingo* prop, const clingo_literal_t *changes, si
         decision_literal_name = "aux";
 
 
-    debug(INFO, "[", decision_literal_name,", ",dl,"] propagate ", changes_str, " mps: ", prop->propagators[td]->mps(), " bound: ",prop->propagators[td]->bound," td: ", td, " id: ", prop->propagators[td]->ID);
+    LOG(fiore::LogLevel::INFO, "[", decision_literal_name,", ",dl,"] propagate ", changes_str, " mps: ", prop->propagators[td]->mps(), " bound: ",prop->propagators[td]->bound," td: ", td, " id: ", prop->propagators[td]->ID);
 }
 
 void print_undo(PropagatorClingo* prop, const clingo_literal_t *changes, size_t size, clingo_propagate_control_t *control, int dl, int td, bool wasp_b){
@@ -1266,7 +1266,7 @@ void print_undo(PropagatorClingo* prop, const clingo_literal_t *changes, size_t 
     if (wasp_b)  raise_wasp_not_implemented_exception() ;
     else  changes_str = prop->compute_changes_str(changes, size, td) ;
 
-    debug(INFO, "id: ", prop->propagators[td]->ID, " dl: ",dl," undo ", changes_str," thread_id: ", td, " mps: ", prop->propagators[td]->mps());
+    LOG(fiore::LogLevel::INFO, "id: ", prop->propagators[td]->ID, " dl: ",dl," undo ", changes_str," thread_id: ", td, " mps: ", prop->propagators[td]->mps());
 }
 
 clingo_literal_t max_w(const Group* g) {
@@ -1278,10 +1278,10 @@ clingo_literal_t max_w(const Group* g) {
         // debug_old("Error accessing g.ord_l with max_und. Debug info:");
         // debug_old(vector_to_string(g->ord_l,"g.ord_l: "));
         // debug_old("max_und: " + std::to_string(g->max_und));
-        debug(DEBUG, "Error accessing g.ord_l with max_und. Debug info:");
-        debug(DEBUG, vector_to_string(g->ord_l,"g.ord_l: "));
-        debug(DEBUG, "max_und: " + std::to_string(g->max_und_i));
-        cmn::setExitCode(CONSTANTS::ERROR_CODE, true);
+        LOG(fiore::LogLevel::DEBUG, "Error accessing g.ord_l with max_und. Debug info:");
+        LOG(fiore::LogLevel::DEBUG, vector_to_string(g->ord_l,"g.ord_l: "));
+        LOG(fiore::LogLevel::DEBUG, "max_und: " + std::to_string(g->max_und_i));
+        fiore::setExitCode(fiore::CONSTANTS::ERROR_CODE, true);
     }
     return 0;
 }

@@ -4,7 +4,7 @@
 #include "utility.h"
 #include <vector>
 #include <memory>
-#include "logger.h"
+#include "fiore/utils/logger.h"
 #include <unordered_set>
 using vector_lit_ptr = std::vector<clingo_literal_t>* ;
 
@@ -34,8 +34,8 @@ struct AmoSumPropagator
     // A function from literals -> groups
     std::unique_ptr<TrueGroupFunction> true_group ;
 
-    std::unique_ptr<cmn::PerfectNHash<clingo_literal_t, int>> sum_removed_weights;
-    std::unique_ptr<cmn::PerfectNHash<clingo_literal_t, int>> mpsHDuringPropagation;
+    std::unique_ptr<fiore::PerfectNHash<clingo_literal_t, int>> sum_removed_weights;
+    std::unique_ptr<fiore::PerfectNHash<clingo_literal_t, int>> mpsHDuringPropagation;
 
     // A list of group
     std::vector<Group*> groups ;
@@ -138,7 +138,7 @@ struct AmoSumPropagator
           constraint(std::move(choice_cons)),
           solver(std::move(solver)),
           maximizer(maximizer),
-          dynamicMPC(this->params["static_mpc"] == CONSTANTS::FALSE_STR && this->params["lazy"] != CONSTANTS::TRUE_STR)
+          dynamicMPC(this->params["static_mpc"] == SETTINGS::FALSE_STR && this->params["lazy"] != SETTINGS::TRUE_STR)
           {}
 
     ~AmoSumPropagator(){
