@@ -5,7 +5,7 @@ import re
 import sys
 import os
 import ast
-from  amosum.utility import *
+from amosum.utility import *
 from amosum.preprocess import *
 from amosum.amosum_parser.__main__ import run as run_rewriter
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))

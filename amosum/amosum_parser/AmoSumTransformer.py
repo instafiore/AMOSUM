@@ -1,13 +1,16 @@
-from amosum_parser.utils import debug
-from amosum_parser import AspFactory
 import sys
 from typing import List
 from lark import Lark, Transformer, Tree, Token, Visitor
-from amosum_parser.ValidatorAmoSum import ValidatorAmoSum
-from amosum_parser.AmoSumGrammar import *
-from amosum_parser.utils import *
-from amosum_parser.AspFactory import AspFactory
-from settings import *
+from amosum.amosum_parser.utils import debug
+from amosum.amosum_parser import AspFactory
+from amosum.amosum_parser.ValidatorAmoSum import ValidatorAmoSum
+from amosum.amosum_parser.AmoSumGrammar import *
+from amosum.amosum_parser.utils import *
+from amosum.amosum_parser.AspFactory import AspFactory
+from amosum.settings import *
+
+# auxiliary atom standing for an aggregate element: true iff the condition of some element with that terms tuple is true
+PREDICATE_ELEMENT = "__element__"
 
 class AmoSumTransformer(Transformer):
 
@@ -16,6 +19,23 @@ class AmoSumTransformer(Transformer):
     def __init__(self, visit_tokens = True):
         super().__init__(visit_tokens=visit_tokens)
         self.aggregate_id_autoincrement = 0
+
+
+    def element_rules(self, aggregate_id, terms, element_body):
+        '''
+        returns: (element_literal, [element_rule, element_constraint])
+        element_literal is identified by (aggregate_id, terms tuple), so that elements with the same tuple are counted once (ASP set semantics).
+        The choice + constraint keeps element_literal equivalent to the condition without letting clasp merge it with the condition literal.
+        '''
+        element_literal = AspFactory.create_classical_literal(PREDICATE_ELEMENT, aggregate_id, AspFactory.create_tuple_terms(terms))
+        not_element_literal = Tree(Token("RULE", "naf_literal"), [Token("NAF", "not"), element_literal])
+
+        element_rule = AspFactory.create_rule(head=AspFactory.create_head_choice(element_literal), body=concatenate_nodes(*element_body) if element_body else None)
+        element_constraint = AspFactory.create_rule(head=None, body=concatenate_nodes(*element_body, not_element_literal))
+        debug(f"element_rule: {toString(element_rule)}")
+        debug(f"element_constraint: {toString(element_constraint)}")
+
+        return element_literal, [element_rule, element_constraint]
 
 
     def amosum_statement(self, children: List[Tree | Token]) -> List[Tree | Token]:
@@ -50,17 +70,18 @@ class AmoSumTransformer(Transformer):
             aggregate_id = AspFactory.create_tuple_terms(aggregate_id_autoincerment_term, body_without_builtin_atoms)
             debug(f"aggregate_id: {toString(aggregate_id)}")
 
-            naf_literals = amosum_aggregate_element.children[2]
-            classical_literal_amosum = pick_n_subtree(naf_literals, data="naf_literal", n=1)
-            assert ValidatorAmoSum.checkNode(classical_literal_amosum.children[0], valid_values = ["classical_literal"])
-            group_classical_literal = AspFactory.create_classical_literal(PREDICATE_GROUP, classical_literal_amosum, AspFactory.create_terminal_term("STRING", '"+"'), term_weight, group_id, aggregate_id)
+            # None for the elements without condition (terms [G] and terms : [G])
+            naf_literals = pick_n_subtree(amosum_aggregate_element, "naf_literals", 1)
+            element_body = [n for n in (naf_literals, body) if n is not None]
+
+            element_literal, element_rules = self.element_rules(aggregate_id, terms, element_body)
+            result += element_rules
+
+            group_classical_literal = AspFactory.create_classical_literal(PREDICATE_GROUP, element_literal, AspFactory.create_terminal_term("STRING", '"+"'), term_weight, group_id, aggregate_id)
             debug(f"group_literal_classical_literal: {group_classical_literal}")
 
-            
-            
             head_choice_group = AspFactory.create_head_choice(group_classical_literal)
-            body_choice = concatenate_nodes(naf_literals, body)
-            choice_group = AspFactory.create_rule(head=head_choice_group, body=body_choice)
+            choice_group = AspFactory.create_rule(head=head_choice_group, body=concatenate_nodes(*element_body) if element_body else None)
             debug(f"choice_group: {choice_group}")
             result.append(choice_group)
             
@@ -135,20 +156,21 @@ class AmoSumTransformer(Transformer):
             aggregate_id = AspFactory.create_tuple_terms(aggregate_id_autoincerment_term, body_without_builtin_atoms)
             debug(f"aggregate_id: {aggregate_id}")
 
-            
-            # TODO: support negated literals
-            naf_literals = amosum_aggregate_element.children[2]
-            classical_literal_amosum = pick_n_subtree(naf_literals, data="naf_literal", n=1)
-            assert ValidatorAmoSum.checkNode(classical_literal_amosum.children[0], valid_values = ["classical_literal"])
-            group_classical_literal = AspFactory.create_classical_literal(PREDICATE_GROUP, classical_literal_amosum, AspFactory.create_terminal_term("STRING", '"+"'), term_weight, group_id, aggregate_id)
+            # None for the elements without condition (terms [G] and terms : [G])
+            naf_literals = pick_n_subtree(amosum_aggregate_element, "naf_literals", 1)
+            element_body = [naf_literals] if naf_literals is not None else []
+            # element_body = [n for n in (naf_literals, body) if n is not None]
+
+            element_literal, element_rules = self.element_rules(aggregate_id, terms, element_body)
+            result += element_rules
+
+            group_classical_literal = AspFactory.create_classical_literal(PREDICATE_GROUP, element_literal, AspFactory.create_terminal_term("STRING", '"+"'), term_weight, group_id, aggregate_id)
             debug(f"group_literal_classical_literal: {group_classical_literal}")
 
             
             
             head_choice_group = AspFactory.create_head_choice(group_classical_literal)
-            body_choice = concatenate_nodes(naf_literals)
-            # body_choice = concatenate_nodes(naf_literals,body)
-            choice_group = AspFactory.create_rule(head=head_choice_group, body=body_choice)
+            choice_group = AspFactory.create_rule(head=head_choice_group, body=concatenate_nodes(*element_body) if element_body else None)
             debug(f"choice_group: {choice_group}")
 
             
@@ -219,7 +241,3 @@ class DiscardBuiltInAtoms(Transformer):
         if not ValidatorAmoSum.isABuiltInAtom(children[0]):
             return children
         return Discard
-    
-
-        
-

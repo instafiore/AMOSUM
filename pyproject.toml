@@ -35,3 +35,7 @@ amoclingo-debug = "amosum.amoclingo.__main__:run"
 
 amowasp = "amosum.amowasp.__main__:optimized_run"
 amowasp-debug = "amosum.amowasp.__main__:run"
+
+
+amosumparser = "amosum.amosum_parser.__main__:optimized_run"
+amosumparser-debug = "amosum.amosum_parser.__main__:main"

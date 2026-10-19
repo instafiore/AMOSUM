@@ -6,9 +6,8 @@ from lark import *
 # DEBUGGING VARIABLE
 DEBUG = False
 
-def debug(*message: str, end ="\n", force_print = False, file = sys.stderr):
-    if force_print or DEBUG:
-        print(message, end=end, file=file)
+def debug(*message: str, end ="\n", file = sys.stderr):
+    if __debug__: print("\t".join(message), end=end, file=file)
 
 def is_leaf(node) -> bool:
         return isinstance(node, Token)
