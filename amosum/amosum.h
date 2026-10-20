@@ -4,9 +4,48 @@
 #include "utility.h"
 #include <vector>
 #include <memory>
-#include "fiore/utils/logger.h"
+#include "fiore/utils/logger.h" 
+#include "fiore/model/program.h" 
 #include <unordered_set>
 using vector_lit_ptr = std::vector<clingo_literal_t>* ;
+
+
+struct AmosumConstraint: public fiore::PBConstraint{
+    std::string id;                                     // aggregate id: last argument of __group__
+    std::string type;                                   // ge_amo, ge_eo, le_amo, le_eo, amomaximize (from __aux__)
+    bool ge;                                            // __lb__ (>=) or __ub__ (<=)
+    std::vector<Group*> groups;
+    std::unique_ptr<fiore::PerfectNHash<clingo_literal_t, size_t>> groupFunction; // literal -> index in groups
+    std::vector<clingo_literal_t> auxes;                // literals with sign "-" (already negated)
+    std::vector<clingo_literal_t> groupsAtoms;          // the __group__ atoms themselves
+
+    AmosumConstraint(const fiore::Program* program, int64_t bound, fiore::Vector<const fiore::Literal*>* literals, fiore::UMNWeightFunction* weightFunction) noexcept
+        : fiore::PBConstraint(program, bound, literals, weightFunction), ge(true), ownedLiterals(literals), ownedWeightFunction(weightFunction) {}
+
+    inline std::string toString() const noexcept override{ std::ostringstream out; out<<"AmosumConstraint("<<id<<", "<<type<<", "<<literals<<", "<<preprocessedSum<<", "<<bound<< ")"; return out.str();};
+
+    ~AmosumConstraint() override{ for(Group* g: groups) delete g; }
+
+private:
+    std::unique_ptr<fiore::Vector<const fiore::Literal*>> ownedLiterals;
+    std::unique_ptr<fiore::UMNWeightFunction> ownedWeightFunction;
+};
+
+class AmosumProgram: public fiore::Program{
+
+public:
+    struct AmosumGrounder: fiore::Program::ProgramGrounder{
+        fiore::Program* ground(const std::vector<std::string>& ASPInputs) override;
+    };
+};
+
+class AmosumProgram: public fiore::Program{
+
+public:
+    struct AmosumGrounder: fiore::Program::ProgramGrounder{
+        Program* ground(const std::vector<std::string>& ASPInputs) override;
+    };
+};
 
 struct AmoSumPropagator
 {
@@ -94,7 +133,7 @@ struct AmoSumPropagator
 
     // whether is inconsistent or not at level 0
     bool inconsistent_at_level_0 ;
-    std::vector<clingo_literal_t> groups_literals ;
+    std::vector<clingo_literal_t> groups_literals;
 
     clingo_propagate_control_t *control = nullptr;
     // inverse of map_slit_plit

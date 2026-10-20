@@ -33,12 +33,12 @@ std::ostream& operator<<(std::ostream& o, const Rule& rule){ return o<<rule.toSt
 std::ostream& operator<<(std::ostream& o, const Rule* rule){ return o<<*rule; }
 
 
-PBConstraint::PBConstraint(const Program* program, const int64_t upperBound, Vector<const Literal*>* softLiterals, UMNWeightFunction*  weightFunction)noexcept:
-    program(program), upperBound(upperBound),
+PBConstraint::PBConstraint(const Program* program, const int64_t upperBound, Vector<const Literal*>* literals, UMNWeightFunction*  weightFunction)noexcept:
+    program(program), bound(upperBound),
     weightFunction(weightFunction == nullptr ? program->weightFunction.get() : weightFunction), 
-    softLiterals(softLiterals == nullptr ? program->softLiterals.get() : softLiterals){
-    // this->softLiterals->sort([](const Literal* a, const Literal* b){ return a->id < b->id; });
-    preprocessedCost = softLiterals != nullptr || weightFunction != nullptr ? Program::preprocessCost(*this->softLiterals, *this->weightFunction, program->mapLiteralId2Literal.get()) : program->preprocessedCost;
+    literals(literals == nullptr ? program->softLiterals.get() : literals){
+
+    preprocessedSum = literals != nullptr || weightFunction != nullptr ? Program::preprocessCost(*this->literals, *this->weightFunction, program->mapLiteralId2Literal.get()) : program->preprocessedCost;
     #ifdef __debug__
         LOG(LogLevel::DEBUG_1, "Created ",this," - PBConstraint::init");
     #endif
@@ -68,9 +68,9 @@ Literal* Program::freshLiteral() noexcept{
 }
 
 
-PBConstraint* Program::addPBConstraint(int64_t upperBound, 
-    Vector<const Literal*>*  &&softLiterals, UMNWeightFunction* weightFunction)noexcept{
-    PBConstraint* pbConstraint = new PBConstraint(this, upperBound, std::move(softLiterals), weightFunction);
+PBConstraint* Program::addPBConstraint(int64_t bound, 
+    Vector<const Literal*>*  &&literals, UMNWeightFunction* weightFunction)noexcept{
+    PBConstraint* pbConstraint = new PBConstraint(this, bound, std::move(literals), weightFunction);
     pBConstraints.emplace_back(pbConstraint);
     return pbConstraint;
 }
@@ -237,7 +237,7 @@ void Program::ProgramGrounder::addArgControl(std::string key, std::string value)
 
 Program::ProgramGrounder::ProgramGrounder(): program(new Program()), first(true){}
 
-Program* Program::ProgramGrounder::ground(std::vector<std::string> ASPInputs){
+Program* Program::ProgramGrounder::ground(const std::vector<std::string>& ASPInputs){
     if(!first) throw Args::BaseException("Grounder already used, pleace create another one");
     
 

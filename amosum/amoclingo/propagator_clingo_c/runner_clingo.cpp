@@ -90,6 +90,9 @@ int main(int argc, char const *argv[])
     std::string encoding = cat(encoding_path);
     std::string instance = cat(instance_path);
 
+    AmosumProgram::AmosumGrounder grounder;
+    grounder.ground({encoding_path, instance_path});
+
     ParameterMap::iterator it_amosum = params.find("amosum_propagators");
 
     std::vector<std::string> sys_parameters;

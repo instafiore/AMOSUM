@@ -105,23 +105,23 @@ public:
 
 class Group {
 public:
-    static int autoincrement;  // Static counter for automatic ID assignment
+    static size_t autoincrement;  // Static counter for automatic ID assignment
 
     // Member variables
-    int N;                         // Number of literals
-    int count_undef;               // Number of undefined literals
-    std::vector<int> ord_l;        // Ordered literals by weight
-    std::vector<int> ord_l_origin; // Original order of literals
-    std::unordered_map<int, int> ord_i;      // Inverse map for ord_l (literal -> index in ord_l)
-    int max_und_i;                   // Index of the maximum undefined literal in ord_l
-    int min_und_i;                   // Index of the minimum undefined literal in ord_l
-    std::vector<int> falses_facts; // All false fact literals of the group
+    size_t N;                         // Number of literals
+    size_t count_undef;               // Number of undefined literals
+    std::vector<clingo_literal_t> ord_l;        // Ordered literals by weight
+    std::vector<clingo_literal_t> ord_l_origin; // Original order of literals
+    std::unordered_map<clingo_literal_t, size_t> ord_i;      // Inverse map for ord_l (literal -> index in ord_l)
+    size_t max_und_i;                   // Index of the maximum undefined literal in ord_l
+    size_t min_und_i;                   // Index of the minimum undefined literal in ord_l
+    std::vector<clingo_literal_t> falses_facts; // All false fact literals of the group
     std::string id;                        // Group ID
-    int id_autoinc;                // Auto-incremented ID for the group
+    size_t id_autoinc;                // Auto-incremented ID for the group
 
     // Constructor
-    Group(std::vector<int> ord_l, std::unordered_map<int, int> ord_i, std::string id)
-        : ord_l(std::move(ord_l)), ord_i(std::move(ord_i)), id(id), id_autoinc(autoincrement++) {
+    Group(std::vector<int>&& ord_l, std::unordered_map<clingo_literal_t, size_t>&& ord_i, std::string id)
+        : ord_l(std::move(ord_l)), ord_i(std::move(ord_i)), id(std::move(id)), id_autoinc(autoincrement++) {
         N = this->ord_l.size();
         count_undef = N;
         ord_l_origin = this->ord_l;  // Copy original order
@@ -131,20 +131,15 @@ public:
 
     // Methods for increasing and decreasing undefined literals count
     void increase_und() { count_undef++; }
-    void decrease_und() { count_undef--; }
+    void decrease_und() { assert(count_undef > 0); count_undef--; }
 
     // Methods for handling false literals
     void add_false_lit(int lit) { falses_facts.push_back(lit); }
-    void remove_false_lit(int lit) { 
-        falses_facts.erase(std::remove(falses_facts.begin(), falses_facts.end(), lit), falses_facts.end());
-    }
+    void remove_false_lit(int lit) noexcept {  falses_facts.erase(std::remove(falses_facts.begin(), falses_facts.end(), lit), falses_facts.end()); }
 
     // Setting max and min undefined literals
-    void set_max(int l) { 
-        max_und_i = (l != SETTINGS::NONE) ? ord_i[l] : SETTINGS::NONE; }
-    void set_min(int l) { 
-        min_und_i = (l != SETTINGS::NONE) ? ord_i[l] : SETTINGS::NONE; }
-
+    void set_max(int l) { max_und_i = (l != SETTINGS::NONE) ? ord_i[l] : SETTINGS::NONE; }
+    void set_min(int l) { min_und_i = (l != SETTINGS::NONE) ? ord_i[l] : SETTINGS::NONE; }
     size_t pc(const bool& ge, const std::string& constraint, const WeightFunction* w) noexcept;
     
     void set_max_min(int l, bool max) {
@@ -154,9 +149,6 @@ public:
 
     inline clingo_literal_t max_und() noexcept { return max_und_i == SETTINGS::NONE ? SETTINGS::NONE : this->ord_l[max_und_i]; }
     inline clingo_literal_t min_und() noexcept { return min_und_i == SETTINGS::NONE ? SETTINGS::NONE : this->ord_l[min_und_i]; }
-
-    // Getting the most undefined literal
-    int get_most_undefined(bool max);
 
     // Update max or min undefined literal based on some condition
     // std::pair<clingo_literal_t, clingo_literal_t> update_max(const std::unique_ptr<InterpretationFunction>& I, bool all, bool update, const clingo_literal_t& assuming_und);
@@ -222,13 +214,13 @@ public:
 
     // Overriding the setter to use group ID as the key
     void setTrueLiteral(const Group* key, const clingo_literal_t &value) {
-        int autoincrement = key->id_autoinc;
+        size_t autoincrement = key->id_autoinc;
         this->values[autoincrement] = value ;
     }
 
     // Overriding the getter to use group ID as the key
     clingo_literal_t getTrueLiteral(const Group* group) const {
-        int autoincrement = group->id_autoinc;
+        size_t autoincrement = group->id_autoinc;
         return this->values[autoincrement];
     }
 

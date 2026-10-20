@@ -29,19 +29,15 @@ struct WeightRule: public Rule{
 struct PBConstraint{
 
     const Program* program;
-    int64_t upperBound;
+    int64_t bound;
     UMNWeightFunction*  weightFunction;
-    Vector<const Literal*>* softLiterals;
-    int64_t preprocessedCost;
+    Vector<const Literal*>* literals;
+    int64_t preprocessedSum;
 
-    PBConstraint(const Program* program, const int64_t upperBound = CONSTANTS::INFPlus64, Vector<const Literal*>* softLiterals = nullptr, UMNWeightFunction*  weightFunction = nullptr) noexcept;
+    PBConstraint(const Program* program, const int64_t bound = 0, Vector<const Literal*>* literals = nullptr, UMNWeightFunction*  weightFunction = nullptr) noexcept;
     
-    inline void updateUpperBound(const int64_t& upperBound)noexcept{ this->upperBound = upperBound; }
-    // inline void disableLastCall()noexcept{ for(Subscriber*& p: propagators) p->update({{CONSTANTS::EVENT, Event::disableLastCall}}); }
-    // inline void fixPb()noexcept{ for(Subscriber*& p: propagators) p->update({{CONSTANTS::EVENT, Event::fixPb}}); }
-    // inline void disableLastCallAndFixPb()noexcept{ for(Subscriber*& p: propagators) p->update({{CONSTANTS::EVENT, Event::disableLastCallAndFixPb}}); }
-    // inline void subscribe(Subscriber* subscriber) noexcept{this->propagators.push_back(subscriber);}
-    inline std::string toString() const noexcept{ std::ostringstream out; out<<"PBConstraint("<<softLiterals<<", "<<preprocessedCost<<", "<<upperBound<< ")"; return out.str();};
+    inline void updateBound(const int64_t& bound)noexcept{ this->bound = bound; }
+    inline virtual std::string toString() const noexcept{ std::ostringstream out; out<<"PBConstraint("<<literals<<", "<<preprocessedSum<<", "<<bound<< ")"; return out.str();};
 
    virtual ~PBConstraint() = default;
 } ;
@@ -56,7 +52,6 @@ struct Program{
     std::vector<std::unique_ptr<Rule>> rules;
     std::unique_ptr<MapLiteralId2Literal> mapLiteralId2Literal;
     std::unique_ptr<UMNWeightFunction> weightFunction;
-    // std::unique_ptr<UMNVector<const Literal*>> literals;
     std::unique_ptr<Vector<const Literal*>> softLiterals;
     std::unique_ptr<Vector<const Literal*>> restLiterals;
     std::unordered_map<std::string, const Literal*> mapLiteralName2Literal;
@@ -79,7 +74,7 @@ struct Program{
     int64_t preprocessedCost;
     void addRule(Rule* &&rule, bool adding2Backend = false) noexcept;
     Literal* freshLiteral() noexcept;
-    PBConstraint* addPBConstraint(int64_t upperBound = CONSTANTS::INFPlus64, Vector<const Literal*>* &&softLiterals = nullptr, UMNWeightFunction* weightFunction = nullptr)noexcept;
+    PBConstraint* addPBConstraint(int64_t bound = 0, Vector<const Literal*>* &&literals = nullptr, UMNWeightFunction* weightFunction = nullptr)noexcept;
     std::string literalIdsToString(const std::vector<clingo_literal_t> literalIds) noexcept;
     inline const int64_t& weight(const clingo_literal_t& literalId) const {return weightFunction->at(literalId);}
     inline std::string weightsToString(bool useLiteralIds = false) noexcept{ return weightFunction->toString(!useLiteralIds ? mapLiteralId2Literal.get() : nullptr); }
@@ -97,7 +92,7 @@ struct Program{
 
     friend ClingoSolver;
     void setPolaritiesLocalSearch(const Assignment* ass = nullptr, size_t priority = CONSTANTS::INFPlus32, Vector<const Literal *>* literals = nullptr) noexcept;
-private:
+protected:
     size_t priorityPolarity;
     struct ProgramGrounder{
 
@@ -207,7 +202,7 @@ private:
             g->program->isOptimizationProblem = size > 0;
             return true;
         }
-        Program* ground(std::vector<std::string> ASPInputs);
+        virtual Program* ground(const std::vector<std::string>& ASPInputs);
         
     private: 
         Program* program;

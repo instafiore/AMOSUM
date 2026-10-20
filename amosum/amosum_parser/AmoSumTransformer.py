@@ -30,12 +30,12 @@ class AmoSumTransformer(Transformer):
         element_literal = AspFactory.create_classical_literal(PREDICATE_ELEMENT, aggregate_id, AspFactory.create_tuple_terms(terms))
         not_element_literal = Tree(Token("RULE", "naf_literal"), [Token("NAF", "not"), element_literal])
 
-        element_rule = AspFactory.create_rule(head=AspFactory.create_head_choice(element_literal), body=concatenate_nodes(*element_body) if element_body else None)
-        element_constraint = AspFactory.create_rule(head=None, body=concatenate_nodes(*element_body, not_element_literal))
+        element_rule = AspFactory.create_rule(head=element_literal, body=concatenate_nodes(*element_body) if element_body else None)
+        # element_constraint = AspFactory.create_rule(head=None, body=concatenate_nodes(*element_body, not_element_literal))
         debug(f"element_rule: {toString(element_rule)}")
-        debug(f"element_constraint: {toString(element_constraint)}")
+        # debug(f"element_constraint: {toString(element_constraint)}")
 
-        return element_literal, [element_rule, element_constraint]
+        return element_literal, [element_rule]
 
 
     def amosum_statement(self, children: List[Tree | Token]) -> List[Tree | Token]:

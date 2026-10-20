@@ -13,10 +13,10 @@ amowasp = $(SRC_DIR)/amowasp/propagator_wasp_c
 SRCS = $(shell find $(SRC_DIR) -name '*.$(C)')
 OBJS = $(addprefix $(BUILD_DIR)/, $(notdir $(SRCS:.$(C)=.o)))
 
-# fiore (repository root): the generic utilities (logger, ...), compiled from source into build/fiore/
+# fiore (repository root): utilities, Clingo helpers and the model (Program, ...), compiled from source into build/fiore/
 include ../../../fiore/fiore.mk
 CFLAGS += $(FIORE_CPPFLAGS)
-FIORE_OBJS = $(patsubst $(FIORE_DIR)/%.$(C),$(BUILD_DIR)/fiore/%.o,$(FIORE_UTILS_SRCS))
+FIORE_OBJS = $(patsubst $(FIORE_DIR)/%.$(C),$(BUILD_DIR)/fiore/%.o,$(FIORE_SRCS))
 
 all: $(TARGET)
 
@@ -25,8 +25,10 @@ print-CC:
 
 BUILD_MODE ?= release
 ifeq ($(BUILD_MODE), test)
-    EXTRA_CFLAGS  = -fsanitize=address -g -O0
-    EXTRA_LDFLAGS = -fsanitize=address
+#     EXTRA_CFLAGS  = -fsanitize=address -g -O0
+#     EXTRA_LDFLAGS = -fsanitize=address
+	EXTRA_CFLAGS  = -g -O0
+    EXTRA_LDFLAGS = 
 else ifeq ($(BUILD_MODE), pprof)
     EXTRA_CFLAGS  = -O2 -g -DNDEBUG
     EXTRA_LDFLAGS = -lprofiler -ltcmalloc

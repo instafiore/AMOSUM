@@ -33,9 +33,9 @@ struct PropagatorPBConstraint: public ClingoPropagator{
     bool addClausesPropagatedLitIds(const clingo_propagate_control_t *control, const std::vector<clingo_literal_t>& propagatedLiteralIds) noexcept;
     bool addClause(const clingo_propagate_control_t *control, const std::vector<clingo_literal_t>& clause) noexcept;
      
-    inline bool isEnabled() const noexcept override{ return ClingoPropagator::isEnabled() && pbConstraint->upperBound != CONSTANTS::INFPlus64; }
+    inline bool isEnabled() const noexcept override{ return ClingoPropagator::isEnabled() && pbConstraint->bound != CONSTANTS::INFPlus64; }
 
-    inline const Vector<const Literal*>& programLiterals() override {return *pbConstraint->softLiterals;}
+    inline const Vector<const Literal*>& programLiterals() override {return *pbConstraint->literals;}
     virtual ~PropagatorPBConstraint();
     PBConstraint* pbConstraint;
     std::unique_ptr<PerfectWeightFunction> weightSolvingLiterals;

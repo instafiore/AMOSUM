@@ -6,38 +6,6 @@
 
 namespace fiore {
 
-class LowerBound{
-protected:
-    int64_t value;
-
-public:
-    LowerBound(): value(CONSTANTS::INFMinus64){}
-    inline void increase(const int64_t& x) noexcept{ if(value != CONSTANTS::INFMinus64) value += x; else value = x; }
-    inline void decrease(const int64_t& x) noexcept{ if(value != CONSTANTS::INFMinus64) value -= x; }
-    inline void set(const int64_t& x) noexcept{ value = x; }
-    inline int64_t getValue() noexcept { return value; };
-};
-
-class LowerBoundOBV: public LowerBound{
-
-protected:
-    // std::unordered_map<size_t, int64_t> progression;
-    std::unique_ptr<PerfectHash<size_t, int64_t>> progression;
-    size_t progressionSize;
-
-public:
-    LowerBoundOBV(): LowerBound(), progressionSize(0){}
-    inline int64_t get(const size_t& i) const noexcept { return progression->get(i); }
-    inline int64_t get() const noexcept { return progression->get(progressionSize); }
-    inline void updateProgression(const size_t& i, const int64_t x) noexcept { if(i >= progressionSize) progressionSize = i+1;  progression->set(i, x); }
-    size_t getShufflingPoint() const noexcept;
-    size_t getMaxIncreasePoint() const noexcept;
-    size_t getShufflingPointBasedOnPercentage(const float& p = 0.7) const noexcept;
-    void setMaxValueAssumptionIndex(const size_t& maxValueIndex) noexcept;
-    inline size_t getMaxValueAssumptionIndex() const noexcept { return progressionSize; }
-    void clearProgressionFromK(const size_t k = 0) noexcept;
-};
-
 class Core;
 std::ostream& operator<<(std::ostream& out, const Core& core);
 

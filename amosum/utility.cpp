@@ -21,7 +21,7 @@
 #include "amoclingo/propagator_clingo_c/optimizer_clingo.h"
 
 using ParameterMap = std::unordered_map<std::string, std::string>;
-int Group::autoincrement = 0;
+size_t Group::autoincrement = 0;
 
 // Function to get the name
 std::string get_name(const std::unordered_map<clingo_symbol_t, clingo_literal_t>* atomNames, clingo_literal_t lit) {
@@ -1378,13 +1378,13 @@ std::pair<clingo_literal_t, clingo_literal_t> Group::update_min(
 
         clingo_literal_t prev_min = (((size_t)min_und_i) < ord_l.size()) ? ord_l[min_und_i] : SETTINGS::NONE;
 
-        int start = all ? 0 : (min_und_i != SETTINGS::NONE ? (min_und_i + 1) : N);
+        size_t start = all ? 0 : (min_und_i != SETTINGS::NONE ? (min_und_i + 1) : N);
         if (start >= N) {
             if (update) min_und_i = SETTINGS::NONE;
             return {SETTINGS::NONE, prev_min};
         }
 
-        for (int i = start; i < N; ++i) {
+        for (size_t i = start; i < N; ++i) {
             clingo_literal_t l = ord_l[i];
             // if (I->get(l) == SETTINGS::NONE || equals(l, assuming_und)) {
             if (I->isUndef(l) || equals(l, assuming_und)) {
@@ -1475,7 +1475,7 @@ void simplifyLiterals(
         aggregate->set(l,false);
         aggregate->set(not_(l),false);
 
-        assert(G->count_undef >= 0);
+        
     }
 }
 

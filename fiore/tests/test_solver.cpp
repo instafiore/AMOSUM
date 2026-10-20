@@ -45,10 +45,10 @@ static int64_t lsu(ClingoSolver& solver, bool& optimization){
         if(!r.second.isSat()) break;
         const int64_t cost = r.first->cost();
         AnswersetsPool::getInstance()->deleteAnswerset(r.first);
-        if(cost > pb->upperBound){ std::printf("FAIL cost %lld above the bound %lld\n", (long long)cost, (long long)pb->upperBound); ++failures; break; }
+        if(cost > pb->bound){ std::printf("FAIL cost %lld above the bound %lld\n", (long long)cost, (long long)pb->bound); ++failures; break; }
         best = optimization ? cost : 0;
         if(!optimization) break;
-        pb->updateUpperBound(cost - 1);   // ask for a strictly better answer set
+        pb->updateBound(cost - 1);   // ask for a strictly better answer set
     }
     return best;
 }

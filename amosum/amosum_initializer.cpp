@@ -232,7 +232,7 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
                         return a.second < b.second || (a.second == b.second && a.first < b.first);
                 });
                 std::vector<clingo_literal_t> ord_l(lits_ord.size(), SETTINGS::NONE);
-                std::unordered_map<int, int> ord_i; 
+                std::unordered_map<clingo_literal_t, size_t> ord_i; 
 
                 for (size_t i = 0; i < lits_ord.size(); ++i) {
                         int l = lits_ord[i].first; 
@@ -240,26 +240,9 @@ const std::vector<clingo_literal_t> AmoSumInitializer::getLiterals(const std::ve
                         ord_i[l] = i;            
                 }
 
-                Group* G = new Group(ord_l,ord_i,group_id) ;
                 LOG(fiore::LogLevel::DEBUG, "group ", group_id, " ord_l: ", ord_l);
+                Group* G = new Group(std::move(ord_l),std::move(ord_i),group_id) ;
                 
-                // clingo_literal_t max_l = m_w(G, true) ;
-                // clingo_literal_t min_l = m_w(G, false) ;
-                // // clingo_literal_t ml = m_w(G, amosum_propagator->ge) ;
-                // int max_w = amosum_propagator->weight->get(max_l);
-                // int min_w = (!amosum_propagator->staticMPC && max_l != min_l) || (amosum_propagator->staticMPC && (amosum_propagator->lazy_prop_activated || !amosum_propagator->ge)) ? amosum_propagator->weight->get(min_l) : 0;
-                // // int min_w = amosum_propagator->lazy_prop_activated || !amosum_propagator->ge ? amosum_propagator->weight->get(m_w(G, !amosum_propagator->ge)) : 0 ;
-
-
-                // amosum_propagator->_mps = amosum_propagator->_mps + (amosum_propagator->ge ? max_w : amosum_propagator->weight->get(min_l));
-
-                // int diff = std::abs(max_w - min_w) ;
-                // bool is_aux = equals(generic_data_map[ID]->aux_lit, max_l);
-                // if ((mpc == nullptr || max_diff < diff) && !is_aux){  
-                //     max_diff = diff;
-                //     mpc = G;
-                // }
-
 
                 clingo_literal_t max_l = m_w(G, true) ;
                 clingo_literal_t min_l = m_w(G, false) ;

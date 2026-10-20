@@ -3,7 +3,7 @@
 #include "propagatorPBAbstraction.h"
 #include "propagator.h"
 #include "assigment.h"
-#include "bound.h"
+#include "core.h"
 
 
 namespace fiore {

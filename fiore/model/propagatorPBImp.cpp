@@ -4,7 +4,7 @@
 
 namespace fiore {
 
- PropagatorPBConstraintImplementation::PropagatorPBConstraintImplementation(PropagatorPBConstraint* abs): abs(abs), currentCost(abs->pbConstraint->preprocessedCost){}
+ PropagatorPBConstraintImplementation::PropagatorPBConstraintImplementation(PropagatorPBConstraint* abs): abs(abs), currentCost(abs->pbConstraint->preprocessedSum){}
 
 const std::vector<clingo_literal_t>& PropagatorPBConstraintImplementation::onLiteralsTrue(clingo_propagate_control_t *control, clingo_literal_t const *literalIds, size_t size, size_t dl)noexcept{
 

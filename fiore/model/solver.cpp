@@ -4,7 +4,7 @@
 #include "../utils/stats.h"
 #include "propagatorGetRest.h"
 #include "propagatorGetDerivedFromAss.h"
-#include "bound.h"
+#include "core.h"
 
 
 

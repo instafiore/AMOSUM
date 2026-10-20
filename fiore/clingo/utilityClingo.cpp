@@ -26,9 +26,9 @@ void clingoLogger(clingo_warning_t code, char const *message, void *data) {
 std::string from_symbol_to_string(clingo_symbol_t symbol) noexcept {
     size_t symbol_size;
     handleError(clingo_symbol_to_string_size(symbol, &symbol_size));
-    char symbol_str_c[symbol_size]; 
-    handleError(clingo_symbol_to_string(symbol, symbol_str_c, symbol_size));
-    std::string symbol_str = std::string(symbol_str_c);
+    std::string symbol_str(symbol_size, '\0');
+    handleError(clingo_symbol_to_string(symbol, symbol_str.data(), symbol_size));
+    symbol_str.resize(symbol_size > 0 ? symbol_size - 1 : 0); // drop the terminating '\0'
     return symbol_str ;
 }
 
@@ -76,14 +76,15 @@ bool printConfigurationClingo(const clingo_configuration_t *conf, clingo_id_t ke
     if (type & clingo_configuration_type_value) {
         
         // Configuration values are always returned as strings
-        size_t size;
-        clingo_configuration_value_get_size(conf, key, &size);
-        char value[size];
-        if (!clingo_configuration_value_get(conf, key, value, size)) { goto error; }
+                size_t size;
+        if (!clingo_configuration_value_get_size(conf, key, &size)) { goto error; }
+        std::string value(size, '\0');
+        if (!clingo_configuration_value_get(conf, key, value.data(), size)) { goto error; }
+        value.resize(size > 0 ? size - 1 : 0); // drop the terminating '\0'
         
         // Value might be NULL if the option has no default/current value
-        if (size > 0) {
-            LOG(LogLevel::INFO_1, indent(depth), "value ", std::string(value));
+        if (size > 1) {
+            LOG(LogLevel::INFO_1, indent(depth), "value ", value);
         } else {
             LOG(LogLevel::INFO_1, indent(depth), "value ", "(empty)");
         }

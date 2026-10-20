@@ -11,7 +11,7 @@ std::pair<bool, bool> PropagatorPBConstraintImplementationLe::updatePhase(clingo
     currentLevel = dl;
     const int64_t &incW = computeCost(literalIds, size, nullptr, true);
     currentCost += incW;
-    const int64_t &ub = abs->pbConstraint->upperBound;
+    const int64_t &ub = abs->pbConstraint->bound;
     #ifdef __debug__
         int64_t actualCostC = actualCost();
         assert(actualCostC == currentCost);
@@ -31,7 +31,7 @@ int64_t PropagatorPBConstraintImplementationLe::actualCost(){
 }
 
 std::vector<clingo_literal_t>& PropagatorPBConstraintImplementationLe::propagatePhase(clingo_propagate_control_t* control) noexcept{
-    const int64_t& ub = abs->pbConstraint->upperBound;
+    const int64_t& ub = abs->pbConstraint->bound;
 
     const clingo_assignment_t* assignment = clingo_propagate_control_assignment(control);
 
