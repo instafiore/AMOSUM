@@ -17,14 +17,26 @@ AmoclingoPropagator::AmoclingoPropagator(std::string name, fiore::ClingoSolver* 
     lazyActive(lazy != SETTINGS::FALSE_STR),
     lazyThreshold(lazy == SETTINGS::FALSE_STR || lazy == SETTINGS::LAZY_HYBRID),
     lazyPerc(lazy == SETTINGS::TRUE_STR ? 1.0 : (lazyThreshold ? 0.0 : std::stod(lazy))) {
-
+    this->check = &checkAmosum;
 }
 
 fiore::PropagatorPBConstraintImplementation* AmoclingoPropagator::createImplementation() noexcept { return new AmosumPropagator(this); }
 
+bool checkAmosum(clingo_propagate_control_t* control, fiore::ClingoPropagator* propagator){
+    AmoclingoPropagator* prop = static_cast<AmoclingoPropagator*>(propagator);
+    if(prop->implementations.empty()) return true;
+    // an update without changes: the bound against the whole assignment (a conflict if violated)
+    if(!fiore::propagateImplementation(control, nullptr, 0, propagator)) return false;
+    const size_t td = clingo_propagate_control_thread_id(control);
+    prop->lastTotalValue = static_cast<AmosumPropagator*>(prop->implementations[td])->currentValue();
+    return true;
+}
+
 void AmoclingoPropagator::initFirstTime(clingo_propagate_init* _init) noexcept{
     // not PropagatorPBConstraint::initFirstTime: it maps only the soft literals of the program and has no groups
     solver->initializer->init(_init, solver);
+    // checkAmosum on total assignments: the value of each model, and the bound once more
+    clingo_propagate_init_set_check_mode(_init, clingo_propagator_check_mode_total);
 
     auto solverLiteral = [_init](const clingo_literal_t plit){
         clingo_literal_t slit;

@@ -4,15 +4,27 @@
 #include "utility.h"
 #include <vector>
 #include <memory>
-#include "fiore/utils/logger.h" 
-#include "fiore/model/program.h" 
-#include "fiore/model/solver.h" 
+#include "fiore/utils/logger.h"
+#include "fiore/model/program.h"
+#include "fiore/model/solver.h"
 #include <unordered_set>
 #include "amosum_program.h"
+#include "amoclingo/propagator_clingo_c/amoclingo_propagator.h"
 
 class AmosumClingoSolver: public fiore::ClingoSolver{
 protected:
     fiore::Program* groundProgram(const std::vector<std::string>& ASPInputs) noexcept override;
 public:
-    AmosumClingoSolver(): ClingoSolver(){}
+    // reason, lazy: --reason and --lazy, the same for every amosum constraint
+    AmosumClingoSolver(std::string reason = "nomin", std::string lazy = SETTINGS::FALSE_STR): ClingoSolver(), reason(std::move(reason)), lazy(std::move(lazy)){}
+
+    // grounds the program (ClingoSolver::init) and registers one AmoclingoPropagator per AmosumConstraint
+    void init(const std::vector<std::string>& ASPInputs) noexcept;
+
+    std::vector<AmoclingoPropagator*> amosumPropagators;    // non-owning: ClingoSolver::propagators owns them
+    AmoclingoPropagator* maximizer = nullptr;               // the #amomaximize constraint, if any (non-owning)
+
+private:
+    const std::string reason;
+    const std::string lazy;
 };

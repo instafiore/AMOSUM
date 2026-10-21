@@ -42,6 +42,10 @@ struct AmoclingoPropagator: public fiore::PropagatorPBConstraint{
     const bool lazyThreshold;                   // false or hybrid
     const double lazyPerc;                      // true: 1, float: its value
 
+    // value of the aggregate at the last total assignment (check): the value of the last model (amomaximize, LSU); one
+    // value for all threads: meant for one solver thread (parallel-mode 1)
+    int64_t lastTotalValue = 0;
+
     inline bool isMember(const clingo_literal_t l) const noexcept { return (size_t)std::abs(l) < N && groupIndex->at(l) != NO_GROUP; }
     inline bool isMoved(const clingo_literal_t l) const noexcept { return hasMovedLiterals && movedInto.find(l) != movedInto.end(); }
 
@@ -52,3 +56,7 @@ protected:
 private:
     std::vector<std::unique_ptr<fiore::SolvingLiteral>> memberSolvingLiterals;   // what ownedSolvingLiterals points to
 };
+
+// check callback (total assignments): the bound against the complete assignment (it may have changed between solve
+// calls without any watched change since), then the value of the model in lastTotalValue
+bool checkAmosum(clingo_propagate_control_t* control, fiore::ClingoPropagator* propagator);

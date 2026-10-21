@@ -42,6 +42,8 @@ struct AmosumPropagator: public fiore::PropagatorPBConstraintImplementation{
 
     void onLiteralsUndefined(clingo_propagate_control_t const *control, clingo_literal_t const *literalIds, size_t size, size_t dl = 0) noexcept override;
     const std::vector<clingo_literal_t>& getReasonForLiteral(const clingo_literal_t& literalId) const noexcept override;
+    // value of the aggregate for the true literals (with the constant): on a total assignment, the value of the model
+    inline int64_t currentValue() const noexcept { return currentSum; }
 
 protected:
     std::pair<bool, bool> updatePhase(clingo_literal_t const *literalIds, size_t size, size_t dl = 0) noexcept override;
@@ -62,6 +64,7 @@ private:
     int64_t maxDiff;                    // largest change of the possible sum by one group (old lazy threshold)
     size_t decisionLevel;
     bool nextPhase;
+    int64_t lastBound;                  // bound at the last update: a new bound (LSU, between solve calls) triggers propagation
     std::vector<clingo_literal_t> watchesToRemove;
     std::unique_ptr<fiore::PerfectNHash<clingo_literal_t, std::vector<clingo_literal_t>>> reasons;   // derived literal (or BOTTOM) -> its reason
     std::unique_ptr<fiore::PerfectNHash<clingo_literal_t, int64_t>> slack;   // min/minfly, ge: weight that can still be left out of the reason of a derived literal

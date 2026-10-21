@@ -12,13 +12,18 @@ amowasp = $(SRC_DIR)/amowasp/propagator_wasp_c
 
 SRCS = $(shell find $(SRC_DIR) -name '*.$(C)')
 OBJS = $(addprefix $(BUILD_DIR)/, $(notdir $(SRCS:.$(C)=.o)))
+# two programs from the same sources: amosum_cpp (runner_clingo.cpp, the old propagators) and amosum_lsu
+# (runner_lsu.cpp, AmosumClingoSolver on fiore): each one without the other's main
+LSU_TARGET = amosum_lsu
+OBJS_CPP = $(filter-out $(BUILD_DIR)/runner_lsu.o, $(OBJS))
+OBJS_LSU = $(filter-out $(BUILD_DIR)/runner_clingo.o, $(OBJS))
 
 # fiore (repository root): utilities, Clingo helpers and the model (Program, ...), compiled from source into build/fiore/
 include ../../../fiore/fiore.mk
 CFLAGS += $(FIORE_CPPFLAGS)
 FIORE_OBJS = $(patsubst $(FIORE_DIR)/%.$(C),$(BUILD_DIR)/fiore/%.o,$(FIORE_SRCS))
 
-all: $(TARGET)
+all: $(TARGET) $(LSU_TARGET)
 
 print-CC:
 	@echo "Using $(CC)"
@@ -47,7 +52,12 @@ pprof:
 	@$(MAKE) BUILD_MODE=pprof
 
 
-$(TARGET): $(OBJS) $(FIORE_OBJS)
+$(TARGET): $(OBJS_CPP) $(FIORE_OBJS)
+	@echo "Linking $@"
+	@mkdir -p $(BIN_DIR)
+	$(CC) $^ $(LDFLAGS) -o $(BIN_DIR)/$@
+
+$(LSU_TARGET): $(OBJS_LSU) $(FIORE_OBJS)
 	@echo "Linking $@"
 	@mkdir -p $(BIN_DIR)
 	$(CC) $^ $(LDFLAGS) -o $(BIN_DIR)/$@

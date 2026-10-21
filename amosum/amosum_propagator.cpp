@@ -57,7 +57,7 @@ AmosumPropagator::AmosumPropagator(AmoclingoPropagator* abs) noexcept:
     ownedGroupIndex(abs->solver->initializer->nt > 1 ? new fiore::PerfectNHash<clingo_literal_t, size_t>(abs->N, AmoclingoPropagator::NO_GROUP) : nullptr),
     groupIndex(ownedGroupIndex ? ownedGroupIndex.get() : abs->groupIndex.get()),
     I(new fiore::PerfectInterpretation(abs->N, fiore::TruthValue(fiore::TruthValue::U))),
-    currentSum(abs->constant), mpsValue(abs->constant), maxDiff(0), decisionLevel(0), nextPhase(false),
+    currentSum(abs->constant), mpsValue(abs->constant), maxDiff(0), decisionLevel(0), nextPhase(false), lastBound(abs->pbConstraint->bound),
     reasons(new fiore::PerfectNHash<clingo_literal_t, std::vector<clingo_literal_t>>(abs->N)),
     slack(abs->minimizeOnTheFly && abs->ge ? new fiore::PerfectNHash<clingo_literal_t, int64_t>(abs->N, 0) : nullptr){
 
@@ -102,6 +102,8 @@ const std::vector<clingo_literal_t>& AmosumPropagator::getReasonForLiteral(const
 std::pair<bool, bool> AmosumPropagator::updatePhase(clingo_literal_t const *literalIds, size_t size, size_t dl) noexcept{
     decisionLevel = dl;
     bool changed = false;       // sumChanged || amo_condition of the old update_phase, for some change
+    // the bound was changed since the last update (LSU: a better value is asked for): propagate again
+    if(bound() != lastBound){ lastBound = bound(); changed = true; }
     for(size_t i = 0; i < size; ++i){
         const clingo_literal_t c = literalIds[i];
         // literal 1, true from the start: first propagation, as the old simplifyAtLevelZero
