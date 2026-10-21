@@ -36,7 +36,7 @@ std::vector<clingo_literal_t>& PropagatorPBConstraintImplementationLe::propagate
     const clingo_assignment_t* assignment = clingo_propagate_control_assignment(control);
 
     int32_t i = maxUndefined;
-    while(i >= 0 && !clingo::isUndef(assignment, abs->localSolvingLiterals[i]->id)) --i;
+    while(i >= 0 && !clingo::isUndef(assignment, abs->ownedSolvingLiterals[i]->id)) --i;
     if(i != maxUndefined){
         if(maxUndefinedTrail.empty() || maxUndefinedTrail.back().first != currentLevel) maxUndefinedTrail.emplace_back(currentLevel, maxUndefined);
         maxUndefined = i;
@@ -44,7 +44,7 @@ std::vector<clingo_literal_t>& PropagatorPBConstraintImplementationLe::propagate
 
     // same scan as before, starting from the first undefined literal
     for(; i >= 0; --i){
-        const clingo_literal_t& slitId = abs->localSolvingLiterals[i]->id;
+        const clingo_literal_t& slitId = abs->ownedSolvingLiterals[i]->id;
         if(!clingo::isUndef(assignment, slitId)) continue;
         if(possibleSum(slitId) > ub) S.push_back(not_(slitId));
         else break;   // sorted by weight: no lighter literal can exceed ub either
@@ -55,10 +55,10 @@ std::vector<clingo_literal_t>& PropagatorPBConstraintImplementationLe::propagate
     #endif
 
     #ifdef __debug__
-        const int32_t n = abs->localSolvingLiterals.size();
+        const int32_t n = abs->ownedSolvingLiterals.size();
         std::vector<clingo_literal_t> expected;
         for(int32_t k = n-1; k >= 0; --k){
-            const clingo_literal_t& s = abs->localSolvingLiterals[k]->id;
+            const clingo_literal_t& s = abs->ownedSolvingLiterals[k]->id;
             if(!clingo::isUndef(assignment, s)) continue;
             if(possibleSum(s) > ub) expected.push_back(not_(s)); else break;
         }

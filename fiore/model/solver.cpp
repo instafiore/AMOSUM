@@ -15,16 +15,22 @@ typedef bool (*clingo_propagator_decide_callback_t)(clingo_id_t thread_id, cling
 
 
 
-ClingoSolver::ClingoSolver(std::vector<std::string> ASPInputs)noexcept:initializer(new ClingoPropagatorInitializer()), getterRestLiterals(nullptr), getterDerivedFromAss(nullptr), changedPolTargets(true), collectUnsatCores(true) {
-    Program::ProgramGrounder grounder;
-    program.reset(grounder.ground(ASPInputs));
+ClingoSolver::ClingoSolver() noexcept: initializer(new ClingoPropagatorInitializer()), getterRestLiterals(nullptr), getterDerivedFromAss(nullptr), changedPolTargets(true), collectUnsatCores(true) {}
+
+void ClingoSolver::init(const std::vector<std::string>&  AspInputs) noexcept {
+    program.reset(groundProgram(AspInputs));
     #ifdef __debug__
         LOG(LogLevel::DEBUG, "Created program:", program);
     #endif
-    // unweighted.reset(new UMNWeightFunction(this->program->maxSoftLiteralId + 1, 1));
+    // propagators are registered on program->ctl: only after grounding
     this->enableRestDetection();
     for(const Literal* t: *program->softLiterals) coreLowerBound.addTarget(t->id, program->weightFunction->at(t->id));
     if(ArgParse::getInstance()->get(CONSTANTS::enableAlreadyDerivedFromAssumptionDetectionKey) == CONSTANTS::TRUE_STR) this->enableGetDerivedFromAssDetection();
+}
+
+Program* ClingoSolver::groundProgram(const std::vector<std::string>&  AspInputs) noexcept{
+    Program::ProgramGrounder grounder;
+    return grounder.ground(AspInputs);
 }
 
 ClingoSolver::~ClingoSolver(){

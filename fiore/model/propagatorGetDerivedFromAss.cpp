@@ -19,14 +19,14 @@ bool initImpPropagatorGetDerivedFromAss(clingo_propagate_init_t *_init, ClingoPr
     
     if(propGetDerFromAss->firstTime){
         propGetDerFromAss->initFirstTime(_init);
-        size_t NSlits = propGetDerFromAss->solver->initializer->maxSolverLiteralId+1;
+        size_t NSlits = propGetDerFromAss->solver->initializer->maxSoftSolverLiteralId+1;
         size_t NPlits = propGetDerFromAss->solver->program->maxLiteralId+1;
         propGetDerFromAss->targetsDerivedFromAssumptions.reset(new PerfectNSet<clingo_literal_t>(NPlits));
         propGetDerFromAss->mapTargetsDerivedFromAssumptionsSlits.reset(new PerfectNHash<clingo_literal_t, std::vector<clingo_literal_t>>(NSlits));
         propGetDerFromAss->assumptionsSlitIds.reset(new PerfectNSet<clingo_literal_t>(NSlits));
 
         // TODO: Understand if doing one at init or each init
-        for(const SolvingLiteral* slit: propGetDerFromAss->localSolvingLiterals){
+        for(const SolvingLiteral* slit: propGetDerFromAss->ownedSolvingLiterals){
             const clingo_literal_t &watchedLiteral = slit->id;
             propGetDerFromAss->watchedLiterals.push_back(watchedLiteral);
             handleError(clingo_propagate_init_add_watch(_init, watchedLiteral));
@@ -103,16 +103,16 @@ bool propagateImpGetDerivedFromAss(clingo_propagate_control_t *control, clingo_l
     if(dl > 0) handleError(clingo_assignment_decision(assignment, dl, &decisionLiteralId));
     const size_t rootLevel = clingo_assignment_root_level(assignment);
     #ifdef __debug__
-        LOG(LogLevel:: DEBUG,"root level: ", rootLevel," level: ", dl," decisionLit: ",prop->solver->initializer->mapSlitId2Slit->get(decisionLiteralId)," changes: ", prop->solvingLiteralIdsToSolvingLiterals(changes, size),", - propagateImpGetDerivedFromAss::updatePhase");
-        LOG(LogLevel:: DEBUG,"root level: ", rootLevel," level: ", dl," decisionLit: ",prop->solver->initializer->mapSlitId2Slit->get(decisionLiteralId)," assumptionsSlit: ", prop->assumptionsSlitIds->toStringSet(prop->solver->initializer->mapSlitId2Slit.get()), " - propagateImpGetDerivedFromAss::updatePhase");
-        LOG(LogLevel::DEBUG,"root level: ", rootLevel," level: ", dl," decisionSLit: ",decisionLiteralId," decisionLit: ",prop->solver->initializer->mapSlitId2Slit->get(decisionLiteralId)," assumptions: ", prop->assumptions, " - propagateImpGetDerivedFromAss::updatePhase");
+        LOG(LogLevel:: DEBUG,"root level: ", rootLevel," level: ", dl," decisionLit: ",prop->solver->initializer->mapSoftSlitId2SoftSlit->get(decisionLiteralId)," changes: ", prop->solvingLiteralIdsToSolvingLiterals(changes, size),", - propagateImpGetDerivedFromAss::updatePhase");
+        LOG(LogLevel:: DEBUG,"root level: ", rootLevel," level: ", dl," decisionLit: ",prop->solver->initializer->mapSoftSlitId2SoftSlit->get(decisionLiteralId)," assumptionsSlit: ", prop->assumptionsSlitIds->toStringSet(prop->solver->initializer->mapSoftSlitId2SoftSlit.get()), " - propagateImpGetDerivedFromAss::updatePhase");
+        LOG(LogLevel::DEBUG,"root level: ", rootLevel," level: ", dl," decisionSLit: ",decisionLiteralId," decisionLit: ",prop->solver->initializer->mapSoftSlitId2SoftSlit->get(decisionLiteralId)," assumptions: ", prop->assumptions, " - propagateImpGetDerivedFromAss::updatePhase");
     #endif
     if(dl > rootLevel) return true;
 
     if(decisionLiteralId == CONSTANTS::TOP || prop->assumptionsSlitIds->contains(decisionLiteralId)){
         for(size_t i = 0; i < size; ++i){
             clingo_literal_t l = changes[i];
-            const SolvingLiteral* slit = (SolvingLiteral*)prop->solver->initializer->mapSlitId2Slit->get(l);
+            const SolvingLiteral* slit = (SolvingLiteral*)prop->solver->initializer->mapSoftSlitId2SoftSlit->get(l);
             for(const Literal* plit: slit->programLiterals){
                 if(prop->targetsDerivedFromAssumptions->contains(plit->id)) continue;
                 #ifdef __debug__
@@ -135,7 +135,7 @@ bool propagateImpGetDerivedFromAss(clingo_propagate_control_t *control, clingo_l
 void PropagatorGetDerivedFromAss::addAssumption(const clingo_literal_t& plit){ this->assumptions.push_back(plit); }
 void PropagatorGetDerivedFromAss::addAssumptionAndSet(const clingo_literal_t& plit, const std::vector<clingo_literal_t>&& derivedFromL){
     addAssumption(plit);
-    const clingo_literal_t slitAssumption = this->solver->initializer->mapPlit2SlitAssumptions[plit];
+    const clingo_literal_t slitAssumption = this->solver->initializer->mapSoftPlit2SoftSlit[plit];
     mapTargetsDerivedFromAssumptionsSlits->set(slitAssumption, derivedFromL);
     for(const clingo_literal_t& d: derivedFromL) targetsDerivedFromAssumptions->add(d);
 }
@@ -144,7 +144,7 @@ void PropagatorGetDerivedFromAss::removeAssumption(const clingo_literal_t& plit)
     #ifdef __debug__
         LOG("Removed assumption: ",this->solver->program->mapLiteralId2Literal->get(plit));
     #endif
-    const clingo_literal_t slitAssumption = this->solver->initializer->mapPlit2SlitAssumptions[plit];
+    const clingo_literal_t slitAssumption = this->solver->initializer->mapSoftPlit2SoftSlit[plit];
     std::vector<clingo_literal_t>& derivedLiterals = this->mapTargetsDerivedFromAssumptionsSlits->get(slitAssumption);
     for(const clingo_literal_t& derived: derivedLiterals){
         targetsDerivedFromAssumptions->remove(derived);
@@ -155,7 +155,7 @@ void PropagatorGetDerivedFromAss::removeAssumption(const clingo_literal_t& plit)
 
 
 void PropagatorGetDerivedFromAss::setDerivedFromAssumption(const clingo_literal_t& plit, std::vector<clingo_literal_t>&& derivedLiterals) noexcept{
-    const clingo_literal_t slitAssumption = this->solver->initializer->mapPlit2SlitAssumptions[plit];
+    const clingo_literal_t slitAssumption = this->solver->initializer->mapSoftPlit2SoftSlit[plit];
     this->mapTargetsDerivedFromAssumptionsSlits->set(slitAssumption, derivedLiterals);
 }
 
@@ -173,7 +173,7 @@ void PropagatorGetDerivedFromAss::clearAssumptions(){
 }
 
 const std::vector<clingo_literal_t>& PropagatorGetDerivedFromAss::derivedFromAssumption(const clingo_literal_t& plit) noexcept{
-    const clingo_literal_t slitAssumption = this->solver->initializer->mapPlit2SlitAssumptions[plit];
+    const clingo_literal_t slitAssumption = this->solver->initializer->mapSoftPlit2SoftSlit[plit];
     return this->mapTargetsDerivedFromAssumptionsSlits->get(slitAssumption);
 }
 

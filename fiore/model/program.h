@@ -31,13 +31,13 @@ struct PBConstraint{
     const Program* program;
     int64_t bound;
     UMNWeightFunction*  weightFunction;
-    Vector<const Literal*>* literals;
+    Vector<const Literal*>* ownedLiterals;
     int64_t preprocessedSum;
 
     PBConstraint(const Program* program, const int64_t bound = 0, Vector<const Literal*>* literals = nullptr, UMNWeightFunction*  weightFunction = nullptr) noexcept;
     
     inline void updateBound(const int64_t& bound)noexcept{ this->bound = bound; }
-    inline virtual std::string toString() const noexcept{ std::ostringstream out; out<<"PBConstraint("<<literals<<", "<<preprocessedSum<<", "<<bound<< ")"; return out.str();};
+    inline virtual std::string toString() const noexcept{ std::ostringstream out; out<<"PBConstraint("<<ownedLiterals<<", "<<preprocessedSum<<", "<<bound<< ")"; return out.str();};
 
    virtual ~PBConstraint() = default;
 } ;
@@ -203,6 +203,11 @@ protected:
             return true;
         }
         virtual Program* ground(const std::vector<std::string>& ASPInputs);
+        virtual ~ProgramGrounder() = default;
+        
+    protected:
+        // the program filled by ground(): derived grounders return a derived Program
+        virtual Program* createProgram() const { return new Program(); }
         
     private: 
         Program* program;

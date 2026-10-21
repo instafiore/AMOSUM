@@ -12,7 +12,7 @@ void PropagatorGetRestLiterals::initFirstTime(clingo_propagate_init_t *_init){
     solver->initializer->init(_init, this->solver);
     rest = &this->solver->initializer->programAtomRestNoFact;
     #ifdef __debug__
-        LOG(LogLevel::INFO, "targets: ",this->solver->initializer->globalSolvingLiterals);
+        LOG(LogLevel::INFO, "targets: ",this->solver->initializer->globalSoftSolvingLiterals);
         LOG(LogLevel::INFO, "rest: ",rest);
     #endif
     this->firstTime = false;

@@ -7,6 +7,7 @@
 #include <stdexcept>
 #include <limits>
 #include <clingo.h>
+#include "fiore/utils/constants.h"
 
 namespace SETTINGS {
 const std::vector<std::string> PROPAGATORS_NAMES = {"ge_amo", "ge_eo", "le_eo", "le_amo", "amomaximize"}; 
@@ -33,4 +34,7 @@ const int ERROR = 70;
 const clingo_literal_t BOTTOM = -1;
 const clingo_literal_t TOP = 1;
 const clingo_literal_t PLITBOTTOM = 0;
+
+// New
+static constexpr clingo_literal_t NONE_LITERAL = fiore::CONSTANTS::NONE32;
 }

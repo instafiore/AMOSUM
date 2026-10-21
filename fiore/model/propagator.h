@@ -12,35 +12,29 @@ struct ClingoSolver;
 
 struct ClingoPropagatorInitializer{
 
-    // inline static ClingoPropagatorInitializer* getInstance() noexcept{ if(instance == nullptr) instance = new ClingoPropagatorInitializer(); return instance;}
-    // inline static void cleanup(){if(instance == nullptr) delete instance;}
-
     void init(clingo_propagate_init* _init, ClingoSolver* propagator) noexcept;
     ClingoPropagatorInitializer(): nt(0), first(true){}
-    
-    // std::vector<clingo_literal_t> solvingLiteralFactIds;
-    std::vector<const SolvingLiteral*> globalSolvingLiterals;
-    std::unique_ptr<MapLiteralId2Literal> mapSlitId2Slit;
+
+    std::vector<const SolvingLiteral*> globalSoftSolvingLiterals;
+    std::unique_ptr<MapLiteralId2Literal> mapSoftSlitId2SoftSlit;
     size_t nt;
-    size_t maxSolverLiteralId;
+    size_t maxSoftSolverLiteralId;
 
     inline void initiliazeAgain(){ first = true; }
     Vector<const Literal*> programAtomRestNoFact;
     Vector<const Literal*> factsVectorProgramLiterals;
-    std::unordered_map<clingo_literal_t, clingo_literal_t> mapPlit2SlitAssumptions;
+    std::unordered_map<clingo_literal_t, clingo_literal_t> mapSoftPlit2SoftSlit;
     inline bool isFact(clingo_literal_t plit) noexcept { return factsSetProgramLiterals.find(plit) != factsSetProgramLiterals.end(); }
 private:
     std::unordered_set<clingo_literal_t> factsSetProgramLiterals;
     bool first;
-    // inline void ClingoPropagatorInitializer::assignPropagatorFields(ClingoPropagator* propagator) noexcept{ propagator->global = this;}
-    // static ClingoPropagatorInitializer* instance;
 };
 
-bool initImpDecisionWeakPropagatorAbstraction(clingo_propagate_init_t *init, ClingoPropagator* propagator);
+bool initImplementation(clingo_propagate_init_t *init, ClingoPropagator* propagator);
 
 struct ClingoPropagator{
 
-    ClingoPropagator(std::string name, ClingoSolver* const solver):solver(solver), firstTime(true), name(name), enabled(true){}
+    ClingoPropagator(std::string name, ClingoSolver* const solver, const bool watchOppositePolarityLiterals = false):solver(solver), firstTime(true), name(name), enabled(true), watchOppositePolarityLiterals(watchOppositePolarityLiterals){}
 
     //! This function is called once before each solving step.
     //! It is used to map relevant program literals to solver literals, add watches for solver literals, and initialize
@@ -147,10 +141,11 @@ struct ClingoPropagator{
 
 
     ClingoSolver* const  solver;
-    std::vector<const SolvingLiteral*> localSolvingLiterals;
+    std::vector<const SolvingLiteral*> ownedSolvingLiterals;
+    
 
 
-    friend bool initImpDecisionWeakPropagatorAbstraction(clingo_propagate_init_t *init, ClingoPropagator* propagator);
+    friend bool initImplementation(clingo_propagate_init_t *init, ClingoPropagator* propagator);
 
     #ifdef __debug__
         inline std::unordered_map<std::string, double> getStatistics() const { return stats; }
@@ -182,6 +177,7 @@ protected:
     bool firstTime;
     std::string name;
     bool enabled;
+    const bool watchOppositePolarityLiterals;
     std::vector<clingo_literal_t> watchedLiterals;
 };
         

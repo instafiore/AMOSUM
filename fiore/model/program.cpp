@@ -36,15 +36,15 @@ std::ostream& operator<<(std::ostream& o, const Rule* rule){ return o<<*rule; }
 PBConstraint::PBConstraint(const Program* program, const int64_t upperBound, Vector<const Literal*>* literals, UMNWeightFunction*  weightFunction)noexcept:
     program(program), bound(upperBound),
     weightFunction(weightFunction == nullptr ? program->weightFunction.get() : weightFunction), 
-    literals(literals == nullptr ? program->softLiterals.get() : literals){
+    ownedLiterals(literals == nullptr ? program->softLiterals.get() : literals){
 
-    preprocessedSum = literals != nullptr || weightFunction != nullptr ? Program::preprocessCost(*this->literals, *this->weightFunction, program->mapLiteralId2Literal.get()) : program->preprocessedCost;
+    preprocessedSum = literals != nullptr || weightFunction != nullptr ? Program::preprocessCost(*this->ownedLiterals, *this->weightFunction, program->mapLiteralId2Literal.get()) : program->preprocessedCost;
     #ifdef __debug__
         LOG(LogLevel::DEBUG_1, "Created ",this," - PBConstraint::init");
     #endif
 }
 
-Program::Program(): restLiterals(new Vector<const Literal*>), isOptimizationProblem(false), priorityPolarity(1){}
+Program::Program(): restLiterals(new Vector<const Literal*>), ctl(nullptr), bk(nullptr), isOptimizationProblem(false), priorityPolarity(1){}
 
 void Program::addRule(Rule* &&rule, bool adding2Backend) noexcept{
     #ifdef __debug__
@@ -235,12 +235,11 @@ void Program::ProgramGrounder::addArgControl(std::string key, std::string value)
     this->arguments.push_back(arg);
 }
 
-Program::ProgramGrounder::ProgramGrounder(): program(new Program()), first(true){}
+Program::ProgramGrounder::ProgramGrounder(): program(nullptr), first(true){}
 
 Program* Program::ProgramGrounder::ground(const std::vector<std::string>& ASPInputs){
     if(!first) throw Args::BaseException("Grounder already used, pleace create another one");
-    
-
+    program = createProgram();
     this->addArgControl("opt-mode", "ignore");
     this->addArgControl("heuristic", "Domain");
     #ifdef __debug__

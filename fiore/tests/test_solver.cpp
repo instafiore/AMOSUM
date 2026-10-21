@@ -70,7 +70,8 @@ int main(int argc, char** argv){
     // default solver (rest and derived-from-assumption detection on): an unsatisfiable set of
     // assumptions gives a core of them; the choice program needs a or b
     {
-        ClingoSolver solver({"tests/data/choice.asp"});
+        ClingoSolver solver;
+        solver.init({"tests/data/choice.asp"});
         std::vector<clingo_literal_t> assumptions;
         for(const Literal* l: *solver.program->softLiterals)
             if(l->name == "a" || l->name == "b") assumptions.push_back(not_(l->id));
@@ -86,7 +87,8 @@ int main(int argc, char** argv){
     }
 
     for(const Case& c: CASES){
-        ClingoSolver solver({c.file});
+        ClingoSolver solver;
+        solver.init({c.file});
         bool optimization = false;
         const int64_t got = lsu(solver, optimization);
         const bool sat = got >= 0;

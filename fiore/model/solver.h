@@ -21,6 +21,8 @@ struct PropagatorGetDerivedFromAss;
 
 struct ClingoSolver {
 
+friend ClingoPropagatorInitializer;
+
     std::unique_ptr<Program> program;
     std::unique_ptr<ClingoPropagatorInitializer> initializer;
     std::vector<std::unique_ptr<ClingoPropagator>> propagators;
@@ -33,7 +35,8 @@ struct ClingoSolver {
 
     void registerPropagator(ClingoPropagator* prop, std::string name = "");
 
-    ClingoSolver(std::vector<std::string> ASPInputs) noexcept;
+    ClingoSolver() noexcept;
+    
 
     inline PBConstraint* createOptimizer(int64_t upperBound = CONSTANTS::INFPlus64, Vector<const Literal*>* &&softLiterals = nullptr, UMNWeightFunction* weightFunction = nullptr)noexcept{
         PBConstraint* pb = program->addPBConstraint(upperBound, std::move(softLiterals), weightFunction);
@@ -99,8 +102,6 @@ struct ClingoSolver {
     inline const Core* getBlamedAssumptions() const noexcept{ return this->res.isSat() ? nullptr : &blamedAssumptions; }
     inline const std::vector<Core*>& getUnsatCores() const noexcept{ return unsatCores; }
 
-    ~ClingoSolver();
-
     #ifdef __debug__
         inline void restartWallTimePropagators() noexcept { for(std::unique_ptr<ClingoPropagator>& p: propagators) p->resetTimes(); }
     #endif
@@ -111,6 +112,10 @@ struct ClingoSolver {
     inline void setCollectUnsatCores(const bool set) noexcept { collectUnsatCores = set; }
     inline int64_t getLowerBound() const noexcept { return  program->preprocessedCost + coreLowerBound.value(); }
     inline bool isLowerBoundAtLeastPPercentageOfAnswerset(Assignment* ans, const float p) const noexcept { return (double)this->getLowerBound() / (double)std::max<int64_t>(1, ans->cost()) >= p; }
+    virtual ~ClingoSolver();
+    void init(const std::vector<std::string>& ASPInputs) noexcept;
+protected:
+    virtual Program* groundProgram(const std::vector<std::string>&  AspInputs) noexcept;
 
 private:
    
@@ -127,8 +132,6 @@ private:
     double totalTimeSolveReal = 0;
     double firstCallTime = 0;
     #endif
-
-
 };
 
 } // namespace fiore

@@ -17,6 +17,8 @@
 #include "fiore/utils/constants.h"
 #include "fiore/utils/logger.h"
 #include "fiore/utils/utility.h"
+#include "../../amosum_program.h"
+#include "../../amosum_solver.h"
 
 
 ParameterMap params;
@@ -90,8 +92,9 @@ int main(int argc, char const *argv[])
     std::string encoding = cat(encoding_path);
     std::string instance = cat(instance_path);
 
-    AmosumProgram::AmosumGrounder grounder;
-    grounder.ground({encoding_path, instance_path});
+    std::unique_ptr<AmosumClingoSolver> solver;
+    solver.reset(new AmosumClingoSolver());
+    solver->init({encoding_path, instance_path});
 
     ParameterMap::iterator it_amosum = params.find("amosum_propagators");
 

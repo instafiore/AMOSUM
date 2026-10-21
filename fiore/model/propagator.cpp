@@ -27,15 +27,15 @@ void ClingoPropagatorInitializer::init(clingo_propagate_init* _init, ClingoSolve
 
     const Vector<const Literal*> &restLiterals = *solver->program->restLiterals.get();
     const Vector<const Literal*> &softLiterals = *solver->program->softLiterals.get();
-    maxSolverLiteralId = 0;
+    maxSoftSolverLiteralId = 0;
     for(const Literal* literal: softLiterals){
         const clingo_literal_t &plitId = literal->id;
         clingo_literal_t slitId;
         clingo_propagate_init_solver_literal(_init, plitId, &slitId);   
-        this->mapPlit2SlitAssumptions[plitId] = slitId;
-        this->mapPlit2SlitAssumptions[not_(plitId)] = not_(slitId);
+        this->mapSoftPlit2SoftSlit[plitId] = slitId;
+        this->mapSoftPlit2SoftSlit[not_(plitId)] = not_(slitId);
         clingo_atom_t atomId = std::abs(slitId);
-        if(maxSolverLiteralId < atomId) maxSolverLiteralId = atomId;
+        if(maxSoftSolverLiteralId < atomId) maxSoftSolverLiteralId = atomId;
         setDefault(mapSlitIdPlitsTmp, slitId, std::make_pair<>(true,std::unordered_set<const Literal*>()));
         mapSlitIdPlitsTmp[slitId].first = true;
         mapSlitIdPlitsTmp[slitId].second.insert(literal);
@@ -43,8 +43,8 @@ void ClingoPropagatorInitializer::init(clingo_propagate_init* _init, ClingoSolve
         setDefault(mapSlitIdPlitsTmp, not_(slitId), std::make_pair<>(false,std::unordered_set<const Literal*>()));
         mapSlitIdPlitsTmp[not_(slitId)].second.insert(negatedLiteral);
     }
-    this->mapPlit2SlitAssumptions[CONSTANTS::TOP] = CONSTANTS::TOP;
-    this->mapPlit2SlitAssumptions[CONSTANTS::BOTTOM] = CONSTANTS::BOTTOM;
+    this->mapSoftPlit2SoftSlit[CONSTANTS::TOP] = CONSTANTS::TOP;
+    this->mapSoftPlit2SoftSlit[CONSTANTS::BOTTOM] = CONSTANTS::BOTTOM;
     auto cmd = ArgParse::getInstance();
     const bool torc = cmd->get(CONSTANTS::polarityHeuristic) == CONSTANTS::polarityHeuristicTORC;
 
@@ -54,11 +54,17 @@ void ClingoPropagatorInitializer::init(clingo_propagate_init* _init, ClingoSolve
 
     if(torc){
         for(const Literal* literal: restLiterals){
+            const Literal* negatedLiteral = mapLiteralId2Literal->literal(not_(literal->id));
             const clingo_literal_t &plitId = literal->id;
             clingo_literal_t slitId;
             clingo_propagate_init_solver_literal(_init, plitId, &slitId);   
             clingo_atom_t atomId = std::abs(slitId);
-            const Literal* negatedLiteral = mapLiteralId2Literal->literal(not_(literal->id));
+            // setDefault(mapSlitIdPlitsTmp, slitId, std::make_pair<>(true,std::unordered_set<const Literal*>()));
+            // mapSlitIdPlitsTmp[slitId].first = true;
+            // mapSlitIdPlitsTmp[slitId].second.insert(literal);
+            // setDefault(mapSlitIdPlitsTmp, not_(slitId), std::make_pair<>(false,std::unordered_set<const Literal*>()));
+            // mapSlitIdPlitsTmp[not_(slitId)].second.insert(negatedLiteral);
+            // if(maxSolverLiteralId < atomId) maxSolverLiteralId = atomId;
             if(atomId != 1) programAtomRestNoFact.push_back(literal->id > 0 ? literal : negatedLiteral);
         }
     }
@@ -68,17 +74,16 @@ void ClingoPropagatorInitializer::init(clingo_propagate_init* _init, ClingoSolve
         LOG(LogLevel::DEBUG, "Time for creating rest literals: ",elaspedTimeRestLiterals);
     #endif
 
-    // maxSolverLiteralId = std::abs(maxKey(mapSlitIdPlitsTmp, [](const clingo_literal_t& a, const clingo_literal_t& b){return std::abs(a) < std::abs(b);}));
-    mapSlitId2Slit.reset(new MapLiteralId2Literal(maxSolverLiteralId + 1));
+    mapSoftSlitId2SoftSlit.reset(new MapLiteralId2Literal(maxSoftSolverLiteralId + 1));
 
     for(const auto&[slitId, plitsWithFlag]: mapSlitIdPlitsTmp){
         const bool& isInsidePb = plitsWithFlag.first;
         const std::unordered_set<const Literal*>& plits = plitsWithFlag.second;
         const SolvingLiteral* solvingLiteral = new SolvingLiteral(slitId, plits);
-        mapSlitId2Slit->set(slitId, solvingLiteral);
+        mapSoftSlitId2SoftSlit->set(slitId, solvingLiteral);
         clingo_atom_t atomId = std::abs(slitId);
         if(!isInsidePb) continue;
-        globalSolvingLiterals.push_back(solvingLiteral);
+        globalSoftSolvingLiterals.push_back(solvingLiteral);
         if(atomId == 1){
             for(const Literal* l: plits){ 
                 factsVectorProgramLiterals.push_back(l);
@@ -90,16 +95,14 @@ void ClingoPropagatorInitializer::init(clingo_propagate_init* _init, ClingoSolve
     if(mapSlitIdPlitsTmp.find(CONSTANTS::TOP) == mapSlitIdPlitsTmp.end()){
         const TOP* solvingLiteralTop = new TOP();
         const BOTTOM* solvingLiteralBottom = new BOTTOM();
-        mapSlitId2Slit->set(solvingLiteralTop->id, solvingLiteralTop);
-        mapSlitId2Slit->set(solvingLiteralBottom->id, solvingLiteralBottom);
+        mapSoftSlitId2SoftSlit->set(solvingLiteralTop->id, solvingLiteralTop);
+        mapSoftSlitId2SoftSlit->set(solvingLiteralBottom->id, solvingLiteralBottom);
     }
 
     #ifdef __debug__
-        // std::string mapSlitId2SlitString = mapSlitId2Slit->toString(nullptr,false);
-        // LOG(LogLevel::INFO_1, "mapSlitId2Slit: ",mapSlitId2Slit, " - ClingoPropagatorInitializer::init");
         LOG(LogLevel::INFO, "soft literals initializer ",softLiterals, " - ClingoPropagatorInitializer::init");
         LOG(LogLevel::DEBUG, "rest literals initializer ",restLiterals, " - ClingoPropagatorInitializer::init");
-        LOG(LogLevel::DEBUG_1, "Global softSolvingLiterals:: ",globalSolvingLiterals, " - ClingoPropagatorInitializer::init");
+        LOG(LogLevel::DEBUG_1, "Global softSolvingLiterals:: ",globalSoftSolvingLiterals, " - ClingoPropagatorInitializer::init");
     #endif
 }   
 
@@ -117,14 +120,14 @@ bool ClingoPropagator::clearIfNotEnabledInInit(clingo_propagate_init* init){
 
 std::vector<const Literal*> ClingoPropagator::solvingLiteralIdsToSolvingLiterals(clingo_literal_t const *changes, size_t size) noexcept{
     std::vector<const Literal*> res;
-    MapLiteralId2Literal* mapLitId2Lit = this->solver->initializer->mapSlitId2Slit.get();
+    MapLiteralId2Literal* mapLitId2Lit = this->solver->initializer->mapSoftSlitId2SoftSlit.get();
     for(size_t i = 0; i < size; ++i) res.push_back(mapLitId2Lit->get(changes[i]));
     return res;
 }
 
 std::vector<const Literal*> ClingoPropagator::solvingLiteralIdsToSolvingLiterals(const std::unordered_set<clingo_literal_t>& changes) noexcept{
     std::vector<const Literal*> res;
-    MapLiteralId2Literal* mapLitId2Lit = this->solver->initializer->mapSlitId2Slit.get();
+    MapLiteralId2Literal* mapLitId2Lit = this->solver->initializer->mapSoftSlitId2SoftSlit.get();
     for(const clingo_literal_t& lit: changes) res.push_back(mapLitId2Lit->get(lit));
     return res;
 }
@@ -136,6 +139,7 @@ void ClingoPropagator::removeWatchAll(clingo_propagate_init* init){
             LOG(LogLevel::DEBUG,"Removing watch from: ",watched);
         #endif  
         handleError(clingo_propagate_init_remove_watch(init, watched));
+        
     }
     watchedLiterals.clear();
 }
@@ -148,8 +152,8 @@ void ClingoPropagator::initFirstTime(clingo_propagate_init* _init){
 
     solver->initializer->init(_init, this->solver);
     const Vector<const Literal*>&  plits = programLiterals();
-    this->localSolvingLiterals.clear();
-    for(const SolvingLiteral* solvingLiteral: solver->initializer->globalSolvingLiterals){
+    this->ownedSolvingLiterals.clear();
+    for(const SolvingLiteral* solvingLiteral: solver->initializer->globalSoftSolvingLiterals){
         const std::unordered_set<const Literal*>& programLiteralsSlit = solvingLiteral->programLiterals;
         bool anyInside = false;
         for(const Literal* plit: plits){
@@ -160,7 +164,7 @@ void ClingoPropagator::initFirstTime(clingo_propagate_init* _init){
                 break;
             }
         }
-        if(anyInside || solvingLiteral->id == CONSTANTS::TOP) this->localSolvingLiterals.push_back(solvingLiteral);
+        if(anyInside || solvingLiteral->id == CONSTANTS::TOP) this->ownedSolvingLiterals.push_back(solvingLiteral);
     }
 }
 

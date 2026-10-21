@@ -6,7 +6,7 @@ namespace fiore {
 
 struct PropagatorPBConstraintImplementationLe : public PropagatorPBConstraintImplementation{
 
-    PropagatorPBConstraintImplementationLe(PropagatorPBConstraint* abs): PropagatorPBConstraintImplementation(abs), maxUndefined((int32_t)abs->localSolvingLiterals.size() - 1){} 
+    PropagatorPBConstraintImplementationLe(PropagatorPBConstraint* abs): PropagatorPBConstraintImplementation(abs), maxUndefined((int32_t)abs->ownedSolvingLiterals.size() - 1){} 
     // const std::vector<clingo_literal_t> simplifyAtLevelZero() override;
     std::pair<bool, bool> updatePhase(clingo_literal_t const *literalIds, size_t size, size_t dl) noexcept override;
     std::vector<clingo_literal_t>& propagatePhase(clingo_propagate_control_t* control) noexcept override;

@@ -13,36 +13,36 @@ PropagatorPBConstraint::~PropagatorPBConstraint(){
 void PropagatorPBConstraint::initFirstTime(clingo_propagate_init* _init) noexcept{
     ClingoPropagator::initFirstTime(_init);
 
-    auto it = std::max_element(localSolvingLiterals.begin(), localSolvingLiterals.end(), [](const Literal* l1, const Literal* l2){ return std::abs(l1->id) < std::abs(l2->id);});
+    auto it = std::max_element(ownedSolvingLiterals.begin(), ownedSolvingLiterals.end(), [](const Literal* l1, const Literal* l2){ return std::abs(l1->id) < std::abs(l2->id);});
 
-    if(it == localSolvingLiterals.end()) return;
+    if(it == ownedSolvingLiterals.end()) return;
 
     maxSolvingLiteralId = std::abs((*it)->id);
     weightSolvingLiterals.reset(new PerfectWeightFunction(maxSolvingLiteralId + 1));
 
-    for(const SolvingLiteral* solvingLiteral: localSolvingLiterals){
+    for(const SolvingLiteral* solvingLiteral: ownedSolvingLiterals){
         const std::unordered_set<const Literal*>& programLiterals = solvingLiteral->programLiterals;
         int64_t weightSolvingLiteral = sum(*pbConstraint->weightFunction, programLiterals);
         weightSolvingLiterals->set(solvingLiteral->id, weightSolvingLiteral);
     }
 
     // Setting weight facts
-    const SolvingLiteral* solvingLiteralFact = (SolvingLiteral*) this->solver->initializer->mapSlitId2Slit->get(1);
+    const SolvingLiteral* solvingLiteralFact = (SolvingLiteral*) this->solver->initializer->mapSoftSlitId2SoftSlit->get(fiore::CONSTANTS::TOP);
     const std::unordered_set<const Literal*>& facts = solvingLiteralFact->programLiterals;
     int64_t weightFacts = sum(*pbConstraint->weightFunction, facts); 
     weightSolvingLiterals->set(1, weightFacts);
 
-    std::sort(localSolvingLiterals.begin(), localSolvingLiterals.end(), 
+    std::sort(ownedSolvingLiterals.begin(), ownedSolvingLiterals.end(), 
     [this](const SolvingLiteral* s1, const SolvingLiteral* s2){
         return weightSolvingLiterals->at(s1->id) < weightSolvingLiterals->at(s2->id);
     });
 
     #ifdef __debug__
-        LOG(LogLevel::INFO, "Solving literals of ",pbConstraint," are: ", localSolvingLiterals, " - PropagatorPBConstraint::initFirstTime");
+        LOG(LogLevel::INFO, "Solving literals of ",pbConstraint," are: ", ownedSolvingLiterals, " - PropagatorPBConstraint::initFirstTime");
     #endif
 
     for(size_t ni = 0; ni < solver->initializer->nt; ++ni){
-        implementations.emplace_back(new PropagatorPBConstraintImplementationLe(this));
+        implementations.emplace_back(createImplementation());
     }
 }
 
@@ -78,6 +78,8 @@ bool PropagatorPBConstraint::addClause(const clingo_propagate_control_t *control
     return false ;
 }
 
+PropagatorPBConstraintImplementation* PropagatorPBConstraint::createImplementation() noexcept { return new PropagatorPBConstraintImplementationLe(this); }
+
 bool PropagatorPBConstraint::addClausesPropagatedLitIds(const clingo_propagate_control_t *control, const std::vector<clingo_literal_t>& propagatedLiteralIds) noexcept{
     size_t td = clingo_propagate_control_thread_id((const clingo_propagate_control_t *)control);
 
@@ -94,38 +96,41 @@ bool PropagatorPBConstraint::addClausesPropagatedLitIds(const clingo_propagate_c
     return false;
 }
 
-bool initImpDecisionWeakPropagatorAbstraction(clingo_propagate_init_t *init, ClingoPropagator* propagator){
+bool initImplementation(clingo_propagate_init_t *init, ClingoPropagator* propagator){
     #ifdef __debug__
         auto start = startTimer();
     #endif
     PropagatorPBConstraint* pbProp = static_cast<PropagatorPBConstraint*>(propagator);
 
     #ifdef __debug__
-        LOG(LogLevel::INFO_1, "Called ",pbProp->name," - initImpDecisionWeakPropagatorAbstraction");
+        LOG(LogLevel::INFO_1, "Called ",pbProp->name," - initPropagator");
     #endif
 
-    if(pbProp->clearIfNotEnabledInInit(init)) 
-        return true;
+    if(pbProp->clearIfNotEnabledInInit(init))  return true;
 
-    const bool& isFirstTime = pbProp->firstTime;
-    if(isFirstTime) 
+    const bool isFirstTime = pbProp->firstTime;
+    if(isFirstTime){  
         pbProp->initFirstTime(init);
-    
-    if(pbProp->localSolvingLiterals.size() == 0)
-        return true;
+        pbProp->firstTime = false;
+    }
+
+    if(pbProp->ownedSolvingLiterals.size() == 0) return true;
     
     if(isFirstTime){
         #ifdef __debug__
-            LOG(LogLevel::INFO, pbProp," adding watches - initImpDecisionWeakPropagatorAbstraction");
+            LOG(LogLevel::INFO, pbProp," adding watches - initPropagator");
         #endif
-        for(const SolvingLiteral* slit: pbProp->localSolvingLiterals){
+        for(const SolvingLiteral* slit: pbProp->ownedSolvingLiterals){
             #ifdef __debug__
-                LOG(LogLevel::INFO, pbProp->name," adding watch @ ", slit, " - initImpDecisionWeakPropagatorAbstraction");
+                LOG(LogLevel::INFO, pbProp->name," adding watch @ ", slit, " - initPropagator");
             #endif
             const clingo_literal_t &watchedLiteral = slit->id;
             handleError(clingo_propagate_init_add_watch(init, watchedLiteral));
-            // handleError(clingo_propagate_init_add_watch(init, -watchedLiteral));
             pbProp->watchedLiterals.push_back(watchedLiteral);
+            if(pbProp->watchOppositePolarityLiterals){
+                handleError(clingo_propagate_init_add_watch(init, not_(watchedLiteral)));
+                pbProp->watchedLiterals.push_back(not_(watchedLiteral));
+            }
         }
         #ifdef __debug__
             LOG(LogLevel::INFO, "Adding watch to fact 1");
@@ -134,14 +139,13 @@ bool initImpDecisionWeakPropagatorAbstraction(clingo_propagate_init_t *init, Cli
         pbProp->watchedLiterals.push_back(1);
     }
     #ifdef __debug__
-        propagator->firstTime = false;    
         double elasped = elapsedTime(start);
         propagator->increaseStat("initTime", elasped);
     #endif
     return true;
 }
 
-bool propagateImpDecisionWeakPropagatorAbstraction(clingo_propagate_control_t *control, clingo_literal_t const *changes, size_t size, ClingoPropagator* propagator){
+bool propagateImplementation(clingo_propagate_control_t *control, clingo_literal_t const *changes, size_t size, ClingoPropagator* propagator){
     #ifdef __debug__
         auto start = startTimer();
     #endif
@@ -161,7 +165,7 @@ bool propagateImpDecisionWeakPropagatorAbstraction(clingo_propagate_control_t *c
     return true;
 }
 
-void undoImpDecisionWeakPropagatorAbstraction(clingo_propagate_control_t const *control, clingo_literal_t const *changes, size_t size, ClingoPropagator* propagator){
+void undoImplementation(clingo_propagate_control_t const *control, clingo_literal_t const *changes, size_t size, ClingoPropagator* propagator){
     #ifdef __debug__
         auto start = startTimer();
     #endif
