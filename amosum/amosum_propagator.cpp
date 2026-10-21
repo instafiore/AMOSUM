@@ -68,12 +68,10 @@ AmosumPropagator::AmosumPropagator(AmoclingoPropagator* abs) noexcept:
         // deep copy: PerfectNHash owns its array, the implicit copy would share it
         if(ownedGroupIndex) for(const clingo_literal_t l: g.literals) ownedGroupIndex->set(l, gi);
     }
+    
     for(const AmosumThreadGroup& g: groups) mpsValue += contribution(g);
-
-    // as in the old specific_phase: the largest change of the possible sum one group can cause, aux group excluded
-    // (with lazy active the minimum weight of the group is used for AMO too)
-    for(const AmosumSolvingGroup& g: abs->solvingGroups){
-        if(g.literals.size() == 1 && abs->auxes.count(g.literals[0]) > 0) continue;
+        for(const AmosumSolvingGroup& g: abs->solvingGroups){
+        if(g.aux) continue;                     // changes only with the aggregate's body: see ProgramGroup::aux
         const int64_t maxW = weightOf(g.literals.back());
         const int64_t minW = (abs->lazyActive || !amo) && g.movedLiterals.empty() ? weightOf(g.literals.front()) : 0;
         maxDiff = std::max(maxDiff, std::abs(maxW - minW));

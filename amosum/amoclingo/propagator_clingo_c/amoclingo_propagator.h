@@ -7,9 +7,8 @@
 struct AmosumSolvingGroup{
     std::string id;
     std::vector<clingo_literal_t> literals;     // ordered by (weight, literal)
-    // solver literals of elements of this group owned by an earlier group (same solver literal): they count with
-    // weight 0 here, the group is decided with 0 when one is true and has minimum 0 while one is not false
     std::vector<clingo_literal_t> movedLiterals;
+    bool aux;                                   // the group of the "-" element (ProgramGroup::aux): left out of the lazy threshold
 };
 
 struct AmoclingoPropagator: public fiore::PropagatorPBConstraint{
@@ -26,7 +25,6 @@ struct AmoclingoPropagator: public fiore::PropagatorPBConstraint{
     std::unique_ptr<fiore::PerfectNHash<clingo_literal_t, size_t>> groupIndex;  // member solver literal -> index of its owner group
     std::unordered_map<clingo_literal_t, std::vector<size_t>> movedInto;        // moved solver literal -> indexes of the groups where it has weight 0
     bool hasMovedLiterals = false;                                              // movedInto not empty: skips its lookups on every change
-    std::unordered_set<clingo_literal_t> auxes;                                 // solver literals of the "-" elements (__aux__)
     int64_t constant;                           // weight of the groups decided by a fact
     size_t N;                                   // max solver atom + 1
     // --reason (>= only, as in the old code):

@@ -44,12 +44,11 @@ void AmoclingoPropagator::initFirstTime(clingo_propagate_init* _init) noexcept{
     std::vector<bool> decided(nGroups, false);
 
     for(size_t gi = 0; gi < nGroups; ++gi){
-        for(const clingo_literal_t plit: constraint->groups[gi]->ord_l_origin){
-            const int64_t w = constraint->weightFunction->at(plit);
+        for(const auto& [plitLiteral, w]: constraint->groups[gi].members){
+            const clingo_literal_t plit = plitLiteral->id;
             const clingo_literal_t slit = solverLiteral(plit);
             if(slit == fiore::CONSTANTS::BOTTOM) continue;                   // never true: contributes 0
             if(slit == fiore::CONSTANTS::TOP){ decided[gi] = true; constant += w; continue; }
-            if(plit < 0) auxes.insert(slit);
             auto [it, inserted] = owner.emplace(slit, gi);
             if(inserted) members[gi].push_back(slit);
             else if(it->second != gi && movedSet[gi].insert(slit).second) moved[gi].push_back(slit);
@@ -63,7 +62,8 @@ void AmoclingoPropagator::initFirstTime(clingo_propagate_init* _init) noexcept{
     //     exactly-one), |w|·¬s is one more element (merged as the others, in a new group if ¬s is not owned yet) and the
     //     constant takes −|w|: the value of the aggregate is the same in every assignment
     std::vector<std::string> ids;
-    for(const Group* g: constraint->groups) ids.push_back(g->id);
+    std::vector<bool> aux;
+    for(const ProgramGroup& g: constraint->groups){ ids.push_back(g.id); aux.push_back(g.aux); }
     std::vector<clingo_literal_t> negatives;
     std::map<clingo_literal_t, size_t> movedFrom;          // literal turned into a moved literal by 1b -> its former owner group
     for(const auto& [slit, w]: merged) if(w < 0) negatives.push_back(slit);
@@ -97,6 +97,7 @@ void AmoclingoPropagator::initFirstTime(clingo_propagate_init* _init) noexcept{
                 movedSet.emplace_back();
                 decided.push_back(false);
                 ids.push_back(ids[gi] + "/not");
+                aux.push_back(false);
             }
         }
         // owner and merged always hold the same literals: ns missing from merged (turned moved before) starts from 0
@@ -121,7 +122,8 @@ void AmoclingoPropagator::initFirstTime(clingo_propagate_init* _init) noexcept{
         // the moved literals that went back to being members (1b) leave moved
         if(moved[gi].size() != ms.size()) moved[gi].erase(std::remove_if(moved[gi].begin(), moved[gi].end(), [&ms](const clingo_literal_t l){ return ms.count(l) == 0; }), moved[gi].end());
         if(members[gi].empty()) continue;
-        AmosumSolvingGroup g{ids[gi], std::move(members[gi]), std::move(moved[gi])};
+        
+        AmosumSolvingGroup g{ids[gi], std::move(members[gi]), std::move(moved[gi]), aux[gi]};
         for(const clingo_literal_t slit: g.literals) weight->set(slit, merged[slit]);
         std::sort(g.literals.begin(), g.literals.end(), [this](const clingo_literal_t a, const clingo_literal_t b){
             return weight->at(a) != weight->at(b) ? weight->at(a) < weight->at(b) : a < b;

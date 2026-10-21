@@ -7,6 +7,8 @@ namespace {
         const fiore::Literal* literal;
         int64_t weight;
         std::string groupId;
+        std::string tuple;          // second argument of __element__(ID, T, G); "" for the aux element
+        bool aux;                   // the "-" element
     };
 
     struct AggregateData{
@@ -20,6 +22,58 @@ namespace {
 
 fiore::Program* AmosumProgram::AmosumGrounder::createProgram() const{
     return new AmosumProgram();
+}
+
+
+
+namespace {
+    // program level normalization of an aggregate: a tuple in several groups counts once, equal weights in a group are one atom
+    std::vector<ProgramGroup> normalize(AmosumProgram* p, const std::string& aggregateId, const bool eo, const std::vector<GroupElement>& elements){
+        std::map<std::string, ProgramGroup> byId;                      // deterministic order
+        std::map<std::string, std::vector<const GroupElement*>> byTuple;
+        for(const GroupElement& e: elements){
+            ProgramGroup& g = byId[e.groupId];
+            g.id = e.groupId;
+            g.aux = g.aux || e.aux;
+            g.members.emplace_back(e.literal, e.weight);
+            if(!e.tuple.empty()) byTuple[e.tuple].push_back(&e);
+        }
+
+        // 2. a tuple in several groups: x = OR of its element atoms, weight w in a group of its own; the element atoms stay in
+        //    their groups with weight 0 (the tuple is counted once, by x); EO: ¬x in x's group too, so that it is exactly-one
+        //    (le_eo: its minimum is 0 while x is not true; ge_eo: the lazy threshold sees that the group can change by w)
+        std::vector<ProgramGroup> extra;
+        for(const auto& [tuple, es]: byTuple){
+            if(es.size() < 2) continue;
+            std::vector<const fiore::Literal*> lits;
+            for(const GroupElement* e: es){
+                lits.push_back(e->literal);
+                ProgramGroup& g = byId[e->groupId];
+                std::find_if(g.members.begin(), g.members.end(), [e](const auto& m){ return m.first == e->literal; })->second = 0;
+            }
+            const fiore::Literal* x = p->addDisjunction(lits, "__tuple__(" + aggregateId + "," + tuple + ")");
+            ProgramGroup g{"__tuple__" + tuple, {{x, es.front()->weight}}};
+            if(eo) g.members.emplace_back(p->mapLiteralId2Literal->literal(fiore::not_(x->id)), 0);
+            extra.push_back(std::move(g));
+        }
+
+        // 3. equal weights in a group: y = OR of those members, with that weight (at most one true: w·[m1] + w·[m2] = w·[y])
+        for(auto& [id, g]: byId){
+            std::map<int64_t, std::vector<const fiore::Literal*>> byWeight;
+            for(const auto& [l, w]: g.members) byWeight[w].push_back(l);
+            std::vector<std::pair<const fiore::Literal*, int64_t>> members;
+            for(const auto& [w, ls]: byWeight){
+                if(ls.size() == 1){ members.emplace_back(ls.front(), w); continue; }
+                members.emplace_back(p->addDisjunction(ls, "__same__(" + aggregateId + "," + id + "," + std::to_string(w) + ")"), w);
+            }
+            g.members = std::move(members);
+        }
+
+        std::vector<ProgramGroup> groups;
+        for(auto& [id, g]: byId) groups.push_back(std::move(g));
+        for(ProgramGroup& g: extra) groups.push_back(std::move(g));
+        return groups;
+    }
 }
 
 fiore::Program* AmosumProgram::AmosumGrounder::ground(const std::vector<std::string>& ASPInputs){
@@ -49,9 +103,19 @@ fiore::Program* AmosumProgram::AmosumGrounder::ground(const std::vector<std::str
             if(lit == nullptr) continue;
             const bool plus = from_symbol_to_string(args[1]) == "\"+\"";
             if(!plus) lit = p->mapLiteralId2Literal->literal(not_(lit->id));
+            
             int w;
             handle_error(clingo_symbol_number(args[2], &w));
-            a.elements.push_back({lit, w, from_symbol_to_string(args[3])});
+            // the tuple of the element atom __element__(ID, T, G); "" for the aux element (__aux__): no ground term prints
+            // as the empty string (even the empty tuple is "()"), so "" can't be a real tuple
+            std::string tuple = "";
+            char const* elementName;
+            handle_error(clingo_symbol_name(args[0], &elementName));
+            clingo_symbol_t const* elementArgs;
+            size_t elementN;
+            handle_error(clingo_symbol_arguments(args[0], &elementArgs, &elementN));
+            if(std::string(elementName) == "__element__" && elementN == 3) tuple = from_symbol_to_string(elementArgs[1]);
+            a.elements.push_back({lit, w, from_symbol_to_string(args[3]), tuple, !plus});   // aux = !plus
             a.groupsAtoms.push_back(plit->id);
         }
         else if((predicate == SETTINGS::PREDICATE_LB || predicate == SETTINGS::PREDICATE_UB) && n == 2){
@@ -68,40 +132,20 @@ fiore::Program* AmosumProgram::AmosumGrounder::ground(const std::vector<std::str
         }
     }
 
-    const size_t N = p->maxLiteralId + 1;
+   
     for(auto& [id, a]: aggregates){
         if(a.elements.empty()) continue;
 
-        // weights must be set before creating the constraint: PBConstraint's constructor preprocesses them
-        fiore::Vector<const fiore::Literal*>* literals = new fiore::Vector<const fiore::Literal*>();
-        fiore::UMNWeightFunction* weights = new fiore::UMNWeightFunction(N);
-        std::map<std::string, std::vector<std::pair<const fiore::Literal*, int64_t>>> groupsRaw;
-        for(const GroupElement& e: a.elements){
-            literals->add(e.literal);
-            weights->set(e.literal->id, e.weight);
-            groupsRaw[e.groupId].emplace_back(e.literal, e.weight);
-        }
+        const bool eo = a.type == "ge_eo" || a.type == "le_eo";
+        std::vector<ProgramGroup> groups = normalize(p, id, eo, a.elements);
 
-        AmosumConstraint* c = new AmosumConstraint(p, a.bound, literals, weights);
+        // PBConstraint's literals and weights stay empty: the aggregate is described by groups only (see AmosumConstraint)
+        AmosumConstraint* c = new AmosumConstraint(p, a.bound, new fiore::Vector<const fiore::Literal*>(), new fiore::UMNWeightFunction(1));
         c->id = id;
         c->type = a.type;
         c->ge = a.ge;
         c->groupsAtoms = std::move(a.groupsAtoms);
-        c->groupFunction.reset(new fiore::PerfectNHash<clingo_literal_t, size_t>(N, fiore::CONSTANTS::NONE64));
-
-        for(auto& [groupId, lits]: groupsRaw){
-            std::sort(lits.begin(), lits.end(), [](const auto& x, const auto& y){
-                return x.second != y.second ? x.second < y.second : x.first->id < y.first->id;
-            });
-            std::vector<clingo_literal_t> ord_l;
-            std::unordered_map<clingo_literal_t, size_t> ord_i;
-            for(const auto& [l, w]: lits){
-                ord_i[l->id] = ord_l.size();
-                ord_l.push_back(l->id);
-                c->groupFunction->set(l->id, c->groups.size());
-            }
-            c->groups.push_back(new Group(std::move(ord_l), std::move(ord_i), groupId));
-        }
+        c->groups = std::move(groups);
 
         LOG(fiore::LogLevel::DEBUG, "AmosumConstraint: ", c->toString());
         p->pBConstraints.emplace_back(c);

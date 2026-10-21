@@ -237,6 +237,26 @@ void Program::ProgramGrounder::addArgControl(std::string key, std::string value)
 
 Program::ProgramGrounder::ProgramGrounder(): program(nullptr), first(true){}
 
+const fiore::Literal* Program::addDisjunction(const std::vector<const fiore::Literal*>& literals, const std::string& name) noexcept{
+    // a local backend: Program::bk is freed by ~Program(), but a backend belongs to its control
+    clingo_backend_t* backend;
+    handleError(clingo_control_backend(ctl, &backend));
+    handleError(clingo_backend_begin(backend));
+    clingo_atom_t atom;
+    handleError(clingo_backend_add_atom(backend, nullptr, &atom));
+    // atom :- l. for each literal: no choice, so by completion atom <-> l1 v l2 v ...
+    for(const fiore::Literal* l: literals){
+        const clingo_literal_t body = l->id;
+        handleError(clingo_backend_rule(backend, false, &atom, 1, &body, 1));
+    }
+    handleError(clingo_backend_end(backend));
+    fiore::Literal* literal = new fiore::Literal(atom, name);
+    mapLiteralId2Literal->addFreshLiteral(literal);
+    mapLiteralName2Literal[name] = literal;
+    if(atom > maxLiteralId) maxLiteralId = atom;
+    return literal;
+}
+
 Program* Program::ProgramGrounder::ground(const std::vector<std::string>& ASPInputs){
     if(!first) throw Args::BaseException("Grounder already used, pleace create another one");
     program = createProgram();

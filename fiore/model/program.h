@@ -92,8 +92,11 @@ struct Program{
 
     friend ClingoSolver;
     void setPolaritiesLocalSearch(const Assignment* ass = nullptr, size_t priority = CONSTANTS::INFPlus32, Vector<const Literal *>* literals = nullptr) noexcept;
+    // a new atom true iff one of `literals` is (one rule per literal), added through the backend after grounding
+    const fiore::Literal* addDisjunction(const std::vector<const fiore::Literal*>& literals, const std::string& name) noexcept;
 protected:
     size_t priorityPolarity;
+    
     struct ProgramGrounder{
 
         ProgramGrounder();
@@ -209,6 +212,7 @@ protected:
         // the program filled by ground(): derived grounders return a derived Program
         virtual Program* createProgram() const { return new Program(); }
         
+       
     private: 
         Program* program;
         std::vector<std::string> arguments;
@@ -217,6 +221,7 @@ protected:
     };
     Program();
     void backendAddRule(const Rule* rule) noexcept;
+    
 };
 
 

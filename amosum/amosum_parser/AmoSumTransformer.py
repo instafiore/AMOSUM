@@ -9,7 +9,7 @@ from amosum.amosum_parser.utils import *
 from amosum.amosum_parser.AspFactory import AspFactory
 from amosum.settings import *
 
-# auxiliary atom standing for the elements of a group with the same weight: true iff the condition of one of them is true
+# auxiliary atom of an element: (aggregate id, terms tuple, group), true iff one of the conditions with that tuple in that group is true
 PREDICATE_ELEMENT = "__element__"
 
 class AmoSumTransformer(Transformer):
@@ -21,14 +21,14 @@ class AmoSumTransformer(Transformer):
         self.aggregate_id_autoincrement = 0
 
 
-    def element_rules(self, aggregate_id, term_weight, group_id, element_body):
+    def element_rules(self, aggregate_id, terms, group_id, element_body):
         '''
         returns: (element_literal, [element_rule])
-        element_literal is identified by (aggregate_id, weight, group): within a group at most one element is true, so
-        the elements of a group with the same weight can be one atom (true iff one of them is): w·[a] + w·[b] = w·[a ∨ b].
-        Elements with the same terms tuple have the same weight and group, so they still count once (ASP set semantics).
+        element_literal is identified by (aggregate_id, terms tuple, group): elements of a group with the same tuple are one
+        atom (ASP set semantics); the grounder (AmosumGrounder) then counts a tuple of several groups once and makes the
+        elements of a group with the same weight one atom
         '''
-        element_literal = AspFactory.create_classical_literal(PREDICATE_ELEMENT, aggregate_id, term_weight, group_id)
+        element_literal = AspFactory.create_classical_literal(PREDICATE_ELEMENT, aggregate_id, AspFactory.create_tuple_terms(terms), group_id)
         element_rule = AspFactory.create_rule(head=element_literal, body=concatenate_nodes(*element_body) if element_body else None)
         debug(f"element_rule: {toString(element_rule)}")
         return element_literal, [element_rule]
@@ -57,6 +57,8 @@ class AmoSumTransformer(Transformer):
         amosum_aggregate_element_list = amosum.find_data(AMOSUM_ELEMENT)
         for amosum_aggregate_element in amosum_aggregate_element_list:
             debug(f"aggregate element: {amosum_aggregate_element}")
+            terms = amosum_aggregate_element.children[0]
+            debug(f"terms element: {terms}")
 
             term_weight = pick_n_subtree(amosum_aggregate_element, "term",1)
             debug(f"term_weight: {term_weight}")
@@ -71,7 +73,7 @@ class AmoSumTransformer(Transformer):
             naf_literals = pick_n_subtree(amosum_aggregate_element, "naf_literals", 1)
             element_body = [n for n in (naf_literals, body) if n is not None]
 
-            element_literal, element_rules = self.element_rules(aggregate_id, term_weight, group_id, element_body)
+            element_literal, element_rules = self.element_rules(aggregate_id, terms, group_id, element_body)
             result += element_rules
 
             group_classical_literal = AspFactory.create_classical_literal(PREDICATE_GROUP, element_literal, AspFactory.create_terminal_term("STRING", '"+"'), term_weight, group_id, aggregate_id)
@@ -139,6 +141,10 @@ class AmoSumTransformer(Transformer):
         
         for amosum_aggregate_element in amosum_aggregate_element_list:
             debug(f"aggregate element: {amosum_aggregate_element}")
+
+            terms = amosum_aggregate_element.children[0]
+            debug(f"terms element: {terms}")
+
             term_weight = pick_n_subtree(amosum_aggregate_element, "term",1)
             debug(f"term_weight: {term_weight}")
 
@@ -153,7 +159,7 @@ class AmoSumTransformer(Transformer):
             element_body = [naf_literals] if naf_literals is not None else []
             # element_body = [n for n in (naf_literals, body) if n is not None]
 
-            element_literal, element_rules = self.element_rules(aggregate_id, term_weight, group_id, element_body)
+            element_literal, element_rules = self.element_rules(aggregate_id, terms, group_id, element_body)
             result += element_rules
 
             group_classical_literal = AspFactory.create_classical_literal(PREDICATE_GROUP, element_literal, AspFactory.create_terminal_term("STRING", '"+"'), term_weight, group_id, aggregate_id)
