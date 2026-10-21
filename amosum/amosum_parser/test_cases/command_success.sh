@@ -1,0 +1,1 @@
+printf 'p(1..3).\n{a(X): p(X)}.\n#amosum{5,X : a(X), p(X) [1]} >= 5.\n' | amosumparser

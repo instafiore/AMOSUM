@@ -1,0 +1,1 @@
+printf '#amosum{5,X : a(X) [1]} >= .\n' | amosumparser; echo "exit $?"
