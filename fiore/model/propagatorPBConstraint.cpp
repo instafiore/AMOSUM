@@ -1,4 +1,4 @@
-#include "propagatorPBAbstraction.h"
+#include "propagatorPBConstraint.h"
 #include "propagatorPBImp.h"
 #include "propagatorPBImpLe.h"
 #include "solver.h"
@@ -46,10 +46,17 @@ void PropagatorPBConstraint::initFirstTime(clingo_propagate_init* _init) noexcep
     }
 }
 
-bool PropagatorPBConstraint::addClause(const clingo_propagate_control_t *control, const std::vector<clingo_literal_t>& clause) noexcept {
-    bool result_add_clause;
-    handleError(clingo_propagate_control_add_clause((clingo_propagate_control*) control, clause.data(), clause.size(), clingo_clause_type_volatile, &result_add_clause)) ;
 
+PropagatorPBConstraintImplementation* PropagatorPBConstraint::createImplementation() noexcept { return new PropagatorPBConstraintImplementationLe(this); }
+
+bool PropagatorPBConstraint::_addClause(const void *control, const std::vector<clingo_literal_t>& clause, const bool isInitControl, const clingo_clause_type_t clauseType) noexcept {
+    bool result_add_clause;
+    
+    clingo_propagate_init* controlInit = isInitControl ? (clingo_propagate_init*) control: nullptr;
+    clingo_propagate_control* controlPropagate = !isInitControl ? (clingo_propagate_control*) control: nullptr;
+
+    if(isInitControl) handleError(clingo_propagate_init_add_clause(controlInit, clause.data(), clause.size(), &result_add_clause));
+    else handleError(clingo_propagate_control_add_clause(controlPropagate, clause.data(), clause.size(), clauseType != CONSTANTS::NONE32 ? clauseType : clauseTypeGlobal, &result_add_clause)) ;
     #ifdef __debug__
         LOG(LogLevel::DEBUG_1,"Adding Clause [slits]: ", this->solvingLiteralIdsToSolvingLiterals(clause));
     #endif
@@ -58,13 +65,16 @@ bool PropagatorPBConstraint::addClause(const clingo_propagate_control_t *control
     if (!result_add_clause){
         #ifdef __debug__
             LOG(LogLevel::DEBUG_1,"Conflict with clause [slits]: ", this->solvingLiteralIdsToSolvingLiterals(clause));
-            LOG(LogLevel::DEBUG_1, this->solvingLiteralIdToSolvingLiteral(clause[0])," is undef: ",clingo::isUndef(clingo_propagate_control_assignment(control), clause[0]), " clause[0]: ",clause[0]);
-            LOG(LogLevel::DEBUG_1, this->solvingLiteralIdToSolvingLiteral(clause[0])," is true: ",clingo::isTrue(clingo_propagate_control_assignment(control), clause[0]));
-            LOG(LogLevel::DEBUG_1, this->solvingLiteralIdToSolvingLiteral(clause[0])," is false: ",clingo::isFalse(clingo_propagate_control_assignment(control), clause[0]));
+            if(!isInitControl){
+                LOG(LogLevel::DEBUG_1, this->solvingLiteralIdToSolvingLiteral(clause[0])," is undef: ",fiore::clingo::isUndef(clingo_propagate_control_assignment(controlPropagate), clause[0]), " clause[0]: ",clause[0]);
+                LOG(LogLevel::DEBUG_1, this->solvingLiteralIdToSolvingLiteral(clause[0])," is true: ",fiore::clingo::isTrue(clingo_propagate_control_assignment(controlPropagate), clause[0]));
+                LOG(LogLevel::DEBUG_1, this->solvingLiteralIdToSolvingLiteral(clause[0])," is false: ",fiore::clingo::isFalse(clingo_propagate_control_assignment(controlPropagate), clause[0]));
+            }
         #endif
         return true ;
     }
-
+    if(isInitControl) return false;
+     
     bool result_propagate;
     handleError(clingo_propagate_control_propagate((clingo_propagate_control*)control, &result_propagate)) ;
     
@@ -78,11 +88,13 @@ bool PropagatorPBConstraint::addClause(const clingo_propagate_control_t *control
     return false ;
 }
 
-PropagatorPBConstraintImplementation* PropagatorPBConstraint::createImplementation() noexcept { return new PropagatorPBConstraintImplementationLe(this); }
+bool PropagatorPBConstraint::addClausesPropagatedLitIds(const clingo_propagate_control*  control, const std::vector<clingo_literal_t>& propagatedLiteralIds, const clingo_clause_type_t clauseType) noexcept{
+    const size_t td = clingo_propagate_control_thread_id((const clingo_propagate_control_t *)control);
+    return _addClausesPropagatedLitIds(control, propagatedLiteralIds, false, td, clauseType); 
+}
 
-bool PropagatorPBConstraint::addClausesPropagatedLitIds(const clingo_propagate_control_t *control, const std::vector<clingo_literal_t>& propagatedLiteralIds) noexcept{
-    size_t td = clingo_propagate_control_thread_id((const clingo_propagate_control_t *)control);
-
+bool PropagatorPBConstraint::_addClausesPropagatedLitIds(const void *control, const std::vector<clingo_literal_t>& propagatedLiteralIds, const bool isInitControl, const size_t td, const clingo_clause_type_t clauseType) noexcept{
+    
     const PropagatorPBConstraintImplementation* imp = implementations[td];
     for(size_t si = 0; si < propagatedLiteralIds.size(); ++si){  
         const clingo_literal_t& literalId = propagatedLiteralIds[si];
@@ -91,9 +103,16 @@ bool PropagatorPBConstraint::addClausesPropagatedLitIds(const clingo_propagate_c
         clause.reserve(r.size() + 1);
         clause.push_back(literalId);
         extendVector(clause, r);
-        if(addClause(control, clause))return true;
+        if(_addClause(control, clause, isInitControl, clauseType))return true;
     }
     return false;
+}
+
+void PropagatorPBConstraint::initPropagation(clingo_propagate_init_t *init) noexcept{
+   for(size_t ni = 0; ni < implementations.size(); ++ni){
+        std::vector<clingo_literal_t> derived = implementations[ni]->initPropagation();
+        if(derived.size() > 0 && this->addClausesPropagatedLitIds(init, derived, ni)) return;
+    }
 }
 
 bool initImplementation(clingo_propagate_init_t *init, ClingoPropagator* propagator){
@@ -114,6 +133,7 @@ bool initImplementation(clingo_propagate_init_t *init, ClingoPropagator* propaga
         pbProp->firstTime = false;
     }
 
+    pbProp->initPropagation(init);
     if(pbProp->ownedSolvingLiterals.size() == 0) return true;
     
     if(isFirstTime){
@@ -138,6 +158,9 @@ bool initImplementation(clingo_propagate_init_t *init, ClingoPropagator* propaga
         handleError(clingo_propagate_init_add_watch(init, 1));
         pbProp->watchedLiterals.push_back(1);
     }
+
+    
+
     #ifdef __debug__
         double elasped = elapsedTime(start);
         propagator->increaseStat("initTime", elasped);

@@ -1,5 +1,5 @@
 #pragma once
-#include "propagatorPBAbstraction.h"
+#include "propagatorPBConstraint.h"
 
 
 
@@ -12,8 +12,10 @@ struct PropagatorPBConstraintImplementation{
     const std::vector<clingo_literal_t>& onLiteralsTrue(clingo_propagate_control_t *control, clingo_literal_t const *literalIds, size_t size, size_t dl = 0) noexcept;
     virtual inline const std::vector<clingo_literal_t>& getReasonForLiteral(const clingo_literal_t& solvingLiteralId) const noexcept { return currentFalseSolvingLiteralIds; }
     virtual void onLiteralsUndefined(clingo_propagate_control_t const *control, clingo_literal_t const *solvingLitearlsIds, size_t size, size_t dl = 0) noexcept = 0;
+    virtual std::vector<clingo_literal_t> initPropagation() noexcept = 0;
 
     virtual ~PropagatorPBConstraintImplementation() = default;
+
     std::vector<clingo_literal_t> currentFalseSolvingLiteralIds;
 protected:
     PropagatorPBConstraint* abs;

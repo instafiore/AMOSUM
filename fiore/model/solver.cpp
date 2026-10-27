@@ -2,6 +2,7 @@
 #include "../utils/logger.h"
 #include "../utils/utility.h"
 #include "../utils/stats.h"
+#include "../utils/argparse.h"
 #include "propagatorGetRest.h"
 #include "propagatorGetDerivedFromAss.h"
 #include "core.h"

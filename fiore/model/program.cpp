@@ -83,9 +83,9 @@ std::string Program::literalIdsToString(const std::vector<clingo_literal_t> lite
     return o.str();
 }
 
-int64_t Program::preprocessCost(Vector<const Literal*>&  softLiterals, 
+int64_t Program::preprocessCost(Vector<const Literal*>&  ownedLiterals, 
     UMNWeightFunction& weightFunction, MapLiteralId2Literal* mapLiteralId2Literal, bool update)noexcept{
-    std::vector<std::pair<const Literal*, const Literal*>> bothPolarityLiteralVec = Program::bothPolarityLiterals(softLiterals, mapLiteralId2Literal);
+    std::vector<std::pair<const Literal*, const Literal*>> bothPolarityLiteralVec = Program::bothPolarityLiterals(ownedLiterals, mapLiteralId2Literal);
     int64_t preprocessedCost = 0;
     for(const std::pair<const Literal*, const Literal*>& literals: bothPolarityLiteralVec){
         std::vector<int64_t> weights;
@@ -95,7 +95,7 @@ int64_t Program::preprocessCost(Vector<const Literal*>&  softLiterals,
         if(update){
             for(const Literal* literal: std::vector<const Literal*>{literals.first, literals.second}){
                 int64_t newWeight = weightFunction.at(literal->id) - minWeight;
-                if(newWeight == 0) softLiterals.remove(literal);
+                if(newWeight == 0) ownedLiterals.remove(literal);
                 weightFunction.set(literal->id, newWeight);
             }
         }

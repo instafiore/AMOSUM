@@ -1,6 +1,6 @@
 #pragma once
 #include <limits>
-#include "fiore/model/propagatorPBAbstraction.h"
+#include "fiore/model/propagatorPBConstraint.h"
 #include "../../amosum_program.h"
 
 // a group of an AmosumConstraint over solver literals: shared by the threads, never modified during search
@@ -15,7 +15,7 @@ struct AmoclingoPropagator: public fiore::PropagatorPBConstraint{
 
     static constexpr size_t NO_GROUP = std::numeric_limits<size_t>::max();
 
-    AmoclingoPropagator(std::string name, fiore::ClingoSolver* solver, AmosumConstraint* constraint, const std::string& reason = "nomin", const std::string& lazy = SETTINGS::FALSE_STR) noexcept;
+    AmoclingoPropagator(std::string name, fiore::ClingoSolver* solver, AmosumConstraint* constraint, const std::string& reason = "nomin", const std::string& lazy = SETTINGS::FALSE_STR, const clingo_clause_type_t clauseType = clingo_clause_type_learnt) noexcept;
 
     AmosumConstraint* const constraint;
     const bool ge;                              // >= (ge_*, amomaximize) or <= (le_*)
@@ -42,10 +42,6 @@ struct AmoclingoPropagator: public fiore::PropagatorPBConstraint{
     const bool lazyThreshold;                   // false or hybrid
     const double lazyPerc;                      // true: 1, float: its value
 
-    // value of the aggregate at the last total assignment (check): the value of the last model (amomaximize, LSU); one
-    // value for all threads: meant for one solver thread (parallel-mode 1)
-    int64_t lastTotalValue = 0;
-
     inline bool isMember(const clingo_literal_t l) const noexcept { return (size_t)std::abs(l) < N && groupIndex->at(l) != NO_GROUP; }
     inline bool isMoved(const clingo_literal_t l) const noexcept { return hasMovedLiterals && movedInto.find(l) != movedInto.end(); }
 
@@ -56,7 +52,3 @@ protected:
 private:
     std::vector<std::unique_ptr<fiore::SolvingLiteral>> memberSolvingLiterals;   // what ownedSolvingLiterals points to
 };
-
-// check callback (total assignments): the bound against the complete assignment (it may have changed between solve
-// calls without any watched change since), then the value of the model in lastTotalValue
-bool checkAmosum(clingo_propagate_control_t* control, fiore::ClingoPropagator* propagator);

@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include "fiore/utils/utility.h"
+#include "fiore/utils/argparse.h"
 
 // command line of the amosum solver (amosum_lsu): amosum's own options, parsed by fiore::ArgParse together with fiore's
 // ones (--log, --log-file-name, --statsfile, --seed, ...); the ASP files are the positional arguments
@@ -28,3 +29,9 @@ struct LazyValue: public fiore::PrintableRegex{
 
 // amosum's options, to pass to fiore::ArgParse::init
 std::vector<fiore::Argument> amosumArguments() noexcept;
+
+class AmosumArgParse: public fiore::ArgParse{
+    AmosumArgParse(int argc, char ** argv): fiore::ArgParse(argc, argv, amosumArguments()) {}
+};
+
+

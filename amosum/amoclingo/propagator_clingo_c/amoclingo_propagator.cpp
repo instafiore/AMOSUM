@@ -4,10 +4,10 @@
 #include <map>
 #include <algorithm>
 
-AmoclingoPropagator::AmoclingoPropagator(std::string name, fiore::ClingoSolver* solver, AmosumConstraint* constraint, const std::string& reason, const std::string& lazy) noexcept:
+AmoclingoPropagator::AmoclingoPropagator(std::string name, fiore::ClingoSolver* solver, AmosumConstraint* constraint, const std::string& reason, const std::string& lazy, const clingo_clause_type_t clauseType) noexcept:
     // falsity changes the max/min possible sum (ge, EO); le_amo depends only on the true literals: their negations
     // are not watched, as in the old watch filter of getLiterals
-    fiore::PropagatorPBConstraint(name, solver, constraint, constraint->type != "le_amo"),
+    fiore::PropagatorPBConstraint(name, solver, constraint, constraint->type != "le_amo", clauseType),
     constraint(constraint),
     ge(constraint->ge),
     eo(constraint->type == "ge_eo" || constraint->type == "le_eo"),
@@ -17,26 +17,26 @@ AmoclingoPropagator::AmoclingoPropagator(std::string name, fiore::ClingoSolver* 
     lazyActive(lazy != SETTINGS::FALSE_STR),
     lazyThreshold(lazy == SETTINGS::FALSE_STR || lazy == SETTINGS::LAZY_HYBRID),
     lazyPerc(lazy == SETTINGS::TRUE_STR ? 1.0 : (lazyThreshold ? 0.0 : std::stod(lazy))) {
-    this->check = &checkAmosum;
+    // this->check = &checkAmosum;
 }
 
 fiore::PropagatorPBConstraintImplementation* AmoclingoPropagator::createImplementation() noexcept { return new AmosumPropagator(this); }
 
-bool checkAmosum(clingo_propagate_control_t* control, fiore::ClingoPropagator* propagator){
-    AmoclingoPropagator* prop = static_cast<AmoclingoPropagator*>(propagator);
-    if(prop->implementations.empty()) return true;
-    // an update without changes: the bound against the whole assignment (a conflict if violated)
-    if(!fiore::propagateImplementation(control, nullptr, 0, propagator)) return false;
-    const size_t td = clingo_propagate_control_thread_id(control);
-    prop->lastTotalValue = static_cast<AmosumPropagator*>(prop->implementations[td])->currentValue();
-    return true;
-}
+// bool checkAmosum(clingo_propagate_control_t* control, fiore::ClingoPropagator* propagator){
+//     AmoclingoPropagator* prop = static_cast<AmoclingoPropagator*>(propagator);
+//     if(prop->implementations.empty()) return true;
+//     // an update without changes: the bound against the whole assignment (a conflict if violated)
+//     if(!fiore::propagateImplementation(control, nullptr, 0, propagator)) return false;
+//     const size_t td = clingo_propagate_control_thread_id(control);
+//     prop->lastSumValue = static_cast<AmosumPropagator*>(prop->implementations[td])->currentValue();
+//     return true;
+// }
 
 void AmoclingoPropagator::initFirstTime(clingo_propagate_init* _init) noexcept{
     // not PropagatorPBConstraint::initFirstTime: it maps only the soft literals of the program and has no groups
     solver->initializer->init(_init, solver);
     // checkAmosum on total assignments: the value of each model, and the bound once more
-    clingo_propagate_init_set_check_mode(_init, clingo_propagator_check_mode_total);
+    // clingo_propagate_init_set_check_mode(_init, clingo_propagator_check_mode_total);
 
     auto solverLiteral = [_init](const clingo_literal_t plit){
         clingo_literal_t slit;
@@ -175,17 +175,15 @@ void AmoclingoPropagator::initFirstTime(clingo_propagate_init* _init) noexcept{
     }
 
     // 6. the bound with every literal still undefined: violated by the facts alone -> no answer set
-    int64_t initialMps = constant;
-    if(ge || eo){
-        for(const AmosumSolvingGroup& g: solvingGroups)
-            initialMps += ge ? weight->at(g.literals.back()) : (g.movedLiterals.empty() ? weight->at(g.literals.front()) : 0);
-    }
-    if(ge ? initialMps < constraint->bound : initialMps > constraint->bound){
-        const clingo_literal_t bottom = fiore::CONSTANTS::BOTTOM;
-        bool result;
-        handleError(clingo_propagate_init_add_clause(_init, &bottom, 1, &result));
-        return;
-    }
-
-    
+    // int64_t initialMps = constant;
+    // if(ge || eo){
+    //     for(const AmosumSolvingGroup& g: solvingGroups)
+    //         initialMps += ge ? weight->at(g.literals.back()) : (g.movedLiterals.empty() ? weight->at(g.literals.front()) : 0);
+    // }
+    // if(ge ? initialMps < constraint->bound : initialMps > constraint->bound){
+    //     const clingo_literal_t bottom = fiore::CONSTANTS::BOTTOM;
+    //     bool result;
+    //     handleError(clingo_propagate_init_add_clause(_init, &bottom, 1, &result));
+    //     return;
+    // }
 }

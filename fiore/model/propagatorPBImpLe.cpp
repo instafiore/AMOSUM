@@ -30,6 +30,10 @@ int64_t PropagatorPBConstraintImplementationLe::actualCost(){
     return c;
 }
 
+std::vector<clingo_literal_t> PropagatorPBConstraintImplementationLe::initPropagation() noexcept{
+    return currentCost > this->abs->pbConstraint->bound ? std::vector<clingo_literal_t>({CONSTANTS::BOTTOM}) : std::vector<clingo_literal_t>();
+}
+
 std::vector<clingo_literal_t>& PropagatorPBConstraintImplementationLe::propagatePhase(clingo_propagate_control_t* control) noexcept{
     const int64_t& ub = abs->pbConstraint->bound;
 

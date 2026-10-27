@@ -78,6 +78,14 @@ AmosumPropagator::AmosumPropagator(AmoclingoPropagator* abs) noexcept:
     }
 }
 
+// before search (every solve call): the bound against the level-0 state; the reason is empty, since only level-0
+// assignments are left between solve calls (reasons[BOTTOM] may still hold the last conflict of the previous call)
+std::vector<clingo_literal_t> AmosumPropagator::initPropagation() noexcept{
+    if(!(ge ? mps() < bound() : mps() > bound())) return {};
+    reasons->get(fiore::CONSTANTS::BOTTOM).clear();
+    return {fiore::CONSTANTS::BOTTOM};
+}
+
 // value of the group in the max (ge) / min (le) possible sum
 int64_t AmosumPropagator::contribution(const AmosumThreadGroup& g) const noexcept{
     if(g.trueLiteral != SETTINGS::NONE_LITERAL) return g.trueIsMoved ? 0 : weightOf(g.trueLiteral);

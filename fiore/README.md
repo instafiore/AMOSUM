@@ -24,7 +24,7 @@ fiore/
 │   ├── solver.*          ClingoSolver: solve, assumptions, unsat cores, polarity, createOptimizer
 │   ├── assigment.*       Assignment, ClingoAssignment, AnswersetsPool
 │   ├── propagator.*      ClingoPropagator, ClingoPropagatorInitializer
-│   ├── propagatorPBAbstraction.*, propagatorPBImp.*, propagatorPBImpLe.*   sum <= bound propagator
+│   ├── propagatorPBConstraint.*, propagatorPBImp.*, propagatorPBImpLe.*   sum <= bound propagator
 │   ├── bound.*           Core, CoreLowerBound, LowerBound(OBV)
 │   └── propagatorGetRest.*, propagatorGetDerivedFromAss.*   helper propagators of ClingoSolver
 └── tests/            test_utils (no Clingo), test_solver, data/*.asp

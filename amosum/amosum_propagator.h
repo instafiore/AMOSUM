@@ -81,6 +81,7 @@ private:
     }
     int64_t contribution(const AmosumThreadGroup& g) const noexcept;
     bool lazyCondition() const noexcept;
+    std::vector<clingo_literal_t> initPropagation() noexcept override;
 
     bool onMemberTrue(clingo_literal_t l) noexcept;
     bool onMemberFalse(clingo_literal_t l) noexcept;

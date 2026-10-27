@@ -11,7 +11,7 @@
 #include <assert.h>
 #include "logger.h"
 #include "utility.h"
-
+#include "argparse.h"
 
 namespace fiore {
 

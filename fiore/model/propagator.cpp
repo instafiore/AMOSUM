@@ -1,5 +1,6 @@
 #include "propagator.h"
 #include "../utils/logger.h"
+#include "../utils/argparse.h"
 #include "solver.h"
 // inline ClingoPropagatorInitializer* ClingoPropagatorInitializer::instance = nullptr;
 

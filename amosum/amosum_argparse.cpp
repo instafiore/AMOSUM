@@ -1,4 +1,4 @@
-#include "argparse.h"
+#include "amosum_argparse.h"
 
 std::vector<fiore::Argument> amosumArguments() noexcept{
     using fiore::Argument;

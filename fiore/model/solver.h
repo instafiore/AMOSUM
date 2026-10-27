@@ -1,6 +1,6 @@
 #pragma once
 #include "../utils/utility.h"
-#include "propagatorPBAbstraction.h"
+#include "propagatorPBConstraint.h"
 #include "propagator.h"
 #include "assigment.h"
 #include "core.h"

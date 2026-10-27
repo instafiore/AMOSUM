@@ -1,6 +1,7 @@
 #include "assigment.h"
 #include "program.h"
 #include "../utils/stats.h"
+#include "../utils/argparse.h"
 
 
 namespace fiore {

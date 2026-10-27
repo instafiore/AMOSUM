@@ -39,7 +39,7 @@ Paper: Alviano, Dodaro, Fiorentino, Maratea, "AMO-aware Aggregates in ASP", IJCA
 ## C++ build and run
 
 - Build (from `amosum/amoclingo/propagator_clingo_c/`): `make clean && make release`
-  (what `install_amoclingo.sh` does); binary `bin/amosum_cpp`, expected there by `amoclingo`.
+  (what `install_amoclingo.sh` does); binary `bin/amoclingo_core`, expected there by `amoclingo`.
 - The Makefile compiles every `.cpp` found under `amosum/` (including `ijcai_version`, an old quirk)
   plus fiore's `utils/` sources into `build/fiore/` (via `include ../../../fiore/fiore.mk`).
 - **Debug build**: `make clean && make BUILD_MODE=test EXTRA_CFLAGS="-g -O0" EXTRA_LDFLAGS=`.
@@ -50,7 +50,7 @@ Paper: Alviano, Dodaro, Fiorentino, Maratea, "AMO-aware Aggregates in ASP", IJCA
   The log file is `amoclingo`'s `-log/--log-file` (default `log` in the current directory, overwritten).
 - Run: `/opt/homebrew/anaconda3/envs/amosum/bin/amoclingo -e <encoding> -i <instance> [-n models] [-l lazy] [-r reason]`
   (conda env `amosum`; the base env has no `clingo` Python module). It rewrites the program into
-  `/tmp/.<name>_without_amosum_*.asp` and prints the `amosum_cpp` command line (`run:` line).
+  `/tmp/.<name>_without_amosum_*.asp` and prints the `amoclingo_core` command line (`run:` line).
 - **Benchmarks**: use the light ones (`ga`, `gc`, `kn`, `kn_toy`). **Do not use nurse rostering (`nr`)**: it is very heavy.
 - Python: run from the repo root (`python -m amosum....`); from inside `amosum/`, the file
   `amosum.py` shadows the `amosum` package and imports fail.
