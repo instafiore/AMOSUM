@@ -30,11 +30,13 @@ Assignment::Assignment()noexcept:
 }
 
 
-ClingoAssignment::ClingoAssignment(Program* program, const size_t number, const clingo_model_t* model, const AssignmentType type): Assignment(program, number, type) {  
+ClingoAssignment::ClingoAssignment(Program* program, const size_t number, const clingo_model_t* model, const AssignmentType type, const std::regex* avoidToShow):
+    Assignment(program, number, type), avoidToShowRegex(avoidToShow){
     this->init(model);
 }
 
-ClingoAssignment::ClingoAssignment(Program* program, const clingo_model_t* model, const AssignmentType type): Assignment(program, CONSTANTS::NONE32, type) {  
+ClingoAssignment::ClingoAssignment(Program* program, const clingo_model_t* model, const AssignmentType type, const std::regex* avoidToShow):
+    Assignment(program, CONSTANTS::NONE32, type), avoidToShowRegex(avoidToShow){
     this->init(model);
 }
 
@@ -78,7 +80,7 @@ void ClingoAssignment::init(const clingo_model_t* model){
     handleError(clingo_model_symbols(model, clingo_show_type_shown, atoms, atoms_n));
 
     outputString = "{ " ;
-
+    bool first = true;
     for (it = atoms, ie = atoms + atoms_n; it != ie; ++it) {
         size_t n;
         char *str_new;
@@ -101,13 +103,15 @@ void ClingoAssignment::init(const clingo_model_t* model){
         // retrieve the symbol's string
         handleError(clingo_symbol_to_string(*it, name, n));
         const Literal* literal = program->literalByName(name);
+        if(std::regex_match(literal->name, *avoidToShowRegex)) continue;
 
         #ifdef __debug__
             LOG(LogLevel::DEBUG, "Setting ",literal, " to true");
         #endif
 
         this->set(literal->id, true);
-        outputString += std::string("\'") +std::string(name)+ std::string("\'") + (it + 1 != ie ? std::string(", ") : std::string(""));
+        outputString += (first ? "" : ", ") + std::string("'") + name + std::string("'");
+        first = false;
     }
 
     outputString += "}";
@@ -136,7 +140,6 @@ void ClingoAssignment::init(const clingo_model_t* model){
             //     NOOP;
         }
     }
-
 
 }
 
@@ -168,8 +171,11 @@ std::string Assignment::toOutputString(Vector<const Literal*> *toShow, const fio
         assert(false);
     if(time != 0) out<<"Time "<<time<<" ";
     if(number == CONSTANTS::NONE32) number = AnswersetsPool::getInstance()->getNextIdAnswersetPrinted();
-    // out<<"Cost: "<<this->cost()<<" "<<prefix<<"AnswerSet "<<number<<"° : "<<this->toInterpretationString(false, true, toShow);
-    if(!this->isSolutionUnkown()) out<<"Cost: "<<this->cost()<<" "<<prefix<<"AnswerSet "<<number<<"° : "<<outputString;
+    if(!this->isSolutionUnkown()){
+        // the cost only with a #minimize
+        if(program->isOptimizationProblem) out<<"Cost: "<<this->cost()<<" ";
+        out<<prefix<<"AnswerSet "<<number<<"° : "<<outputString;
+    }
     else out<<outputString;
     return out.str();
 };

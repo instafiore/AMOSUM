@@ -34,7 +34,7 @@ struct Assignment{
     std::string toCostOutputString(Vector<const Literal*> *toShow = nullptr) noexcept;
 
     void foundNewAnswerset(std::string prefix = "", const std::string& verbose = CONSTANTS::verboseLevel1) noexcept;
-    void printAssignment(std::string prefix = "") noexcept;
+    virtual void printAssignment(std::string prefix = "") noexcept;
     void printCostAssignment(std::string prefix = "") noexcept;
     void setAsCurrentOptimum() noexcept;
 
@@ -78,9 +78,11 @@ private:
 
 struct ClingoAssignment: public Assignment{
     int64_t* clingoCost;
-    ClingoAssignment(Program* program, const size_t number, const clingo_model_t* model, const AssignmentType type = AssignmentType::StableModel);
-    ClingoAssignment(Program* program, const clingo_model_t* model, const AssignmentType type = AssignmentType::StableModel);
+    // avoidToShow: atoms not printed (nullptr: all shown); not owned, it must outlive the assignment
+    ClingoAssignment(Program* program, const size_t number, const clingo_model_t* model, const AssignmentType type = AssignmentType::StableModel, const std::regex* avoidToShow = nullptr);
+    ClingoAssignment(Program* program, const clingo_model_t* model, const AssignmentType type = AssignmentType::StableModel, const std::regex* avoidToShow = nullptr);
     void init(const clingo_model_t* model);
+    const std::regex* const avoidToShowRegex;
 };
 
 std::ostream& operator<<(std::ostream& out, const Assignment& value);

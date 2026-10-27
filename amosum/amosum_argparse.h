@@ -20,6 +20,12 @@ namespace AMOSUM_ARGS {
     // --lazy: when to propagate (see AmoclingoPropagator): false, true, hybrid, or a float in [0,1]
     const std::string lazyKey = "lazy";
     const std::string lazyDefault = "false";
+
+
+    // --algorithm: search algorithm for #amomaximize (without #amomaximize: always a single solve, as lsu does)
+    const std::string algorithmKey = "opt-strategy";
+    const std::string algorithmLsu = "lsu";
+    const std::string algorithmDefault = algorithmLsu;
 }
 
 // false, true, hybrid, or a float in [0,1]

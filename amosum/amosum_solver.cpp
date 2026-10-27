@@ -14,10 +14,6 @@ void AmosumClingoSolver::init(const std::vector<std::string>& ASPInputs) noexcep
         AmoclingoPropagator* propagator = new AmoclingoPropagator("amosum " + constraint->id, this, constraint, reason, lazy);
         registerPropagator(propagator);         // registered on program->ctl, owned by ClingoSolver::propagators
         amosumPropagators.push_back(propagator);
-        if(constraint->type == "amomaximize"){
-            if(maximizer != nullptr) fiore::setExitCode(fiore::CONSTANTS::ERROR_CODE, true, "more than one #amomaximize");
-            maximizer = propagator;
-        }
     }
     #ifdef __debug__
         LOG(fiore::LogLevel::INFO, "Registered ", amosumPropagators.size(), " amosum propagators (reason ", reason, ", lazy ", lazy, ")");

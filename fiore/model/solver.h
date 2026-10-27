@@ -101,6 +101,7 @@ friend ClingoPropagatorInitializer;
     void removeLastAssumption() noexcept;
     inline const Core* getBlamedAssumptions() const noexcept{ return this->res.isSat() ? nullptr : &blamedAssumptions; }
     inline const std::vector<Core*>& getUnsatCores() const noexcept{ return unsatCores; }
+    virtual ClingoAssignment* createAssignment(const clingo_model_t* model){ return new ClingoAssignment(program.get(), model); }
 
     #ifdef __debug__
         inline void restartWallTimePropagators() noexcept { for(std::unique_ptr<ClingoPropagator>& p: propagators) p->resetTimes(); }

@@ -4,8 +4,8 @@ std::vector<fiore::Argument> amosumArguments() noexcept{
     using fiore::Argument;
     return {
         Argument::Builder(AMOSUM_ARGS::reasonKey).isWithValue()
-            .withDesc("Reasons of the >= derivations")
-            .withLongDesc("Reasons of the >= derivations: nomin (from the second maximum of the derived literal's group), "
+            .withDesc("Reasons computation")
+            .withLongDesc("Reasons computation: nomin (from the second maximum of the derived literal's group), "
                           "ijcai (all the false literals of that group), min and minfly (nomin minimized greedily), "
                           "cmin (not implemented: as nomin)")
             .withDefaultValue(AMOSUM_ARGS::reasonDefault)
@@ -19,5 +19,12 @@ std::vector<fiore::Argument> amosumArguments() noexcept{
             .withDefaultValue(AMOSUM_ARGS::lazyDefault)
             .withRegex(LazyValue())
             .build(),
+        Argument::Builder(AMOSUM_ARGS::algorithmKey).isWithValue()
+            .withDesc("Search algorithm for #amomaximize")
+            .withLongDesc("Search algorithm for #amomaximize: lsu (linear search, each model of value v sets the "
+                          "bound to v+1 until UNSAT). Ignored without #amomaximize")
+            .withDefaultValue(AMOSUM_ARGS::algorithmDefault)
+            .withValidValues({AMOSUM_ARGS::algorithmLsu})
+            .build()
     };
 }

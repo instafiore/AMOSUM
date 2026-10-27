@@ -20,10 +20,8 @@ public:
 
     // grounds the program (ClingoSolver::init) and registers one AmoclingoPropagator per AmosumConstraint
     void init(const std::vector<std::string>& ASPInputs) noexcept;
-
+    fiore::ClingoAssignment* createAssignment(const clingo_model_t* model) override{ return new AmosumClingoAssignment(static_cast<AmosumProgram*>(program.get()), model);}
     std::vector<AmoclingoPropagator*> amosumPropagators;    // non-owning: ClingoSolver::propagators owns them
-    AmoclingoPropagator* maximizer = nullptr;               // the #amomaximize constraint, if any (non-owning)
-
 private:
     const std::string reason;
     const std::string lazy;

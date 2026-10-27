@@ -90,7 +90,7 @@ bool solveCallback(clingo_solve_event_type_t type, void *event, void *data, bool
             #ifdef __debug__
                 LOG(LogLevel::DEBUG, "solveCallback: SAT");
             #endif
-            solver->answerset = new ClingoAssignment(solver->program.get(), model);
+            solver->answerset = solver->createAssignment(model);
             AnswersetsPool::getInstance()->addAnswerset(solver->answerset);
             // solver->answerSets.emplace_back(answeset);
             // Program* program, const size_t number, clingo_model_t* model

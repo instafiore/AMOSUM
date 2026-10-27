@@ -37,4 +37,5 @@ const clingo_literal_t PLITBOTTOM = 0;
 
 // New
 static constexpr clingo_literal_t NONE_LITERAL = fiore::CONSTANTS::NONE32;
+inline const std::regex auxRegex{R"(__(element|group|aux|lb|ub|tuple|same)__(\(.*)?)"};
 }

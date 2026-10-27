@@ -22,7 +22,7 @@
 #include "amosum/amosum_argparse.h"
 #include "fiore/utils/stats.h"
 #include "fiore/clingo/utilityClingo.h"
-
+#include "runner_clingo.h"
 
 
 
@@ -59,7 +59,7 @@ int main(int argc, char ** argv) {
         #endif
 
         static constexpr bool release_mode = !test_mode;
-        std::cout << "weaksbls version 2.0 mode: "
+        std::cout << "amoclingo version 3.0 mode: "
                 << (release_mode ? "release" : "test")
                 << (stats_mode   ? "-stats"  : "")
                 << "\n";
@@ -89,14 +89,10 @@ int main(int argc, char ** argv) {
             std::cout<<"Debugging at: "<<pathToLogFile<<"\n";
         #endif
     
-        std::ostringstream oss;
-        oss<<std::string("ASP input files: ")<<ASPInputsPositional;
-        std::cout<<oss.str()<<std::endl;
         
-        // Runner runner;
+        Runner runner;
         fiore::Statistics::initInstance(fiore::ArgParse::getInstance()->get(fiore::CONSTANTS::STATSFILEKey));
-        // fiore::clingo::ClingoResult result = runner.run();
-        fiore::clingo::ClingoResult result;
+        fiore::clingo::ClingoResult result = runner.run();
         fiore::setExitCode(result.exitCode());
     } catch( Args::HelpHasBeenPrintedException & e) {
         return 0;

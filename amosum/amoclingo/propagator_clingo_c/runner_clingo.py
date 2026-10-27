@@ -1,110 +1,47 @@
-from io import StringIO
-import json
-import math
-import subprocess
-import time
-from typing import Dict, List
-import re
-import sys
 import os
-import amosum.amosum_parser as amosum_parser
-from amosum import *
+import re
 import signal
+import subprocess
+import tempfile
+from typing import List
 
-# adding root path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-import ast
-from amosum.amowasp.propagator_wasp_py.runner_wasp import RunnerWasp
-from  utility import *
-import utility
-import settings
-from preprocess import *
-from datetime import datetime
+from amosum import settings
+from amosum.amosum_parser.__main__ import run as run_rewriter
 
 
+def rewriteWithoutAmosum(path: str, directory: str) -> str:
+    # the amosum statements of path rewritten into plain ASP, in a temporary file inside directory
+    name = re.sub(r"\.(asp|lp)$", "", os.path.basename(path))
+    with tempfile.NamedTemporaryFile("w", dir=directory, prefix=f"{name}_without_amosum_", suffix=".asp", delete=False) as f:
+        f.write(run_rewriter(input=path))
+        return f.name
 
-        
 
-class RunnerClingoCpp(RunnerWasp):
+class RunnerClingoCpp:
     '''
-    This class is meant to run experiments on the AMO sum propagator(s) Clingo using C API
+    Rewrites the ASP inputs with the amosum parser and runs amoclingo-core on them with the given options:
+    amoclingo-core's output goes straight to stdout/stderr and run() returns its exit code
     '''
 
     SOLVER_EXE = "amoclingo-core"
-    
 
-    def __init__(self, parameters: Dict[str, str]) -> None:
-        super().__init__(parameters)
+    def __init__(self, inputs: List[str], args: List[str]) -> None:
+        self.inputs = inputs        # ASP files, rewritten before the run
+        self.args = args            # amoclingo-core's options, passed as they are
 
-    def handleRun(self, run, totalTime, maximizationProblem = False) -> List[Result]:
-        eachModelTime = totalTime
-        generator = run_and_stream(run)
-        results: List[Result] = []
-    
+    def run(self) -> int:
+        exe = f"{settings.PROPAGATOR_DIR_LOCATION_CLINGO_C_BIN}/{RunnerClingoCpp.SOLVER_EXE}"
 
-        for line in generator:
-            # print(f"serialized: {line}")
-            if not line.strip(): continue
-            resultNew = Result.parse(line)
-            if resultNew is None:
-                continue
-            result = resultNew
-            if maximizationProblem:
-                endCurrentModelTime = time.time()
-                result.cumulativeTime = round(endCurrentModelTime - totalTime,3)
-                result.timeModel = round(endCurrentModelTime - eachModelTime, 3)
-                eachModelTime = endCurrentModelTime            
-            print(result)
-            results.append(result)
+        with tempfile.TemporaryDirectory(prefix="amoclingo_") as tmp:
+            rewritten = [rewriteWithoutAmosum(i, tmp) for i in self.inputs]
+            # the options before the files: amoclingo-core's parser takes everything after the first file as a file
+            command = [exe, *self.args, *rewritten]
+            proc = subprocess.Popen(command)
 
-        if len(results) == 0:
-                results.append(Result(None, TIMEOUT_CODE))
+            # SIGINT/SIGTERM are forwarded: amoclingo-core prints its best answer set and exits
+            def forward(signum, frame):
+                proc.send_signal(signum)
+            signal.signal(signal.SIGINT, forward)
+            signal.signal(signal.SIGTERM, forward)
 
-        return results
-    
-    def run(self) -> Result:
-        
-        location_encoding = self.encoding
-        location_instance = self.instance
-
-        print(f"encoding: {location_encoding}") 
-        print(f"instance: {location_instance}")
-
-        
-        hidden_location_encoding= self.rewrite_file_without_amosum(location_encoding)
-        hidden_location_instance= self.rewrite_file_without_amosum(location_instance)
-
-        
-        grounded_program, run_command_ground = ground_program(hidden_location_encoding, hidden_location_instance, return_command=True)
-        
-        run = f"{settings.PROPAGATOR_DIR_LOCATION_CLINGO_C_BIN}/./{RunnerClingoCpp.SOLVER_EXE}\
-            -encoding={hidden_location_encoding}\
-            -instance={hidden_location_instance} \
-            -models={self.num_models} \
-            -logfile={self.log_file} \
-            -serialize"
-
-        preprocess_map =  preprocess_ground_program(grounded_program)
-        for amosum in preprocess_map["amosum_set"]:
-            self.registerPropagator(amosum.prop_type, amosum.id)
-
-        prop_run = ""
-        if len(preprocess_map["amosum_set"]) > 0:
-            prop_run = f" -amosum_propagators=\"{' '.join(self.propagators)}\" "
-            run += prop_run
-
-        # print(f"weights: {str(preprocess_map["amosum_mapweights"])}")
-        maximization = preprocess_map.get("maximization") # Decomment to have cost only for amomaximize problems
-        # weights = preprocess_map["amosum_mapweights"]
-
-     
-        print(f"run:\t {run}")
-
-        totalTime = time.time()
-        result = None
-        
-        result = self.handleRun(run, totalTime, maximization)
-        # print(f"Exit code: {result.exitCode}")
-        
-        return result
+            return proc.wait()      # the temporary directory and the rewritten files are removed here
