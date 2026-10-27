@@ -1,0 +1,13 @@
+value_max(20).
+{in_knapsack(X, V):V=2..4, value_max(MAX)}<=1:-object(X, WEIGHT, VALUE).
+__element__((0, ub(MAX_WEIGHT, 0)), (V*WEIGHT), (X)):-in_knapsack(X, V), object(X, WEIGHT, _), ub(MAX_WEIGHT, 0).
+{__group__(__element__((0, ub(MAX_WEIGHT, 0)), (V*WEIGHT), (X)), "+", V*WEIGHT, (X), (0, ub(MAX_WEIGHT, 0)))}:-in_knapsack(X, V), object(X, WEIGHT, _), ub(MAX_WEIGHT, 0).
+__ub__(MAX_WEIGHT, (0, ub(MAX_WEIGHT, 0))):-ub(MAX_WEIGHT, 0).
+__aux__((0, ub(MAX_WEIGHT, 0)), le_amo):-ub(MAX_WEIGHT, 0).
+{__group__(__aux__((0, ub(MAX_WEIGHT, 0)), le_amo), "-", MAX_WEIGHT, (__aux__((0, ub(MAX_WEIGHT, 0)), le_amo)), (0, ub(MAX_WEIGHT, 0)))}:-ub(MAX_WEIGHT, 0).
+__element__((1, lb(MIN, 1)), (V*VALUE), (X)):-in_knapsack(X, V), object(X, _, VALUE), lb(MIN, 1).
+{__group__(__element__((1, lb(MIN, 1)), (V*VALUE), (X)), "+", V*VALUE, (X), (1, lb(MIN, 1)))}:-in_knapsack(X, V), object(X, _, VALUE), lb(MIN, 1).
+__lb__(MIN, (1, lb(MIN, 1))):-lb(MIN, 1).
+__aux__((1, lb(MIN, 1)), ge_amo):-lb(MIN, 1).
+{__group__(__aux__((1, lb(MIN, 1)), ge_amo), "-", MIN, (__aux__((1, lb(MIN, 1)), ge_amo)), (1, lb(MIN, 1)))}:-lb(MIN, 1).
+

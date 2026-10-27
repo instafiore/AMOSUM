@@ -30,8 +30,4 @@ struct LazyValue: public fiore::PrintableRegex{
 // amosum's options, to pass to fiore::ArgParse::init
 std::vector<fiore::Argument> amosumArguments() noexcept;
 
-class AmosumArgParse: public fiore::ArgParse{
-    AmosumArgParse(int argc, char ** argv): fiore::ArgParse(argc, argv, amosumArguments()) {}
-};
-
 

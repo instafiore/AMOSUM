@@ -28,6 +28,7 @@ ArgParse::ArgParse(int argc, char ** argv, const std::vector<Argument>& extraArg
     this->addArgument(Argument::Builder(CONSTANTS::verboseKey).isWithValue().withDesc("1: cost and time per answer set\n2: cost, time, and answer set").withDefaultValue(CONSTANTS::verboseDef).withValidValues({CONSTANTS::verboseLevel1, CONSTANTS::verboseLevel2}).build());
     for(const Argument& a: extraArguments) this->addArgument(a);
     // parsing arguments
+    build();
 }
 
 void ArgParse::checkArguments(){

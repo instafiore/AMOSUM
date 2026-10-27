@@ -155,7 +155,7 @@ size_t Assignment::numberOfTrueLiterals(const Vector<const Literal*>* literals) 
     return numberOfTL;
 }
 
-std::string Assignment::toOutputString(Vector<const Literal*> *toShow) noexcept{
+std::string Assignment::toOutputString(Vector<const Literal*> *toShow, const fiore::UMNWeightFunction* w) noexcept{
     std::ostringstream out;
     std::string prefix;
     if(result.isOptimum()){

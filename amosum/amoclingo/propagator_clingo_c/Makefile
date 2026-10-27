@@ -6,7 +6,7 @@ BUILD_DIR = build
 BIN_DIR = bin
 INCLUDES =  
 SRC_DIR = ../..
-TARGET = amoclingo_core
+TARGET = amoclingo-core
 C=cpp
 amowasp = $(SRC_DIR)/amowasp/propagator_wasp_c
 

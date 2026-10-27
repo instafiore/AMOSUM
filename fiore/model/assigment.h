@@ -30,7 +30,7 @@ struct Assignment{
     std::string toAnswerSetString(const Vector<const Literal*> *toShow = nullptr)const noexcept;
     std::string toInterpretationString(bool printUndefined = false,  bool onlyTrueAtoms = true, Vector<const Literal*> *toShow = nullptr);
     std::string toConstraints()const noexcept;
-    std::string toOutputString(Vector<const Literal*> *toShow = nullptr) noexcept;
+    std::string toOutputString(Vector<const Literal*> *toShow = nullptr, const fiore::UMNWeightFunction* w = nullptr) noexcept;
     std::string toCostOutputString(Vector<const Literal*> *toShow = nullptr) noexcept;
 
     void foundNewAnswerset(std::string prefix = "", const std::string& verbose = CONSTANTS::verboseLevel1) noexcept;

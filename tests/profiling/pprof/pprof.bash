@@ -13,7 +13,7 @@ I="/tmp/.0011-knapsack-15-32223-358414-type1_without_amosum_2026-06-03-12-51-26-
 P="ge_amo -id (1,lb(358414,1)) -encoding /Users/instafiore/Workspace/AMOSUM/tests/benchmarks/knapsack/encoding-amosum-amo.asp -instance /Users/instafiore/Workspace/AMOSUM/tests/benchmarks/knapsack/instances/0011-knapsack-15-32223-358414-type1.asp -lazy false -reason nomin -lang cpp -models -log_file log -static_mpc false le_amo -id (0,ub(32223,0)) -encoding /Users/instafiore/Workspace/AMOSUM/tests/benchmarks/knapsack/encoding-amosum-amo.asp -instance /Users/instafiore/Workspace/AMOSUM/tests/benchmarks/knapsack/instances/0011-knapsack-15-32223-358414-type1.asp -lazy false -reason nomin -lang cpp -models -log_file log -static_mpc false"
 
 CPUPROFILE_FREQUENCY=4000 CPUPROFILE=$OUT timeout 30s \
-    /Users/instafiore/Workspace/AMOSUM/amosum/amoclingo/propagator_clingo_c/bin/./amoclingo_core \
+    /Users/instafiore/Workspace/AMOSUM/amosum/amoclingo/propagator_clingo_c/bin/./amoclingo-core \
     -encoding="$E" \
     -instance="$I" \
     -models=1 \
