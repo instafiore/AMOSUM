@@ -194,6 +194,19 @@ def runCore(inputs: List[str], strategy: str, progression: str, reason: str, laz
     return parseOutput(out.returncode, out.stdout + out.stderr)
 
 
+def runPython(inputs: List[str], implementation: str, strategy: str, progression: str, reason: str, lazy: str,
+              directory: str, timeout: int) -> Run:
+    # the Python versions on the original files (they rewrite them): amoclingo --lang py (clingo), amowasp (WASP)
+    module = ["-m", "amosum.amoclingo", "--lang", "py"] if implementation == "py" else ["-m", "amosum.amowasp"]
+    command = [sys.executable, "-O", *module, *inputs, f"--opt-strategy={strategy}", f"--progression={progression}",
+               f"--reason={reason}", f"--lazy={lazy}"]
+    try:
+        out = subprocess.run(command, capture_output=True, text=True, timeout=timeout, cwd=directory)
+    except subprocess.TimeoutExpired:
+        return Run(-1, None, [], "TIMEOUT")
+    return parseOutput(out.returncode, out.stdout + out.stderr)
+
+
 def runWrapper(inputs: List[str], reason: str, lazy: str, directory: str, timeout: int) -> Run:
     # as a user would: python -m amosum.amoclingo FILES --reason R --lazy L
     command = [sys.executable, "-O", "-m", "amosum.amoclingo", *inputs, "--reason", reason, "--lazy", lazy,
@@ -255,6 +268,15 @@ def check(case: Case, run: Run) -> List[str]:
     return errors
 
 
+NAMES = {"cpp": "amoclingo-core", "py": "amoclingo --lang py", "wasp": "amowasp"}
+
+
+def tooSlow(implementation: str, bench: str, strategy: str, progression: str) -> bool:
+    # linear unsat-sat from the maximum possible value of kn_max (> 10^5) down to the optimum: tens of thousands of
+    # solve calls, fine in C++, beyond the timeout in Python and with a WASP run per step: speed, not correctness
+    return implementation != "cpp" and bench == "kn_max" and strategy == "unsat-sat" and progression in ("1", "2")
+
+
 def main() -> int:
     all = benchmarks()
     parser = argparse.ArgumentParser(description="Correctness checks of amoclingo-core against clingo")
@@ -263,6 +285,8 @@ def main() -> int:
     parser.add_argument("--timeout", type=int, default=120, help="seconds per run [120]")
     parser.add_argument("--jobs", type=int, default=os.cpu_count(), help="parallel runs [cpu count]")
     parser.add_argument("--no-wrapper", action="store_true", help="skip the checks of the Python wrapper")
+    parser.add_argument("--implementation", choices=["cpp", "py", "wasp"], default="cpp",
+                        help="cpp: amoclingo-core, py: amoclingo --lang py (clingo's Python API), wasp: amowasp [cpp]")
     parser.add_argument("--strategies", nargs="+", choices=STRATEGIES, default=STRATEGIES,
                         help="--opt-strategy values to check [all]")
     parser.add_argument("--progressions", nargs="+", default=PROGRESSIONS,
@@ -271,7 +295,8 @@ def main() -> int:
     args.benchmarks = args.benchmarks or list(all)
     for b in args.benchmarks:
         if b not in all: parser.error(f"unknown benchmark {b}: choose among {', '.join(all)}")
-    if not os.path.isfile(EXE): sys.exit(f"{EXE} not found: build it first (make release)")
+    if args.implementation == "cpp" and not os.path.isfile(EXE): sys.exit(f"{EXE} not found: build it first (make release)")
+    if args.implementation != "cpp": args.no_wrapper = True      # the wrapper checks are for amoclingo-core
 
     with tempfile.TemporaryDirectory(prefix="amosum_correctness_") as tmp:
         cases: List[Tuple[Case, List[Tuple[str, str, str, str]]]] = []
@@ -298,12 +323,19 @@ def main() -> int:
         for (case, _), ref in zip(cases, refs): case.ref = ref
 
         jobs = [(case, *run) for case, runs in cases for run in runs]
-        print(f"running amoclingo-core {len(jobs)} times ...", flush=True)
+        skipped = [j for j in jobs if tooSlow(args.implementation, j[0].bench, j[1], j[2])]
+        jobs = [j for j in jobs if not tooSlow(args.implementation, j[0].bench, j[1], j[2])]
+        if skipped:
+            print(f"skipped {len(skipped)} runs too slow for {NAMES[args.implementation]} (kn_max, unsat-sat, progression 1 or 2)")
+        print(f"running {NAMES[args.implementation]} {len(jobs)} times ...", flush=True)
 
         def one(job):
             case, strategy, progression, reason, lazy = job
             directory = tempfile.mkdtemp(dir=tmp)
-            return job, check(case, runCore(case.rewritten, strategy, progression, reason, lazy, directory, args.timeout))
+            if args.implementation == "cpp":
+                return job, check(case, runCore(case.rewritten, strategy, progression, reason, lazy, directory, args.timeout))
+            inputs = [case.encoding] + ([case.instance] if case.instance else [])
+            return job, check(case, runPython(inputs, args.implementation, strategy, progression, reason, lazy, directory, args.timeout))
 
         failures = 0
         perCase: Dict[str, List[str]] = {}
@@ -329,7 +361,7 @@ def main() -> int:
                 for e in errors: print(f"  {e}")
                 wrapperFailures += bool(errors)
 
-        print(f"\namoclingo-core: {len(jobs) - failures}/{len(jobs)} runs correct"
+        print(f"\n{NAMES[args.implementation]}: {len(jobs) - failures}/{len(jobs)} runs correct"
               + ("" if args.no_wrapper else f"; wrapper: {len(wrapperCases) - wrapperFailures}/{len(wrapperCases)}"))
         return 1 if failures or wrapperFailures else 0
 

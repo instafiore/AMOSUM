@@ -81,45 +81,44 @@ The `<path_to_wasp_exe>` argument is optional if the executable is already avail
 
 # Usage
 
-## Show help
-
 ```bash
 amoclingo -h
+amowasp -h
 ```
 
----
+All the commands take the ASP files (encoding, instance, ...) as positional arguments and the same options.
 
-# Running AMOSUM
-
-## AMOCLINGO — C++ propagator
+## AMOCLINGO — C++ propagator (`amoclingo-core`)
 
 ```bash
-amoclingo -e <encoding> -i <instance> -l cpp
+amoclingo <encoding> <instance>
 ```
 
-## AMOCLINGO — Python propagator
+## AMOCLINGO — Python propagator (clingo's Python API)
 
 ```bash
-amoclingo -e <encoding> -i <instance> -l py
+amoclingo <encoding> <instance> -lg py
 ```
 
-## AMOWASP — Python propagator
+## AMOWASP — Python propagator on WASP
 
 ```bash
-amowasp -e <encoding> -i <instance>
+amowasp <encoding> <instance>          # WASP from $WASP_EXE, or --wasp <path>
 ```
 
----
+The Python version is a port of the C++ one: same semantics, options, output and exit codes (10 SAT, 20 UNSAT,
+30 optimum). An equal tuple in two groups counts once (as clingo's `#sum{T: C}`).
 
-# Lazy Propagation
+## Options
 
-Lazy propagation can be enabled with:
+| Option | Values | Default |
+|---|---|---|
+| `--reason` | `nomin`, `ijcai` (all the false literals of the group), `min`, `minfly` (minimized reasons), `cmin` | `nomin` |
+| `--lazy` | `false`, `true`, `hybrid`, or a float in [0,1]: when to propagate | `false` |
+| `--opt-strategy` | `#amomaximize`: `sat-unsat` (upwards), `unsat-sat` (downwards), `binary` | `sat-unsat` |
+| `--progression` | step of the bound at step n for `sat-unsat` / `unsat-sat`: `1`, `2`, `2^n`, `n^2`, ... | `1` |
 
-```bash
---l=cpp --lazy=true
-```
-
-This strategy reduces propagation overhead by delaying reasoning until it becomes necessary during search.
+On WASP each step of an `#amomaximize` search is a new WASP run.
 
 ---
 
@@ -128,36 +127,35 @@ This strategy reduces propagation overhead by delaying reasoning until it become
 ## Full propagation with IJCAI reason (AMOSUM-INF)
 
 ```bash
-amoclingo \
-    -e tests/benchmarks/graph_colouring/encoding-amosum-amo.asp \
-    -i tests/benchmarks/graph_colouring/instances/0001-graph_colouring-125-0_1200.asp \
-    -m ijcai
+amoclingo tests/benchmarks/gc/encoding-amosum-amo.asp tests/benchmarks/gc/instances/0001-graph_colouring-125-0_1200.asp \
+    --reason ijcai
 ```
 
 ## Full propagation (AMOSUM-INF-R)
 
 ```bash
-amoclingo \
-    -e tests/benchmarks/graph_colouring/encoding-amosum-amo.asp \
-    -i tests/benchmarks/graph_colouring/instances/0001-graph_colouring-125-0_1200.asp
+amoclingo tests/benchmarks/gc/encoding-amosum-amo.asp tests/benchmarks/gc/instances/0001-graph_colouring-125-0_1200.asp
 ```
 
 ## Full propagation with Minimization (AMOSUM-INF-MR)
 
 ```bash
-amoclingo \
-    -e tests/benchmarks/graph_colouring/encoding-amosum-amo.asp \
-    -i tests/benchmarks/graph_colouring/instances/0001-graph_colouring-125-0_1200.asp \
-    -m min
+amoclingo tests/benchmarks/gc/encoding-amosum-amo.asp tests/benchmarks/gc/instances/0001-graph_colouring-125-0_1200.asp \
+    --reason min
 ```
 
 ## Lazy propagation (AMOSUM-L)
 
 ```bash
-amoclingo \
-    -e tests/benchmarks/graph_colouring/encoding-amosum-amo.asp \
-    -i tests/benchmarks/graph_colouring/instances/0001-graph_colouring-125-0_1200.asp \
-    --lazy=true
+amoclingo tests/benchmarks/gc/encoding-amosum-amo.asp tests/benchmarks/gc/instances/0001-graph_colouring-125-0_1200.asp \
+    --lazy true
+```
+
+## #amomaximize with exponential steps
+
+```bash
+amoclingo tests/benchmarks/kn_toy_max/encoding-amomaximize.asp tests/benchmarks/kn_toy/instances/toy_le_5.asp \
+    --opt-strategy unsat-sat --progression "2^n"
 ```
 
 ---

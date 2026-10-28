@@ -37,19 +37,18 @@ def lazyValue(value: str) -> str:
 
 
 def parseArguments() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(prog="amoclingo", description="Clingo with #amosum, #eosum and #amomaximize")
+    # allow_abbrev=False: no prefixes of options (otherwise -l, the --lazy of -lg py, would be taken as -lg)
+    parser = argparse.ArgumentParser(prog="amoclingo", description="Clingo with #amosum, #eosum and #amomaximize", allow_abbrev=False)
     parser.add_argument("inputs", nargs="*", metavar="asp-input", help="ASP files (encoding, instance, ...)")
-    parser.add_argument("-lg", "--lang", choices=["cpp", "py"], default="cpp", help="Propagator: C++ or Python [cpp]")
+    parser.add_argument("-lg", "--lang", choices=["cpp", "py"], default="cpp",
+                        help="Propagator: C++ (amoclingo-core) or Python (clingo's Python API), same options [cpp]")
     for name, kwargs in AMOCLINGO_OPTIONS:
         if name == "lazy": kwargs = dict(kwargs, type=lazyValue)
         parser.add_argument(f"--{name}", default=None, **kwargs)
     parser.add_argument("--TimestampLogFile", action="store_true", help="Set the timestamp to the log file")
 
-    # parse_known_args: with -lg py the old options (-e, -i, ...) are read by parse_args
-    known, rest = parser.parse_known_args()
-    if known.lang == "cpp" and rest:
-        parser.error(f"unrecognized arguments: {' '.join(rest)}")
-    if known.lang == "cpp" and not known.inputs:
+    known = parser.parse_args()
+    if not known.inputs:
         parser.error("at least one ASP input is required")
     return known
 
@@ -72,23 +71,18 @@ def optimized_run():
     os.execvp(sys.executable, [sys.executable, "-O", "-m", "amosum.amoclingo", *sys.argv[1:]])
 
 
-def runPython():
-    # RunnerClingoPython imports utility and settings as top-level modules: amosum/ must be on the path
-    sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    from amosum.amoclingo.python.runner_clingo import RunnerClingoPython
-    from amosum.utility import parse_args, ERROR_CODE
-
-    params = parse_args()
-    print(f"Parameters: {params}")
-    results = RunnerClingoPython(parameters=params).run()
-    exit(results[0].exitCode if results else ERROR_CODE)
+def runPython(known: argparse.Namespace) -> int:
+    # the Python version: the options of amoclingo-core that change the search (the others are for its log and stats)
+    from amosum.amoclingo.python.runner import run as runner
+    return runner(known.inputs, reason=known.reason or "nomin", lazy=known.lazy or "false",
+                  strategy=known.opt_strategy or "sat-unsat", progression=known.progression or "1")
 
 
 def run():
     known = parseArguments()
     if known.lang == "cpp":
         exit(RunnerClingoCpp(known.inputs, amoclingoArguments(known)).run())   # amoclingo-core's exit code
-    runPython()
+    exit(runPython(known))
 
 if __name__ == '__main__':
     run()

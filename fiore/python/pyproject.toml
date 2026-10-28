@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fiore"
+version = "0.1.0"
+description = "Python side of the fiore library: clingo programs and propagators, WASP plugins"
+requires-python = ">=3.10"
+# clingo is needed by fiore.program, fiore.solver and fiore.propagator; fiore.result and fiore.wasp are pure Python
+# (fiore.wasp.plugin runs inside WASP's own interpreter, without clingo)
+dependencies = []
+
+[tool.setuptools]
+packages = ["fiore"]

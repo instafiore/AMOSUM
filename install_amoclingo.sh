@@ -6,3 +6,5 @@ if [[ ":$PATH:" != *"$CPP_FOLDER"* ]]; then
     echo "Installing in $CPP_FOLDER";
     export PATH="$CPP_FOLDER/bin:$PATH";
 fi
+# fiore's Python package (used by the Python version: amoclingo -lg py, amowasp)
+pip install -q -e fiore/python

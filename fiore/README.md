@@ -92,3 +92,25 @@ unsatisfiable).
 - Bug fixes: `Set::contains` tested the element instead of its hash (pointer elements were never
   found, negative integers read out of bounds); `ClingoSolver::removeLastAssumption` did not update
   `assumptionsSet`.
+
+## Python package (`python/`)
+
+The parts of fiore that a Python propagator needs, as the package `fiore` (`python/fiore/`, installable with
+`pip install -e fiore/python`). Python has dicts, `argparse` and `logging`, so the containers, `ArgParse`, `Logger` and
+`Statistics` have no Python counterpart.
+
+```
+python/fiore/
+├── result.py        exit codes (10, 20, 30, 29, 28) and Result                         pure Python
+├── program.py       Program: clingo grounding, atoms by name and literal, extra ground rules (add_rules)
+├── solver.py        ClingoSolver: one model per solve call, with a snapshot of the model
+├── propagator.py    EnginePropagator: a clingo propagator dispatching to one engine per solver thread; clauses
+│                    learnt or volatile; init conflicts made volatile through check (as PropagatorPBConstraint)
+└── wasp.py          WaspPlugin + install: WASP's plugin protocol on the same engines; run_wasp: runs the
+                     binary on a ground program (smodels) and reads the models                pure Python
+```
+
+An engine works on solver literals and knows nothing about the solver: `on_true(changes, dl, force)` returns the
+derived literals (`BOTTOM` for a conflict), `reason(d)` the literals, false, that make `d` valid, `undo(changes)`,
+`init_check()`. The same engine runs on clingo (`EnginePropagator`) and inside WASP (`WaspPlugin`); `result.py` and
+`wasp.py` are pure Python because WASP runs the plugin in its own interpreter.

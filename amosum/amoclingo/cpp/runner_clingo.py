@@ -6,15 +6,7 @@ import tempfile
 from typing import List
 
 from amosum import settings
-from amosum.amosum_parser.__main__ import run as run_rewriter
-
-
-def rewriteWithoutAmosum(path: str, directory: str) -> str:
-    # the amosum statements of path rewritten into plain ASP, in a temporary file inside directory
-    name = re.sub(r"\.(asp|lp)$", "", os.path.basename(path))
-    with tempfile.NamedTemporaryFile("w", dir=directory, prefix=f"{name}_without_amosum_", suffix=".asp", delete=False) as f:
-        f.write(run_rewriter(input=path))
-        return f.name
+from amosum.rewrite import rewrite_without_amosum as rewriteWithoutAmosum
 
 
 class RunnerClingoCpp:
