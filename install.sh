@@ -30,7 +30,7 @@ if [ -z "${CONDA_PREFIX:-}" ]; then
     echo "No conda environment is active: run 'conda activate amosum' first (see ./install.sh --help)" >&2
     exit 1
 fi
-PYTHON="$CONDA_PREFIX/bin/python"
+PYTHON="$CONDA_PREFIX/bin/python3"
 echo "Installing AMOSUM in $CONDA_PREFIX"
 
 # 1. Python packages (editable: the commands use this checkout)
