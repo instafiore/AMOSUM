@@ -16,17 +16,21 @@ Paper: Alviano, Dodaro, Fiorentino, Maratea, "AMO-aware Aggregates in ASP", IJCA
 
 - **Never modify `amosum/ijcai_version/`**: it is the published IJCAI version. The rest of the code
   is the extension being developed.
-- Python propagators, amowasp (Python) and the parser are separate areas; only touch what the
-  current task is about. The C++ headers in `amosum/amowasp/propagator_wasp_c/` are used by the
-  clingo C++ build and may be changed.
+- **Never modify the Python versions** (Python propagators and all of `amosum/amowasp/`, including the
+  old C++ headers in `amowasp/propagator_wasp_c/`, which include the removed `amosum.h` and are not
+  compiled anymore). The parser is a separate area; only touch it when the task is about it.
 
 ## Layout
 
-- `amosum/` — Python package (`pyproject.toml`), C++ sources of the propagator:
-  `amosum.{h,cpp}`, `amosum_initializer.*`, `utility.{h,cpp,tpp}`, `settings.h`,
-  `amoclingo/propagator_clingo_c/` (runner, clingo propagator, optimizers, Makefile),
-  `amowasp/propagator_wasp_c/*.h` (ge_amo, ge_eo, le_amo, le_eo propagation phases),
-  `amosum_parser/` (see below).
+- `amosum/` — Python package (`pyproject.toml`), C++ sources of `amoclingo-core` (on fiore):
+  `amosum_program.*` (grounding into `AmosumProgram`/`AmosumConstraint`, groups),
+  `amosum_propagator.*` (propagation per thread), `amosum_solver.*` (`AmosumClingoSolver`),
+  `amosum_argparse.*`, `utility.{h,cpp}` (split, symbols, clingo errors), `settings.h`,
+  `amoclingo/propagator_clingo_c/`: `amoclingo.cpp` (main), `runner_clingo.*`,
+  `amoclingo_propagator.*` (clingo propagator), `amoclingo_algorithms.h` + `amoclingo_{sat_unsat,
+  unsat_sat,binary,progression}.cpp` (searches for `#amomaximize`, `--progression`), Makefile;
+  `amosum_parser/` (see below). The old C++ propagator (amosum.*, amosum_initializer.*,
+  propagator_clingo*, optimizers) was removed: see git history before it.
 - `fiore/` — reusable C++20 library (namespace `fiore`), compiled from source:
   - `utils/` (no Clingo): containers (`Vector`, `IterableSet`, `PerfectNHash`, `PerfectInterpretation`,
     `TruthValue`, ...), `ArgParse`, `Logger` + `LOG` macro, `Statistics`, `constants.h` (`fiore::CONSTANTS`)
@@ -34,14 +38,16 @@ Paper: Alviano, Dodaro, Fiorentino, Maratea, "AMO-aware Aggregates in ASP", IJCA
   - `model/`: `Program`, `ClingoSolver`, PB (sum <= bound) propagator, `Core`/`CoreLowerBound`, ...
   - `fiore.mk` (sources and include flag for applications), `Makefile` (`make test`), `README.md`
   - includes from outside: `#include "fiore/utils/logger.h"` with `-I<repo root>`
-- `tests/check_correctness/test_suite/` — benchmarks (`bench/{ga,gc,kn,kn_toy,nr}`) and notebook.
+- `tests/correctness/check_correctness.py` — checks of `amoclingo-core` against clingo (edge cases in
+  `bench/edge`, `#amomaximize` encodings in `bench/kn_toy_max`, `bench/kn_max`); the benchmarks
+  (`bench/{ga,gc,kn,kn_toy,nr}`) are in `tests/correctness-old/test_suite/`.
 
 ## C++ build and run
 
 - Build (from `amosum/amoclingo/propagator_clingo_c/`): `make clean && make release`
   (what `install_amoclingo.sh` does); binary `bin/amoclingo-core`, expected there by `amoclingo`.
-- The Makefile compiles every `.cpp` found under `amosum/` (including `ijcai_version`, an old quirk)
-  plus fiore's `utils/` sources into `build/fiore/` (via `include ../../../fiore/fiore.mk`).
+- The Makefile compiles the `.cpp` files of `propagator_clingo_c/` and of `amosum/` itself (not its
+  subfolders) plus fiore's sources into `build/fiore/` (via `include ../../../fiore/fiore.mk`).
 - **Debug build**: `make clean && make BUILD_MODE=test EXTRA_CFLAGS="-g -O0" EXTRA_LDFLAGS=`.
   The plain `make test` adds `-fsanitize=address`, and AddressSanitizer aborts at startup on this
   Mac (even for an empty program) — not a code problem.
@@ -60,11 +66,8 @@ Paper: Alviano, Dodaro, Fiorentino, Maratea, "AMO-aware Aggregates in ASP", IJCA
 - `fiore` library created from WeakSatBasedLS code; amosum's `common_utility`, `common_constants`,
   `logger`, `stats` removed and replaced by fiore (`fiore::PerfectNHash`, `fiore::setExitCode`,
   `fiore::Logger`). amosum keeps `SETTINGS::TRUE_STR/FALSE_STR` (`"true"/"false"`): fiore's are `"t"/"f"`.
-- Deterministic group order in `amosum_initializer.cpp`: atoms iterated sorted by (literal, name)
-  instead of by `clingo_symbol_t` value (addresses for compound terms), ties in the weight sort
-  broken by literal id. Before, the order of the literals in a group could change between runs.
-- `AmoSumPropagator::I` is a `fiore::PerfectInterpretation` (created all-undefined, `TruthValue::U`);
-  the old `InterpretationFunction` code is kept commented.
+- Groups are ordered deterministically (by weight, then literal id), as the old
+  `amosum_initializer.cpp` did, so the order of the literals in a group never changes between runs.
 - Light benchmarks were verified identical before/after each change (3 runs per instance).
 
 ## amosum_parser (current focus)

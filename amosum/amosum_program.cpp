@@ -1,5 +1,6 @@
 #include "amosum_program.h"
 #include <algorithm>
+#include <map>
 #include "fiore/model/program.h"
 #include "fiore/model/assigment.h"
 

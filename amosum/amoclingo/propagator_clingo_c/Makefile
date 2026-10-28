@@ -10,7 +10,8 @@ TARGET = amoclingo-core
 C=cpp
 amowasp = $(SRC_DIR)/amowasp/propagator_wasp_c
 
-SRCS = $(shell find $(SRC_DIR) -name '*.$(C)')
+# the sources of amoclingo-core: this folder and amosum/ (not its subfolders: ijcai_version, amowasp, ...)
+SRCS = $(wildcard *.$(C)) $(wildcard $(SRC_DIR)/*.$(C))
 OBJS = $(addprefix $(BUILD_DIR)/, $(notdir $(SRCS:.$(C)=.o)))
 # fiore (repository root): utilities, Clingo helpers and the model (Program, ...), compiled from source into build/fiore/
 include ../../../fiore/fiore.mk
