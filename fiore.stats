@@ -7,10 +7,10 @@
     "restarts": 0,
     "restarts_blocked": 0,
     "restarts_last": 0,
-    "time": 1.2159347534179688e-05
+    "time": 2.193450927734375e-05
   },
   "solver": {
-    "total_time": 1.2159347534179688e-05
+    "total_time": 2.193450927734375e-05
   },
   "generic": {},
   "series": {}
