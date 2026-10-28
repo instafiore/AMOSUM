@@ -23,12 +23,9 @@ class Runner:
         with tempfile.TemporaryDirectory(prefix="amoclingo_py_") as tmp:
             solver.init(rewrite_all(inputs, tmp))
         backend = AmosumClingoBackend(solver)
-        best = None
-        try:
-            if strategy == "sat-unsat" or backend.amomaximize() is None: best, result = sat_unsat(backend, steps)
-            elif strategy == "unsat-sat": best, result = unsat_sat(backend, steps)
-            else: best, result = binary_search(backend)         # --progression not used
-        except KeyboardInterrupt:
-            result = ClingoResult.satisfiable().set_unknown_optimum() if best is not None else ClingoResult.unknown()
+        # an interruption (SIGINT, SIGTERM) is handled by fiore.model.assignment.on_interrupt, installed by main
+        if strategy == "sat-unsat" or backend.amomaximize() is None: best, result = sat_unsat(backend, steps)
+        elif strategy == "unsat-sat": best, result = unsat_sat(backend, steps)
+        else: best, result = binary_search(backend)         # --progression not used
         print_final(best, result)
         return result
