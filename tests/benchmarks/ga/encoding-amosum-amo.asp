@@ -19,4 +19,4 @@ possible_hours(125).
 
 % sum
 % :- project(Pro, LB, UB), #sum{ H*S, Per, M: join_project(Per, Pro, H, M), role(Per,R), salary(R,S), project_month(Pro, SM, EM), M >= SM, M <= EM} < LB.
-#amosum{H*S: join_project(Per, Pro, H, M), role(Per,R), salary(R,S), project_month(Pro, SM, EM), M >= SM, M <= EM [(Per, M, Pro)]} >= LB:  project(Pro, LB, UB).
+#amosum{H*S, Per, M, Pro: join_project(Per, Pro, H, M), role(Per,R), salary(R,S), project_month(Pro, SM, EM), M >= SM, M <= EM [(Per, M, Pro)]} >= LB:  project(Pro, LB, UB).
