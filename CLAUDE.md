@@ -25,11 +25,12 @@ Paper: Alviano, Dodaro, Fiorentino, Maratea, "AMO-aware Aggregates in ASP", IJCA
   `amosum_program.*` (grounding into `AmosumProgram`/`AmosumConstraint`, groups),
   `amosum_propagator.*` (propagation per thread), `amosum_solver.*` (`AmosumClingoSolver`),
   `amosum_argparse.*`, `utility.{h,cpp}` (split, symbols, clingo errors), `settings.h`,
-  `amoclingo/propagator_clingo_c/`: `amoclingo.cpp` (main), `runner_clingo.*`,
+  `amoclingo/cpp/`: `amoclingo.cpp` (main), `runner_clingo.*`,
   `amoclingo_propagator.*` (clingo propagator), `amoclingo_algorithms.h` + `amoclingo_{sat_unsat,
   unsat_sat,binary,progression}.cpp` (searches for `#amomaximize`, `--progression`), Makefile;
-  `amosum_parser/` (see below). The old C++ propagator (amosum.*, amosum_initializer.*,
-  propagator_clingo*, optimizers) was removed: see git history before it.
+  `amoclingo/python/` (Python propagator for clingo, `--lang py`), `amowasp/python/` (Python
+  propagator for WASP), `amosum_parser/` (see below). The old C++ propagator (amosum.*,
+  amosum_initializer.*, propagator_clingo*, optimizers) was removed: see git history before it.
 - `fiore/` — reusable C++20 library (namespace `fiore`), compiled from source:
   - `utils/` (no Clingo): containers (`Vector`, `IterableSet`, `PerfectNHash`, `PerfectInterpretation`,
     `TruthValue`, ...), `ArgParse`, `Logger` + `LOG` macro, `Statistics`, `constants.h` (`fiore::CONSTANTS`)
@@ -37,25 +38,34 @@ Paper: Alviano, Dodaro, Fiorentino, Maratea, "AMO-aware Aggregates in ASP", IJCA
   - `model/`: `Program`, `ClingoSolver`, PB (sum <= bound) propagator, `Core`/`CoreLowerBound`, ...
   - `fiore.mk` (sources and include flag for applications), `Makefile` (`make test`), `README.md`
   - includes from outside: `#include "fiore/utils/logger.h"` with `-I<repo root>`
-- `tests/correctness/check_correctness.py` — checks of `amoclingo-core` against clingo, on
-  `tests/correctness/bench/`: `edge` (small cases), `ga`, `gc`, `kn`, `kn_toy` (encodings
-  `encoding-amosum-{amo,eo}.asp` + `instances/`), `kn_toy_max`, `kn_max` (`#amomaximize` on their instances).
+- `tests/` (see `tests/README.md`): `unit/` (C++ unit tests, own minimal framework `unit.h`:
+  `make -C tests/unit test`), `correctness/check_correctness.py` (amoclingo-core against clingo),
+  `benchmarks/` (`edge`, `ga`, `gc`, `kn`, `kn_toy`, `kn_toy_max`, `kn_max`).
+- `experiments/` — paper material, not tests: `visualization/` (results, plots), `synthetic/`,
+  `profiling/` (pprof scripts, still with the old amoclingo-core command line).
 
 ## C++ build and run
 
-- Build (from `amosum/amoclingo/propagator_clingo_c/`): `make clean && make release`
+- Build (from `amosum/amoclingo/cpp/`): `make clean && make release`
   (what `install_amoclingo.sh` does); binary `bin/amoclingo-core`, expected there by `amoclingo`.
-- The Makefile compiles the `.cpp` files of `propagator_clingo_c/` and of `amosum/` itself (not its
+- The Makefile compiles the `.cpp` files of `amoclingo/cpp/` and of `amosum/` itself (not its
   subfolders) plus fiore's sources into `build/fiore/` (via `include ../../../fiore/fiore.mk`).
-- **Debug build**: `make clean && make BUILD_MODE=test EXTRA_CFLAGS="-g -O0" EXTRA_LDFLAGS=`.
-  The plain `make test` adds `-fsanitize=address`, and AddressSanitizer aborts at startup on this
-  Mac (even for an empty program) — not a code problem.
+- **Debug build**: `make clean && make test` (`-g -O0`; AddressSanitizer is commented out in the
+  Makefile: it aborts at startup on this Mac, even for an empty program).
+- **Tests**: `make -C tests/unit test` (unit, debug and release), `python tests/correctness/check_correctness.py`
+  (end to end, ~2 min; `--quick` for one configuration per case), `make -C fiore test` (fiore's own).
 - Logging: `LOG(fiore::LogLevel::DEBUG|INFO|CRITICAL|ALWAYS, ...)`, active only without `NDEBUG`.
   Do not use `fiore::LogLevel::ERROR` for non-fatal messages: it exits the program.
-  The log file is `amoclingo`'s `-log/--log-file` (default `log` in the current directory, overwritten).
-- Run: `/opt/homebrew/anaconda3/envs/amosum/bin/amoclingo -e <encoding> -i <instance> [-n models] [-l lazy] [-r reason]`
-  (conda env `amosum`; the base env has no `clingo` Python module). It rewrites the program into
-  `/tmp/.<name>_without_amosum_*.asp` and prints the `amoclingo-core` command line (`run:` line).
+  The log file is `--log-file-name` (default `fiore.log` in the current directory).
+- Run: `/opt/homebrew/anaconda3/envs/amosum/bin/amoclingo <encoding> <instance> [--opt-strategy sat-unsat|unsat-sat|binary]
+  [--progression 1|2|2^n|...] [--reason ...] [--lazy ...]` (conda env `amosum`; the base env has no `clingo`
+  Python module). It rewrites the ASP files into temporary files and runs `amoclingo-core` with the options
+  first (amoclingo-core's parser takes everything after the first file as a file). `-lg py` runs the
+  Python propagator with the old `-e/-i` options. It is not maintained (left as it is on purpose): it supports
+  only ge_amo, ge_eo, le_eo (le_amo and #amomaximize hit `assert False` in `get_propagator_variables`),
+  its runner's `run()` crashes after solving since 9764811 (`results = None`, undefined `result`), and it
+  counts equal tuples once per group (`#sum{T,G: C}`), while amoclingo-core uses set semantics
+  (`#sum{T: C}`, the chosen semantics: equal tuples in different groups count once).
 - **Benchmarks**: use the light ones (`ga`, `gc`, `kn`, `kn_toy`). **Do not use nurse rostering (`nr`)**: it is very heavy.
 - Python: run from the repo root (`python -m amosum....`); from inside `amosum/`, the file
   `amosum.py` shadows the `amosum` package and imports fail.

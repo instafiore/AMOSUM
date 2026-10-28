@@ -1086,15 +1086,15 @@ def get_propagator_variables(prop_type):
     if prop_type == "ge_amo":
         ge = True
         choice_cons = "AMO"
-        from amowasp.propagator_wasp_py.ge_amo import propagate_phase
+        from amowasp.python.ge_amo import propagate_phase
     elif prop_type == "le_eo":    
         ge = False
         choice_cons = "EO"
-        from amowasp.propagator_wasp_py.le_eo import propagate_phase
+        from amowasp.python.le_eo import propagate_phase
     elif prop_type == "ge_eo":       
         ge = True
         choice_cons = "EO"
-        from amowasp.propagator_wasp_py.ge_eo import propagate_phase
+        from amowasp.python.ge_eo import propagate_phase
     else: 
         assert False
     return ge, propagate_phase, choice_cons

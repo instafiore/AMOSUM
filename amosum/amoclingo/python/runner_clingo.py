@@ -18,11 +18,11 @@ from clingo.control import Control
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import ast
-from amosum.amowasp.propagator_wasp_py.runner_wasp import RunnerWasp
+from amosum.amowasp.python.runner_wasp import RunnerWasp
 from  utility import *
 import utility
 import settings
-from amosum.amoclingo.propagator_clingo_py.propagator_clingo import *
+from amosum.amoclingo.python.propagator_clingo import *
 from preprocess import *
 from datetime import datetime
 

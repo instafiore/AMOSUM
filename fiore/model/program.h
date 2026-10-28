@@ -85,7 +85,7 @@ struct Program{
     inline const Literal* literalByName(std::string name) const noexcept{ auto it = mapLiteralName2Literal.find(name); return it != mapLiteralName2Literal.end() ? it->second : nullptr;}
     bool isOptimizationProblem;
 
-    ~Program(){
+    virtual ~Program(){
         if(bk != nullptr) free(bk);
         if(ctl != nullptr) clingo_control_free(ctl);
     }

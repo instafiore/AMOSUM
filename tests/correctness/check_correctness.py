@@ -32,8 +32,8 @@ from typing import Dict, List, Optional, Tuple
 import clingo
 
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-HERE = os.path.join(REPO, "tests", "correctness", "bench")
-EXE = os.path.join(REPO, "amosum", "amoclingo", "propagator_clingo_c", "bin", "amoclingo-core")
+HERE = os.path.join(REPO, "tests", "benchmarks")
+EXE = os.path.join(REPO, "amosum", "amoclingo", "cpp", "bin", "amoclingo-core")
 
 SAT, UNSAT, OPTIMUM = 10, 20, 30
 

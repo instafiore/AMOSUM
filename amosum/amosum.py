@@ -4,7 +4,7 @@ import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from typing import Callable, List, Optional, Dict, Tuple
 from amosum.utility import *
-import amosum.amowasp.propagator_wasp_py.wasp as wasp
+import amosum.amowasp.python.wasp as wasp
 import re
 import settings
 from settings import *

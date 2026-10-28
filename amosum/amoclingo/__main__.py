@@ -5,7 +5,7 @@ import re
 import sys
 from typing import List
 
-from amosum.amoclingo.propagator_clingo_c.runner_clingo import RunnerClingoCpp
+from amosum.amoclingo.cpp.runner_clingo import RunnerClingoCpp
 
 '''
 This is the entry file to run the AMO SUM propagator(s) CLINGO
@@ -75,7 +75,7 @@ def optimized_run():
 def runPython():
     # RunnerClingoPython imports utility and settings as top-level modules: amosum/ must be on the path
     sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    from amosum.amoclingo.propagator_clingo_py.runner_clingo import RunnerClingoPython
+    from amosum.amoclingo.python.runner_clingo import RunnerClingoPython
     from amosum.utility import parse_args, ERROR_CODE
 
     params = parse_args()

@@ -5,8 +5,8 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import amowasp
 from typing import List
-from amosum.amowasp.propagator_wasp_py.propagator_wasp import *
-import amowasp.propagator_wasp_py.propagator_wasp as propagator_wasp
+from amosum.amowasp.python.propagator_wasp import *
+import amowasp.python.propagator_wasp as propagator_wasp
 from utility import *
 import time
 from amosum.amosum import AmoSumPropagator

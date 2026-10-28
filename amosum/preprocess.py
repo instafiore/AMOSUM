@@ -1,5 +1,5 @@
 import sys
-from amosum.amowasp.propagator_wasp_py.wasp import *
+from amosum.amowasp.python.wasp import *
 from amosum.settings import *
 
 class amosum_aggregate:

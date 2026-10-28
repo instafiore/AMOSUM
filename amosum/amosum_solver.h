@@ -9,7 +9,7 @@
 #include "fiore/model/solver.h"
 #include <unordered_set>
 #include "amosum_program.h"
-#include "amoclingo/propagator_clingo_c/amoclingo_propagator.h"
+#include "amoclingo/cpp/amoclingo_propagator.h"
 
 class AmosumClingoSolver: public fiore::ClingoSolver{
 protected:

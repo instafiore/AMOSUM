@@ -2,7 +2,7 @@
 #include <limits>
 #include <unordered_map>
 #include "fiore/model/propagatorPBImp.h"
-#include "amoclingo/propagator_clingo_c/amoclingo_propagator.h"
+#include "amoclingo/cpp/amoclingo_propagator.h"
 
 // port of Group (utility.h) over solver literals: one copy per thread, modified during search
 struct AmosumThreadGroup{
