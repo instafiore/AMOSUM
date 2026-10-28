@@ -100,6 +100,7 @@ friend ClingoPropagatorInitializer;
     inline void removeLastKAssumptions(const size_t& k) noexcept { size_t n = assumptions.size(); size_t i = std::min(n, k); removeFromIToLastAssumption(n-i); }
     void removeLastAssumption() noexcept;
     inline const Core* getBlamedAssumptions() const noexcept{ return this->res.isSat() ? nullptr : &blamedAssumptions; }
+    inline const Core* getCore() const noexcept{ return this->res.isUnsat() ? &blamedAssumptions : nullptr; }
     inline const std::vector<Core*>& getUnsatCores() const noexcept{ return unsatCores; }
     virtual ClingoAssignment* createAssignment(const clingo_model_t* model){ return new ClingoAssignment(program.get(), model); }
 

@@ -8,8 +8,8 @@
 #include "amosum/amosum_solver.h"
 
 // Search algorithms of amoclingo on an initialized AmosumClingoSolver (solver.init already called).
-// Each one returns the result of the search; the best answer set is the pool's current optimum
-// (fiore::AnswersetsPool::getOptimalAnswerSet), which is also what signalHandler prints on SIGINT/SIGTERM.
+// Each one returns the result of the search; the best answer set is the pool's best known one
+// (fiore::AnswersetsPool::getBestKnownAnswerSet), which is also what signalHandler prints on SIGINT/SIGTERM.
 // Without #amomaximize every algorithm is a single solve call.
 
 
@@ -40,6 +40,10 @@ fiore::clingo::ClingoResult satUnsat(AmosumClingoSolver& solver, const Progressi
 // each UNSAT call), never at a value known SAT nor below the minimum possible value; a model goes back to u - 1 with
 // step 0. With p = 1: down by 1 until the first model, which is optimal
 fiore::clingo::ClingoResult unsatSat(AmosumClingoSolver& solver, const Progression& progression) noexcept;
+
+// binary search: between the best model's value v (every bound <= v is SAT) and the smallest bound known UNSAT, each
+// call tries the middle bound; a model raises v to its value, an UNSAT call lowers the UNSAT bound to the middle one
+fiore::clingo::ClingoResult binarySearch(AmosumClingoSolver& solver) noexcept;
 
 
 // helpers shared by the algorithms
@@ -93,7 +97,7 @@ namespace amoclingoSearch {
         AmosumClingoAssignment* a = static_cast<AmosumClingoAssignment*>(answerset);
         a->result = result;
         if(best != nullptr) fiore::AnswersetsPool::getInstance()->deleteAnswerset(best);
-        a->setAsCurrentOptimum();
+        a->setAsBestKnown();
         a->result.unkown();             // a better model may exist
         a->printAssignment();
         return a;
@@ -112,7 +116,7 @@ namespace amoclingoSearch {
         if(!result.isSat()) return result;
         AmosumClingoAssignment* a = static_cast<AmosumClingoAssignment*>(answerset);
         a->result = result;
-        a->setAsCurrentOptimum();
+        a->setAsBestKnown();
         return a->result;
     }
 }

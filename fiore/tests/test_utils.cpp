@@ -6,6 +6,7 @@
 #include "fiore/utils/utility.h"
 #include "fiore/utils/logger.h"
 #include "fiore/utils/stats.h"
+#include "fiore/utils/argparse.h"
 #include <cstdio>
 #include <sstream>
 

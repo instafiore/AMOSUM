@@ -31,10 +31,10 @@ using fiore::operator<<;
 
 
 void signalHandler(int signum) {
-    fiore::Assignment* optAnswer = fiore::AnswersetsPool::getInstance()->getOptimalAnswerSet();
-    optAnswer->result.unkown();
-    optAnswer->printAssignment();
-    fiore::setExitCode(optAnswer->result.exitCode());
+    fiore::Assignment* bestKnown = fiore::AnswersetsPool::getInstance()->getBestKnownAnswerSet();
+    bestKnown->result.unkown();
+    bestKnown->printAssignment();
+    fiore::setExitCode(bestKnown->result.exitCode());
     fiore::cleanup();
     exit(fiore::CONSTANTS::EXIT_CODE);
 }

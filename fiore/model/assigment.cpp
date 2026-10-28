@@ -103,13 +103,15 @@ void ClingoAssignment::init(const clingo_model_t* model){
         // retrieve the symbol's string
         handleError(clingo_symbol_to_string(*it, name, n));
         const Literal* literal = program->literalByName(name);
-        if(std::regex_match(literal->name, *avoidToShowRegex)) continue;
+
 
         #ifdef __debug__
             LOG(LogLevel::DEBUG, "Setting ",literal, " to true");
         #endif
 
         this->set(literal->id, true);
+        // nullptr: every atom is shown
+        if(avoidToShowRegex != nullptr && std::regex_match(literal->name, *avoidToShowRegex)) continue;
         outputString += (first ? "" : ", ") + std::string("'") + name + std::string("'");
         first = false;
     }
@@ -227,7 +229,7 @@ void Assignment::foundNewAnswerset(std::string prefix, const std::string& verbos
     // std::string verbose = ArgParse::getInstance()->get(CONSTANTS::verboseKey);
     if(verbose == CONSTANTS::verboseLevel1) this->printCostAssignment(prefix);
     else if(verbose == CONSTANTS::verboseLevel2) this->printAssignment(prefix);
-    this->setAsCurrentOptimum();
+    this->setAsBestKnown();
 }
 
 void Assignment::printAssignment(std::string prefix) noexcept{
@@ -290,7 +292,7 @@ Assignment::~Assignment(){
     #endif
 }
 
-void Assignment::setAsCurrentOptimum() noexcept{  AnswersetsPool::getInstance()->setOptimalAnswerSet(this->id); }
+void Assignment::setAsBestKnown() noexcept{  AnswersetsPool::getInstance()->setBestKnownAnswerSet(this->id); }
 
 
 inline AnswersetsPool* AnswersetsPool::instance = nullptr;

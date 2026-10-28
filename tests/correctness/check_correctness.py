@@ -8,7 +8,8 @@ and #amomaximize as #maximize. For each case and each configuration (--reason, -
   - the printed answer set is an answer set of the reference (all its atoms true, every other atom false);
   - #amomaximize: the printed values strictly increase, the last one is the value of the printed answer set
     and the reference optimum.
-The #amomaximize cases run with every --opt-strategy (sat-unsat, unsat-sat) and --progression (1, 2, 2^n, n^2).
+The #amomaximize cases run with every --opt-strategy (sat-unsat, unsat-sat, binary) and --progression (1, 2, 2^n, n^2;
+binary does not use it).
 The Python wrapper (python -m amosum.amoclingo) is also checked on a few cases, with the options after the files.
 
 Run from the repository root, with the amosum conda env (it needs the clingo Python module) and amoclingo-core built:
@@ -43,7 +44,7 @@ ALL_CONFIGS = [(r, l) for r in REASONS for l in LAZY]
 FEW_CONFIGS = [("nomin", "false"), ("min", "hybrid"), ("ijcai", "true")]
 # --opt-strategy x --progression: every pair runs on the #amomaximize cases; without #amomaximize each one is a single
 # solve call, checked once per pair on the edge cases only
-STRATEGIES = ["sat-unsat", "unsat-sat"]
+STRATEGIES = ["sat-unsat", "unsat-sat", "binary"]
 PROGRESSIONS = ["1", "2", "2^n", "n^2"]
 
 
@@ -284,7 +285,8 @@ def main() -> int:
                 if encoding not in rewritten: rewritten[encoding] = rewrite(encoding, tmp)
                 case.rewritten = [rewritten[encoding]] + ([instance] if instance else [])
                 base = [("nomin", "false")] if args.quick else configs
-                pairs = [(st, pr) for st in args.strategies for pr in args.progressions]
+                # binary does not use --progression: once
+                pairs = [(st, pr) for st in args.strategies for pr in (args.progressions if st != "binary" else ["1"])]
                 if case.maximize: runs = [(st, pr, r, l) for st, pr in pairs for r, l in base]
                 else:
                     runs = [("sat-unsat", "1", r, l) for r, l in base]

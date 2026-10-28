@@ -7,6 +7,7 @@
 #include "fiore/utils/utility.h"
 #include "fiore/utils/logger.h"
 #include "fiore/utils/stats.h"
+#include "fiore/utils/argparse.h"
 #include "fiore/clingo/utilityClingo.h"
 #include "fiore/model/solver.h"
 #include "fiore/model/program.h"

@@ -34,13 +34,14 @@ fiore::clingo::ClingoResult Runner::run(){
     fiore::clingo::ClingoResult result;
     if(algorithm == AMOSUM_ARGS::algorithmSatUnsat || !hasAmomaximize) result = satUnsat(solver, *progression);
     else if(algorithm == AMOSUM_ARGS::algorithmUnsatSat) result = unsatSat(solver, *progression);
+    else if(algorithm == AMOSUM_ARGS::algorithmBinary) result = binarySearch(solver);     // --progression not used
     else fiore::setExitCode(fiore::CONSTANTS::ERROR_CODE, true, "Unknown algorithm: " + algorithm);
 
     std::ostringstream out;
     std::string answerOutString;
     fiore::AnswersetsPool* pool = fiore::AnswersetsPool::getInstance();
     if(result.isSat()){
-        fiore::Assignment* answerSet = pool->getOptimalAnswerSet();
+        fiore::Assignment* answerSet = pool->getBestKnownAnswerSet();
         answerOutString = answerSet->toOutputString();
         pool->deleteAnswerset(answerSet);       // before the solver: it points to the solver's program
     }

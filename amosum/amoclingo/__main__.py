@@ -19,7 +19,7 @@ AMOCLINGO_OPTIONS = [
     ("reason", dict(choices=["nomin", "ijcai", "min", "minfly", "cmin"],
                     help="Reasons of the >= derivations [nomin]")),
     ("lazy", dict(help="When to propagate: false, true, hybrid, or a float in [0,1] [false]")),
-    ("opt-strategy", dict(choices=["sat-unsat", "unsat-sat"], help="Search algorithm for #amomaximize: upwards or downwards [sat-unsat]")),
+    ("opt-strategy", dict(choices=["sat-unsat", "unsat-sat", "binary"], help="Search algorithm for #amomaximize: upwards, downwards or binary search [sat-unsat]")),
     ("progression", dict(help="Step of the bound at step n: 1 (linear), 2 (+2), 2^n, n^2, ... [1]")),
     ("log", dict(choices=LOG_LEVELS, help="Log level (debug builds) [INFO]")),
     ("log-file-name", dict(help="Path for log file (debug builds) [fiore.log]")),

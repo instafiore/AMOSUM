@@ -36,7 +36,7 @@ struct Assignment{
     void foundNewAnswerset(std::string prefix = "", const std::string& verbose = CONSTANTS::verboseLevel1) noexcept;
     virtual void printAssignment(std::string prefix = "") noexcept;
     void printCostAssignment(std::string prefix = "") noexcept;
-    void setAsCurrentOptimum() noexcept;
+    void setAsBestKnown() noexcept;
 
     inline bool isOptimum()const noexcept{ return this->result.isOptimum();}
     inline bool isSolutionUnkown()const noexcept{ return this->type == AssignmentType::NoSolution;}
@@ -93,11 +93,11 @@ struct AnswersetsPool{
 
     inline size_t addAnswerset(Assignment* assignment){ if(assignment != nullptr) assignment->id = autoIncId++; this->answersets[assignment->id] = assignment; return assignment->id;}
     inline void deleteAnswerset(Assignment* assignment){ if(assignment != nullptr) deleteAnswerset(assignment->id);}
-    inline void setOptimalAnswerSet(Assignment* assignment){ 
+    inline void setBestKnownAnswerSet(Assignment* assignment){ 
         if(assignment != nullptr) {
-            setOptimalAnswerSet(assignment->id);
+            setBestKnownAnswerSet(assignment->id);
             #ifdef __debug__
-                LOG(LogLevel::INFO_1, "Setting as optimum answer set: ", assignment->id);
+                LOG(LogLevel::INFO_1, "Setting as best known answer set: ", assignment->id);
             #endif
         } 
     }
@@ -119,15 +119,15 @@ struct AnswersetsPool{
         }
         this->answersets[id] = nullptr; 
     }
-    inline void setOptimalAnswerSet(size_t id){ 
-        optimalAnswerSet = id; 
+    inline void setBestKnownAnswerSet(size_t id){ 
+        bestKnownAnswerSet = id; 
         #ifdef __debug__
-            LOG(LogLevel::INFO, "Setting as optimum answer set: ", id);
+            LOG(LogLevel::INFO, "Setting as best known answer set: ", id);
         #endif
     }
 
     inline Assignment* getAnswerset(size_t id){ return this->answersets[id]; }
-    inline Assignment* getOptimalAnswerSet(){ return optimalAnswerSet != CONSTANTS::NONE32 ? this->answersets[optimalAnswerSet]: Assignment::getNoSolutionAssignment();}
+    inline Assignment* getBestKnownAnswerSet(){ return bestKnownAnswerSet != CONSTANTS::NONE32 ? this->answersets[bestKnownAnswerSet]: Assignment::getNoSolutionAssignment();}
     static AnswersetsPool* getInstance() noexcept;
     inline static void cleanup(){ delete instance; }
     inline size_t getNextIdAnswersetPrinted() noexcept{ return autoIncIdForPrinting++; }
@@ -144,9 +144,9 @@ private:
     std::unordered_map<size_t, Assignment*> answersets;
     size_t autoIncId;
     size_t autoIncIdForPrinting;
-    size_t optimalAnswerSet;
+    size_t bestKnownAnswerSet;
     static AnswersetsPool* instance;
-    AnswersetsPool() noexcept: upperBound(CONSTANTS::INFPlus64), autoIncId(0), autoIncIdForPrinting(1), optimalAnswerSet(CONSTANTS::NONE32){}
+    AnswersetsPool() noexcept: upperBound(CONSTANTS::INFPlus64), autoIncId(0), autoIncIdForPrinting(1), bestKnownAnswerSet(CONSTANTS::NONE32){}
 };
 
 } // namespace fiore

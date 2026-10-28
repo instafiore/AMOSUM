@@ -157,13 +157,13 @@ std::pair<ClingoAssignment*, const clingo::ClingoResult> ClingoSolver::solve(con
     if(!this->res.isSat()){
         blamedAssumptions.clear();
         if (this->res.isUnsat()) {
-            Core* core = new Core();
+            Core* core = collectUnsatCores ? new Core() : nullptr;
             clingo_literal_t const *corePointer = nullptr;
             size_t coreSize = 0;
             handleError(clingo_solve_handle_core(handle, &corePointer, &coreSize));
             for(size_t i=0; i<coreSize; ++i){ 
                 const clingo_literal_t& assumption = corePointer[i];
-                core->add(assumption);
+                if(collectUnsatCores) core->add(assumption);
                 blamedAssumptions.add(assumption);
             }
             if(collectUnsatCores){
@@ -173,7 +173,7 @@ std::pair<ClingoAssignment*, const clingo::ClingoResult> ClingoSolver::solve(con
                         Statistics::getInstance()->addSeriesPoint("lowerBound", getLowerBound());
                     #endif
                 }
-            }else delete core;
+            }
         }else if(this->res.isUnkown()){
             for(const clingo_literal_t& l: this->assumptions) blamedAssumptions.add(l);
         }

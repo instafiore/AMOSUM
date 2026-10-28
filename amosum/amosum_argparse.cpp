@@ -24,12 +24,14 @@ std::vector<fiore::Argument> amosumArguments() noexcept{
             .withLongDesc("Search algorithm for #amomaximize: sat-unsat (upwards from the minimum possible value: "
                           "each model of value v sets the bound to v+p(step), back to v+1 after UNSAT), unsat-sat "
                           "(downwards from the maximum possible value: each UNSAT bound u sets it to u-p(step), back to "
-                          "u-1 after a model); p is --progression (1: LSU and LUS). Ignored without #amomaximize")
+                          "u-1 after a model); p is --progression (1: LSU and LUS); binary (binary search between the "
+                          "best model's value and the smallest bound known UNSAT; --progression is not used). Ignored "
+                          "without #amomaximize")
             .withDefaultValue(AMOSUM_ARGS::algorithmDefault)
-            .withValidValues({AMOSUM_ARGS::algorithmSatUnsat, AMOSUM_ARGS::algorithmUnsatSat})
+            .withValidValues({AMOSUM_ARGS::algorithmSatUnsat, AMOSUM_ARGS::algorithmUnsatSat, AMOSUM_ARGS::algorithmBinary})
             .build(),
         Argument::Builder(AMOSUM_ARGS::progressionKey).isWithValue()
-            .withDesc("Step of the bound of --opt-strategy at step n: 1 (linear), 2 (+2), 2^n, n^2, ...")
+            .withDesc("Step of the bound of sat-unsat / unsat-sat at step n: 1 (linear), 2 (+2), 2^n, n^2, ...")
             .withLongDesc("Step of the bound of --opt-strategy at step n = 0, 1, 2, ...: an expression in n with "
                           "integers, + - * ^ and parentheses, e.g. 1 (linear), 2 (+2), 2^n, n^2; values below 1 count "
                           "as 1. Step n restarts from 0 when the search goes back (UNSAT for sat-unsat, a model for unsat-sat)")
