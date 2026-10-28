@@ -5,8 +5,8 @@
 #include <sstream>
 #include <string>
 #include <vector>
-#include "amosum/amosum_solver.h"
-#include "amosum/amoclingo/cpp/amoclingo_algorithms.h"
+#include "amosum/amoclingo/cpp/solver.h"
+#include "amosum/core/cpp/search/algorithms.h"
 #include "fiore/model/assigment.h"
 
 #ifndef DATA_DIR
@@ -54,9 +54,10 @@ namespace helpers {
         CaptureOutput capture;
         auto solver = solverFor(name);
         const Progression progression(progressionText);
-        if(strategy == "sat-unsat") s.result = satUnsat(*solver, progression);
-        else if(strategy == "unsat-sat") s.result = unsatSat(*solver, progression);
-        else s.result = binarySearch(*solver);
+        AmosumClingoBackend backend(*solver);
+        if(strategy == "sat-unsat") s.result = satUnsat(backend, progression);
+        else if(strategy == "unsat-sat") s.result = unsatSat(backend, progression);
+        else s.result = binarySearch(backend);
         if(s.result.isSat()){
             // the best known answer set is in the pool: read it, then delete it while its program still exists
             fiore::AnswersetsPool* pool = fiore::AnswersetsPool::getInstance();

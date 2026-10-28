@@ -4,17 +4,18 @@ CFLAGS = -Wall -Wextra -std=c++20 -I/opt/homebrew/include -I$(CONDA_PREFIX)/incl
 LDFLAGS = -L/opt/homebrew/lib -L$(CONDA_PREFIX)/lib -Wl,-rpath,/opt/homebrew/lib -Wl,-rpath,$(CONDA_PREFIX)/lib -lclingo $(EXTRA_LDFLAGS)
 BUILD_DIR = build
 BIN_DIR = bin
-INCLUDES =  
-SRC_DIR = ../..
+REPO := $(abspath ../../..)
 TARGET = amoclingo-core
 C=cpp
 
-# the sources of amoclingo-core: this folder and amosum/ (not its subfolders: ijcai_version, amowasp, ...)
-SRCS = $(wildcard *.$(C)) $(wildcard $(SRC_DIR)/*.$(C))
-OBJS = $(addprefix $(BUILD_DIR)/, $(notdir $(SRCS:.$(C)=.o)))
-# fiore (repository root): utilities, Clingo helpers and the model (Program, ...), compiled from source into build/fiore/
-include ../../../fiore/fiore.mk
-CFLAGS += $(FIORE_CPPFLAGS)
+# the sources of amoclingo-core: amoclingo/cpp (main, runner, options, clingo propagator and solver) and core/cpp
+# (program, propagation, searches); objects keep their folders under build/ (both have a propagator.cpp)
+SRCS = $(wildcard $(REPO)/amosum/amoclingo/cpp/*.$(C)) $(wildcard $(REPO)/amosum/core/cpp/*.$(C)) $(wildcard $(REPO)/amosum/core/cpp/search/*.$(C))
+OBJS = $(patsubst $(REPO)/%.$(C),$(BUILD_DIR)/%.o,$(SRCS))
+# fiore (fiore/cpp): utilities, Clingo helpers and the model (Program, ...), compiled from source into build/fiore/
+include ../../../fiore/cpp/fiore.mk
+# includes: "fiore/..." (FIORE_CPPFLAGS) and "amosum/..." (the repository root)
+CFLAGS += $(FIORE_CPPFLAGS) -I$(REPO) -MMD -MP
 FIORE_OBJS = $(patsubst $(FIORE_DIR)/%.$(C),$(BUILD_DIR)/fiore/%.o,$(FIORE_SRCS))
 
 all: $(TARGET)
@@ -57,15 +58,13 @@ $(BUILD_DIR)/fiore/%.o: $(FIORE_DIR)/%.$(C)
 	@echo "Compiling $< -> $@"
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(BUILD_DIR)/%.o: $(SRC_DIR)/%.$(C)
-	@mkdir -p $(BUILD_DIR) # Create build directory if not exists
+$(BUILD_DIR)/%.o: $(REPO)/%.$(C)
+	@mkdir -p $(dir $@)
 	@echo "Compiling $< -> $@"
-	$(CC) $(CFLAGS) $(LDFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
-$(BUILD_DIR)/%.o: ./%.$(C)
-	@mkdir -p $(BUILD_DIR) # Create build directory if not exists
-	@echo "Compiling $< -> $@"
-	$(CC) $(CFLAGS) $(LDFLAGS) -c $< -o $@
+# header dependencies (-MMD): a changed header recompiles the files that include it
+-include $(OBJS:.o=.d) $(FIORE_OBJS:.o=.d)
 
 clean:
 	@echo "Cleaning up..."

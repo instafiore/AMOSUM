@@ -15,7 +15,7 @@ class TestSearchClingo(unittest.TestCase):
             with self.subTest(strategy=strategy, progression=progression):
                 best, result, values, _ = clingo_search(name, strategy, progression)
                 self.assertTrue(result.optimum)
-                self.assertEqual(best.value, optimum)
+                self.assertEqual(best.amosum_cost, optimum)
                 self.assertEqual(values[-1], optimum)
                 self.assertTrue(all(a < b for a, b in zip(values, values[1:])), values)
 
@@ -57,10 +57,10 @@ class TestSearchWasp(unittest.TestCase):
     """amowasp end to end on the .asp sources (it rewrites them): optimum and exit code"""
 
     def run_wasp(self, name, strategy="sat-unsat", progression="1"):
-        from amosum.amowasp.python.runner import run
+        from amosum.amowasp.py.runner import Runner
         out = io.StringIO()
         with contextlib.redirect_stdout(out):
-            code = run([data(name, "asp")], strategy=strategy, progression=progression)
+            code = Runner().run([data(name, "asp")], os.environ["WASP_EXE"], strategy=strategy, progression=progression).exit_code()
         values = [int(v) for v in re.findall(r"^Amomaximize Cost: (-?\d+) ", out.getvalue(), re.M)]
         return code, values, out.getvalue()
 

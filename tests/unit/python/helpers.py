@@ -1,16 +1,17 @@
-"""helpers of the Python unit tests: the data files, a search on clingo or WASP, quiet output"""
+"""helpers of the Python unit tests: the data files, a search on clingo, quiet output"""
 import contextlib
 import io
 import os
 import re
 
-from fiore.program import Program
+from fiore.model.program import Program
 
-from amosum.amoclingo.python.runner import ClingoBackend
-from amosum.core import search
-from amosum.core.engine import Options
-from amosum.core.program import read_aggregates
-from amosum.core.progression import Progression
+from amosum.amoclingo.py.solver import AmosumClingoBackend, AmosumClingoSolver
+from amosum.core.py.program import read_aggregates
+from amosum.core.py.search.binary import binary_search
+from amosum.core.py.search.progression import Progression
+from amosum.core.py.search.sat_unsat import sat_unsat
+from amosum.core.py.search.unsat_sat import unsat_sat
 
 DATA = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data")
 
@@ -36,11 +37,15 @@ def ground(name: str):
 
 
 def clingo_search(name: str, strategy: str = "sat-unsat", progression: str = "1"):
-    """(best answer set, result, printed values) of a search with the Python propagator on clingo"""
-    program, constraints = ground(name)
-    backend = ClingoBackend(program, constraints, Options())
+    """(best answer set, result, printed values, solver) of a search with the Python propagator on clingo"""
+    solver = AmosumClingoSolver()
+    solver.init([data(name)])
+    backend = AmosumClingoBackend(solver)
+    steps = Progression(progression)
     out = io.StringIO()
     with contextlib.redirect_stdout(out):
-        best, result = search.run(strategy, backend, backend.amomaximize, Progression(progression))
+        if strategy == "sat-unsat": best, result = sat_unsat(backend, steps)
+        elif strategy == "unsat-sat": best, result = unsat_sat(backend, steps)
+        else: best, result = binary_search(backend)
     values = [int(v) for v in re.findall(r"^Amomaximize Cost: (-?\d+) ", out.getvalue(), re.M)]
-    return best, result, values, backend
+    return best, result, values, solver

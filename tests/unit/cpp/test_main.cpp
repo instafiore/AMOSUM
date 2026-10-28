@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 #include "unit.h"
-#include "amosum/amosum_argparse.h"
+#include "amosum/amoclingo/cpp/options.h"
 #include "fiore/utils/argparse.h"
 #include "fiore/utils/constants.h"
 #include "fiore/utils/logger.h"

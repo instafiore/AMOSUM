@@ -95,9 +95,9 @@ TEST(program_amomaximize){
 
 TEST(program_possible_values_of_amomaximize){
     auto far = solverFor("max_far");                        // x(1..10), one group each
-    CHECK_EQ(amoclingoSearch::maxPossibleValue(programOf(*far)->amomaximizeConstraint), 55);
-    CHECK_EQ(amoclingoSearch::minPossibleValue(programOf(*far)->amomaximizeConstraint), 0);
+    CHECK_EQ(amosumSearch::maxPossibleValue(programOf(*far)->amomaximizeConstraint), 55);
+    CHECK_EQ(amosumSearch::minPossibleValue(programOf(*far)->amomaximizeConstraint), 0);
     auto negative = solverFor("max_negative");              // one group, weights -3..-1
-    CHECK_EQ(amoclingoSearch::maxPossibleValue(programOf(*negative)->amomaximizeConstraint), 0);
-    CHECK_EQ(amoclingoSearch::minPossibleValue(programOf(*negative)->amomaximizeConstraint), -3);
+    CHECK_EQ(amosumSearch::maxPossibleValue(programOf(*negative)->amomaximizeConstraint), 0);
+    CHECK_EQ(amosumSearch::minPossibleValue(programOf(*negative)->amomaximizeConstraint), -3);
 }

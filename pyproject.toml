@@ -37,5 +37,5 @@ amowasp = "amosum.amowasp.__main__:optimized_run"
 amowasp-debug = "amosum.amowasp.__main__:run"
 
 
-amosumparser = "amosum.amosum_parser.__main__:optimized_run"
-amosumparser-debug = "amosum.amosum_parser.__main__:main"
+amosumparser = "amosum.amosumparser.__main__:optimized_run"
+amosumparser-debug = "amosum.amosumparser.__main__:main"

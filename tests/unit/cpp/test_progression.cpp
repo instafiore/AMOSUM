@@ -1,7 +1,7 @@
 // Progression: the --progression expression in the step n (parser, evaluation, limits, errors)
 #include <stdexcept>
 #include "unit.h"
-#include "amosum/amoclingo/cpp/amoclingo_algorithms.h"
+#include "amosum/core/cpp/search/algorithms.h"
 
 static int64_t at(const std::string& expression, size_t n){ return Progression(expression).at(n); }
 

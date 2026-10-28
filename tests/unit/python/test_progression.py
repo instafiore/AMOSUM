@@ -1,7 +1,7 @@
-"""--progression (amosum.core.progression): the same cases as the C++ unit tests"""
+"""--progression (amosum.core.py.search.progression): the same cases as the C++ unit tests"""
 import unittest
 
-from amosum.core.progression import CAP, Progression
+from amosum.core.py.search.progression import CAP, Progression
 
 
 def at(expression, n):

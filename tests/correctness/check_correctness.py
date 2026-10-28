@@ -154,7 +154,7 @@ def checkAnswerSet(text: str, instance: Optional[str], atoms: List[str], maximiz
 def rewrite(path: str, directory: str) -> str:
     # the amosum statements rewritten into plain ASP by the parser (the same rewriting as the Python wrapper)
     with open(path) as f: text = f.read()
-    out = subprocess.run([sys.executable, "-O", "-m", "amosum.amosum_parser"], input=text, capture_output=True, text=True, cwd=REPO)
+    out = subprocess.run([sys.executable, "-O", "-m", "amosum.amosumparser"], input=text, capture_output=True, text=True, cwd=REPO)
     if out.returncode != 0: raise RuntimeError(f"the parser failed on {path}:\n{out.stderr[-2000:]}")
     rewritten = os.path.join(directory, re.sub(r"\W", "_", os.path.relpath(path, REPO)) + ".lp")
     with open(rewritten, "w") as f: f.write(out.stdout)

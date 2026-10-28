@@ -8,7 +8,7 @@
 | `correctness/` | end-to-end checks against plain clingo (set semantics), on every benchmark and configuration, for the three implementations | `python tests/correctness/check_correctness.py [--implementation cpp\|py\|wasp] [--quick] [bench ...]` |
 | `benchmarks/` | the ASP inputs of `correctness/`: `edge` (small cases), `ga`, `gc`, `kn`, `kn_toy` (`encoding-amosum-{amo,eo}.asp` + `instances/`), `kn_toy_max`, `kn_max` (`#amomaximize` encodings on the kn_toy / kn instances) | |
 
-fiore's own C++ tests are in `fiore/tests` (`make -C fiore test`).
+fiore's own C++ tests are in `fiore/cpp/tests` (`make -C fiore/cpp test`).
 
 Everything needs the `amosum` conda env (clingo; `CONDA_PREFIX` set for the C++ builds) with fiore's Python package
 installed (`pip install -e fiore/python`). `--implementation cpp` needs `amoclingo-core` built

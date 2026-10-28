@@ -1,6 +1,7 @@
-"""amosum.core.program: the aggregates read from the ground program and their normalization (needs clingo)"""
+"""amosum.core.py.program: the aggregates read from the ground program and their normalization (needs clingo)"""
 import unittest
 
+from amosum.core.py.search.algorithms import max_possible_value, min_possible_value
 from tests.unit.python.helpers import ground
 
 
@@ -48,12 +49,12 @@ class TestProgram(unittest.TestCase):
         _, far = ground("max_far")                                 # also a <= 17 aggregate
         self.assertEqual(sorted(c.type for c in far), ["amomaximize", "le_amo"])
         m = amomaximize(far)
-        self.assertEqual((m.max_possible_value(), m.min_possible_value()), (55, 0))
+        self.assertEqual((max_possible_value(m), min_possible_value(m)), (55, 0))
         m = amomaximize(ground("max_negative")[1])
-        self.assertEqual((m.max_possible_value(), m.min_possible_value()), (0, -3))
+        self.assertEqual((max_possible_value(m), min_possible_value(m)), (0, -3))
 
     def test_constraint_json_round_trip(self):
-        from amosum.core.constraint import AmosumConstraint
+        from amosum.core.py.program import AmosumConstraint
         _, constraints = ground("shared_tuple")
         c = constraints[0]
         back = AmosumConstraint.from_json(c.to_json())

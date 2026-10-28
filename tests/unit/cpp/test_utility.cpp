@@ -1,7 +1,7 @@
 // amosum/utility.h: split, not_, from_symbol_to_string
 #include <clingo.h>
 #include "unit.h"
-#include "amosum/utility.h"
+#include "amosum/core/cpp/utility.h"
 
 TEST(split_keeps_empty_fields){
     CHECK_EQ(split("a&b&&c", '&'), (std::vector<std::string>{"a", "b", "", "c"}));

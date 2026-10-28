@@ -6,28 +6,32 @@ Originally extracted from WeakSatBasedLS.
 
 ## Layout
 
+fiore exists in C++ (`cpp/`) and in Python (`python/`, see below), mirroring each other: `cpp/fiore/<area>/<file>.h`
+<-> `python/fiore/<area>/<file>.py`.
+
 ```
-fiore/
+fiore/cpp/
 ├── fiore.mk          sources, include flag: include it from the application's Makefile
-├── Makefile          fiore's own tests only
-├── utils/            generic, no Clingo                                      namespace fiore
-│   ├── constants.h       fiore::CONSTANTS (sentinels, exit codes, option keys)
-│   ├── utilityCommon.*   containers (Vector, IterableSet, Hash, Interpretation, ...), Literal, printers, timers
-│   ├── utility.*         ArgParse (command line), Cluster, WeightFunction, cleanup()
-│   ├── logger.*          Logger, LOG macro
-│   ├── stats.*           Statistics (counters, summaries, series, JSON)
-│   └── args-parser/      vendored header-only library (MIT, see its LICENSES/)
-├── clingo/           everything that touches the Clingo C API                namespace fiore::clingo
-│   └── utilityClingo.*   ClingoResult, truth values of literals, errors (handleError), statistics, configuration
-├── model/            Program and solver on top of Clingo                     namespace fiore
-│   ├── program.*         Program, PBConstraint, grounding
-│   ├── solver.*          ClingoSolver: solve, assumptions, unsat cores, polarity, createOptimizer
-│   ├── assigment.*       Assignment, ClingoAssignment, AnswersetsPool
-│   ├── propagator.*      ClingoPropagator, ClingoPropagatorInitializer
-│   ├── propagatorPBConstraint.*, propagatorPBImp.*, propagatorPBImpLe.*   sum <= bound propagator
-│   ├── bound.*           Core, CoreLowerBound, LowerBound(OBV)
-│   └── propagatorGetRest.*, propagatorGetDerivedFromAss.*   helper propagators of ClingoSolver
-└── tests/            test_utils (no Clingo), test_solver, data/*.asp
+├── Makefile          fiore's own tests only (make -C fiore/cpp test)
+├── tests/            test_utils (no Clingo), test_solver, data/*.asp
+└── fiore/            the sources (included as "fiore/<area>/<file>.h")
+    ├── utils/            generic, no Clingo                                      namespace fiore
+    │   ├── constants.h       fiore::CONSTANTS (sentinels, exit codes, option keys)
+    │   ├── utilityCommon.*   containers (Vector, IterableSet, Hash, Interpretation, ...), Literal, printers, timers
+    │   ├── utility.*         ArgParse (command line), Cluster, WeightFunction, cleanup()
+    │   ├── logger.*          Logger, LOG macro
+    │   ├── stats.*           Statistics (counters, summaries, series, JSON)
+    │   └── args-parser/      vendored header-only library (MIT, see its LICENSES/)
+    ├── clingo/           everything that touches the Clingo C API                namespace fiore::clingo
+    │   └── utilityClingo.*   ClingoResult, truth values of literals, errors (handleError), statistics, configuration
+    ├── model/            Program and solver on top of Clingo                     namespace fiore
+    │   ├── program.*         Program, PBConstraint, grounding
+    │   ├── solver.*          ClingoSolver: solve, assumptions, unsat cores, polarity, createOptimizer
+    │   ├── assigment.*       Assignment, ClingoAssignment, AnswersetsPool
+    │   ├── propagator.*      ClingoPropagator (watches, clause type, addClause), ClingoPropagatorInitializer
+    │   ├── propagatorPBConstraint.*, propagatorPBImp.*, propagatorPBImpLe.*   sum <= bound propagator
+    │   ├── bound.*           Core, CoreLowerBound, LowerBound(OBV)
+    │   └── propagatorGetRest.*, propagatorGetDerivedFromAss.*   helper propagators of ClingoSolver
 ```
 
 `assigment` keeps its original spelling (all includes use it; the classes are spelled correctly).
@@ -35,9 +39,9 @@ fiore/
 ## Using it in an application
 
 ```make
-include path/to/fiore/fiore.mk
+include path/to/fiore/cpp/fiore.mk
 SRCS     += $(FIORE_SRCS)          # or only $(FIORE_UTILS_SRCS): no Clingo needed
-CXXFLAGS += $(FIORE_CPPFLAGS)      # adds the parent folder of fiore/ to the include path
+CXXFLAGS += $(FIORE_CPPFLAGS)      # adds fiore/cpp to the include path
 LDLIBS   += -lclingo               # for FIORE_CLINGO_SRCS
 ```
 ```cpp
@@ -96,21 +100,26 @@ unsatisfiable).
 ## Python package (`python/`)
 
 The parts of fiore that a Python propagator needs, as the package `fiore` (`python/fiore/`, installable with
-`pip install -e fiore/python`). Python has dicts, `argparse` and `logging`, so the containers, `ArgParse`, `Logger` and
-`Statistics` have no Python counterpart.
+`pip install -e fiore/python`), in the same layout as the C++ sources. Python has dicts, `argparse` and `logging`, so the
+containers, `ArgParse`, `Logger` and `Statistics` have no Python counterpart; WASP exists only in Python.
 
 ```
 python/fiore/
-├── result.py        exit codes (10, 20, 30, 29, 28) and Result                         pure Python
-├── program.py       Program: clingo grounding, atoms by name and literal, extra ground rules (add_rules)
-├── solver.py        ClingoSolver: one model per solve call, with a snapshot of the model
-├── propagator.py    EnginePropagator: a clingo propagator dispatching to one engine per solver thread; clauses
-│                    learnt or volatile; init conflicts made volatile through check (as PropagatorPBConstraint)
-└── wasp.py          WaspPlugin + install: WASP's plugin protocol on the same engines; run_wasp: runs the
-                     binary on a ground program (smodels) and reads the models                pure Python
+├── utils/constants.py                 ↔ utils/constants.h               exit codes, BOTTOM / TOP          pure Python
+├── clingo/utility_clingo.py           ↔ clingo/utilityClingo.h          ClingoResult                      pure Python
+├── model/program.py                   ↔ model/program.h                 Program: grounding, atoms, extra ground rules
+├── model/solver.py                    ↔ model/solver.h                  ClingoSolver: one model per solve call
+├── model/assignment.py                ↔ model/assigment.h               ClingoAssignment: a model as printed  pure Python
+├── model/propagator.py                ↔ model/propagator.h              ClingoPropagator: clause type, add_clause
+├── model/propagator_pb_imp.py         ↔ model/propagatorPBImp.h         PropagatorPBConstraintImplementation  pure Python
+├── model/propagator_pb_constraint.py  ↔ model/propagatorPBConstraint.h  PropagatorPBConstraint: one implementation per
+│                                                                         thread, volatile init conflicts through check
+└── wasp/plugin.py, wasp/runner.py     (Python only)                      WASP's plugin protocol on the same
+                                                                          implementations; the binary on a smodels program
 ```
 
-An engine works on solver literals and knows nothing about the solver: `on_true(changes, dl, force)` returns the
-derived literals (`BOTTOM` for a conflict), `reason(d)` the literals, false, that make `d` valid, `undo(changes)`,
-`init_check()`. The same engine runs on clingo (`EnginePropagator`) and inside WASP (`WaspPlugin`); `result.py` and
-`wasp.py` are pure Python because WASP runs the plugin in its own interpreter.
+A PropagatorPBConstraintImplementation works on solver literals and knows nothing about the solver:
+`on_literals_true(changes, dl, force)` returns the derived literals (`BOTTOM` for a conflict),
+`get_reason_for_literal(d)` the literals, false, that make `d` valid, `on_literals_undefined(changes)`,
+`init_propagation()`. The same implementation runs on clingo (`PropagatorPBConstraint`) and inside WASP (`WaspPlugin`),
+which is why the modules it needs are pure Python (WASP runs the plugin in its own interpreter, without clingo).

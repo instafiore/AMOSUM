@@ -24,32 +24,40 @@ Paper: Alviano, Dodaro, Fiorentino, Maratea, "AMO-aware Aggregates in ASP", IJCA
 
 ## Layout
 
-- `amosum/` — Python package (`pyproject.toml`), C++ sources of `amoclingo-core` (on fiore):
-  `amosum_program.*` (grounding into `AmosumProgram`/`AmosumConstraint`, groups),
-  `amosum_propagator.*` (propagation per thread), `amosum_solver.*` (`AmosumClingoSolver`),
-  `amosum_argparse.*`, `utility.{h,cpp}` (split, symbols, clingo errors), `settings.h`,
-  `amoclingo/cpp/`: `amoclingo.cpp` (main), `runner_clingo.*`,
-  `amoclingo_propagator.*` (clingo propagator), `amoclingo_algorithms.h` + `amoclingo_{sat_unsat,
-  unsat_sat,binary,progression}.cpp` (searches for `#amomaximize`, `--progression`), Makefile;
-  `amosum_parser/` (see below), `rewrite.py` (the parser on files, shared by all the runners).
-  Python version (port of the C++ one, on fiore's Python package): `core/` (pure Python: `engine.py` the
-  propagation = AmosumPropagator + the solving groups of AmoclingoPropagator, `constraint.py`, `progression.py`,
-  `search.py` sat-unsat/unsat-sat/binary, `output.py` the lines of amoclingo-core; `program.py` reads and normalizes
-  the aggregates, with clingo), `amoclingo/python/` (`amoclingo --lang py`: clingo's Python API),
-  `amowasp/python/` (`amowasp`: `runner.py` grounds with clingo into smodels, `amowasp_plugin.py` runs inside WASP;
-  `#amomaximize` reruns WASP for each bound). The normalization's OR atoms (`__tuple__`, `__same__`) are ground
-  rules added to the program (clingo: a second grounding step; WASP: in the smodels text). The old C++ and Python
-  propagators were removed: see the git history before them.
-- `fiore/` — reusable C++20 library (namespace `fiore`), compiled from source:
-  - `utils/` (no Clingo): containers (`Vector`, `IterableSet`, `PerfectNHash`, `PerfectInterpretation`,
-    `TruthValue`, ...), `ArgParse`, `Logger` + `LOG` macro, `Statistics`, `constants.h` (`fiore::CONSTANTS`)
-  - `clingo/` (namespace `fiore::clingo`): Clingo helpers, `ClingoResult`, `handleError`
-  - `model/`: `Program`, `ClingoSolver`, PB (sum <= bound) propagator, `Core`/`CoreLowerBound`, ...
-  - `fiore.mk` (sources and include flag for applications), `Makefile` (`make test`), `README.md`
-  - includes from outside: `#include "fiore/utils/logger.h"` with `-I<repo root>`
-  - `python/fiore/`: the Python package `fiore` (Result, Program, ClingoSolver, EnginePropagator, WASP plugin
-    protocol and runner); installed in the env as editable (`pip install -e fiore/python`; here a `.pth` file,
-    `_editable_impl_fiore.pth`, since the env has no setuptools)
+C++ and Python mirror each other, file by file (`<area>/cpp/<name>.{h,cpp}` <-> `<area>/py/<name>.py`, the same class
+names in Python style); WASP exists only in Python.
+
+- `amosum/` — the Python package (`pyproject.toml`) and the C++ sources of `amoclingo-core`:
+  - `core/` — amosum itself, independent of the solver glue:
+    - `cpp/`: `settings.h`, `utility.{h,cpp}` (split, symbols, clingo errors), `program.{h,cpp}` (AmosumProgram,
+      AmosumGrounder, normalization, AmosumConstraint, AmosumClingoAssignment), `propagator.{h,cpp}` (AmosumOptions,
+      AmosumSolvingGroups + buildSolvingGroups, AmosumThreadGroup, AmosumPropagator: the propagation per thread),
+      `search/` (`algorithms.h`: AmosumSearchBackend, Progression, helpers in `amosumSearch`; `sat_unsat.cpp`,
+      `unsat_sat.cpp`, `binary.cpp`, `progression.cpp`)
+    - `py/`: the same (`settings.py`, `program.py`, `propagator.py`, `search/`); pure Python except
+      `program.read_aggregates` (clingo, imported there), so that the WASP plugin can use it
+  - `amoclingo/` — the `amoclingo` command (`__main__.py`: C++ by default, rewrites the files and runs
+    `cpp/bin/amoclingo-core`; `-lg py` the Python version):
+    - `cpp/`: `main.cpp`, `runner.{h,cpp}`, `options.{h,cpp}`, `propagator.{h,cpp}` (AmoclingoPropagator: the clingo
+      glue), `solver.{h,cpp}` (AmosumClingoSolver, AmosumClingoBackend), `Makefile`
+    - `py/`: `main.py`, `runner.py`, `options.py`, `propagator.py`, `solver.py`
+  - `amowasp/` — the `amowasp` command; `py/`: `main.py`, `runner.py`, `options.py`, `solver.py` (AmosumWaspSolver:
+    grounds with clingo into smodels; AmosumWaspBackend: a WASP run per solve call), `plugin/amowasp_plugin.py`
+    (runs inside WASP; its folder is on WASP's sys.path, so it holds only that module)
+  - `amosumparser/` — the parser (see below), its `settings.py` / `utility.py`, `rewrite.py` (the parser on files,
+    used by every runner)
+  - The normalization's OR atoms (`__tuple__`, `__same__`) are ground rules added to the program (clingo: a second
+    grounding step; WASP: in the smodels text). The old C++ and Python propagators were removed: see the git history.
+- `fiore/` — the reusable library, mirrored in C++ and Python:
+  - `cpp/`: `fiore/{utils,clingo,model}` (namespace `fiore`): `utils/` (no Clingo: containers, `ArgParse`, `Logger` +
+    `LOG`, `Statistics`, `constants.h`), `clingo/` (`ClingoResult`, `handleError`), `model/` (`Program`,
+    `ClingoSolver`, `ClingoPropagator` with `addClause` and the clause type, `PropagatorPBConstraint`,
+    `PropagatorPBConstraintImplementation`, `Core`, ...); `fiore.mk` (sources and `-I fiore/cpp`: includes stay
+    `#include "fiore/model/solver.h"`), `Makefile` (`make -C fiore/cpp test`), `tests/`
+  - `python/fiore/`: the package `fiore` (`utils/constants`, `clingo/utility_clingo`, `model/{program, solver,
+    assignment, propagator, propagator_pb_imp, propagator_pb_constraint}`, `wasp/{plugin, runner}`); installed as
+    editable (`pip install -e fiore/python`; here a `.pth` file, `_editable_impl_fiore.pth`, since the env has no
+    setuptools)
 - `tests/` (see `tests/README.md`): `unit/cpp/` (C++ unit tests, own minimal framework `unit.h`:
   `make -C tests/unit/cpp test`), `unit/python/` (`python -O -m unittest discover -s tests/unit/python -t .`),
   `unit/data/`, `correctness/check_correctness.py` (against clingo, `--implementation cpp|py|wasp`),
@@ -61,13 +69,14 @@ Paper: Alviano, Dodaro, Fiorentino, Maratea, "AMO-aware Aggregates in ASP", IJCA
 
 - Build (from `amosum/amoclingo/cpp/`): `make clean && make release`
   (what `install_amoclingo.sh` does); binary `bin/amoclingo-core`, expected there by `amoclingo`.
-- The Makefile compiles the `.cpp` files of `amoclingo/cpp/` and of `amosum/` itself (not its
-  subfolders) plus fiore's sources into `build/fiore/` (via `include ../../../fiore/fiore.mk`).
+- The Makefile compiles `amoclingo/cpp/`, `core/cpp/` and `core/cpp/search/` (objects keep their folders under
+  `build/`: both have a `propagator.cpp`) plus fiore's sources into `build/fiore/` (via `include
+  ../../../fiore/cpp/fiore.mk`); includes are `"fiore/..."` and `"amosum/..."` (`-I<repo root>`).
 - **Debug build**: `make clean && make test` (`-g -O0`; AddressSanitizer is commented out in the
   Makefile: it aborts at startup on this Mac, even for an empty program).
 - **Tests**: `make -C tests/unit/cpp test` (C++ unit, debug and release), `python -O -m unittest discover -s
   tests/unit/python -t .` (Python unit), `python tests/correctness/check_correctness.py [--implementation cpp|py|wasp]`
-  (end to end, cpp ~2 min; `--quick` for one configuration per case), `make -C fiore test` (fiore's own).
+  (end to end, cpp ~2 min; `--quick` for one configuration per case), `make -C fiore/cpp test` (fiore's own).
 - Logging: `LOG(fiore::LogLevel::DEBUG|INFO|CRITICAL|ALWAYS, ...)`, active only without `NDEBUG`.
   Do not use `fiore::LogLevel::ERROR` for non-fatal messages: it exits the program.
   The log file is `--log-file-name` (default `fiore.log` in the current directory).
@@ -92,9 +101,9 @@ Paper: Alviano, Dodaro, Fiorentino, Maratea, "AMO-aware Aggregates in ASP", IJCA
   `amosum_initializer.cpp` did, so the order of the literals in a group never changes between runs.
 - Light benchmarks were verified identical before/after each change (3 runs per instance).
 
-## amosum_parser (current focus)
+## amosumparser
 
-`amosum/amosum_parser/` (~750 lines Python, Lark LALR):
+`amosum/amosumparser/` (~750 lines Python, Lark LALR):
 - `AmoSumGrammar.py` — ASP-Core grammar extended with `#amosum` / `#eosum` / `#amomaximize`
   elements `terms : naf_literals [group_id]`, bound `binop term`, optional `: body`.
 - `AmoSumTransformer.py` — rewrites each amosum statement into plain ASP:
@@ -106,5 +115,4 @@ Paper: Alviano, Dodaro, Fiorentino, Maratea, "AMO-aware Aggregates in ASP", IJCA
 - `AspFactory.py` (tree builders), `ValidatorAmoSum.py`, `utils.py` (`toString` pretty printer,
   `debug`, `concatenate_nodes`), `__main__.py` (reads stdin, prints the rewritten program),
   `amosum.txt` (design notes), `test_cases/ge_amo_kn_amosum.asp`.
-- Imports `from settings import *` (amosum's Python `settings.py`) and `from utility import *` via
-  `sys.path` hacks in `__main__.py`. The parser had not been run yet in the session that wrote this file.
+- Imports its own `settings.py` (the predicate names) and `utility.py` (`read_file`, `ERROR_CODE`).

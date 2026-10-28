@@ -1,8 +1,10 @@
 """fiore (Python): the pure Python parts, Result and the WASP plugin protocol"""
 import unittest
 
-from fiore.result import Result
-from fiore.wasp import BOTTOM, WaspPlugin, split_atoms
+from fiore.clingo.utility_clingo import ClingoResult as Result
+from fiore.utils.constants import BOTTOM
+from fiore.wasp.plugin import WaspPlugin
+from fiore.wasp.runner import split_atoms
 
 
 class TestResult(unittest.TestCase):
@@ -27,10 +29,10 @@ class TestWasp(unittest.TestCase):
         class Engine:
             def __init__(self, derived, reasons):
                 self.derived, self.reasons = derived, reasons
-            def init_check(self): return []
-            def on_true(self, changes, dl, force=False): return self.derived
-            def reason(self, d): return self.reasons.get(d, [])
-            def undo(self, changes): pass
+            def init_propagation(self): return []
+            def on_literals_true(self, changes, dl, force=False): return self.derived
+            def get_reason_for_literal(self, d): return self.reasons.get(d, [])
+            def on_literals_undefined(self, changes): pass
 
         plugin = WaspPlugin({}, lambda names, level0: (Engine([-5], {-5: [3]}), [1, -1], []))
         plugin.get_literals(5)
