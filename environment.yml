@@ -11,5 +11,4 @@ dependencies:
   - clingo=5.8
   - python=3.13
   - pip
-  - pip:
-      - .
+# the packages (amosum, fiore) and amoclingo-core are installed by ./install.sh, in the activated environment

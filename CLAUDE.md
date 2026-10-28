@@ -68,7 +68,8 @@ names in Python style); WASP exists only in Python.
 ## C++ build and run
 
 - Build (from `amosum/amoclingo/cpp/`): `make clean && make release`
-  (what `install_amoclingo.sh` does); binary `bin/amoclingo-core`, expected there by `amoclingo`.
+  (`./install.sh` does it, with the Python packages and WASP_EXE); binary `bin/amoclingo-core`, expected there by
+  `amoclingo`. Install: `conda activate amosum && ./install.sh --wasp <wasp>` (`--no-pip`: rebuild only).
 - The Makefile compiles `amoclingo/cpp/`, `core/cpp/` and `core/cpp/search/` (objects keep their folders under
   `build/`: both have a `propagator.cpp`) plus fiore's sources into `build/fiore/` (via `include
   ../../../fiore/cpp/fiore.mk`); includes are `"fiore/..."` and `"amosum/..."` (`-I<repo root>`).

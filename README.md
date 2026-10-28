@@ -56,22 +56,26 @@ The following software is required:
 
 # Installation
 
-Create the Conda environment and install the required components:
+Create the Conda environment, activate it and install everything at once:
 
 ```bash
 conda env create -f environment.yml
-source ./install_amoclingo.sh
-source ./install_amowasp.sh <path_to_wasp_exe>
+conda activate amosum
+./install.sh --wasp <path_to_wasp_exe>
 ```
 
-where `<path_to_wasp_exe>` is the path to the `wasp` executable.
+`install.sh` installs the Python packages (`amosum`, with the commands `amoclingo`, `amowasp` and `amosumparser`, and
+`fiore`), builds `amoclingo-core` (the C++ propagator) and stores the path of the `wasp` executable in the
+environment (`WASP_EXE`, set at every `conda activate`), then checks the three commands on a small program.
+`--wasp` can be left out if `WASP_EXE` is already set or `wasp` is on the `PATH`; without WASP, `amowasp` is not set
+up. `./install.sh --no-pip` only rebuilds `amoclingo-core`; `./install.sh --help` lists the options.
 
 ## Additional build step for the IJCAI version
 
 To build the IJCAI version, run:
 
 ```bash
-source ./install_ijcai.sh [<path_to_wasp_exe>]
+source ./install_ijcai_version.sh [<path_to_wasp_exe>]
 ```
 
 The `<path_to_wasp_exe>` argument is optional if the executable is already available through the environment configuration.

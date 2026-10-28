@@ -1,1 +1,0 @@
-export WASP_EXE=$1
