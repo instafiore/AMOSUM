@@ -1,5 +1,118 @@
 #pragma once
+#include <algorithm>
+#include <cstdint>
+#include <memory>
+#include <string>
 #include "fiore/clingo/utilityClingo.h"
+#include "fiore/model/assigment.h"
 #include "amosum/amosum_solver.h"
 
-fiore::clingo::ClingoResult lsu(AmosumClingoSolver& solver) noexcept;
+// Search algorithms of amoclingo on an initialized AmosumClingoSolver (solver.init already called).
+// Each one returns the result of the search; the best answer set is the pool's current optimum
+// (fiore::AnswersetsPool::getOptimalAnswerSet), which is also what signalHandler prints on SIGINT/SIGTERM.
+// Without #amomaximize every algorithm is a single solve call.
+
+
+// --progression: how far the bound moves at step n = 0, 1, 2, ... of satUnsat / unsatSat, as an expression in n with integers,
+// n, + - * ^ and parentheses: 1 (linear, the default), 2 (+2), 2^n, n^2, 3*n+1, ... A value below 1 counts as 1
+// (n^2 at n = 0), values are capped at 2^62
+class Progression{
+public:
+    explicit Progression(const std::string& expression);    // std::invalid_argument on a malformed expression
+    int64_t at(size_t n) const noexcept;
+    // 1 at every step: the bound of satUnsat never goes back, so its clauses can stay learnt
+    bool isLinear() const noexcept { return linear; }
+    const std::string expression;
+
+    struct Node;
+private:
+    std::shared_ptr<const Node> root;
+    bool linear;
+};
+
+
+// SAT-UNSAT (upwards; LSU with p = 1): from the minimum possible value, after a model of value v the bound is v + p(step) (step+1 at each
+// model), never at a bound known UNSAT nor above the maximum possible value; an UNSAT call goes back to v + 1 with
+// step 0. With p = 1: each model v sets the bound to v + 1 until UNSAT (the last model is optimal)
+fiore::clingo::ClingoResult satUnsat(AmosumClingoSolver& solver, const Progression& progression) noexcept;
+
+// UNSAT-SAT (downwards; LUS with p = 1): from the maximum possible value, after an UNSAT call at bound u the bound is u - p(step) (step+1 at
+// each UNSAT call), never at a value known SAT nor below the minimum possible value; a model goes back to u - 1 with
+// step 0. With p = 1: down by 1 until the first model, which is optimal
+fiore::clingo::ClingoResult unsatSat(AmosumClingoSolver& solver, const Progression& progression) noexcept;
+
+
+// helpers shared by the algorithms
+namespace amoclingoSearch {
+
+    // the solver set up for a sequence of plain solve calls (no assumptions, cores, rest or derived-literal detection)
+    inline void prepare(AmosumClingoSolver& solver) noexcept{
+        solver.setNoConflictLimits();
+        solver.clearAssumptions();
+        solver.disableRestDetection();
+        solver.disableGetDerivedFromAssDetection();
+        solver.setCollectUnsatCores(false);
+    }
+
+    inline AmosumConstraint* amomaximize(AmosumClingoSolver& solver) noexcept{
+        return static_cast<AmosumProgram*>(solver.program.get())->amomaximizeConstraint;
+    }
+
+    // largest / smallest value of the #amomaximize: at most one member per group, possibly none (the aux group, of
+    // weight bound = 0, is left out)
+    inline int64_t maxPossibleValue(const AmosumConstraint* constraint) noexcept{
+        int64_t value = 0;
+        for(const ProgramGroup& g: constraint->groups){
+            if(g.aux) continue;
+            int64_t best = 0;
+            for(const auto& [literal, weight]: g.members) best = std::max(best, weight);
+            value += best;
+        }
+        return value;
+    }
+    inline int64_t minPossibleValue(const AmosumConstraint* constraint) noexcept{
+        int64_t value = 0;
+        for(const ProgramGroup& g: constraint->groups){
+            if(g.aux) continue;
+            int64_t worst = 0;
+            for(const auto& [literal, weight]: g.members) worst = std::min(worst, weight);
+            value += worst;
+        }
+        return value;
+    }
+
+    // the clauses of the #amomaximize propagator hold only for the bound of the current solve call: for a bound that
+    // can decrease between calls (the other constraints' bounds never change: their clauses stay learnt)
+    inline void useVolatileClauses(AmosumClingoSolver& solver) noexcept{
+        if(solver.maximizer != nullptr) solver.maximizer->updateClauseTypeGlobal(clingo_clause_type_volatile);
+    }
+
+    // a model of solver.solve(): the new best answer set (the previous one is deleted), printed as not yet optimal
+    inline AmosumClingoAssignment* acceptModel(fiore::ClingoAssignment* answerset, const fiore::clingo::ClingoResult& result, AmosumClingoAssignment* best) noexcept{
+        // AmosumClingoSolver::createAssignment builds AmosumClingoAssignment
+        AmosumClingoAssignment* a = static_cast<AmosumClingoAssignment*>(answerset);
+        a->result = result;
+        if(best != nullptr) fiore::AnswersetsPool::getInstance()->deleteAnswerset(best);
+        a->setAsCurrentOptimum();
+        a->result.unkown();             // a better model may exist
+        a->printAssignment();
+        return a;
+    }
+
+    // best is proven optimal
+    inline fiore::clingo::ClingoResult optimum(AmosumClingoAssignment* best) noexcept{
+        best->result.optimum();
+        return best->result;
+    }
+
+    // without #amomaximize: one solve call (a #minimize is optimized by clingo inside it)
+    inline fiore::clingo::ClingoResult solveOnce(AmosumClingoSolver& solver) noexcept{
+        prepare(solver);
+        auto [answerset, result] = solver.solve();
+        if(!result.isSat()) return result;
+        AmosumClingoAssignment* a = static_cast<AmosumClingoAssignment*>(answerset);
+        a->result = result;
+        a->setAsCurrentOptimum();
+        return a->result;
+    }
+}

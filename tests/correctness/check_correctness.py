@@ -6,8 +6,9 @@ every aggregate written as a plain clingo #sum (set semantics, as amosum: equal 
 and #amomaximize as #maximize. For each case and each configuration (--reason, --lazy) it checks:
   - the exit code: 20 if the reference is UNSAT, 10 if SAT, 30 with #amomaximize;
   - the printed answer set is an answer set of the reference (all its atoms true, every other atom false);
-  - #amomaximize: the values printed by LSU strictly increase, the last one is the value of the printed answer set
+  - #amomaximize: the printed values strictly increase, the last one is the value of the printed answer set
     and the reference optimum.
+The #amomaximize cases run with every --opt-strategy (sat-unsat, unsat-sat) and --progression (1, 2, 2^n, n^2).
 The Python wrapper (python -m amosum.amoclingo) is also checked on a few cases, with the options after the files.
 
 Run from the repository root, with the amosum conda env (it needs the clingo Python module) and amoclingo-core built:
@@ -40,6 +41,10 @@ REASONS = ["nomin", "ijcai", "min", "minfly"]
 LAZY = ["false", "true", "hybrid", "0.5"]
 ALL_CONFIGS = [(r, l) for r in REASONS for l in LAZY]
 FEW_CONFIGS = [("nomin", "false"), ("min", "hybrid"), ("ijcai", "true")]
+# --opt-strategy x --progression: every pair runs on the #amomaximize cases; without #amomaximize each one is a single
+# solve call, checked once per pair on the edge cases only
+STRATEGIES = ["sat-unsat", "unsat-sat"]
+PROGRESSIONS = ["1", "2", "2^n", "n^2"]
 
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -56,6 +61,7 @@ def benchmarks() -> Dict[str, Tuple[List[Tuple[str, Optional[str]]], List[Tuple[
         "edge": ([(f, None) for f in sorted(glob.glob(os.path.join(HERE, "edge", "*.asp")))], ALL_CONFIGS),
         "kn_toy": (old("kn_toy"), ALL_CONFIGS),
         "kn_toy_max": ([(os.path.join(HERE, "kn_toy_max", "encoding-amomaximize.asp"), i) for i in kn_toy_instances], ALL_CONFIGS),
+        "kn_max": ([(os.path.join(HERE, "kn_max", "encoding-amomaximize.asp"), i) for i in sorted(glob.glob(os.path.join(OLD, "kn", "instances", "*.asp")))], FEW_CONFIGS),
         "kn": (old("kn"), ALL_CONFIGS),
         "gc": (old("gc"), FEW_CONFIGS),
         "ga": (old("ga"), FEW_CONFIGS),
@@ -159,7 +165,7 @@ def rewrite(path: str, directory: str) -> str:
 class Run:
     exitCode: int
     atoms: Optional[List[str]]      # the last printed answer set
-    values: List[int]               # "Amomaximize Cost: V" of each LSU model
+    values: List[int]               # "Amomaximize Cost: V" of each model found
     output: str
 
 
@@ -177,9 +183,10 @@ def parseOutput(exitCode: int, output: str) -> Run:
     return Run(exitCode, atoms, values, output)
 
 
-def runCore(inputs: List[str], reason: str, lazy: str, directory: str, timeout: int) -> Run:
+def runCore(inputs: List[str], strategy: str, progression: str, reason: str, lazy: str, directory: str, timeout: int) -> Run:
     # the options before the files: amoclingo-core takes everything after the first file as a file
-    command = [EXE, f"--statsfile={os.path.join(directory, 'stats')}", f"--reason={reason}", f"--lazy={lazy}", *inputs]
+    command = [EXE, f"--statsfile={os.path.join(directory, 'stats')}", f"--opt-strategy={strategy}",
+               f"--progression={progression}", f"--reason={reason}", f"--lazy={lazy}", *inputs]
     try:
         out = subprocess.run(command, capture_output=True, text=True, timeout=timeout, cwd=directory)
     except subprocess.TimeoutExpired:
@@ -240,7 +247,7 @@ def check(case: Case, run: Run) -> List[str]:
             errors.append("no 'Amomaximize Cost' printed")
         else:
             if any(a >= b for a, b in zip(run.values, run.values[1:])):
-                errors.append(f"LSU values not strictly increasing: {run.values}")
+                errors.append(f"values not strictly increasing: {run.values}")
             if run.values[-1] != ref.optimum:
                 errors.append(f"last value {run.values[-1]}, optimum {ref.optimum}")
         if isAnswerSet and value != ref.optimum:
@@ -256,6 +263,10 @@ def main() -> int:
     parser.add_argument("--timeout", type=int, default=120, help="seconds per run [120]")
     parser.add_argument("--jobs", type=int, default=os.cpu_count(), help="parallel runs [cpu count]")
     parser.add_argument("--no-wrapper", action="store_true", help="skip the checks of the Python wrapper")
+    parser.add_argument("--strategies", nargs="+", choices=STRATEGIES, default=STRATEGIES,
+                        help="--opt-strategy values to check [all]")
+    parser.add_argument("--progressions", nargs="+", default=PROGRESSIONS,
+                        help=f"--progression values to check [{' '.join(PROGRESSIONS)}]")
     args = parser.parse_args()
     args.benchmarks = args.benchmarks or list(all)
     for b in args.benchmarks:
@@ -263,7 +274,7 @@ def main() -> int:
     if not os.path.isfile(EXE): sys.exit(f"{EXE} not found: build it first (make release)")
 
     with tempfile.TemporaryDirectory(prefix="amosum_correctness_") as tmp:
-        cases: List[Tuple[Case, List[Tuple[str, str]]]] = []
+        cases: List[Tuple[Case, List[Tuple[str, str, str, str]]]] = []
         rewritten: Dict[str, str] = {}
         for bench in args.benchmarks:
             files, configs = all[bench]
@@ -272,28 +283,34 @@ def main() -> int:
                 case = Case(bench, encoding, instance, plain(text), "#amomaximize" in re.sub(r"%.*", "", text))
                 if encoding not in rewritten: rewritten[encoding] = rewrite(encoding, tmp)
                 case.rewritten = [rewritten[encoding]] + ([instance] if instance else [])
-                cases.append((case, [("nomin", "false")] if args.quick else configs))
+                base = [("nomin", "false")] if args.quick else configs
+                pairs = [(st, pr) for st in args.strategies for pr in args.progressions]
+                if case.maximize: runs = [(st, pr, r, l) for st, pr in pairs for r, l in base]
+                else:
+                    runs = [("sat-unsat", "1", r, l) for r, l in base]
+                    if bench == "edge": runs += [(st, pr, "nomin", "false") for st, pr in pairs if (st, pr) != ("sat-unsat", "1")]
+                cases.append((case, runs))
 
         print(f"computing {len(cases)} references with clingo ...", flush=True)
         with ThreadPoolExecutor(args.jobs) as pool:
             refs = list(pool.map(lambda c: reference(c[0].plainText, c[0].instance, c[0].maximize), cases))
         for (case, _), ref in zip(cases, refs): case.ref = ref
 
-        jobs = [(case, reason, lazy) for case, configs in cases for reason, lazy in configs]
+        jobs = [(case, *run) for case, runs in cases for run in runs]
         print(f"running amoclingo-core {len(jobs)} times ...", flush=True)
 
         def one(job):
-            case, reason, lazy = job
+            case, strategy, progression, reason, lazy = job
             directory = tempfile.mkdtemp(dir=tmp)
-            return job, check(case, runCore(case.rewritten, reason, lazy, directory, args.timeout))
+            return job, check(case, runCore(case.rewritten, strategy, progression, reason, lazy, directory, args.timeout))
 
         failures = 0
         perCase: Dict[str, List[str]] = {}
         with ThreadPoolExecutor(args.jobs) as pool:
-            for (case, reason, lazy), errors in pool.map(one, jobs):
+            for (case, strategy, progression, reason, lazy), errors in pool.map(one, jobs):
                 if errors:
                     failures += 1
-                    perCase.setdefault(case.name, []).append(f"  --reason={reason} --lazy={lazy}: " + "; ".join(errors))
+                    perCase.setdefault(case.name, []).append(f"  --opt-strategy={strategy} --progression={progression} --reason={reason} --lazy={lazy}: " + "; ".join(errors))
         for case, _ in cases:
             ref = case.ref
             status = "UNSAT" if not ref.sat else (f"OPTIMUM {ref.optimum}" if case.maximize else "SAT")

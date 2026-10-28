@@ -12,6 +12,7 @@ struct ClingoSolver;
 bool initImplementation(clingo_propagate_init_t *init, ClingoPropagator* prop);
 bool propagateImplementation(clingo_propagate_control_t *control, clingo_literal_t const *changes, size_t size, ClingoPropagator* propagator);
 void undoImplementation(clingo_propagate_control_t const *control, clingo_literal_t const *changes, size_t size, ClingoPropagator* propagator);
+bool checkImplementation(clingo_propagate_control_t *control, ClingoPropagator* propagator);
 
 
 struct PropagatorPBConstraint: public ClingoPropagator{
@@ -21,6 +22,8 @@ struct PropagatorPBConstraint: public ClingoPropagator{
         this->init = &initImplementation;
         this->propagate = &propagateImplementation;
         this->undo = &undoImplementation;
+        // only for the init conflicts of a volatile clause type (see initPropagation): the check mode is none otherwise
+        this->check = &checkImplementation;
     }
     
     // inline const UMNVector<const Literal*>& programLiterals() override { return plits.get() != nullptr ? *plits.get() : *solver->program->literals.get(); }
@@ -28,6 +31,7 @@ struct PropagatorPBConstraint: public ClingoPropagator{
     friend bool initImplementation(clingo_propagate_init_t *init, ClingoPropagator* prop);
     friend bool propagateImplementation(clingo_propagate_control_t *control, clingo_literal_t const *changes, size_t size, ClingoPropagator* propagator);
     friend void undoImplementation(clingo_propagate_control_t const *control, clingo_literal_t const *changes, size_t size, ClingoPropagator* propagator);
+    friend bool checkImplementation(clingo_propagate_control_t *control, ClingoPropagator* propagator);
 
     inline std::string toString() const { std::ostringstream o; o<<"PropagatorPBConstraintAbstract("<<name<<")"; return o.str();}
     void initPropagation(clingo_propagate_init_t *init) noexcept;
@@ -44,6 +48,8 @@ struct PropagatorPBConstraint: public ClingoPropagator{
     std::unique_ptr<PerfectWeightFunction> weightSolvingLiterals;
 
     inline void updateClauseTypeGlobal(clingo_clause_type_t clauseTypeGlobal) noexcept{ this->clauseTypeGlobal = clauseTypeGlobal; }
+    // volatile clauses are deleted after the current solve call: for a bound that can also decrease between calls
+    inline bool isVolatileClauseType() const noexcept{ return clauseTypeGlobal == clingo_clause_type_volatile || clauseTypeGlobal == clingo_clause_type_volatile_static; }
     std::vector<PropagatorPBConstraintImplementation*> implementations;
     // friend ClingoSolver;
 protected:
@@ -54,6 +60,9 @@ protected:
     bool _addClause(const void *control, const std::vector<clingo_literal_t>& clause, const bool isInitControl, const clingo_clause_type_t clauseType = CONSTANTS::NONE32) noexcept;
     bool _addClausesPropagatedLitIds(const void *control, const std::vector<clingo_literal_t>& propagatedLiteralIds, const bool isInitControl, const size_t td, const clingo_clause_type_t clauseType = CONSTANTS::NONE32) noexcept;
     clingo_clause_type_t clauseTypeGlobal;
+    // volatile clause type: the clauses of initPropagation, one list per thread, added by checkImplementation at the first
+    // fixpoint of the solve call (clauses added at init are permanent, while these hold only for the current bound)
+    std::vector<std::vector<std::vector<clingo_literal_t>>> pendingInitClauses;
 
 
 };

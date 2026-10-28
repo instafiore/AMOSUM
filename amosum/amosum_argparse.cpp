@@ -21,10 +21,20 @@ std::vector<fiore::Argument> amosumArguments() noexcept{
             .build(),
         Argument::Builder(AMOSUM_ARGS::algorithmKey).isWithValue()
             .withDesc("Search algorithm for #amomaximize")
-            .withLongDesc("Search algorithm for #amomaximize: lsu (linear search, each model of value v sets the "
-                          "bound to v+1 until UNSAT). Ignored without #amomaximize")
+            .withLongDesc("Search algorithm for #amomaximize: sat-unsat (upwards from the minimum possible value: "
+                          "each model of value v sets the bound to v+p(step), back to v+1 after UNSAT), unsat-sat "
+                          "(downwards from the maximum possible value: each UNSAT bound u sets it to u-p(step), back to "
+                          "u-1 after a model); p is --progression (1: LSU and LUS). Ignored without #amomaximize")
             .withDefaultValue(AMOSUM_ARGS::algorithmDefault)
-            .withValidValues({AMOSUM_ARGS::algorithmLsu})
+            .withValidValues({AMOSUM_ARGS::algorithmSatUnsat, AMOSUM_ARGS::algorithmUnsatSat})
+            .build(),
+        Argument::Builder(AMOSUM_ARGS::progressionKey).isWithValue()
+            .withDesc("Step of the bound of --opt-strategy at step n: 1 (linear), 2 (+2), 2^n, n^2, ...")
+            .withLongDesc("Step of the bound of --opt-strategy at step n = 0, 1, 2, ...: an expression in n with "
+                          "integers, + - * ^ and parentheses, e.g. 1 (linear), 2 (+2), 2^n, n^2; values below 1 count "
+                          "as 1. Step n restarts from 0 when the search goes back (UNSAT for sat-unsat, a model for unsat-sat)")
+            .withDefaultValue(AMOSUM_ARGS::progressionDefault)
+            .withRegex(ProgressionValue())
             .build()
     };
 }

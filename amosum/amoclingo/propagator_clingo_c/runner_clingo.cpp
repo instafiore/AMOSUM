@@ -24,8 +24,16 @@ fiore::clingo::ClingoResult Runner::run(){
     const bool hasAmomaximize = static_cast<AmosumProgram*>(solver.program.get())->amomaximizeConstraint != nullptr;
     const std::string algorithm = args->get(AMOSUM_ARGS::algorithmKey);
 
+    std::unique_ptr<Progression> progression;
+    try{
+        progression = std::make_unique<Progression>(args->get(AMOSUM_ARGS::progressionKey));
+    }catch(const std::invalid_argument& e){
+        fiore::setExitCode(fiore::CONSTANTS::ERROR_CODE, true, e.what());
+    }
+
     fiore::clingo::ClingoResult result;
-    if(algorithm == AMOSUM_ARGS::algorithmLsu || !hasAmomaximize) result = lsu(solver);
+    if(algorithm == AMOSUM_ARGS::algorithmSatUnsat || !hasAmomaximize) result = satUnsat(solver, *progression);
+    else if(algorithm == AMOSUM_ARGS::algorithmUnsatSat) result = unsatSat(solver, *progression);
     else fiore::setExitCode(fiore::CONSTANTS::ERROR_CODE, true, "Unknown algorithm: " + algorithm);
 
     std::ostringstream out;

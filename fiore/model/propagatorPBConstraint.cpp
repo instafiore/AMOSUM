@@ -109,10 +109,38 @@ bool PropagatorPBConstraint::_addClausesPropagatedLitIds(const void *control, co
 }
 
 void PropagatorPBConstraint::initPropagation(clingo_propagate_init_t *init) noexcept{
-   for(size_t ni = 0; ni < implementations.size(); ++ni){
+    if(isVolatileClauseType()){
+        // the clauses are kept for checkImplementation: an init clause would stay after this solve call
+        pendingInitClauses.assign(implementations.size(), {});
+        bool pending = false;
+        for(size_t ni = 0; ni < implementations.size(); ++ni){
+            for(const clingo_literal_t literalId: implementations[ni]->initPropagation()){
+                std::vector<clingo_literal_t> clause{literalId};
+                extendVector(clause, implementations[ni]->getReasonForLiteral(literalId));
+                pendingInitClauses[ni].push_back(std::move(clause));
+                pending = true;
+            }
+        }
+        clingo_propagate_init_set_check_mode(init, pending ? clingo_propagator_check_mode_fixpoint : clingo_propagator_check_mode_none);
+        return;
+    }
+    for(size_t ni = 0; ni < implementations.size(); ++ni){
         std::vector<clingo_literal_t> derived = implementations[ni]->initPropagation();
         if(derived.size() > 0 && this->addClausesPropagatedLitIds(init, derived, ni)) return;
     }
+}
+
+// volatile clause type: adds the clauses of initPropagation of this solve call (once per thread)
+bool checkImplementation(clingo_propagate_control_t *control, ClingoPropagator* propagator){
+    PropagatorPBConstraint* pbProp = static_cast<PropagatorPBConstraint*>(propagator);
+    const size_t td = clingo_propagate_control_thread_id(control);
+    if(td >= pbProp->pendingInitClauses.size() || pbProp->pendingInitClauses[td].empty()) return true;
+    std::vector<std::vector<clingo_literal_t>> clauses = std::move(pbProp->pendingInitClauses[td]);
+    pbProp->pendingInitClauses[td].clear();
+    for(const std::vector<clingo_literal_t>& clause: clauses){
+        if(pbProp->addClause(control, clause)) return true;     // conflict: this solve call is UNSAT
+    }
+    return true;
 }
 
 bool initImplementation(clingo_propagate_init_t *init, ClingoPropagator* propagator){
@@ -125,6 +153,8 @@ bool initImplementation(clingo_propagate_init_t *init, ClingoPropagator* propaga
         LOG(LogLevel::INFO_1, "Called ",pbProp->name," - initPropagator");
     #endif
 
+    // check is registered for every PB propagator: called only when initPropagation asks for it
+    clingo_propagate_init_set_check_mode(init, clingo_propagator_check_mode_none);
     if(pbProp->clearIfNotEnabledInInit(init))  return true;
 
     const bool isFirstTime = pbProp->firstTime;
