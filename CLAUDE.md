@@ -16,9 +16,8 @@ Paper: Alviano, Dodaro, Fiorentino, Maratea, "AMO-aware Aggregates in ASP", IJCA
 
 - **Never modify `amosum/ijcai_version/`**: it is the published IJCAI version. The rest of the code
   is the extension being developed.
-- **Never modify the Python versions** (Python propagators and all of `amosum/amowasp/`, including the
-  old C++ headers in `amowasp/propagator_wasp_c/`, which include the removed `amosum.h` and are not
-  compiled anymore). The parser is a separate area; only touch it when the task is about it.
+- **Never modify the Python versions** (Python propagators and all of `amosum/amowasp/`).
+  The parser is a separate area; only touch it when the task is about it.
 
 ## Layout
 

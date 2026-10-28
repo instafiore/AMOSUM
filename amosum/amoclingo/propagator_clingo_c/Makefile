@@ -8,7 +8,6 @@ INCLUDES =
 SRC_DIR = ../..
 TARGET = amoclingo-core
 C=cpp
-amowasp = $(SRC_DIR)/amowasp/propagator_wasp_c
 
 # the sources of amoclingo-core: this folder and amosum/ (not its subfolders: ijcai_version, amowasp, ...)
 SRCS = $(wildcard *.$(C)) $(wildcard $(SRC_DIR)/*.$(C))
@@ -59,11 +58,6 @@ $(BUILD_DIR)/fiore/%.o: $(FIORE_DIR)/%.$(C)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.$(C)
-	@mkdir -p $(BUILD_DIR) # Create build directory if not exists
-	@echo "Compiling $< -> $@"
-	$(CC) $(CFLAGS) $(LDFLAGS) -c $< -o $@
-
-$(BUILD_DIR)/%.o: $(amowasp)/%.$(C)
 	@mkdir -p $(BUILD_DIR) # Create build directory if not exists
 	@echo "Compiling $< -> $@"
 	$(CC) $(CFLAGS) $(LDFLAGS) -c $< -o $@
