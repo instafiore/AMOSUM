@@ -38,9 +38,9 @@ Paper: Alviano, Dodaro, Fiorentino, Maratea, "AMO-aware Aggregates in ASP", IJCA
   - `model/`: `Program`, `ClingoSolver`, PB (sum <= bound) propagator, `Core`/`CoreLowerBound`, ...
   - `fiore.mk` (sources and include flag for applications), `Makefile` (`make test`), `README.md`
   - includes from outside: `#include "fiore/utils/logger.h"` with `-I<repo root>`
-- `tests/correctness/check_correctness.py` — checks of `amoclingo-core` against clingo (edge cases in
-  `bench/edge`, `#amomaximize` encodings in `bench/kn_toy_max`, `bench/kn_max`); the benchmarks
-  (`bench/{ga,gc,kn,kn_toy,nr}`) are in `tests/correctness-old/test_suite/`.
+- `tests/correctness/check_correctness.py` — checks of `amoclingo-core` against clingo, on
+  `tests/correctness/bench/`: `edge` (small cases), `ga`, `gc`, `kn`, `kn_toy` (encodings
+  `encoding-amosum-{amo,eo}.asp` + `instances/`), `kn_toy_max`, `kn_max` (`#amomaximize` on their instances).
 
 ## C++ build and run
 

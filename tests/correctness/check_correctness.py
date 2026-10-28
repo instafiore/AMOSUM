@@ -33,7 +33,6 @@ import clingo
 
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 HERE = os.path.join(REPO, "tests", "correctness", "bench")
-OLD = os.path.join(REPO, "tests", "correctness-old", "test_suite", "bench")
 EXE = os.path.join(REPO, "amosum", "amoclingo", "propagator_clingo_c", "bin", "amoclingo-core")
 
 SAT, UNSAT, OPTIMUM = 10, 20, 30
@@ -53,19 +52,19 @@ PROGRESSIONS = ["1", "2", "2^n", "n^2"]
 # (nurse rostering, nr, is left out on purpose: it is too heavy)
 
 def benchmarks() -> Dict[str, Tuple[List[Tuple[str, Optional[str]]], List[Tuple[str, str]]]]:
-    def old(bench: str, kinds=("amo", "eo")):
-        instances = sorted(glob.glob(os.path.join(OLD, bench, "instances", "*.asp")))
-        return [(os.path.join(OLD, bench, f"encoding-amosum-{k}.asp"), i) for k in kinds for i in instances]
+    def encodings(bench: str, kinds=("amo", "eo")):
+        instances = sorted(glob.glob(os.path.join(HERE, bench, "instances", "*.asp")))
+        return [(os.path.join(HERE, bench, f"encoding-amosum-{k}.asp"), i) for k in kinds for i in instances]
 
-    kn_toy_instances = sorted(glob.glob(os.path.join(OLD, "kn_toy", "instances", "*.asp")))
+    kn_toy_instances = sorted(glob.glob(os.path.join(HERE, "kn_toy", "instances", "*.asp")))
     return {
         "edge": ([(f, None) for f in sorted(glob.glob(os.path.join(HERE, "edge", "*.asp")))], ALL_CONFIGS),
-        "kn_toy": (old("kn_toy"), ALL_CONFIGS),
+        "kn_toy": (encodings("kn_toy"), ALL_CONFIGS),
         "kn_toy_max": ([(os.path.join(HERE, "kn_toy_max", "encoding-amomaximize.asp"), i) for i in kn_toy_instances], ALL_CONFIGS),
-        "kn_max": ([(os.path.join(HERE, "kn_max", "encoding-amomaximize.asp"), i) for i in sorted(glob.glob(os.path.join(OLD, "kn", "instances", "*.asp")))], FEW_CONFIGS),
-        "kn": (old("kn"), ALL_CONFIGS),
-        "gc": (old("gc"), FEW_CONFIGS),
-        "ga": (old("ga"), FEW_CONFIGS),
+        "kn_max": ([(os.path.join(HERE, "kn_max", "encoding-amomaximize.asp"), i) for i in sorted(glob.glob(os.path.join(HERE, "kn", "instances", "*.asp")))], FEW_CONFIGS),
+        "kn": (encodings("kn"), ALL_CONFIGS),
+        "gc": (encodings("gc"), FEW_CONFIGS),
+        "ga": (encodings("ga"), FEW_CONFIGS),
     }
 
 
