@@ -9,7 +9,7 @@ import time
 from typing import Callable, List, Optional
 
 from fiore.clingo.utility_clingo import ClingoResult
-from fiore.utils.constants import ERROR_CODE
+from fiore.utils.constants import *
 
 _start = time.time()
 
@@ -60,7 +60,7 @@ _cleanups: List[Callable[[], None]] = []
 
 
 def on_interrupt(signum, frame) -> None:
-    """the best answer set known, not proven optimal (exit code 29), or "No solution found" (exit code 1, as
+    """the best answer set known, not proven optimal (exit code 29), or "No solution found" (exit code 28, as
     amoclingo-core); then the cleanups and the exit. It does not raise: a signal often arrives inside a callback of
     clingo (the propagator), where an exception would become a clingo error."""
     signal.signal(signal.SIGINT, signal.SIG_IGN)
@@ -74,6 +74,7 @@ def on_interrupt(signum, frame) -> None:
             code = best.result.exit_code()
         else:
             print(f"Wall Time: {wall_time():f}s No solution found", flush=True)
+            code = UNKNOWN_CODE
     except Exception:
         pass                # e.g. the signal arrived while stdout was being written
     for cleanup in _cleanups:

@@ -35,12 +35,14 @@ struct ClingoResult{
 
     size_t value;
     bool solvedAtLevel0;
-    inline short exitCode() const noexcept { 
+    inline short exitCode() const noexcept {
+        if (this->isSolutionUnkown()) return CONSTANTS::UNKOWN_CODE;      // "No solution found": no answer set known
         if (this->isUnsat()) return CONSTANTS::UNSAT_CODE;
         if (this->isOptimum()) return CONSTANTS::OPTIMUM_CODE;
         if (this->isOptimumUnkownSat()) return CONSTANTS::OPTIMUM_UNKOWN_CODE;
         if (this->isOptimumUnkown()) return CONSTANTS::UNKOWN_CODE;
-        if(this->isSat()) return CONSTANTS::SAT_CODE;
+        if (this->isSat()) return CONSTANTS::SAT_CODE;
+        if (this->isUnkown()) return CONSTANTS::UNKOWN_CODE;
         return CONSTANTS::ERROR_CODE;
     }
 

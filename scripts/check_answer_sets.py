@@ -378,8 +378,7 @@ def main() -> int:
     atoms: List[clingo.Symbol] = []
     if mode != "exact":
         try:
-            atoms = sorted({s for a in answers for s in map(clingo.parse_term, a.atoms)
-                            if not ignored(s, args.ignore_prefix) and is_atom(s)})
+            atoms = sorted({s for a in answers for s in map(clingo.parse_term, a.atoms) if not ignored(s, args.ignore_prefix) and is_atom(s)})
         except RuntimeError as err:
             print(f"error: cannot parse an atom of the output: {err}", file=sys.stderr)
             return 2
