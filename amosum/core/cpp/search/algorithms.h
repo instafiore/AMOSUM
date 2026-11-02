@@ -10,7 +10,10 @@
 // Search algorithms on the #amomaximize value (mirrored by core/py/search/), on any AmosumSearchBackend: the clingo
 // one is amoclingo/cpp/solver.h (AmosumClingoBackend).
 // Each one returns the result of the search; the best answer set is the pool's best known one
-// (fiore::AnswersetsPool::getBestKnownAnswerSet), which is also what signalHandler prints on SIGINT/SIGTERM.
+// (fiore::AnswersetsPool::getBestKnownAnswerSet).
+// SIGINT/SIGTERM interrupt the solve call in progress, and every later call returns at once as interrupted: a
+// call interrupted before a model is neither SAT nor UNSAT, so a search returns its best model as not proven optimal (or
+// the interrupted result without a model). Only an UNSAT call proves anything.
 // Without #amomaximize every algorithm is a single solve call.
 
 
@@ -104,7 +107,7 @@ namespace amosumSearch {
     // without #amomaximize: one solve call (a #minimize is optimized by clingo inside it)
     inline fiore::clingo::ClingoResult solveOnce(AmosumSearchBackend& backend) noexcept{
         auto [a, result] = backend.solve();
-        if(!result.isSat()) return result;
+        if(!result.isSat()) return result;          // UNSAT, or interrupted before a model
         a->result = result;
         a->setAsBestKnown();
         return a->result;

@@ -48,7 +48,7 @@ struct ClingoResult{
 
     ClingoResult(size_t result = clingo_solve_value_error, bool solvedAtLevel0 = false)noexcept: value(result), solvedAtLevel0(solvedAtLevel0){}
 
-    ClingoResult(ClingoSolveValue result, bool solvedAtLevel0 = false)noexcept: value(result){}
+    ClingoResult(ClingoSolveValue result, bool solvedAtLevel0 = false)noexcept: value(result), solvedAtLevel0(solvedAtLevel0){}
 
     std::string toString() const noexcept{
         std::stringstream out;
@@ -69,7 +69,10 @@ struct ClingoResult{
     inline bool isOptimum() const noexcept{ return this->value & clingo_solve_value_optimum; }
     inline bool isOptimumUnkown() const noexcept{ return this->value & clingo_solve_value_unkown_optimum; }
     inline bool isOptimumUnkownSat() const noexcept{ return this->isOptimumUnkown() && this->isSat(); }
-    inline bool isUnkown() const noexcept{ return this->value == clingo_solve_value_unkown; }
+    // no answer: not solved yet, or interrupted (SIGINT / SIGTERM) before a model or a proof. Note: a SAT call of
+    // ClingoSolver::solve also has the interrupted bit (the handle is closed after the first model)
+    inline bool isUnkown() const noexcept{ return this->value == clingo_solve_value_unkown || (isInterrupted() && !isSat() && !isUnsat()); }
+    inline bool isInterrupted() const noexcept{ return this->value & clingo_solve_value_interrupted; }
     inline bool isUnsat() const noexcept{ return this->value & clingo_solve_value_unsatisfiable; }
     inline bool isSolutionUnkown() const noexcept{ return this->value & clingo_solve_no_solution_found; }
 

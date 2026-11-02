@@ -2,6 +2,7 @@
 #include "amosum/amoclingo/cpp/solver.h"
 #include "amosum/amoclingo/cpp/options.h"
 #include "amosum/core/cpp/search/algorithms.h"
+#include "fiore/clingo/stop.h"
 
 using namespace Args;
 fiore::clingo::ClingoResult Runner::run(){
@@ -46,7 +47,10 @@ fiore::clingo::ClingoResult Runner::run(){
         answerOutString = answerSet->toOutputString();
         pool->deleteAnswerset(answerSet);       // before the solver: it points to the solver's program
     }
-    else answerOutString = result.isUnsat() ? "UNSATISFIABLE" : "UNKNOWN";
+    else if(result.isUnsat()) answerOutString = "UNSATISFIABLE";
+    // stopped by SIGINT / SIGTERM before any model: the same line as the Python version
+    else if(fiore::clingo::stopRequested) answerOutString = "Wall Time: " + std::to_string(fiore::getWallTime()) + "s No solution found";
+    else answerOutString = "UNKNOWN";
 
     out<<answerOutString;
     std::cout<<out.str()<<std::endl;

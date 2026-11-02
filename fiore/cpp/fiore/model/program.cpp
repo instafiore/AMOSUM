@@ -271,6 +271,7 @@ Program* Program::ProgramGrounder::ground(const std::vector<std::string>& ASPInp
 
 
     handleError(clingo_control_new(fromVecStr2VecCstring(arguments), arguments.size(), clingo::clingoLogger, NULL, CONSTANTS::INFPlus32, &program->ctl));
+    clingo::controlToInterrupt = program->ctl;      // interrupted by SIGINT / SIGTERM (fiore/clingo/stop.h)
     for(std::string aspInput: ASPInputs) {
          #ifdef __debug__
             auto startLoadingTimeASPInput = startTimer();

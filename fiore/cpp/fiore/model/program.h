@@ -1,6 +1,7 @@
 #pragma once
 #include "../utils/utility.h"
 #include "../clingo/utilityClingo.h"
+#include "../clingo/stop.h"
 #include "../utils/logger.h"
 
 
@@ -87,7 +88,12 @@ struct Program{
 
     virtual ~Program(){
         if(bk != nullptr) free(bk);
-        if(ctl != nullptr) clingo_control_free(ctl);
+        if(ctl != nullptr){
+            // no longer interrupted by the signal handler (only if it is this program's control)
+            clingo_control_t* own = ctl;
+            clingo::controlToInterrupt.compare_exchange_strong(own, nullptr);
+            clingo_control_free(ctl);
+        }
     }
 
     friend ClingoSolver;

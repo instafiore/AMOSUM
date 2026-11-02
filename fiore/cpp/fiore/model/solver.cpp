@@ -134,6 +134,13 @@ std::pair<ClingoAssignment*, const clingo::ClingoResult> ClingoSolver::solve(con
     // TODO: To remove and optimize it
     // if(assumptionsOnTheFly != nullptr) for(const clingo_literal_t& l: *assumptionsOnTheFly) addAssumption(l);
 
+    // stopped by SIGINT / SIGTERM (fiore/clingo/stop.h): no new solve call, the result is the one of an interrupted call
+    if(clingo::stopRequested){
+        this->answerset = nullptr;
+        this->res = clingo::ClingoResult(clingo::ClingoResult::clingo_solve_value_interrupted);
+        return {nullptr, this->res};
+    }
+
     clingo_solve_handle_t *handle = NULL;
 
     bool result;

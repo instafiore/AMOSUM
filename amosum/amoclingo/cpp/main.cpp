@@ -10,7 +10,8 @@
 #include <limits>
 #include <chrono>
 #include <csignal>
-#include <sys/signal.h>
+#include <ctime>
+#include <unistd.h>
 #include "fiore/utils/constants.h"
 #include "fiore/utils/logger.h"
 #include "fiore/utils/utility.h"
@@ -23,6 +24,7 @@
 #include "fiore/utils/stats.h"
 #include "fiore/clingo/utilityClingo.h"
 #include "amosum/amoclingo/cpp/runner.h"
+#include "fiore/clingo/stop.h"
 
 
 
@@ -30,21 +32,40 @@ using namespace Args;
 using fiore::operator<<;
 
 
+// SIGINT / SIGTERM: only async-signal-safe operations (see fiore/clingo/stop.h). The run stops at the solve call in
+// progress and prints its best answer set in normal code (Runner::run), then main writes the statistics and exits.
 void signalHandler(int signum) {
-    fiore::Assignment* bestKnown = fiore::AnswersetsPool::getInstance()->getBestKnownAnswerSet();
-    bestKnown->result.unkown();
-    bestKnown->printAssignment();
-    fiore::setExitCode(bestKnown->result.exitCode());
-    fiore::cleanup();
-    exit(fiore::CONSTANTS::EXIT_CODE);
+    static timespec first = {0, 0};
+    timespec now;
+    clock_gettime(CLOCK_MONOTONIC, &now);
+    if(fiore::clingo::stopRequested){
+        // `timeout` signals the process and its process group, and the amoclingo wrapper forwards it too: the same
+        // signal arrives two or three times at once -> ignored. One >= 2 s after the first means the run did not
+        // stop -> quit now, with the "killed by signal" code
+        const long long elapsedNs = (now.tv_sec - first.tv_sec) * 1000000000LL + (now.tv_nsec - first.tv_nsec);
+        if(elapsedNs >= 2000000000LL) _exit(128 + signum);
+        return;
+    }
+    first = now;
+    fiore::clingo::stopRequested = 1;
+    clingo_control_t* control = fiore::clingo::controlToInterrupt.load();
+    if(control != nullptr) clingo_control_interrupt(control);      // documented as callable from a signal handler
+}
+
+static void installSignalHandler() noexcept{
+    struct sigaction action{};
+    action.sa_handler = signalHandler;
+    sigemptyset(&action.sa_mask);
+    action.sa_flags = SA_RESTART;
+    sigaction(SIGINT, &action, nullptr);
+    sigaction(SIGTERM, &action, nullptr);
 }
 
 int main(int argc, char ** argv) {
 
     try {
 
-        signal(SIGINT, signalHandler);
-        signal(SIGTERM, signalHandler);
+        installSignalHandler();
 
         #ifdef NDEBUG
             static constexpr bool test_mode    = false;
