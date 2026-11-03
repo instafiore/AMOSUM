@@ -107,10 +107,6 @@ bool solveCallback(clingo_solve_event_type_t type, void *event, void *data, bool
         // // step = statistics for this step,
         // // accum = accumulated statistics
     }
-    else {
-        clingo_solve_result_bitset_t *result = (clingo_solve_result_bitset_t *)event;
-        solver->res = clingo::ClingoResult(*result);
-    }
 
     #ifdef __debug__
         auto elapsedTimeCallbackSolve = elapsedTime(startTime);
@@ -131,19 +127,17 @@ void ClingoSolver::setConflictLimit(std::string max_conflicts) {
 std::pair<ClingoAssignment*, const clingo::ClingoResult> ClingoSolver::solve(const std::vector<clingo_literal_t>& assumptionsOnTheFly) noexcept{
 
 
-    // TODO: To remove and optimize it
-    // if(assumptionsOnTheFly != nullptr) for(const clingo_literal_t& l: *assumptionsOnTheFly) addAssumption(l);
-
-    // stopped by SIGINT / SIGTERM (fiore/clingo/stop.h): no new solve call, the result is the one of an interrupted call
-    if(clingo::stopRequested){
+    if(clingo::stopRequested){                                         
         this->answerset = nullptr;
-        this->res = clingo::ClingoResult(clingo::ClingoResult::clingo_solve_value_interrupted);
+        this->res = clingo::ClingoResult(clingo::ClingoResult::clingo_solve_value_unkown);
+        blamedAssumptions.clear();                            
+        for(const clingo_literal_t& l: this->assumptions) blamedAssumptions.add(l);
         return {nullptr, this->res};
     }
 
     clingo_solve_handle_t *handle = NULL;
 
-    bool result;
+    clingo_solve_result_bitset_t callResult = 0;
 
     #ifdef __debug__
         auto startTimeSolve = startTimer();
@@ -159,7 +153,9 @@ std::pair<ClingoAssignment*, const clingo::ClingoResult> ClingoSolver::solve(con
     #ifdef __debug__
         auto elaspedTimeSolve = elapsedTime(startTimeSolve);
     #endif
-    clingo_solve_handle_wait(handle,-1,&result);
+
+    handleError(clingo_solve_handle_get(handle, &callResult));
+    this->res = clingo::ClingoResult(callResult);
 
     if(!this->res.isSat()){
         blamedAssumptions.clear();
@@ -186,7 +182,8 @@ std::pair<ClingoAssignment*, const clingo::ClingoResult> ClingoSolver::solve(con
         }
     }
 
-    clingo_solve_handle_close(handle);
+
+    clingo_solve_handle_close(handle);    
 
 
     auto pairAssignmentRes = this->res.isSat()

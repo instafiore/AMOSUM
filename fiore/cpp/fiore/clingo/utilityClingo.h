@@ -69,8 +69,7 @@ struct ClingoResult{
     inline bool isOptimum() const noexcept{ return this->value & clingo_solve_value_optimum; }
     inline bool isOptimumUnkown() const noexcept{ return this->value & clingo_solve_value_unkown_optimum; }
     inline bool isOptimumUnkownSat() const noexcept{ return this->isOptimumUnkown() && this->isSat(); }
-    // no answer: not solved yet, or interrupted (SIGINT / SIGTERM) before a model or a proof. Note: a SAT call of
-    // ClingoSolver::solve also has the interrupted bit (the handle is closed after the first model)
+    // no answer: not solved yet, or interrupted (SIGINT / SIGTERM) before a model or a proof
     inline bool isUnkown() const noexcept{ return this->value == clingo_solve_value_unkown || (isInterrupted() && !isSat() && !isUnsat()); }
     inline bool isInterrupted() const noexcept{ return this->value & clingo_solve_value_interrupted; }
     inline bool isUnsat() const noexcept{ return this->value & clingo_solve_value_unsatisfiable; }
