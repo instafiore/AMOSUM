@@ -1,14 +1,10 @@
 #include "amosum/core/cpp/search/algorithms.h"
 #include "fiore/utils/logger.h"
 
-// UNSAT-SAT search on the #amomaximize value (downwards), with a progression p (LUS with p = 1; the mirror of satUnsat).
-// Invariants: unsatBound is the smallest bound known UNSAT (maxPossibleValue + 1 before any UNSAT call); best (value v),
-// if any, is the last model, every bound <= v is SAT. The optimum is v as soon as v + 1 == unsatBound.
 fiore::clingo::ClingoResult unsatSat(AmosumSearchBackend& backend, const Progression& progression) noexcept{
     AmosumConstraint* amomaximize = backend.amomaximize();
     if(amomaximize == nullptr) return amosumSearch::solveOnce(backend);
 
-    // the bound decreases: the clauses learnt under a bound must not outlive its call
     backend.useVolatileClauses();
 
     const int64_t maxValue = amosumSearch::maxPossibleValue(amomaximize);
@@ -23,19 +19,15 @@ fiore::clingo::ClingoResult unsatSat(AmosumSearchBackend& backend, const Progres
 
         if(result.isSat()){
             best = amosumSearch::acceptModel(answerset, result, best);
-            step = 0;                                       // back to the last UNSAT bound
+            step = 0;                                      
         }
         else if(result.isUnsat()){
             unsatBound = amomaximize->bound;
-            // UNSAT where the #amomaximize constrains nothing: no answer set
             if(best == nullptr && unsatBound <= minValue) return result;
         }
-        else return best != nullptr ? best->result : result;   // interrupted: best (if any) stays "unknown"
-
+        else return best != nullptr ? best->result : result;   
         if(best != nullptr && best->amosumCost + 1 >= unsatBound) return amosumSearch::optimum(best);
 
-        // unsatBound - p(step), clamped to the smallest bound still open (above the last model's value, or the minimum
-        // possible value before any model)
         const int64_t lower = best != nullptr ? best->amosumCost + 1 : minValue;
         const int64_t decrement = progression.at(step);
         const int64_t next = (unsatBound - lower >= decrement) ? unsatBound - decrement : lower;

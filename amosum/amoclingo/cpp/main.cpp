@@ -49,7 +49,7 @@ void signalHandler(int signum) {
     first = now;
     fiore::clingo::stopRequested = 1;
     clingo_control_t* control = fiore::clingo::controlToInterrupt.load();
-    if(control != nullptr) clingo_control_interrupt(control);      // documented as callable from a signal handler
+    if(control != nullptr) clingo_control_interrupt(control);      
 }
 
 static void installSignalHandler() noexcept{
