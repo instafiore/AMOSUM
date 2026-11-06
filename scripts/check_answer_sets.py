@@ -275,7 +275,7 @@ class Checker:
                                 on_core=lambda c: core.extend(c))
         if result.satisfiable:
             # the value is reliable only in exact mode (the model is exactly S)
-            if self.mode == "exact" and answer.value is not None and values and values[-1] != answer.value:
+            if self.mode in ("exact", "facts") and answer.value is not None and values and values[-1] != answer.value:
                 return False, [f"printed Amomaximize Cost {answer.value}, but its value in the program is {values[-1]}"]
             return True, []
 
