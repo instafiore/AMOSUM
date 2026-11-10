@@ -37,6 +37,7 @@ fiore::clingo::ClingoResult Runner::run(){
     if(algorithm == AMOSUM_ARGS::algorithmSatUnsat || !hasAmomaximize) result = satUnsat(backend, *progression);
     else if(algorithm == AMOSUM_ARGS::algorithmUnsatSat) result = unsatSat(backend, *progression);
     else if(algorithm == AMOSUM_ARGS::algorithmBinary) result = binarySearch(backend);     // --progression not used
+    else if(algorithm == AMOSUM_ARGS::algorithmUsc) result = usc(backend);     // --progression not used
     else fiore::setExitCode(fiore::CONSTANTS::ERROR_CODE, true, "Unknown algorithm: " + algorithm);
 
     std::ostringstream out;

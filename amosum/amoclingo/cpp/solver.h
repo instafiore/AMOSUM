@@ -36,9 +36,10 @@ private:
 struct AmosumClingoBackend: public AmosumSearchBackend{
     explicit AmosumClingoBackend(AmosumClingoSolver& solver) noexcept;
     AmosumConstraint* amomaximize() noexcept override;
-    std::pair<AmosumClingoAssignment*, fiore::clingo::ClingoResult> solve() noexcept override;
+    std::pair<AmosumClingoAssignment*, fiore::clingo::ClingoResult> solve(const std::vector<const fiore::Literal*>& assumptions = std::vector<const fiore::Literal*>()) noexcept override;
     void setBound(int64_t bound) noexcept override;
     void useVolatileClauses() noexcept override;
+    const fiore::Core* getCore()  noexcept override;
 private:
     AmosumClingoSolver& solver;
 };

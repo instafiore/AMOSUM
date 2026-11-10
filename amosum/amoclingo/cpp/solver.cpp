@@ -39,8 +39,9 @@ AmosumConstraint* AmosumClingoBackend::amomaximize() noexcept{
     return static_cast<AmosumProgram*>(solver.program.get())->amomaximizeConstraint;
 }
 
-std::pair<AmosumClingoAssignment*, fiore::clingo::ClingoResult> AmosumClingoBackend::solve() noexcept{
-    auto [answerset, result] = solver.solve();
+std::pair<AmosumClingoAssignment*, fiore::clingo::ClingoResult> AmosumClingoBackend::solve(const std::vector<const fiore::Literal*>& assumptions) noexcept{
+    std::vector<clingo_literal_t> assumptionsId(assumptions.size()); for(size_t i=0; i<assumptions.size(); ++i) assumptionsId[i] = assumptions[i]->id;
+    auto [answerset, result] = solver.solve(assumptionsId);
     // AmosumClingoSolver::createAssignment builds AmosumClingoAssignment
     return {static_cast<AmosumClingoAssignment*>(answerset), result};
 }
@@ -52,4 +53,9 @@ void AmosumClingoBackend::setBound(int64_t bound) noexcept{
 void AmosumClingoBackend::useVolatileClauses() noexcept{
     // only the #amomaximize propagator: the other constraints' bounds never change, their clauses stay learnt
     if(solver.maximizer != nullptr) solver.maximizer->updateClauseTypeGlobal(clingo_clause_type_volatile);
+}
+
+
+const fiore::Core*AmosumClingoBackend::getCore()  noexcept{
+    return solver.getCore();
 }

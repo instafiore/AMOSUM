@@ -28,7 +28,7 @@ std::vector<fiore::Argument> amosumArguments() noexcept{
                           "best model's value and the smallest bound known UNSAT; --progression is not used). Ignored "
                           "without #amomaximize")
             .withDefaultValue(AMOSUM_ARGS::algorithmDefault)
-            .withValidValues({AMOSUM_ARGS::algorithmSatUnsat, AMOSUM_ARGS::algorithmUnsatSat, AMOSUM_ARGS::algorithmBinary})
+            .withValidValues({AMOSUM_ARGS::algorithmSatUnsat, AMOSUM_ARGS::algorithmUnsatSat, AMOSUM_ARGS::algorithmBinary, AMOSUM_ARGS::algorithmUsc})
             .build(),
         Argument::Builder(AMOSUM_ARGS::progressionKey).isWithValue()
             .withDesc("Step of the bound of sat-unsat / unsat-sat at step n: 1 (linear), 2 (+2), 2^n, n^2, ...")

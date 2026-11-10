@@ -5,6 +5,7 @@
 #include <string>
 #include "fiore/clingo/utilityClingo.h"
 #include "fiore/model/assigment.h"
+#include "fiore/model/core.h"
 #include "amosum/core/cpp/program.h"
 
 // Search algorithms on the #amomaximize value (mirrored by core/py/search/), on any AmosumSearchBackend: the clingo
@@ -39,10 +40,10 @@ private:
 struct AmosumSearchBackend{
     virtual ~AmosumSearchBackend() = default;
     virtual AmosumConstraint* amomaximize() noexcept = 0;           // nullptr: no #amomaximize
-    // one solve call: the model (an AmosumClingoAssignment in the pool) if SAT, and the result
-    virtual std::pair<AmosumClingoAssignment*, fiore::clingo::ClingoResult> solve() noexcept = 0;
+    virtual std::pair<AmosumClingoAssignment*, fiore::clingo::ClingoResult> solve(const std::vector<const fiore::Literal*>& assumptions = std::vector<const fiore::Literal*>()) noexcept = 0;
     virtual void setBound(int64_t bound) noexcept = 0;              // the bound of the #amomaximize for the next calls
     virtual void useVolatileClauses() noexcept = 0;                 // the bound may decrease: clauses must not outlive a call
+    virtual const fiore::Core* getCore()  noexcept = 0;
 };
 
 
@@ -59,6 +60,10 @@ fiore::clingo::ClingoResult unsatSat(AmosumSearchBackend& backend, const Progres
 // binary search: between the best model's value v (every bound <= v is SAT) and the smallest bound known UNSAT, each
 // call tries the middle bound; a model raises v to its value, an UNSAT call lowers the UNSAT bound to the middle one
 fiore::clingo::ClingoResult binarySearch(AmosumSearchBackend& backend) noexcept;
+
+
+// TODO
+fiore::clingo::ClingoResult usc(AmosumSearchBackend& backend) noexcept;
 
 
 // helpers shared by the algorithms

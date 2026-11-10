@@ -14,7 +14,6 @@ fiore::PropagatorPBConstraintImplementation* AmoclingoPropagator::createImplemen
 }
 
 void AmoclingoPropagator::initFirstTime(clingo_propagate_init* _init) noexcept{
-    // not PropagatorPBConstraint::initFirstTime: it maps only the soft literals of the program and has no groups
     solver->initializer->init(_init, solver);
 
     auto solverLiteral = [_init](const clingo_literal_t plit){

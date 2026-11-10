@@ -37,6 +37,7 @@ struct PBConstraint{
 
     PBConstraint(const Program* program, const int64_t bound = 0, Vector<const Literal*>* literals = nullptr, UMNWeightFunction*  weightFunction = nullptr) noexcept;
     
+    inline int64_t weight(const fiore::Literal* l) const noexcept { return weightFunction->at(l->id); }
     inline void updateBound(const int64_t& bound)noexcept{ this->bound = bound; }
     inline virtual std::string toString() const noexcept{ std::ostringstream out; out<<"PBConstraint("<<ownedLiterals<<", "<<preprocessedSum<<", "<<bound<< ")"; return out.str();};
 

@@ -28,7 +28,6 @@ struct AmosumConstraint: public fiore::PBConstraint{
     AmosumConstraint(const fiore::Program* program, int64_t bound, fiore::Vector<const fiore::Literal*>* literals, fiore::UMNWeightFunction* weightFunction) noexcept
         : fiore::PBConstraint(program, bound, literals, weightFunction), ge(true){}
 
-    inline int64_t weight(const fiore::Literal* l) const noexcept { return weightFunction->at(l->id); }
     inline std::string toString() const noexcept override{ std::ostringstream out; out<<"AmosumConstraint("<<id<<", "<<type<<", "<<groups.size()<<" groups, "<<(ge ? ">= " : "<= ")<<bound<< ")"; return out.str();};
 };
 

@@ -27,6 +27,7 @@ namespace AMOSUM_ARGS {
     const std::string algorithmSatUnsat = "sat-unsat";     // upwards (LSU with --progression 1)
     const std::string algorithmUnsatSat = "unsat-sat";     // downwards (LUS with --progression 1)
     const std::string algorithmBinary = "binary";          // binary search (--progression not used)
+    const std::string algorithmUsc = "usc";             // unsatisfiable core search (--progression not used)
     const std::string algorithmDefault = algorithmSatUnsat;
 
     // --progression: how far the bound of sat-unsat / unsat-sat moves at step n (an expression in n, see Progression)
