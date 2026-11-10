@@ -50,7 +50,6 @@ add(){ [[ -n "$2" ]] && OPTS+=("--$1=$2"); }
 
 # static parameters
 add statsfile "$stats"
-add verbose 2
 
 CMD=(amoclingo "${OPTS[@]}" "$ENCODING" "$FILENAME")
 
@@ -90,11 +89,10 @@ CONFIGS = [
     dict(reason="minfly", lazy="true"),
     # AMOMAXIMIZE
     dict(reason="ijcai", lazy="false", progression="1", opt_strategy="sat-unsat"),
-    dict(reason="nomin", lazy="false", progression="1", opt_strategy="sat-unsat"),
     dict(reason="minfly", lazy="true", progression="1", opt_strategy="sat-unsat"),
 ]
 
-COMMON = {"lang": "cpp"}
+COMMON = {"lang": "cpp", "verbose": "progression-last-model"}
 
 SHORT = {
     "opt_strategy": "opt",
