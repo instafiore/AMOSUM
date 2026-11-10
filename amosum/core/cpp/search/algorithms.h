@@ -94,7 +94,7 @@ namespace amosumSearch {
         if(best != nullptr) fiore::AnswersetsPool::getInstance()->deleteAnswerset(best);
         a->setAsBestKnown();
         a->result.unkown();             // a better model may exist
-        a->printAssignment();
+        if(amosumPrintMode() != AmosumPrintMode::LastModel) a->printAssignment();
         return a;
     }
 

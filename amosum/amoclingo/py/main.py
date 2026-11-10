@@ -12,5 +12,6 @@ def main(known: argparse.Namespace) -> int:
     handle_interrupts()
     print("amoclingo version 3.0 (python)", flush=True)
     result = Runner().run(known.inputs, reason=known.reason or "nomin", lazy=known.lazy or "false",
-                          strategy=known.opt_strategy or "sat-unsat", progression=known.progression or "1")
+                          strategy=known.opt_strategy or "sat-unsat", progression=known.progression or "1",
+                          verbose=known.verbose or "each-model")
     return result.exit_code()

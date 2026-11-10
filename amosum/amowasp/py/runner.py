@@ -5,10 +5,12 @@ import tempfile
 from typing import List
 
 from fiore.clingo.utility_clingo import ClingoResult
-from fiore.model.assignment import add_interrupt_cleanup, print_final, remove_interrupt_cleanup
+from fiore.model.assignment import add_interrupt_cleanup, remove_interrupt_cleanup, set_interrupt_printer
 
 from amosum.amosumparser.rewrite import rewrite_all
 from amosum.amowasp.py.solver import AmosumWaspBackend, AmosumWaspSolver
+from amosum.core.py.program import set_print_mode
+from amosum.core.py.search.algorithms import print_last
 from amosum.core.py.search.binary import binary_search
 from amosum.core.py.search.progression import Progression
 from amosum.core.py.search.sat_unsat import sat_unsat
@@ -18,7 +20,9 @@ from amosum.core.py.search.unsat_sat import unsat_sat
 class Runner:
 
     def run(self, inputs: List[str], wasp: str, reason: str = "nomin", lazy: str = "false", strategy: str = "sat-unsat",
-            progression: str = "1") -> ClingoResult:
+            progression: str = "1", verbose: str = "each-model") -> ClingoResult:
+        set_print_mode(verbose)
+        set_interrupt_printer(print_last)       # an interrupted run ends with the same last line
         steps = Progression(progression)
         with tempfile.TemporaryDirectory(prefix="amowasp_") as tmp:
             # an interruption (SIGINT, SIGTERM: fiore.model.assignment.on_interrupt, installed by main) exits at once:
@@ -34,5 +38,5 @@ class Runner:
                 else: best, result = binary_search(backend)     # --progression not used
             finally:
                 remove_interrupt_cleanup(remove_tmp)
-        print_final(best, result)
+        print_last(best, result)
         return result

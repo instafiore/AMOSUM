@@ -17,7 +17,9 @@ AMOCLINGO_OPTIONS = [
     ("log-file-name", dict(help="Path for log file (debug builds) [fiore.log]")),
     ("statsfile", dict(help="Path to stats file [fiore.stats]")),
     ("seed", dict(help="Seed [42]")),
-    ("verbose", dict(choices=["1", "2"], help="1: cost and time per answer set, 2: cost, time and answer set [1]")),
+    ("verbose", dict(choices=["each-model", "last-model", "cost-only", "progression-last-model"],
+                     help="each-model: every improving model, last-model: only the last one, cost-only: only the costs "
+                          "(the last model without #amomaximize), progression-last-model: the costs, then the last model [each-model]")),
 ]
 
 

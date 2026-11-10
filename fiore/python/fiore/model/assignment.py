@@ -44,11 +44,11 @@ class ClingoAssignment:
         ClingoAssignment.best_known = self
 
 
-def print_final(best: Optional[ClingoAssignment], result: ClingoResult) -> None:
-    """the last line of a run: the best answer set with the final result, or UNSATISFIABLE / UNKNOWN"""
+def print_final(best: Optional[ClingoAssignment], result: ClingoResult, prefix: str = "") -> None:
+    """the last line of a run: the best answer set with the final result (after prefix), or UNSATISFIABLE / UNKNOWN"""
     if result.is_sat() and best is not None:
         best.result = result
-        print(best.to_output_string(), flush=True)
+        print(prefix + best.to_output_string(), flush=True)
     else:
         print("UNSATISFIABLE" if result.is_unsat() else "UNKNOWN", flush=True)
 
@@ -57,11 +57,19 @@ def print_final(best: Optional[ClingoAssignment], result: ClingoResult) -> None:
 # interruption (SIGINT, SIGTERM): as amoclingo-core
 
 _cleanups: List[Callable[[], None]] = []
+# the last line of an interrupted run, given the best answer set and its result (not proven optimal): as the normal
+# end of the run, so that it is the same line amoclingo-core prints (its runner prints it after the stop)
+_final_printer: Callable[[ClingoAssignment, ClingoResult], None] = print_final
+
+
+def set_interrupt_printer(printer: Callable[[ClingoAssignment, ClingoResult], None]) -> None:
+    global _final_printer
+    _final_printer = printer
 
 
 def on_interrupt(signum, frame) -> None:
-    """the best answer set known, not proven optimal (exit code 29), or "No solution found" (exit code 28, as
-    amoclingo-core); then the cleanups and the exit. It does not raise: a signal often arrives inside a callback of
+    """the best answer set known, not proven optimal (exit code 29), printed as the last line of the run
+    (set_interrupt_printer), or "No solution found" (exit code 28, as amoclingo-core); then the cleanups and the exit. It does not raise: a signal often arrives inside a callback of
     clingo (the propagator), where an exception would become a clingo error."""
     signal.signal(signal.SIGINT, signal.SIG_IGN)
     signal.signal(signal.SIGTERM, signal.SIG_IGN)
@@ -69,9 +77,9 @@ def on_interrupt(signum, frame) -> None:
     try:
         best = ClingoAssignment.best_known
         if best is not None:
-            best.result = ClingoResult.satisfiable().set_unknown_optimum()
-            best.print_assignment()
-            code = best.result.exit_code()
+            result = ClingoResult.satisfiable().set_unknown_optimum()
+            _final_printer(best, result)            # sets best.result
+            code = result.exit_code()
         else:
             print(f"Wall Time: {wall_time():f}s No solution found", flush=True)
             code = UNKNOWN_CODE

@@ -55,9 +55,13 @@ const std::string STATSFILEDefault = "fiore.stats";
 const std::string seedKey = "seed";
 const std::string DefaultSeed = "42";
 const std::string verboseKey = "verbose";
-const std::string verboseLevel1 = "1";
-const std::string verboseLevel2 = "2";
-const std::string verboseDef = verboseLevel1;
+const std::string verboseEachModel = "each-model";      // every improving model, with its atoms
+const std::string verboseLastModel = "last-model";      // only the last model
+const std::string verboseCostOnly = "cost-only";        // the cost of every improving model (last model without optimization)
+const std::string verboseProgressionLastModel = "progression-last-model";   // the cost of every improving model, then the last model
+const std::string verboseLevel1 = verboseCostOnly;      // the old names, used by Assignment::foundNewAnswerset
+const std::string verboseLevel2 = verboseEachModel;
+const std::string verboseDef = verboseEachModel;
 
 // polarity heuristic of ClingoPropagatorInitializer (torc: rest literals for ClingoSolver::setTORC)
 const std::string polarityHeuristic = "polarity-heuristic";

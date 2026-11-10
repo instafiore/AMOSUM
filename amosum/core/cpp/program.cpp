@@ -3,6 +3,8 @@
 #include <map>
 #include "fiore/model/program.h"
 #include "fiore/model/assigment.h"
+#include "fiore/utils/argparse.h"
+#include <iostream>
 
 // Anonymus namespace
 namespace {
@@ -92,6 +94,17 @@ namespace {
         fiore::UMNWeightFunction* w = new fiore::UMNWeightFunction(1);
         return {groups, w};
     }
+}
+
+AmosumPrintMode amosumPrintMode() noexcept{
+    static const AmosumPrintMode mode = [](){
+        const std::string v = fiore::ArgParse::getInstance()->get(fiore::CONSTANTS::verboseKey);
+        if(v == fiore::CONSTANTS::verboseLastModel) return AmosumPrintMode::LastModel;
+        if(v == fiore::CONSTANTS::verboseCostOnly) return AmosumPrintMode::CostOnly;
+        if(v == fiore::CONSTANTS::verboseProgressionLastModel) return AmosumPrintMode::ProgressionLastModel;
+        return AmosumPrintMode::EachModel;
+    }();
+    return mode;
 }
 
 fiore::Program* AmosumProgram::AmosumGrounder::ground(const std::vector<std::string>& ASPInputs){
@@ -199,4 +212,21 @@ void AmosumClingoAssignment::initAmosum(const clingo_model_t* model) {
             }
         }
     }
+}
+
+void AmosumClingoAssignment::printAssignment(std::string prefix) noexcept{
+    const AmosumProgram* p = static_cast<const AmosumProgram*>(this->program);
+    if(p->amomaximizeConstraint == nullptr){ fiore::ClingoAssignment::printAssignment(prefix); return; }
+    prefix += "Amomaximize Cost: " + std::to_string(this->amosumCost) + " ";
+    const AmosumPrintMode mode = amosumPrintMode();
+    if(mode == AmosumPrintMode::CostOnly || mode == AmosumPrintMode::ProgressionLastModel){     // no atoms
+        std::cout << prefix << "Wall Time: " << std::to_string(fiore::getWallTime()) << "s" << std::endl;
+        return;
+    }
+    fiore::ClingoAssignment::printAssignment(prefix);
+}
+
+std::string AmosumClingoAssignment::costLine() const noexcept{
+    const std::string status = result.isOptimum() ? " Optimum" : (result.isOptimumUnkownSat() ? " Unkown" : "");
+    return "Amomaximize Cost: " + std::to_string(amosumCost) + status;
 }

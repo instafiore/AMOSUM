@@ -9,6 +9,9 @@
 #include "fiore/model/program.h"
 #include "fiore/model/assigment.h"      // fiore::ClingoAssignment, fiore::AssignmentType
 
+// --verbose: each-model, last-model, cost-only, progression-last-model (the costs during the search, then the last model)
+enum class AmosumPrintMode{ EachModel, LastModel, CostOnly, ProgressionLastModel };
+AmosumPrintMode amosumPrintMode() noexcept;         
 
 // a group of an AmosumConstraint over program literals (from the grounding): at most one member true (exactly one for EO)
 struct ProgramGroup{
@@ -58,10 +61,8 @@ struct AmosumClingoAssignment: public fiore::ClingoAssignment{
     AmosumClingoAssignment(AmosumProgram* program, const clingo_model_t* model, const fiore::AssignmentType type = fiore::AssignmentType::StableModel):
         fiore::ClingoAssignment(program, model, type, &SETTINGS::auxRegex){ initAmosum(model); }
     void initAmosum(const clingo_model_t* model);
-    // the #amomaximize value only when there is one; the caller's prefix is kept
-    void printAssignment(std::string prefix = "") noexcept override {
-        const AmosumProgram* p = static_cast<const AmosumProgram*>(this->program);
-        if(p->amomaximizeConstraint != nullptr) prefix += "Amomaximize Cost: " + std::to_string(this->amosumCost) + " ";
-        fiore::ClingoAssignment::printAssignment(prefix);
-    }
+    // the #amomaximize value only when there is one; cost-only: no atoms; the caller's prefix is kept
+    void printAssignment(std::string prefix = "") noexcept override;
+    // the last line of cost-only: the value and whether it is proven optimal
+    std::string costLine() const noexcept;
 };

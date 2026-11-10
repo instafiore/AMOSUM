@@ -17,7 +17,7 @@ Pure Python except read_aggregates (clingo, imported there): the WASP plugin use
 import re
 from typing import Dict, List, Optional, Tuple
 
-from fiore.model.assignment import ClingoAssignment
+from fiore.model.assignment import ClingoAssignment, wall_time
 
 from amosum.core.py.settings import (AMOMAXIMIZE, AUX_REGEX, PREDICATE_AUX, PREDICATE_ELEMENT, PREDICATE_GROUP,
                                      PREDICATE_LB, PREDICATE_SAME, PREDICATE_TUPLE, PREDICATE_UB)
@@ -200,6 +200,19 @@ def model_value(constraint: AmosumConstraint, is_true) -> int:
     return value
 
 
+PRINT_MODES = ("each-model", "last-model", "cost-only", "progression-last-model")
+_print_mode = "each-model"          # --verbose (amosumPrintMode of program.cpp)
+
+
+def set_print_mode(mode: str) -> None:
+    global _print_mode
+    _print_mode = mode
+
+
+def get_print_mode() -> str:
+    return _print_mode
+
+
 class AmosumClingoAssignment(ClingoAssignment):
     """a model with the value of the #amomaximize (amosum_cost, 0 without one); the auxiliary atoms are not printed"""
 
@@ -209,6 +222,18 @@ class AmosumClingoAssignment(ClingoAssignment):
         self.amosum_cost = model_value(amomaximize, is_true) if amomaximize is not None else 0
 
     def print_assignment(self, prefix: str = "") -> None:
-        if self.has_amomaximize:
-            prefix += f"Amomaximize Cost: {self.amosum_cost} "
+        """the #amomaximize value only when there is one; cost-only, progression-last-model: no atoms; the caller's
+        prefix is kept"""
+        if not self.has_amomaximize:
+            return super().print_assignment(prefix)
+        prefix += f"Amomaximize Cost: {self.amosum_cost} "
+        if _print_mode in ("cost-only", "progression-last-model"):
+            print(f"{prefix}Wall Time: {wall_time():f}s", flush=True)      # no atoms
+            ClingoAssignment.best_known = self
+            return
         super().print_assignment(prefix)
+
+    def cost_line(self) -> str:
+        """the last line of cost-only: the value and whether it is proven optimal"""
+        status = " Optimum" if self.result.optimum else (" Unkown" if self.result.unknown_optimum else "")
+        return f"Amomaximize Cost: {self.amosum_cost}{status}"

@@ -19,5 +19,5 @@ def main(known: argparse.Namespace) -> int:
     handle_interrupts(stop_wasp)
     print("amowasp version 3.0", flush=True)
     result = Runner().run(known.inputs, wasp, reason=known.reason, lazy=known.lazy, strategy=known.opt_strategy,
-                          progression=known.progression)
+                          progression=known.progression, verbose=known.verbose)
     return result.exit_code()

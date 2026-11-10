@@ -11,8 +11,9 @@ Each search returns (the best answer set or None, the ClingoResult: optimum prov
 from typing import Optional, Tuple
 
 from fiore.clingo.utility_clingo import ClingoResult
+from fiore.model.assignment import ClingoAssignment, print_final
 
-from amosum.core.py.program import AmosumClingoAssignment, AmosumConstraint
+from amosum.core.py.program import AmosumClingoAssignment, AmosumConstraint, get_print_mode
 from amosum.core.py.search.progression import Progression
 
 
@@ -28,8 +29,24 @@ def min_possible_value(constraint: AmosumConstraint) -> int:
 def accept_model(found: AmosumClingoAssignment, best: Optional[AmosumClingoAssignment]) -> AmosumClingoAssignment:
     """a model of backend.solve(): the new best answer set, printed as not yet optimal"""
     found.result = ClingoResult.satisfiable().set_unknown_optimum()
-    found.print_assignment()
+    if get_print_mode() == "last-model":
+        ClingoAssignment.best_known = found     # not printed, but an interruption still prints it
+    else:
+        found.print_assignment()
     return found
+
+
+def print_last(best: Optional[AmosumClingoAssignment], result: ClingoResult) -> None:
+    """the last line of a run (as amoclingo-core's Runner::run): cost-only prints the value only, last-model and
+    progression-last-model add the #amomaximize value (no model was printed with its atoms)"""
+    last = result.is_sat() and best is not None and best.has_amomaximize
+    mode = get_print_mode()
+    if last and mode == "cost-only":
+        best.result = result
+        print(best.cost_line(), flush=True)
+    else:
+        with_value = last and mode in ("last-model", "progression-last-model")
+        print_final(best, result, f"Amomaximize Cost: {best.amosum_cost} " if with_value else "")
 
 
 def optimum(best: AmosumClingoAssignment) -> Tuple[AmosumClingoAssignment, ClingoResult]:

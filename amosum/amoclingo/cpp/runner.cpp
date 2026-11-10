@@ -43,8 +43,16 @@ fiore::clingo::ClingoResult Runner::run(){
     std::string answerOutString;
     fiore::AnswersetsPool* pool = fiore::AnswersetsPool::getInstance();
     if(result.isSat()){
-        fiore::Assignment* answerSet = pool->getBestKnownAnswerSet();
-        answerOutString = answerSet->toOutputString();
+        auto* answerSet = static_cast<AmosumClingoAssignment*>(pool->getBestKnownAnswerSet());
+        const AmosumPrintMode mode = amosumPrintMode();
+        if(hasAmomaximize && mode == AmosumPrintMode::CostOnly) answerOutString = answerSet->costLine();
+        else{
+            answerOutString = answerSet->toOutputString();
+            // last-model, progression-last-model: no model was printed with its atoms, so the last line also carries
+            // the #amomaximize value
+            if(hasAmomaximize && (mode == AmosumPrintMode::LastModel || mode == AmosumPrintMode::ProgressionLastModel))
+                answerOutString = "Amomaximize Cost: " + std::to_string(answerSet->amosumCost) + " " + answerOutString;
+        }
         pool->deleteAnswerset(answerSet);       // before the solver: it points to the solver's program
     }
     else if(result.isUnsat()) answerOutString = "UNSATISFIABLE";

@@ -25,7 +25,10 @@ ArgParse::ArgParse(int argc, char ** argv, const std::vector<Argument>& extraArg
     this->addArgument(Argument::Builder(CONSTANTS::logKey).isWithValue().withDesc("Defining a log level").withLongDesc("The log level to be used").withDefaultValue(Logger::levelToString(LogLevel::INFO)).withValidValues(getLogLevelNames()).build());
     this->addArgument(Argument::Builder(CONSTANTS::STATSFILEKey).isWithValue().withDesc("Defining a stats file").withLongDesc("Path to stats file").withDefaultValue(CONSTANTS::STATSFILEDefault).build());
     this->addArgument(Argument::Builder(CONSTANTS::seedKey).isWithValue().withDesc("Seed").withDefaultValue(CONSTANTS::DefaultSeed).withRegex(UnsignedInteger()).build());
-    this->addArgument(Argument::Builder(CONSTANTS::verboseKey).isWithValue().withDesc("1: cost and time per answer set\n2: cost, time, and answer set").withDefaultValue(CONSTANTS::verboseDef).withValidValues({CONSTANTS::verboseLevel1, CONSTANTS::verboseLevel2}).build());
+    this->addArgument(Argument::Builder(CONSTANTS::verboseKey).isWithValue()
+        .withDesc("each-model: every improving model\nlast-model: only the last model\ncost-only: the cost of every improving model (the last model if not an optimization problem)\nprogression-last-model: the cost of every improving model, then the last model")
+        .withDefaultValue(CONSTANTS::verboseDef)
+        .withValidValues({CONSTANTS::verboseEachModel, CONSTANTS::verboseLastModel, CONSTANTS::verboseCostOnly, CONSTANTS::verboseProgressionLastModel}).build());
     for(const Argument& a: extraArguments) this->addArgument(a);
     // parsing arguments
     build();

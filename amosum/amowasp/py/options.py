@@ -14,5 +14,8 @@ def parse_arguments(argv=None) -> argparse.Namespace:
     parser.add_argument("--opt-strategy", choices=["sat-unsat", "unsat-sat", "binary"], default="sat-unsat",
                         help="Search algorithm for #amomaximize (each step is a new WASP run) [sat-unsat]")
     parser.add_argument("--progression", default="1", help="Step of the bound at step n: 1 (linear), 2 (+2), 2^n, n^2, ... [1]")
+    parser.add_argument("--verbose", choices=["each-model", "last-model", "cost-only", "progression-last-model"], default="each-model",
+                        help="each-model: every improving model, last-model: only the last one, cost-only: only the "
+                             "costs (the last model without #amomaximize), progression-last-model: the costs, then the last model [each-model]")
     parser.add_argument("--wasp", default=None, help="WASP executable [$WASP_EXE]")
     return parser.parse_args(argv)
