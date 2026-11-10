@@ -90,6 +90,7 @@ CONFIGS = [
     # AMOMAXIMIZE
     dict(reason="ijcai", lazy="false", progression="1", opt_strategy="sat-unsat"),
     dict(reason="minfly", lazy="true", progression="1", opt_strategy="sat-unsat"),
+    dict(reason="nomin", lazy="true", progression="1", opt_strategy="sat-unsat"),
 ]
 
 COMMON = {"lang": "cpp", "verbose": "progression-last-model"}
