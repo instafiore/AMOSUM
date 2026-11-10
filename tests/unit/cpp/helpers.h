@@ -63,7 +63,7 @@ namespace helpers {
             fiore::AnswersetsPool* pool = fiore::AnswersetsPool::getInstance();
             auto* best = static_cast<AmosumClingoAssignment*>(pool->getBestKnownAnswerSet());
             s.value = best->amosumCost;
-            s.answerSet = best->outputString;
+            s.answerSet = best->output();
             pool->deleteAnswerset(best);
         }
         s.volatileClauses = solver->maximizer != nullptr && solver->maximizer->isVolatileClauseType();

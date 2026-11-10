@@ -57,92 +57,65 @@ const Assignment* Assignment::randomAssignmentForSoft(const Program* program, do
     return assignment;
 }
 
+bool isSoftLiteralOf(const Program* program, clingo_literal_t literalId) noexcept{ return program->isSoft(literalId); }
 
 void ClingoAssignment::init(const clingo_model_t* model){
-    
-    clingo_symbol_t *atoms = NULL;
-    size_t atoms_n;
-    clingo_symbol_t const *it, *ie;
-    char *name = NULL;
-    size_t str_n = 0;
-
-    // handleError(clingo_model_symbols_size(model, clingo_show_type_all, &atoms_n));
-    handleError(clingo_model_symbols_size(model, clingo_show_type_shown, &atoms_n));
-
-    if (!(atoms = (clingo_symbol_t*)malloc(sizeof(*atoms) * atoms_n))) {
-        clingo_set_error(clingo_error_bad_alloc, "could not allocate memory for atoms");
-        #ifdef __debug__
-            LOG(LogLevel::CLINGO_ERROR, "could not allocate memory for atoms");
-        #endif
-    }
-
-    // handleError(clingo_model_symbols(model, clingo_show_type_all, atoms, atoms_n));
-    handleError(clingo_model_symbols(model, clingo_show_type_shown, atoms, atoms_n));
-
-    outputString = "{ " ;
-    bool first = true;
-    for (it = atoms, ie = atoms + atoms_n; it != ie; ++it) {
-        size_t n;
-        char *str_new;
-   
-        // determine size of the string representation of the next symbol in the model
-        handleError(clingo_symbol_to_string_size(*it, &n));
-   
-        if (str_n < n) {
-            // allocate required memory to hold the symbol's string
-            if (!(str_new = (char*)realloc(name, sizeof(*name) * n))) {
-                clingo_set_error(clingo_error_bad_alloc, "could not allocate memory for symbol's string");
-                #ifdef __debug__
-                    LOG(LogLevel::CLINGO_ERROR, "could not allocate memory for symbol's string");
-                #endif
-            }
-            name = str_new;
-            str_n = n;
-        }
-   
-        // retrieve the symbol's string
-        handleError(clingo_symbol_to_string(*it, name, n));
-        const Literal* literal = program->literalByName(name);
-
-
-        #ifdef __debug__
-            LOG(LogLevel::DEBUG, "Setting ",literal, " to true");
-        #endif
-
-        this->set(literal->id, true);
-        // nullptr: every atom is shown
-        if(avoidToShowRegex != nullptr && std::regex_match(literal->name, *avoidToShowRegex)) continue;
-        outputString += (first ? "" : ", ") + std::string("'") + name + std::string("'");
-        first = false;
-    }
-
-    outputString += "}";
-
-
-    //  assuming one level
-    size_t cs;
-    handleError(clingo_model_cost_size(model, &cs));
-    clingoCost = (int64_t*) malloc(sizeof(int64_t) * cs);
-    handleError(clingo_model_cost(model, clingoCost, cs));
-
-    // TODO: maybe trying to optimize it having two lists: one for the original soft literals another for the new soft literals     
+    // the shown atoms, as symbols: no text here
+    ensuredRestLiterals = false;  
+    size_t n;
+    handleError(clingo_model_symbols_size(model, clingo_show_type_shown, &n));
+    trueSymbols.resize(n);
+    handleError(clingo_model_symbols(model, clingo_show_type_shown, trueSymbols.data(), n));
     costProgram = program->preprocessedCost;
-    #ifdef __debug__
-        LOG(LogLevel::DEBUG," Program soft literals size: ", program->softLiterals->size());
-    #endif
     for(const Literal* literal: *program->softLiterals){
         bool isTrue;
         handleError(clingo_model_is_true(model, literal->id, &isTrue));
+        this->set(literal->id, isTrue);         // false ones too: a negative soft literal (not a) is read from its atom
         if(isTrue){
-            this->set(literal->id, true);
             trueSoftLiterals.push_back(literal);
-            const int64_t& w = program->weight(literal->id);
-            costProgram+= w;
-            // if(w < 0)
-            //     NOOP;
+            costProgram += program->weight(literal->id);
         }
     }
 
+    if(program->readRestLiterals){              // TORC: the rest atoms from the model (unwritten atoms read false)
+        for(const Literal* literal: *program->restLiterals){
+            bool isTrue;
+            handleError(clingo_model_is_true(model, literal->id, &isTrue));
+            this->set(literal->id, isTrue);
+        }
+        ensuredRestLiterals = true;
+    }
+}
+
+// the shown atoms true, without the text
+void ClingoAssignment::ensureRestLiterals() const noexcept{
+    if(ensuredRestLiterals) return;
+    ensuredRestLiterals = true;
+    ClingoAssignment* self = const_cast<ClingoAssignment*>(this);   // lazy: only the cached interpretation changes
+    for(const clingo_symbol_t symbol: trueSymbols){
+        const Literal* literal = program->literalBySymbol(symbol);
+        if(literal != nullptr) self->set(literal->id, true);
+    }
+}
+
+// { 'a', 'b'} from the symbols, with the names computed at grounding; the shown atoms are set true on the way
+void ClingoAssignment::ensureOutputString() noexcept{
+    if(ensuredOutputString) return;
+    ensuredOutputString = true;
+    const bool setRest = !ensuredRestLiterals;
+    std::string out = "{ ";
+    bool first = true;
+    for(const clingo_symbol_t symbol: trueSymbols){
+        const Literal* literal = program->literalBySymbol(symbol);
+        // a shown term that is not an atom (#show t : body.): text only
+        const std::string name = literal != nullptr ? literal->name : clingo::from_symbol_to_string(symbol);
+        if(literal != nullptr && setRest) this->set(literal->id, true);
+        if(avoidToShowRegex != nullptr && std::regex_match(name, *avoidToShowRegex)) continue;   // nullptr: all shown
+        out += (first ? "'" : ", '") + name + "'";
+        first = false;
+    }
+    outputString = out + "}";
+    ensuredRestLiterals = true;
 }
 
 size_t Assignment::numberOfTrueLiterals(const Vector<const Literal*>* literals) const noexcept{
@@ -161,6 +134,8 @@ size_t Assignment::numberOfTrueLiterals(const Vector<const Literal*>* literals) 
 }
 
 std::string Assignment::toOutputString(Vector<const Literal*> *toShow, const fiore::UMNWeightFunction* w) noexcept{
+    if(this->isSolutionUnkown()) return outputString;
+    ensureOutputString();
     std::ostringstream out;
     std::string prefix;
     if(result.isOptimum()){
@@ -183,6 +158,7 @@ std::string Assignment::toOutputString(Vector<const Literal*> *toShow, const fio
 };
 
 std::string Assignment::toCostOutputString(Vector<const Literal*> *toShow) noexcept{
+    if(this->isSolutionUnkown()) return outputString;
     std::ostringstream out;
     std::string prefix;
     if(result.isOptimum()){

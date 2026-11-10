@@ -340,7 +340,8 @@ Program* Program::ProgramGrounder::ground(const std::vector<std::string>& ASPInp
         #endif
         // mapLiteralId2Literal[literalId] = literal;
         program->mapLiteralId2Literal->set(literalId, literal);
-        program->mapLiteralName2Literal[nameStr] = literal;
+       program->mapLiteralName2Literal[nameStr] = literal;
+        program->mapLiteralSymbol2Literal[name] = literal;          
         if((weightDict.find(literal->id) == weightDict.end()) && (weightDict.find(not_(literal->id)) == weightDict.end()))
             program->restLiterals->push_back(literal);
 
@@ -390,6 +391,7 @@ Program* Program::ProgramGrounder::ground(const std::vector<std::string>& ASPInp
         }
     );
     first = false;
+    for(const Literal* l: *program->softLiterals) program->softAtomIds.insert(std::abs(l->id));
 
     #ifdef __debug__
         auto endCreationgSoftLiterals = elapsedTime(startCreationgSoftLiterals);

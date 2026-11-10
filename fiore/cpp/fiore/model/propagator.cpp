@@ -48,6 +48,7 @@ void ClingoPropagatorInitializer::init(clingo_propagate_init* _init, ClingoSolve
     this->mapSoftPlit2SoftSlit[CONSTANTS::BOTTOM] = CONSTANTS::BOTTOM;
     auto cmd = ArgParse::getInstance();
     const bool torc = cmd->get(CONSTANTS::polarityHeuristic) == CONSTANTS::polarityHeuristicTORC;
+    solver->program->readRestLiterals = torc;
 
     #ifdef __debug__
         auto startTimeRestLiterals = startTimer();

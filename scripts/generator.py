@@ -89,6 +89,7 @@ CONFIGS = [
     dict(reason="minfly", lazy="false"),
     dict(reason="minfly", lazy="true"),
     # AMOMAXIMIZE
+    dict(reason="ijcai", lazy="false", progression="1", opt_strategy="sat-unsat"),
     dict(reason="nomin", lazy="false", progression="1", opt_strategy="sat-unsat"),
     dict(reason="minfly", lazy="true", progression="1", opt_strategy="sat-unsat"),
 ]

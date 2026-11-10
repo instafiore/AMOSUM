@@ -56,6 +56,9 @@ struct Program{
     std::unique_ptr<Vector<const Literal*>> softLiterals;
     std::unique_ptr<Vector<const Literal*>> restLiterals;
     std::unordered_map<std::string, const Literal*> mapLiteralName2Literal;
+    std::unordered_map<clingo_symbol_t, const Literal*> mapLiteralSymbol2Literal;   // filled at grounding
+    std::unordered_set<clingo_atom_t> softAtomIds;      // atoms of the soft literals (after preprocessCost)
+    bool readRestLiterals = false;                      // TORC: ClingoAssignment reads the rest atoms of every model
     uint32_t maxSoftLiteralId;
     uint32_t maxOriginLiteralId;
     uint32_t maxLiteralId;
@@ -64,6 +67,9 @@ struct Program{
     bool byDescendingWeight(const Literal* a, const Literal* b) const noexcept;
     inline bool isWeighted() const noexcept{ return weights.size() > 1; }
     inline bool isUnWeighted() const noexcept{ return weights.size() == 1; }
+    inline const Literal* literalBySymbol(clingo_symbol_t symbol) const noexcept{ auto it = mapLiteralSymbol2Literal.find(symbol); return it != mapLiteralSymbol2Literal.end() ? it->second : nullptr; }
+    // a soft literal's atom: both polarities are written by ClingoAssignment::init
+    inline bool isSoft(clingo_literal_t literalId) const noexcept{ return softAtomIds.count(std::abs(literalId)) > 0; }
 
     // Clingo
     clingo_control* ctl;

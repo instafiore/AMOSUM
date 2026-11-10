@@ -10,6 +10,7 @@ namespace fiore {
 enum AssignmentType{BraveConsequences=0, CautiousConsequences, StableModel, RandomAssignment, NoSolution};
 
 struct Program;
+bool isSoftLiteralOf(const Program* program, clingo_literal_t literalId) noexcept;   // defined in assigment.cpp
 
 struct Assignment{
 
@@ -30,8 +31,10 @@ struct Assignment{
     std::string toAnswerSetString(const Vector<const Literal*> *toShow = nullptr)const noexcept;
     std::string toInterpretationString(bool printUndefined = false,  bool onlyTrueAtoms = true, Vector<const Literal*> *toShow = nullptr);
     std::string toConstraints()const noexcept;
-    std::string toOutputString(Vector<const Literal*> *toShow = nullptr, const fiore::UMNWeightFunction* w = nullptr) noexcept;
+    virtual std::string toOutputString(Vector<const Literal*> *toShow = nullptr, const fiore::UMNWeightFunction* w = nullptr) noexcept;
     std::string toCostOutputString(Vector<const Literal*> *toShow = nullptr) noexcept;
+    // the answer set as text ({ 'a', 'b'}), built on demand
+    inline const std::string& output() noexcept{ ensureOutputString(); return outputString; }
 
     void foundNewAnswerset(std::string prefix = "", const std::string& verbose = CONSTANTS::verboseLevel1) noexcept;
     virtual void printAssignment(std::string prefix = "") noexcept;
@@ -41,14 +44,29 @@ struct Assignment{
     inline bool isOptimum()const noexcept{ return this->result.isOptimum();}
     inline bool isSolutionUnkown()const noexcept{ return this->type == AssignmentType::NoSolution;}
 
-    inline bool isTrue(const clingo_literal_t& literalId)const { return this->assignment->isTrue(literalId);}
-    inline bool isTrue(const Literal* literal)const { return this->isTrue(literal->id);}
-    
-    inline bool isFalse(const clingo_literal_t& literalId)const { return this->assignment->isFalse(literalId);}
-    inline bool isFalse(const Literal* literal)const { return this->isFalse(literal->id);}
+    // soft literals (targets): written by init, read directly
+    inline bool isTrueSoft(const clingo_literal_t& id) const { assert(isSoftLiteralOf(program, id)); return assignment->isTrue(id); }
+    inline bool isTrueSoft(const Literal* l) const { return isTrueSoft(l->id); }
+    inline bool isFalseSoft(const clingo_literal_t& id) const { assert(isSoftLiteralOf(program, id)); return assignment->isFalse(id); }
+    inline bool isFalseSoft(const Literal* l) const { return isFalseSoft(l->id); }
+    inline bool isUndefinedSoft(const clingo_literal_t& id) const { assert(isSoftLiteralOf(program, id)); return assignment->isUndef(id); }
+    inline bool isUndefinedSoft(const Literal* l) const { return isUndefinedSoft(l->id); }
 
-    inline bool isUndefined(const clingo_literal_t& literalId)const { return this->assignment->isUndef(literalId);}
-    inline bool isUndefined(const Literal* literal)const { return this->isUndefined(literal->id);}
+    inline bool isTrueRest(const clingo_literal_t& id) const { if(!ensuredRestLiterals) ensureRestLiterals(); return assignment->isTrue(id); }
+    inline bool isFalseRest(const clingo_literal_t& id) const { if(!ensuredRestLiterals) ensureRestLiterals(); return assignment->isFalse(id); }
+    inline bool isUndefinedRest(const clingo_literal_t& id) const { if(!ensuredRestLiterals) ensureRestLiterals(); return assignment->isUndef(id); }
+
+    // any literal: soft atoms are always written, so the soft check is needed only while the rest atoms are not set
+    inline bool isTrue(const clingo_literal_t& id) const { if(!ensuredRestLiterals && !isSoftLiteralOf(program, id)) ensureRestLiterals(); return assignment->isTrue(id); }
+    inline bool isFalse(const clingo_literal_t& id) const { if(!ensuredRestLiterals && !isSoftLiteralOf(program, id)) ensureRestLiterals(); return assignment->isFalse(id); }
+    inline bool isUndefined(const clingo_literal_t& id) const { if(!ensuredRestLiterals && !isSoftLiteralOf(program, id)) ensureRestLiterals(); return assignment->isUndef(id); }
+
+    inline bool isTrueRest(const Literal* l) const { return isTrueRest(l->id); }
+    inline bool isFalseRest(const Literal* l) const { return isFalseRest(l->id); }
+    inline bool isUndefinedRest(const Literal* l) const { return isUndefinedRest(l->id); }
+    inline bool isTrue(const Literal* l) const { return isTrue(l->id); }
+    inline bool isFalse(const Literal* l) const { return isFalse(l->id); }
+    inline bool isUndefined(const Literal* l) const { return isUndefined(l->id); }
 
     inline void setTime(double time) noexcept { this->time = time; }
     int64_t cost(UMNWeightFunction* weight = nullptr) noexcept;
@@ -69,6 +87,9 @@ struct Assignment{
     static const Assignment* randomAssignmentForSoft(const Program* program, double p);
     inline static Assignment* getNoSolutionAssignment() noexcept { return new Assignment(); } 
 protected:
+    mutable bool ensuredRestLiterals = true;        // false only while a ClingoAssignment has not set its rest atoms
+    virtual void ensureOutputString() noexcept {}
+    virtual void ensureRestLiterals() const noexcept {}
     Assignment(const Program* program, const size_t number, bool optimalityProven = false, const AssignmentType type = AssignmentType::StableModel, double time = 0) noexcept;
 private:
     std::unique_ptr<UMInterpretation> assignment;
@@ -77,12 +98,19 @@ private:
 };
 
 struct ClingoAssignment: public Assignment{
-    int64_t* clingoCost;
+    int64_t* clingoCost = nullptr;                  // no longer read by init
+    std::vector<clingo_symbol_t> trueSymbols;       // the shown atoms of the model (the text is built on demand)
     // avoidToShow: atoms not printed (nullptr: all shown); not owned, it must outlive the assignment
     ClingoAssignment(Program* program, const size_t number, const clingo_model_t* model, const AssignmentType type = AssignmentType::StableModel, const std::regex* avoidToShow = nullptr);
     ClingoAssignment(Program* program, const clingo_model_t* model, const AssignmentType type = AssignmentType::StableModel, const std::regex* avoidToShow = nullptr);
     void init(const clingo_model_t* model);
     const std::regex* const avoidToShowRegex;
+    ~ClingoAssignment() override { if(clingoCost != nullptr) free(clingoCost); }
+protected:
+    void ensureOutputString() noexcept override;
+    void ensureRestLiterals() const noexcept override;
+private:
+    mutable bool ensuredOutputString = false;       // default initialisers: both constructors
 };
 
 std::ostream& operator<<(std::ostream& out, const Assignment& value);

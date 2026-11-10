@@ -80,14 +80,16 @@ TEST(assignment_hides_auxiliary_atoms_but_keeps_them_true){
     helpers::CaptureOutput quiet;
     auto [answerset, result] = solver->solve();
     REQUIRE(result.isSat());
-    // shown: the program's own atoms only
-    CHECK(answerset->outputString.find("'x(1)'") != std::string::npos);
-    CHECK(!std::regex_search(answerset->outputString, std::regex("__(element|group|aux|lb|ub|tuple|same)__")));
-    // but in the assignment the auxiliary atoms keep their value (__ub__ and __aux__ are facts)
+    // in the assignment the auxiliary atoms keep their value (__ub__ and __aux__ are facts); read before the text
+    // is built, so that the rest atoms are set on demand (ensureRestLiterals)
     int auxiliaryTrue = 0;
     for(const fiore::Literal* l: *solver->program->restLiterals)
         if(l->name.rfind("__ub__", 0) == 0 || l->name.rfind("__aux__", 0) == 0) auxiliaryTrue += answerset->isTrue(l);
     CHECK_EQ(auxiliaryTrue, 2);
+    // but the text shows the program's own atoms only
+    const std::string& text = answerset->output();
+    CHECK(text.find("'x(1)'") != std::string::npos);
+    CHECK(!std::regex_search(text, std::regex("__(element|group|aux|lb|ub|tuple|same)__")));
     fiore::AnswersetsPool::getInstance()->deleteAnswerset(answerset);
 }
 
@@ -99,7 +101,8 @@ TEST(assignment_amosum_cost_is_the_value_of_the_model){
     REQUIRE(result.isSat());
     int64_t sum = 0;
     const std::regex atom("'x\\((\\d+)\\)'");
-    for(auto it = std::sregex_iterator(answerset->outputString.begin(), answerset->outputString.end(), atom); it != std::sregex_iterator(); ++it)
+    const std::string& text = answerset->output();
+    for(auto it = std::sregex_iterator(text.begin(), text.end(), atom); it != std::sregex_iterator(); ++it)
         sum += std::stoll((*it)[1]);
     CHECK_EQ(static_cast<AmosumClingoAssignment*>(answerset)->amosumCost, sum);
     fiore::AnswersetsPool::getInstance()->deleteAnswerset(answerset);

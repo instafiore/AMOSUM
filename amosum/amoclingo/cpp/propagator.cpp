@@ -25,7 +25,7 @@ void AmoclingoPropagator::initFirstTime(clingo_propagate_init* _init) noexcept{
         return plit > 0 ? slit : fiore::not_(slit);
     };
 
-    // 1-3. the groups over solver literals (core)
+    // 1-3. the groups over solver literals
     solvingGroups = buildSolvingGroups(*constraint, solverLiteral);
 
     // 4. watched literals (initImplementation watches each one, and its negation if watchOppositePolarityLiterals):
