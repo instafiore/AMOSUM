@@ -3,8 +3,6 @@
 #include "amosum/core/cpp/program.h"
 #include "amosum/core/cpp/propagator.h"
 
-// The clingo propagator of one amosum aggregate (mirrored by amoclingo/py/propagator.py): it maps the program groups to
-// solver literals (buildSolvingGroups), watches them and runs one AmosumPropagator (core) per solver thread
 struct AmoclingoPropagator: public fiore::PropagatorPBConstraint{
 
     AmoclingoPropagator(std::string name, fiore::ClingoSolver* solver, AmosumConstraint* constraint, const std::string& reason = "nomin", const std::string& lazy = SETTINGS::FALSE_STR, const clingo_clause_type_t clauseType = clingo_clause_type_learnt) noexcept;

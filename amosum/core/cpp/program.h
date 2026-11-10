@@ -9,30 +9,26 @@
 #include "fiore/model/program.h"
 #include "fiore/model/assigment.h"      // fiore::ClingoAssignment, fiore::AssignmentType
 
-// --verbose: each-model, last-model, cost-only, progression-last-model (the costs during the search, then the last model)
 enum class AmosumPrintMode{ EachModel, LastModel, CostOnly, ProgressionLastModel };
 AmosumPrintMode amosumPrintMode() noexcept;         
 
-// a group of an AmosumConstraint over program literals (from the grounding): at most one member true (exactly one for EO)
 struct ProgramGroup{
-    std::string id;
-    std::vector<std::pair<const fiore::Literal*, int64_t>> members;   // program literal, weight (0: counted in another group)
-    // the group of the "-" element (¬__aux__, weight = bound): it changes only when the aggregate's body does, so it is left
-    // out of the lazy threshold (otherwise the threshold is always met)
-    bool aux = false;
+    std::string id; // id of the group
+    std::vector<const fiore::Literal*> members; // members of the group
+    bool aux = false; // if it is the aux atom of the amosum construct
 };
+
 struct AmosumConstraint: public fiore::PBConstraint{
-    // the aggregate is described by `groups` only: PBConstraint's literals and weight function are empty (owned here,
-    // as PBConstraint keeps raw pointers) and must not be used for amosum
     std::string id;                                     // aggregate id: last argument of __group__
     std::string type;                                   // ge_amo, ge_eo, le_amo, le_eo, amomaximize (from __aux__)
     bool ge;                                            // __lb__ (>=) or __ub__ (<=)
     std::vector<ProgramGroup> groups;                   // after the program level normalization (AmosumGrounder)
     std::vector<clingo_literal_t> groupsAtoms;          // the __group__ atoms themselves
 
-    AmosumConstraint(const fiore::Program* program, int64_t bound, fiore::Vector<const fiore::Literal*>* literals, fiore::UMNWeightFunction* weightFunction) noexcept 
+    AmosumConstraint(const fiore::Program* program, int64_t bound, fiore::Vector<const fiore::Literal*>* literals, fiore::UMNWeightFunction* weightFunction) noexcept
         : fiore::PBConstraint(program, bound, literals, weightFunction), ge(true){}
 
+    inline int64_t weight(const fiore::Literal* l) const noexcept { return weightFunction->at(l->id); }
     inline std::string toString() const noexcept override{ std::ostringstream out; out<<"AmosumConstraint("<<id<<", "<<type<<", "<<groups.size()<<" groups, "<<(ge ? ">= " : "<= ")<<bound<< ")"; return out.str();};
 };
 
@@ -42,7 +38,6 @@ class AmosumProgram: public fiore::Program{
 public:
     std::vector<AmosumConstraint*> amosumConstraints;   // non-owning: the constraints are owned by pBConstraints
     AmosumConstraint* amomaximizeConstraint;
-    // owners of the (empty) literals / weight function of each AmosumConstraint: PBConstraint keeps raw pointers
     std::vector<std::unique_ptr<fiore::Vector<const fiore::Literal*>>> pbLiterals;
     std::vector<std::unique_ptr<fiore::UMNWeightFunction>> pbWeightFunctions;
     struct AmosumGrounder: fiore::Program::ProgramGrounder{

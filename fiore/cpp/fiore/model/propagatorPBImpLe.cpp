@@ -23,9 +23,9 @@ std::pair<bool, bool> PropagatorPBConstraintImplementationLe::updatePhase(clingo
 
 
 int64_t PropagatorPBConstraintImplementationLe::actualCost(){
-    int64_t c = this->abs->weightSolvingLiterals->at(1);
+    int64_t c = constant();
     for(const clingo_literal_t &l: this->currentFalseSolvingLiteralIds){
-        c += this->abs->weightSolvingLiterals->at(not_(l));
+        c += weightOf(not_(l));
     }
     return c;
 }

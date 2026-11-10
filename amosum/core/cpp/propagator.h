@@ -46,11 +46,9 @@ struct AmosumSolvingGroups{
     static constexpr size_t NO_GROUP = std::numeric_limits<size_t>::max();
 
     std::vector<AmosumSolvingGroup> groups;
-    std::unique_ptr<fiore::PerfectNHash<clingo_literal_t, int64_t>> weight;     // member solver literal -> sum of the weights of its elements
     std::unique_ptr<fiore::PerfectNHash<clingo_literal_t, size_t>> groupIndex;  // member solver literal -> index of its owner group
     std::unordered_map<clingo_literal_t, std::vector<size_t>> movedInto;        // moved solver literal -> indexes of the groups where it has weight 0
     bool hasMovedLiterals = false;                                              // movedInto not empty: skips its lookups on every change
-    int64_t constant = 0;                       // weight of the groups decided by a fact
     size_t N = 2;                               // max solver atom + 1
     std::map<clingo_literal_t, std::unordered_set<const fiore::Literal*>> elements;   // solver literal -> its elements
 
@@ -60,9 +58,9 @@ struct AmosumSolvingGroups{
 
 // steps 1-3 of the old AmoclingoPropagator::initFirstTime: the program groups of `constraint` over solver literals.
 // solverLiteral(program literal) is its solver literal, fiore::CONSTANTS::TOP (decided before search) or
-// fiore::CONSTANTS::BOTTOM (never true)
-AmosumSolvingGroups buildSolvingGroups(const AmosumConstraint& constraint, const std::function<clingo_literal_t(clingo_literal_t)>& solverLiteral);
-
+// fiore::CONSTANTS::BOTTOM (never true). weight gets the weight of each member solver literal, and at TOP the weight of
+// the groups decided by a fact (the propagator's weightSolvingLiterals)
+AmosumSolvingGroups buildSolvingGroups(const AmosumConstraint& constraint, const std::function<clingo_literal_t(clingo_literal_t)>& solverLiteral, std::unique_ptr<fiore::PerfectWeightFunction>& weight);
 // port of Group (utility.h) over solver literals: one copy per thread, modified during search
 struct AmosumThreadGroup{
     static constexpr size_t NONE_INDEX = std::numeric_limits<size_t>::max();
@@ -133,7 +131,6 @@ private:
     inline int64_t bound() const noexcept { return abs->pbConstraint->bound; }
     inline bool amoLe() const noexcept { return amo && !ge; }
     inline int64_t mps() const noexcept { return amoLe() ? currentSum : mpsValue; }
-    inline int64_t weightOf(const clingo_literal_t l) const noexcept { return l == SETTINGS::NONE_LITERAL ? 0 : sg.weight->at(l); }
     inline bool isMemberHere(const clingo_literal_t l) const noexcept { return (size_t)std::abs(l) < sg.N && groupIndex->at(l) != AmosumSolvingGroups::NO_GROUP; }
     inline size_t groupOf(const clingo_literal_t l) const noexcept {
         if(isMemberHere(l)) return groupIndex->at(l);

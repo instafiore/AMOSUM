@@ -48,8 +48,6 @@ fiore::clingo::ClingoResult Runner::run(){
         if(hasAmomaximize && mode == AmosumPrintMode::CostOnly) answerOutString = answerSet->costLine();
         else{
             answerOutString = answerSet->toOutputString();
-            // last-model, progression-last-model: no model was printed with its atoms, so the last line also carries
-            // the #amomaximize value
             if(hasAmomaximize && (mode == AmosumPrintMode::LastModel || mode == AmosumPrintMode::ProgressionLastModel))
                 answerOutString = "Amomaximize Cost: " + std::to_string(answerSet->amosumCost) + " " + answerOutString;
         }

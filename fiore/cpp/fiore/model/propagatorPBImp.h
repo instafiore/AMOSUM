@@ -25,6 +25,13 @@ protected:
     virtual std::pair<bool, bool> updatePhase(clingo_literal_t const *literalIds, size_t size, size_t dl = 0) noexcept = 0;
     virtual std::vector<clingo_literal_t>& propagatePhase(clingo_propagate_control_t* control = nullptr) noexcept = 0;
 
+    // weight of a solver literal for this constraint (abs->weightSolvingLiterals): NONE32 (no literal) weighs 0
+    inline int64_t weightOf(const clingo_literal_t literalId) const noexcept {
+        return literalId == CONSTANTS::NONE32 ? 0 : abs->weightSolvingLiterals->at(literalId);
+    }
+    // weight of the facts (TOP): the value of the constraint when no other literal is true
+    inline int64_t constant() const noexcept { return abs->weightSolvingLiterals->at(CONSTANTS::TOP); }
+
     inline int64_t computeCost(clingo_literal_t const *literalIds, size_t size, PerfectWeightFunction* weight = nullptr, bool updateInterpretation = false) noexcept{
         if(weight == nullptr) weight = abs->weightSolvingLiterals.get();
         int64_t cost = 0;

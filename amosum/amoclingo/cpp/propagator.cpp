@@ -3,8 +3,6 @@
 #include <unordered_set>
 
 AmoclingoPropagator::AmoclingoPropagator(std::string name, fiore::ClingoSolver* solver, AmosumConstraint* constraint, const std::string& reason, const std::string& lazy, const clingo_clause_type_t clauseType) noexcept:
-    // falsity changes the max/min possible sum (ge, EO); le_amo depends only on the true literals: their negations
-    // are not watched, as in the old watch filter of getLiterals
     fiore::PropagatorPBConstraint(name, solver, constraint, constraint->type != "le_amo", clauseType),
     constraint(constraint),
     ge(constraint->ge),
@@ -25,8 +23,10 @@ void AmoclingoPropagator::initFirstTime(clingo_propagate_init* _init) noexcept{
         return plit > 0 ? slit : fiore::not_(slit);
     };
 
-    // 1-3. the groups over solver literals
-    solvingGroups = buildSolvingGroups(*constraint, solverLiteral);
+    // 1-3. the groups over solver literals; their weights (TOP: the facts) are this propagator's weight function,
+    //      read by the implementations (weightOf, constant): before createImplementation
+    solvingGroups = buildSolvingGroups(*constraint, solverLiteral, weightSolvingLiterals);
+    maxSolvingLiteralId = solvingGroups.N - 1;
 
     // 4. watched literals (initImplementation watches each one, and its negation if watchOppositePolarityLiterals):
     //    one per atom when both polarities are watched, one per literal otherwise (s and -s may both be members);

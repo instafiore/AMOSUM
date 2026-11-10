@@ -71,7 +71,7 @@ namespace amosumSearch {
         for(const ProgramGroup& g: constraint->groups){
             if(g.aux) continue;
             int64_t best = 0;
-            for(const auto& [literal, weight]: g.members) best = std::max(best, weight);
+            for(const fiore::Literal* literal: g.members) best = std::max(best, constraint->weight(literal));
             value += best;
         }
         return value;
@@ -81,7 +81,7 @@ namespace amosumSearch {
         for(const ProgramGroup& g: constraint->groups){
             if(g.aux) continue;
             int64_t worst = 0;
-            for(const auto& [literal, weight]: g.members) worst = std::min(worst, weight);
+            for(const fiore::Literal* literal: g.members) worst = std::min(worst, constraint->weight(literal));
             value += worst;
         }
         return value;

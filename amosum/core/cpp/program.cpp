@@ -35,16 +35,26 @@ namespace {
 
     struct NormalizeResult{
         std::vector<ProgramGroup> groups;
-        fiore::UMNWeightFunction* w;
+        fiore::UMNWeightFunction* w;            // member -> its weight (owned by AmosumProgram::pbWeightFunctions)
     };
 
-    // program level normalization of an aggregate: a tuple in several groups counts once, equal weights in a group are one atom
+    // a group while normalizing: members with their weight
+    struct WeightedGroup{
+        std::string id;
+        std::vector<std::pair<const fiore::Literal*, int64_t>> members;
+        bool aux = false;
+    };
+
+    // program level normalization of an aggregate: a tuple in several groups counts once, equal weights in a group are one
+    // atom. A program literal is a member of one group only: each element has its own __element__(ID, T, G) atom (the
+    // parser), the OR atoms are fresh; equal solver literals in several groups are merged by buildSolvingGroups
     NormalizeResult normalize(AmosumProgram* p, const std::string& aggregateId, const bool eo, const std::vector<GroupElement>& elements){
-        std::map<std::string, ProgramGroup> byId;                      // deterministic order
+        std::map<std::string, WeightedGroup> byId;                     // deterministic order
         std::map<std::string, std::vector<const GroupElement*>> byTuple;
-        
+
+        // 1. the elements by group
         for(const GroupElement& e: elements){
-            ProgramGroup& g = byId[e.groupId];
+            WeightedGroup& g = byId[e.groupId];
             g.id = e.groupId;
             g.aux = g.aux || e.aux;
             g.members.emplace_back(e.literal, e.weight);
@@ -54,17 +64,17 @@ namespace {
         // 2. a tuple in several groups: x = OR of its element atoms, weight w in a group of its own; the element atoms stay in
         //    their groups with weight 0 (the tuple is counted once, by x); EO: ¬x in x's group too, so that it is exactly-one
         //    (le_eo: its minimum is 0 while x is not true; ge_eo: the lazy threshold sees that the group can change by w)
-        std::vector<ProgramGroup> extra;
+        std::vector<WeightedGroup> extra;
         for(const auto& [tuple, es]: byTuple){
             if(es.size() < 2) continue;
             std::vector<const fiore::Literal*> lits;
             for(const GroupElement* e: es){
                 lits.push_back(e->literal);
-                ProgramGroup& g = byId[e->groupId];
+                WeightedGroup& g = byId[e->groupId];
                 std::find_if(g.members.begin(), g.members.end(), [e](const auto& m){ return m.first == e->literal; })->second = 0;
             }
             const fiore::Literal* x = p->addDisjunction(lits, "__tuple__(" + aggregateId + "," + tuple + ")");
-            ProgramGroup g{"__tuple__" + tuple, {{x, es.front()->weight}}};
+            WeightedGroup g{"__tuple__" + tuple, {{x, es.front()->weight}}};
             if(eo) g.members.emplace_back(p->mapLiteralId2Literal->literal(fiore::not_(x->id)), 0);
             extra.push_back(std::move(g));
             p->maxLiteralId = std::max(p->maxLiteralId, static_cast<uint32_t>(std::abs(x->id)));
@@ -82,17 +92,17 @@ namespace {
             g.members = std::move(members);
         }
 
+        // the weights: after the OR atoms, so that N exceeds every atom (NHash keeps -id at id + N)
+        fiore::UMNWeightFunction* w = new fiore::UMNWeightFunction(p->maxLiteralId + 1);
         std::vector<ProgramGroup> groups;
-        for(auto& [id, g]: byId) groups.push_back(std::move(g));
-        for(ProgramGroup& g: extra) groups.push_back(std::move(g));
-        // fiore::UMNWeightFunction* w = new fiore::UMNWeightFunction(p->maxLiteralId+1);
-        // for(ProgramGroup& g: groups){
-        //     for(const auto&[literal, weight]: g.members){
-        //             w->set(literal->id, weight);
-        //     }
-        // }
-        fiore::UMNWeightFunction* w = new fiore::UMNWeightFunction(1);
-        return {groups, w};
+        auto add = [&](WeightedGroup& g){
+            ProgramGroup pg{g.id, {}, g.aux};
+            for(const auto& [l, weight]: g.members){ pg.members.push_back(l); w->set(l->id, weight); }   // members are unique: set
+            groups.push_back(std::move(pg));
+        };
+        for(auto& [id, g]: byId) add(g);
+        for(WeightedGroup& g: extra) add(g);
+        return {std::move(groups), w};
     }
 }
 
@@ -163,16 +173,15 @@ fiore::Program* AmosumProgram::AmosumGrounder::ground(const std::vector<std::str
         }
     }
 
-   
     for(auto& [id, a]: aggregates){
         if(a.elements.empty()) continue;
 
         const bool eo = a.type == "ge_eo" || a.type == "le_eo";
         NormalizeResult normalizeResult = normalize(p, id, eo, a.elements);
-        std::vector<ProgramGroup> groups = normalizeResult.groups; 
-        // PBConstraint's literals and weights stay empty: the aggregate is described by groups only (see AmosumConstraint)
+        // the weights of the members are PBConstraint's weight function; its literals stay empty: preprocessCost would
+        // rewrite the weights of l / ¬l pairs, which are in the same group for EO (see AmosumConstraint)
         fiore::Vector<const fiore::Literal*>* v = new fiore::Vector<const fiore::Literal*>();
-        fiore::UMNWeightFunction* w = normalizeResult.w; 
+        fiore::UMNWeightFunction* w = normalizeResult.w;
         p->pbWeightFunctions.emplace_back(w);
         p->pbLiterals.emplace_back(v);
         AmosumConstraint* c = new AmosumConstraint(p, a.bound, v, w);
@@ -180,7 +189,7 @@ fiore::Program* AmosumProgram::AmosumGrounder::ground(const std::vector<std::str
         c->type = a.type;
         c->ge = a.ge;
         c->groupsAtoms = std::move(a.groupsAtoms);
-        c->groups = std::move(groups);
+        c->groups = std::move(normalizeResult.groups);
         if(c->type == "amomaximize"){
             if(p->amomaximizeConstraint != nullptr) fiore::setExitCode(fiore::CONSTANTS::ERROR_CODE, true, "At most one amomaximize statement can be declared!");
 
@@ -201,15 +210,13 @@ void AmosumClingoAssignment::initAmosum(const clingo_model_t* model) {
     const AmosumConstraint* amomaximize = p->amomaximizeConstraint;
     if(amomaximize == nullptr) return;
 
-    // at most one true member per group: the weight of the first true member is the group's value
+    // at most one true member per group, and a literal is a member of one group only: the weight of the first true member
+    // is the group's value
     for(const ProgramGroup& g: amomaximize->groups){
-        for(const auto& [literal, weight]: g.members){
+        for(const fiore::Literal* literal: g.members){
             bool isTrue;
             handleError(clingo_model_is_true(model, literal->id, &isTrue));
-            if(isTrue){
-                amosumCost += weight;
-                break;
-            }
+            if(isTrue){ amosumCost += amomaximize->weight(literal); break; }
         }
     }
 }

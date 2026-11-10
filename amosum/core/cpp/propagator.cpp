@@ -60,9 +60,9 @@ AmosumOptions::AmosumOptions(const std::string& reason, const std::string& lazy)
 
 // ----- AmosumSolvingGroups -----
 
-AmosumSolvingGroups buildSolvingGroups(const AmosumConstraint& constraint, const std::function<clingo_literal_t(clingo_literal_t)>& solverLiteral){
+AmosumSolvingGroups buildSolvingGroups(const AmosumConstraint& constraint, const std::function<clingo_literal_t(clingo_literal_t)>& solverLiteral, std::unique_ptr<fiore::PerfectWeightFunction>& weight){
     AmosumSolvingGroups out;
-
+    int64_t constant = 0;                   // weight of the groups decided by a fact: TOP in weight
     // 1a. elements -> solver literals: equal solver literals are merged (weights summed) into the first group containing
     //    them; a later group containing the same solver literal keeps it as a moved literal (weight 0 there)
     const size_t nGroups = constraint.groups.size();
@@ -74,11 +74,12 @@ AmosumSolvingGroups buildSolvingGroups(const AmosumConstraint& constraint, const
     std::vector<bool> decided(nGroups, false);
 
     for(size_t gi = 0; gi < nGroups; ++gi){
-        for(const auto& [plitLiteral, w]: constraint.groups[gi].members){
+        for(const fiore::Literal* plitLiteral: constraint.groups[gi].members){
             const clingo_literal_t plit = plitLiteral->id;
+            const int64_t w = constraint.weight(plitLiteral);
             const clingo_literal_t slit = solverLiteral(plit);
             if(slit == fiore::CONSTANTS::BOTTOM) continue;                   // never true: contributes 0
-            if(slit == fiore::CONSTANTS::TOP){ decided[gi] = true; out.constant += w; continue; }
+            if(slit == fiore::CONSTANTS::TOP){ decided[gi] = true; constant += w; continue; }
             auto [it, inserted] = owner.emplace(slit, gi);
             if(inserted) members[gi].push_back(slit);
             else if(it->second != gi && movedSet[gi].insert(slit).second) moved[gi].push_back(slit);
@@ -110,7 +111,7 @@ AmosumSolvingGroups buildSolvingGroups(const AmosumConstraint& constraint, const
         movedFrom.emplace(s, gi);
         owner.erase(s);
         merged.erase(itw);
-        out.constant -= std::abs(w);
+        constant -= std::abs(w);
         // |w|·¬s: merged into the owner of ¬s; if ¬s was turned into a moved literal here before, it goes back to being
         // a member of that group (its former owner: at most one true still holds there); otherwise a new group
         const clingo_literal_t ns = fiore::not_(s);
@@ -143,7 +144,8 @@ AmosumSolvingGroups buildSolvingGroups(const AmosumConstraint& constraint, const
     clingo_atom_t maxAtom = 1;
     for(const auto& [slit, gi]: owner) maxAtom = std::max<clingo_atom_t>(maxAtom, std::abs(slit));
     out.N = maxAtom + 1;
-    out.weight.reset(new fiore::PerfectNHash<clingo_literal_t, int64_t>(out.N, 0));
+    weight.reset(new fiore::PerfectWeightFunction(out.N, 0));
+    weight->set(fiore::CONSTANTS::TOP, constant);
     out.groupIndex.reset(new fiore::PerfectNHash<clingo_literal_t, size_t>(out.N, AmosumSolvingGroups::NO_GROUP));
     for(size_t gi = 0; gi < members.size(); ++gi){
         // the members turned into moved literals of this group by 1b leave it: one pass instead of one erase each
@@ -154,10 +156,9 @@ AmosumSolvingGroups buildSolvingGroups(const AmosumConstraint& constraint, const
         if(members[gi].empty()) continue;
 
         AmosumSolvingGroup g{ids[gi], std::move(members[gi]), std::move(moved[gi]), aux[gi]};
-        for(const clingo_literal_t slit: g.literals) out.weight->set(slit, merged[slit]);
-        const fiore::PerfectNHash<clingo_literal_t, int64_t>& weight = *out.weight;
+        for(const clingo_literal_t slit: g.literals) weight->set(slit, merged[slit]);
         std::sort(g.literals.begin(), g.literals.end(), [&weight](const clingo_literal_t a, const clingo_literal_t b){
-            return weight.at(a) != weight.at(b) ? weight.at(a) < weight.at(b) : a < b;
+            return weight->at(a) != weight->at(b) ? weight->at(a) < weight->at(b) : a < b;
         });
         const size_t index = out.groups.size();
         for(const clingo_literal_t slit: g.literals) out.groupIndex->set(slit, index);
@@ -175,7 +176,7 @@ AmosumPropagator::AmosumPropagator(fiore::PropagatorPBConstraint* abs, const Amo
     ownedGroupIndex(threads > 1 ? new fiore::PerfectNHash<clingo_literal_t, size_t>(groups_.N, AmosumSolvingGroups::NO_GROUP) : nullptr),
     groupIndex(ownedGroupIndex ? ownedGroupIndex.get() : groups_.groupIndex.get()),
     I(new fiore::PerfectInterpretation(groups_.N, fiore::TruthValue(fiore::TruthValue::U))),
-    currentSum(groups_.constant), mpsValue(groups_.constant), maxDiff(0), decisionLevel(0), nextPhase(false), lastBound(abs->pbConstraint->bound),
+    currentSum(constant()), mpsValue(constant()), maxDiff(0), decisionLevel(0), nextPhase(false), lastBound(abs->pbConstraint->bound),
     reasons(new fiore::PerfectNHash<clingo_literal_t, std::vector<clingo_literal_t>>(groups_.N)),
     slack(options.minimizeOnTheFly && ge ? new fiore::PerfectNHash<clingo_literal_t, int64_t>(groups_.N, 0) : nullptr){
 
