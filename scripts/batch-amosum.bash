@@ -13,7 +13,8 @@ cd "$(dirname "$0")" || exit 1
 # Directories with the solver scripts. The solver regex is matched against the
 # full path of every file directly inside them (not in their subdirectories).
 SOLVER_DIRS=(
-    /home/mazzotta/Experiments/solvers/amosum/amosum-scripts   # amoclingo, amowasp, ...
+    /home/mazzotta/Experiments/solvers/bin_fiorentino/AMOSUM/scripts/amosum-scripts
+    /home/mazzotta/Experiments/solvers/bin_fiorentino/AMOSUM/scripts/clingo
 )
 BENCH_DIR=instances
 RESULT_HOME=repository-of-results-amosum
@@ -233,8 +234,9 @@ run_benchmark() {
     done
 }
 
-benchs="CombinatorialAuctionsAmomaximize|KnapsackAmomaximize|TSP|WeightedGraphColouringAmomaximize|WOD"
-solvers='./(amoclingo.*opt=su|clingo-plain-amo-outf1)'
+# benchs="CombinatorialAuctionsAmomaximize|KnapsackAmomaximize|TSP|WeightedGraphColouringAmomaximize|WOD"
+benchs="CombinatorialAuctionsOpt"
+solvers='./(amoclingo.*opt=su|clingo-amo)'
 # run_benchmark "$benchs" "Lite" "$solvers"
 run_benchmark "$benchs" "Normal" "$solvers"
 
