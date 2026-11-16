@@ -1,0 +1,1 @@
+#maximize { E,U,T,S : assign(U,T,S), capable(U,T,E) }.

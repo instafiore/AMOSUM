@@ -1,0 +1,1 @@
+#maximize { Value, I : x(I), bid(I, Value) }.

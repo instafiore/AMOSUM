@@ -1,0 +1,1 @@
+#maximize{ H*S, Per, M, Pro: join_project(Per, Pro, H, M), role(Per,R), salary(R,S), project_month(Pro, SM, EM), M >= SM, M <= EM}.

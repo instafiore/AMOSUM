@@ -1,0 +1,1 @@
+#maximize{ R,X,Y : tour(X,Y), revenue(X,Y,R) }.

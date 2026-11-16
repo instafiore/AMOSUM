@@ -1,0 +1,810 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage{todonotes}
+\usepackage[ruled,linesnumbered,vlined]{algorithm2e}
+\newcommand{\carmine}[1]{\todo[color=blue!20]{{\bf Carmine:} #1}}
+\newcommand{\group}{\mathit{group}}
+\newcommand{\lits}{\mathit{lits}}
+\newcommand{\mwh}{\mathit{mwh}}
+\newcommand{\mwl}{\mathit{mwl}}
+\newcommand{\smwh}{\mathit{smwh}}
+\newcommand{\wh}{\mathit{wh}}
+\newcommand{\ml}{\mathit{ml}}
+\newcommand{\inc}{\mathit{inc}}
+\newcommand{\mps}{\mathit{mps}}
+\newcommand{\blw}{\mathit{blw}}
+\newcommand{\ext}{\xrightarrow{\text{ext}}}
+\newcommand{\G}{\mathbb{G}}
+\newcommand{\atoms}{\mathit{atoms}}
+\newcommand{\parts}{\mathit{parts}}
+\newcommand{\p}{\mathit{part}}
+\newcommand{\bnd}{\mathit{bnd}}
+\newcommand{\rsn}{\mathit{rsn}}
+\newtheorem{lemma}{Lemma}
+\newcommand{\cupdot}{\,\dot{\cup}\,}
+\newtheorem{corollary}{Corollary}
+\newcommand{\wasp}{\textsc{wasp}\xspace}
+\newcommand{\clingo}{\textsc{clingo}\xspace}
+\newcommand{\amowaspij}{\textsc{amowasp-base-py}\xspace}
+\newcommand{\amoclingoijpy}{\textsc{amoclingo-base-py}\xspace}
+\newcommand{\amoclingoijc}{\textsc{amoclingo-base-c}\xspace}
+\newcommand{\amoclingoinf}{\textsc{amoclingo-inf}\xspace}
+\newcommand{\amoclingoinfr}{\textsc{amoclingo-inf-r}\xspace}
+\newcommand{\amoclingoinfmr}{\textsc{amoclingo-inf-mr}\xspace}
+\newcommand{\amoclingolazy}{\textsc{amoclingo-l}\xspace}
+\newcommand{\amoclingohybrid}{\textsc{amoclingo-h}\xspace}
+
+\newcommand{\eowaspij}{\textsc{eowasp-base-py}\xspace}
+\newcommand{\eoclingoijpy}{\textsc{eoclingo-base-py}\xspace}
+\newcommand{\eoclingoijc}{\textsc{eoclingo-base-c}\xspace}
+\newcommand{\eoclingoinf}{\textsc{eoclingo-inf}\xspace}
+\newcommand{\eoclingoinfr}{\textsc{eoclingo-inf-r}\xspace}
+\newcommand{\eoclingoinfmr}{\textsc{eoclingo-inf-mr}\xspace}
+\newcommand{\eoclingolazy}{\textsc{eoclingo-l}\xspace}
+\newcommand{\eoclingohybrid}{\textsc{eoclingo-h}\xspace}
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}{Proposition}[section]
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[section]
+\newtheorem{example}{Example}[section]
+
+% --- Custom Colors and Commands ---
+\definecolor{revcolor}{rgb}{0.1, 0.1, 0.5} % Dark blue for comments
+\newcommand{\reviewertodo}{\subsection{\color{red}Comment}} 
+\newcommand{\revieweranswered}{\subsection{Comment}} 
+\newenvironment{response}{
+    \color{blue} \textbf{Response.}
+}{
+}
+% not answered yet: what we should do (to remove before submitting)
+\newcommand{\notanswered}[1]{{\color{red}\textbf{Not answered yet.} #1}}
+
+\title{Response to Reviewers}
+\author{\parbox{0.85\textwidth}{\centering\itshape AMOSUM Constraints: Enhancing ASP Propagation with Aggregates and At-Most-One Constraints}}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+We would like to thank the reviewers for their careful reading and constructive feedback. Their insightful comments and suggestions have been extremely valuable and have enabled us to substantially improve both the presentation and the technical content of the manuscript.
+
+The main changes introduced in the revised version are summarized as follows:
+\begin{itemize}
+    \item We substantially improved the presentation of the proposed approach, with major revisions to Sections~3 and~4.
+    \item We corrected the errors identified in the proofs and carefully revised the corresponding theoretical arguments. Moreover, we introduced the concept of $\sigma$-reason to clarify that subset-minimality is not global on $\Pi$, but focused on the \textsc{amosum} constraint.
+    \item We extended the related work section by providing a more detailed discussion of the differences between our approach, related constraints studied in pseudo-Boolean solving, and our previous work presented at IJCAI.
+    \item We significantly extended the experimental evaluation by adding two new benchmarks. Overall, the revised analysis now comprises approximately 1,400 combinatorial instances from six benchmark families, in addition to 24 synthetic instances.
+    \item We corrected several typographical errors and addressed a number of additional minor issues throughout the manuscript.
+\end{itemize}
+
+All non-trivial changes are highlighted in blue in the main document.
+
+We believe that these revisions have substantially improved the clarity, correctness, and overall quality of the article, and we are grateful to the reviewers for their valuable contribution to this process.
+
+In the following, we address each comment point by point. Our responses are shown in blue.
+
+% \section*{Response to Reviewer 1}
+
+% \reviewertodo
+% Many sections of the paper are well presented, and
+% the overall approach is technically correct.
+% But section 4 is not presented well and it is not technically correct.
+% Sometimes the text is hard to follow, and this is made more difficult
+% by the many typos and small mistakes showing up along the paragraphs.
+% The notation is rather involved, and it is unclear whether some concepts
+% could be formalized in a simpler way.
+% The proofs are hard to follow, and in some cases (see below) they are incorrect.
+
+% \response 
+
+% \action 
+
+\section{Response to Reviewer 1}
+
+\vspace{0.5cm}
+
+\revieweranswered 
+The paper introduces AMO- and EOSUM constraints, which act monotonically.
+As such, they correspond directly to constraints used in PB-solving,
+and the paper can be seen as making a contribution to (native) PB-solving
+with an application to ASP. I think the paper would benefit from making
+this relation more explicit (even in the the abstract?).
+
+\begin{response}
+We agree that the connection with pseudo-Boolean solving was not sufficiently explicit. At the ground level, an \textsc{amosum} constraint corresponds to a structured system of pseudo-Boolean constraints: one weighted lower-bound constraint, together with one at-most-one constraint for each part. Similarly, an \textsc{eosum} constraint replaces the at-most-one constraints with exactly-one constraints. Our contribution can also be viewed as a native propagation method for this structured class of pseudo-Boolean constraints, instantiated in the context of ASP solving (with non-ground variables). We have made this connection explicit in the abstract and introduction, and further clarified the distinction from translation-based PB approaches in the related-work section.
+\end{response}
+
+\vspace{0.5cm}
+
+\revieweranswered
+In this regard, there has been closely related work in (translation-based) PB-solving [1,2].
+In that case, the idea is to take advantage of the combination of AMO and
+SUM constraints to generate more compact SAT encodings.
+I think that work should be discussed in the related work section.
+
+\begin{enumerate}
+\item[[1]] Bofill, M., Coll, J., Nightingale, P., Suy, J., Ulrich-Oltean, F., \& Villaret, M. (2022).
+SAT encodings for Pseudo-Boolean constraints together with at-most-one constraints.
+\textit{Artificial Intelligence}, 302, 103604.
+\item[[2]] Ans\'{o}tegui, C., Bofill, M., Coll, J., Dang, N., Esteban, J.~L., Miguel, I., \ldots\ \& Villaret, M. (2019, September).
+Automatic detection of at-most-one and exactly-one relations for improved SAT encodings of pseudo-boolean constraints.
+In \textit{International Conference on Principles and Practice of Constraint Programming} (pp. 20-).
+\end{enumerate}
+
+\begin{response}
+Thank you for pointing out these papers.
+We added them in the discussion of related work.
+
+\end{response} 
+
+\vspace{0.5cm}
+
+\revieweranswered
+One of the weakness of the paper is precisely this loose integration with ASP.
+The paper introduces constraints, but not proper aggregate atoms, that could be used
+anywhere in the bodies of the rules.
+From the KR perspective, the approach falls short on this side.
+I wonder how hard would it be to make this extension, as it would certainly improve the paper.
+
+\begin{response}
+Thank you for raising this point. We agree that supporting \textsc{amosum} as a first-class aggregate atom in arbitrary rule bodies would further strengthen its integration with ASP. Nevertheless, its presentation as a constraint construct is a deliberate design choice that reflects the scope of this paper.
+
+From a knowledge-representation perspective, an important advantage of ASP over propositional PB formalisms is its non-ground language, which allows variables to be used to express families of constraints compactly. The proposed syntax retains this advantage: a single non-ground \textsc{amosum} constraint can represent a potentially large family of structured ground PB constraints.
+
+In this work, however, we focus specifically on the constraint-propagation phase, including inference, reason generation, and reason minimization. We therefore introduce \textsc{amosum} explicitly as a constraint construct. Allowing it to occur as an ordinary aggregate atom in arbitrary rule bodies would not be a mere syntactic extension. It would require defining its truth value in positive and default-negated occurrences and, more importantly, addressing recursive occurrences and their interaction with stable-model semantics and unfounded-set propagation. It is worth noting that the semantics of recursive aggregates in ASP is still a matter of debate, as no single semantics has yet gained universal acceptance. For instance, \textsc{clingo} adopts the Ferraris semantics, whereas DLV implements the FLP semantics.
+Therefore, this kind of construct would substantially broaden both the theoretical and implementation scope of the paper. 
+
+We have clarified this design choice in the paper and now explicitly mention first-class \textsc{amosum} aggregate atoms as an interesting direction for future work.
+\end{response}
+
+\vspace{0.5cm}
+
+\revieweranswered
+Another weakness is the short number of benchmarks used in the experiments,
+specially since for NS there are only 5 instances.
+The papers [1,2] have some additional benchmarks that could possibly be used in this work.
+
+\begin{response}
+We extended the experimental evaluation by adding two new benchmarks: the well-known Traveling Salesman Problem (TSP) and Combinatorial Auctions (CA), a benchmark previously used in [1].
+\end{response}
+
+\vspace{0.5cm}
+
+\revieweranswered
+On the definition of $rsn_{\sigma}(J,l,s)$ in (17) and $rsn'_{\sigma}(J,l,s)$ in (24).
+The second part of the condition of $rsn_{\sigma}(J,l,s)$ is
+(1) $\{ l' \in lits_{\sigma}|s | wh_{\sigma}(l') \geq mwh_{\sigma}(J,s) \}$
+but it should have $\overline{J}$ in the first part:
+(2) $\{ l' \in lits_{\sigma}|s \cap \overline{J} | wh_{\sigma}(l') \geq mwh_{\sigma}(J,s) \}$.
+Otherwise, it does not agree with the description, which talks about the false literals in
+the part of l, and the following examples would be incorrect.
+In the IJCAI paper, this condition was
+(3) $\{ l' \in lits_{\sigma}|_s | wh_{\sigma}(l') > mwh_{\sigma}(J,s) \}$.
+My understanding is that, inside the definition of $rsn_{\sigma}(J,l,s)$, it holds that
+$(3) \subseteq (2)$
+because the literals l' that satisfy the $>$ condition of (3) must always be false in J:
+they cannot be true because then the first condition of $rsn_{\sigma}(J,l,s)$
+would be triggered, and they cannot be undefined because then
+$wh_{\sigma}(l') > mwh_{\sigma}(J,s)$ would not hold.
+Also, in general (2) is not a subset of (3),
+so (3) is a better choice since it gives smaller reasons.
+Note also that the following is equivalent to (3)
+(4) $\{ l' \in lits_{\sigma}|s \cap \overline{J} | wh_{\sigma}(l') > mwh_{\sigma}(J,s) \}$
+and (to me) easier to understand since it makes explicit the fact that $l' \in \overline{J}$.
+It is also a subset of (2), even outside the definition of $rsn_\sigma(J,l,s)$.
+It seems to me that all propositions of the paper hold using (4) instead of (1).
+Similarly, in the definition of $rsn_{\sigma}'(J,l,s)$ in (24), instead of
+(5) $\{ l' \in lits_{\sigma}|s \cap \overline{J} | wh_{\sigma}(l') >= mwh'{J \cup {-l},s)}\}$
+one could use
+(6) $\{ l' \in lits_{\sigma}|s \cap \overline{J} | wh_{\sigma}(l') > mwh'{J \cup {-l},s)}\}$
+and it also seems to me that all propositions would still hold.
+Could you please clarify these issues?
+I may be wrong in my analysis, but in that case I would expect the paper to include an explanation
+for the change from the IJCAI paper to the current paper, and to make sure that the experiments are
+run with an implementation that agrees with the definition of the current paper.
+If I am right, then I suggest that the paper and the implementation uses (4) and (6) instead of (1) and (5).
+
+\begin{response}    
+Thank you for pointing this out.
+It was indeed an error; now we use $>$ instead of $\ge$ and for clarity we also added $\ell' \in \lits_{\sigma}|_s \cap \overline{J}$ in the definition of rsn.
+\end{response}
+
+\vspace{0.5cm}
+
+\revieweranswered
+The definition modifies (17) on the part of l, and keeps the rest intact,
+but it is formulated in a way that obscures this relation.
+I suggest redefining (24) by something like
+${l} \cup \{ l' \in lits_{\sigma}|_s \cap \overline{J} \mid wh_{\sigma}(l') > mwh(J \cup \{-l\},s)\}$
+together with the right part of (17). This would also avoid the need for introducing $mwh'_{\sigma}(I,s)$.
+I understand that you may have some reasons to keep the current definition,
+but in that case I think it would still be helpful to have a formal statement that makes clear
+the relation between (17) and (24).
+
+
+\begin{response}
+After rephrasing Sections 3 and 4, we no longer use the primed version; only the final definition of mwh remains.
+\end{response}
+
+
+\vspace{0.5cm}
+
+ \revieweranswered
+Theorem 4.1 (now Theorem 3.3)\\
+I think Theorem 4.1 holds, but the proof is not correct.\\
+See this part: \\
+1 By construction, $imp(R,l) \subseteq F$. \\
+2 Given a literal $ l' \in lits_{\sigma}|s $ if $ -l' \not\in F $ then $ -l' \not \in imp(R,l)$, \\
+3 that is, for each $l' \in lits_{\sigma}|s$, \\
+4 if $-l' \in F $ then $ imp(R,l)^\uparrow(l') = J^\uparrow(l') = 0$, \\
+5 otherwise $imp(R,l)^\uparrow(l') = J^\uparrow(l') = 1$. \\
+6 Hence $mwh'_{\sigma}(imp(R,l) \cup -l),l) = mwh'_{\sigma}(J \cup -l,s)$, ... \\
+In 6, the second argument of the left term should be s, not l.
+These kind of errors happen too often in the paper, and make it hard to follow.
+I think 4 is correct, but the proof does not justify why is it correct
+(could one rely on $imp(R,l)|_s = F$?).
+For 5, from 1 we obtain that if
+$-l' \not\in F$
+then
+$-l' \not\in imp(R,l)$
+and therefore
+$imp(R,l)^\uparrow(l') = 1$;
+but the claim that
+$J^\uparrow(l') = 1$
+is not justified and, in fact, I think that it is incorrect.
+It can happen that
+$J^\uparrow(l') = 0$,
+and therefore
+$-l' \in lits_{\sigma}|_s \cap \overline{J}$
+but
+$-l' \not\in F$
+because the condition
+$wh(l') \leq mwh'{\sigma}(J \cup -l, s)$
+does not hold.
+That is, $l'$ can be false in J but have a small weight,
+so that in R it is undefined (and $imp(R,l) (l') = 1)$
+while in J it is false (and $J(l) = 0$).
+
+\begin{response}
+Concerning comment 6: the second argument of the left-hand term should be $s$, not $\ell$. Yes, this is a typo, thank you.
+
+Concerning the proof, thank you for pointing this out.
+You are correct that point~5 does not hold in general, and we have updated the proof accordingly. The key changes are the following:
+
+\begin{itemize}
+    \item \textbf{Better explanation of point~4:} we explicitly stated that $\mathit{imp}(R,\ell) \cupdot \{\overline{\ell}\}$ maps to false exactly the literals in $F$, that is, $(\mathit{imp}(R,\ell)\cupdot \{\overline{\ell}\})|_s=F$.
+
+    \item \textbf{Fix of point~5:} \emph{otherwise $\mathit{imp}(R,\ell)^\uparrow(\ell') = J^\uparrow(\ell') = 1$.}\\
+    This does not always hold: a false literal $\ell'$ with respect to $J$ could be undefined in $\mathit{imp}(R,\ell)$ if $\ell'$ is below the maximum undefined literal. To fix this, we prove both directions of $\mwh_\sigma(\mathit{imp}(R,\ell) \cupdot \{\overline{\ell}\}, s) = \mwh_\sigma(J \cupdot \{\overline{\ell}\}, s)$.
+\end{itemize}
+
+\end{response}
+
+\vspace{0.5cm}
+
+\revieweranswered
+Corollary 1 (removed)
+
+The equation in the third line is confusing to me:
+$mwh'(J,s) = mwh'(J \cupdot l, s) = mwh'(J \cupdot -l, s)$
+Should the first be $mwh(J,s)$? What is the role of $mwh'(J \cupdot l, s)$?
+
+In the last two lines some {l} should be replaced by {-l}
+and $imp(R,l)^\uparrow{l}$ should be $imp(R,l) \cupdot \{-l\}$.
+Again, these issues make it hard to follow the proofs.
+This also shows up in the proof of corollary 2, around lines 21 and 24,
+and in the statement of corollaries 3 and 4,
+as well as in Theorem $4.4$
+
+\begin{response}
+The equality was intended to highlight that $\mwh'$ is independent of the presence or absence of $\ell$.
+
+However, after reorganizing the paper, we now define only the inference rules (RT) and (RF), instead of R2, R3, and R4. This change also reduced the number of theorems and corollaries, including the removal of the original Corollary 1.
+
+More specifically, the changes are as follows:
+\begin{itemize}
+\item The original Corollary 1 has been removed, and the original Corollary 2 is now Theorem 3.4.
+\item The original Corollaries 3 and 4 have been removed.
+\item Theorem 4.4 is now Theorem 4.1.
+\end{itemize}
+
+For all theorems and corollaries, we have also fixed the typos involving $\overline{\ell}$.
+
+
+\end{response}
+
+\vspace{0.5cm}
+
+\revieweranswered Corollary 2 (now Theorem 3.4)
+In Line 23, it says that
+$mwh'(J \cupdot l, part(l)) = wh(l)$
+but this does not hold in general, in particular because
+$-l \in lits_{\sigma}$.
+For example, in the case where all literals in J are undefined,
+$mwh'(J \cup l, part(l)) = mwh'(J \setminus {-l}, part(l))$
+
+\begin{response}
+The revised syntax explicitly excludes complementary pairs of literals from the aggregation set. Therefore, since $\ell \in \lits_\sigma$, we necessarily have $\overline{\ell}  \notin\lits_\sigma$. Moreover, the premise of (RF) guarantees that no literal in $\mathit{part}(\ell)$ is true in $J$. Hence, after setting $\ell$ to true, it is the unique true literal of its part, and therefore
+$$
+\mwh_\sigma(J\cupdot\{\ell\},\mathit{part}(\ell))=\wh_\sigma(\ell).
+$$
+We have made these conditions explicit in the revised statement and proof of Theorem~3.4.
+\end{response}
+
+\vspace{0.5cm}
+\revieweranswered Theorem 4.4 (now Theorem 4.1).
+
+Theorem 4.4 part 1 seems incorrect to me.
+Instead of
+... = mwh(s) - wh(-l')
+it should be something like
+... = $mwh(s \setminus {-l'}) - wh(-l')$
+The proof claims that
+$mwh'(imp(R \cup {-l'},l),s) = mwh(s)$
+but this is incorrect whenever the weight of -l'
+is greater than the weight of the other literals of s (and $p \neq s$).
+In this case, $imp(R \cup {-l'},l)$ only contains literal l' from part s,
+and therefore
+$mwh'(imp(R \cup {-l'},l),s)$
+equals the highest weight among the remaining literals in s.
+
+\begin{response}
+Thank you for pointing this out.
+As you said, $\mwh(\mathit{imp}(R \cup  \{\overline{l'}\},l),s)$ is equal to the maximum among the remaining literals; we changed the proof accordingly.
+
+Concerning correctness of the implementation, the algorithm remains correct:
+\begin{itemize}
+    \item In case $\mwh(s) \neq \wh(\ell')$ we have $\mwh(s) = \mwh'(\mathit{imp}(R \cupdot \{ {\overline{\ell'}} \},\ell), s)$.
+    \item In case $\mwh(s)  = \wh(\ell')$ we have $\mwh'(\mathit{imp}(R \cupdot \{ {\overline{\ell'}} \},\ell), s) - \mathit{wh}(\overline{\ell'}) \le 0$ and \\$\max\{\mwh'(\mathit{imp}(R \cupdot \{ {\overline{\ell'}} \},\ell), s) - \mathit{wh}(\overline{\ell'}),0\} = 0 = \mwh(s) - \mathit{wh}(\overline{\ell'})$.
+\end{itemize}
+
+Furthermore, we also added a better description for the case $s=p$, explaining that the reason under consideration cannot be the reason (20) associated with (RF).
+\end{response}
+
+
+\vspace{0.5cm}
+\revieweranswered EOSUM inference
+
+In P. 23, L. 44-49, it is said that for EOSUM only false literals are inferred.
+Why is that?
+I understand this for inference (R2),
+that only infers a literal if it is the last undefined of its part,
+but not for (R4), where that is not necessarily the case.
+
+\begin{response}
+The EOSUM propagator does not infer true literals because we leave this task to the \textsc{eo} inference rule implemented by \textsc{clingo}'s built-in propagator. This choice is motivated by the fact that the reasons generated by the \textsc{eo} constraint are generally more effective.
+
+We clarified this in the paper, thank you.
+\end{response}
+
+\vspace{0.5cm}
+\revieweranswered EOSUM with variables
+
+In the definition of EOSUM with variables,
+there is an issue with the specification of part names.
+See the constraint of Example 5.2:
+$$\#\mathit{EOSUM} \{ W : col(X,C), cw(C,W) [X] \} >= MIN : lb(MIN). (7)$$
+it is unclear what are the parts X to which the EO sum constraint should apply,
+how do you define the semantics for this case?
+One option can be to require that the X is either a ground term or a global variable.
+
+Note that if this is not handled properly
+and the propagator works on the ground instantiation,
+it *could* give unintuitive results.
+For example, Gringo would ground rule (7) together with
+lb(0). cw(1,1). :- col(1,1). (8)
+into
+$$\#\mathit{EOSUM}{ } >= 0.$$
+which would be satisfiable, while adding the choice rule
+$$\{ col(1,1) \}.$$
+to (7) and (8) gringo would generate the constraint:
+$$\#\mathit{EOSUM}\{ 1 : col(1,1) [1]\ \} >= 0.$$
+which would be unsatisfiable,
+since we have the constraint
+$$
+:- col(1,1).
+$$
+an no atom in part 1 is true.
+
+\begin{response}
+Thank you for pointing out this ambiguity. The intended interpretation is that \textsc{eosum} exploits EO groups that are explicitly declared in the input program and enforced by the solver's built-in propagator; it does not introduce the EO relations itself. We have now stated this well-formedness requirement explicitly and clarified the grounding of part identifiers. In Example 5.2, each ground value of $X$ identifies one EO group, which is defined by the first rule. 
+Consequently, the programs in the counterexample, which do not contain the required exactly-one constraint, are not well-formed uses of \textsc{eosum} as the added choice rule is not an exactly-one constraint.
+\end{response}
+
+
+\vspace{0.5cm}
+\revieweranswered
+Typos and minor comments:
+\begin{enumerate}
+    \item P.~3, L.~43: \texttt{unit} $\rightarrow$ \texttt{units}
+    
+    % \textcolor{red}{Fixed}
+    \item P.~4, L.~4: The concept of clause materialization has not been introduced; rephrase?
+    
+    % \textcolor{red}{Fixed}
+    \item P.~4, L.~26--28: ``However, \ldots{} specialist).'' $\rightarrow$ rephrase
+    % \textcolor{red}{Fixed}
+    \item P.~5, L.~40--42: The description refers to AMO semantics; either adapt it to EO or move them to L.~32.
+    % \textcolor{red}{Fixed}
+    \item P.~7, L.~15--16: In (8) and (9), add negations before the $p$'s in the bodies.
+    % \textcolor{red}{Fixed}
+    \item P.~7, L.~26: In $\sigma_1$, use $\sim x$ and $\sim y$ for the negations of $x$ and $y$, as in the previous rules.
+    % \textcolor{red}{Fixed}
+    \item P.~7, L.~52: \texttt{assignment}
+    % \textcolor{red}{Fixed}
+    \item P.~8, L.~17: $I \models r \rightarrow I \models B(r)$
+    % \textcolor{red}{Fixed}
+    \item P.~8, L.~23: The stable models of $\Pi_{run}$ are $\{z,y\}$ and $\{z,x\}$ (omitting negative literals and prime atoms).
+    % \textcolor{red}{Fixed}
+    \item P.~9, L.~53--54: ``contains more than one atom inferred from the branching point''. This concept is not introduced before; I suggest integrating it somehow in L.~29--30, where it says ``until the learned clauses results in the inclusion of \ldots{} branch''.
+    % \textcolor{red}{Fixed}
+    \item P.~10, L.~9: \texttt{textscsum}
+    % \textcolor{red}{Fixed}
+    \item P.~10, L.~9: \texttt{textscsum constraint}
+    % \textcolor{red}{Fixed}
+    \item P.~10, L.~36: ``say because'' $\rightarrow$ ``say''?
+    % \textcolor{red}{Rephrased}
+    \item P.~11: The authors may want to highlight those symbols (R1), (R2), and (R3) that are used everywhere throughout the paper, so that they are easier to locate.
+    \item P.~11, L.~50--52, (R3): The condition that no literal in $\operatorname{part}(l)$ is true is somehow implicit, but it could be required for some proof steps, I am not sure.
+    % \textcolor{red}{Fixed}
+    \item P.~14, L.~26: In the first condition of $mwh'_\sigma(I,s)$, replace $l'$ by $wh(l')$ to return a weight.
+    % \textcolor{red}{Fixed}.
+    \item P.~14, L.~38--39: The part ``we are no longer forced to infer a literal to true when it is the last undefined of its part'' could be interpreted as saying that in that case the new propagator does not infer such a literal $\rightarrow$ rephrase.
+    
+    % \textcolor{red}{Following the suggestion of Rev. 2, this section has been completely revised, so the sentence does not appear anymore.}
+    \item P.~14, L.~56: (26) should be (17).
+
+   % \textcolor{red}{ Following the suggestion of Rev. 2, this section has been completely revised, so the sentence does not appear anymore.}
+    \item P.~15: Usually, a corollary is a statement that follows from another theorem or proposition, but this is not the case for Corollaries 1--6.
+    \item P.~15, L.~11: $\sigma_5$ should be $\sigma_6$.
+    % \textcolor{red}{Fixed}.
+    \item P.~15, L.~15: \texttt{max} $\rightarrow$ \texttt{maximum}
+
+    % \textcolor{red}{No longer appears in the revised manuscript}
+    \item P.~15, L.~16: ``that is less of'' $\rightarrow$ ``less than''
+
+    % \textcolor{red}{No longer appears in the revised manuscript}
+    \item P.~15, L.~17: ``undefined in'' $\rightarrow$ ``undefined literal in''
+
+    % \textcolor{red}{Fixed}.
+    
+    \item P.~15, L.~29: Replace (16) by (17). 
+    % \textcolor{red}{No longer appears in the revised manuscript}
+    \item P.~15, L.~33: ``That is'' $\rightarrow$ add a comma.
+    % \textcolor{red}{No longer appears in the revised manuscript}
+    \item P.~15, L.~49: Replace (16) by (17).
+    % \textcolor{red}{No longer appears in the revised manuscript}
+    \item P.~16, L.~13: $I'(l) \rightarrow I(l)$
+    % \textcolor{red}{No longer appears in the revised manuscript}
+    \item P.~16, L.~21 and 24: What is $\operatorname{imp}(R,l)^l$?
+    % \textcolor{red}{Typo, fixed}.
+    \item P.~16, L.~30: Theorem 4.2 and Corollaries 3 and 4 can refer to $I$ instead of $I'$.
+    % \textcolor{red}{No longer appear in the revised manuscript}
+    \item P.~16, L.~32: ``for each \ldots{} then'' sounds strange to me.
+    % \textcolor{red}{No longer appears in the revised manuscript}
+    \item P.~16, L.~33: Rephrase first line: ``for each $l'\in lits$ then\ldots''
+    % \textcolor{red}{No longer appears in the revised manuscript}
+    \item P.~16, L.~37: \texttt{reason} $\rightarrow$ \texttt{proof}? or \texttt{reasoning}?
+    % \textcolor{red}{No longer appears in the revised manuscript}
+    \item P.~16, L.~39--41: In Corollaries 3 and 4, at some places $\overline{\ell}$ should be used instead of simply $\ell$.
+    % \textcolor{red}{No longer appears in the revised manuscript}
+    \item P.~16, L.~47: In Theorem 4.3, use $I$ instead of $I'$.
+    % \textcolor{red}{Fixed}
+    \item P.~17, L.~18: \texttt{result} $\rightarrow$ \texttt{results} and delete Line 25?
+
+    \item P.~17, L.~34: ``Minimization of the reason'' $\rightarrow$ ``reasons''
+    % \textcolor{red}{Rephrased}.
+    \item P.~17, L.~52--55: $\wedge$ and $\rightarrow$ as logical symbols have not been introduced. I suggest simplifying this paragraph since resolution is already introduced previously.
+    % \textcolor{red}{Fixed}.
+    \item P.~20, L.~39: (24), (19) $\rightarrow$ (24) or (19)
+   % \textcolor{red}{No longer appears in the revised manuscript}
+    \item P.~23, L.~39: ``It is possible to observe'' sounds a bit strange to me.
+    % \textcolor{red}{Fixed}.
+    \item P.~24, L.~13--19: These last sentences are a bit unclear to me $\rightarrow$ rephrase?
+    % \textcolor{red}{Fixed}.
+    \item P.~24, L.~42: In (34), should $\operatorname{conj}_i$ also belong to the body?
+    % \textcolor{red}{Fixed}.
+    \item P.~25, L.~12: \texttt{assumw}    
+    % \textcolor{red}{Fixed}.
+    \item P.~25, L.~16: \texttt{(b,4),}
+    % \textcolor{red}{Fixed}.
+    \item P.~25, L.~19: ``grounded program'' $\rightarrow$ ``ground''?
+    % \textcolor{red}{Rephrased}.
+    \item P.~25, L.~20 and the next one: The program should be grounded properly.
+    % \textcolor{red}{Fixed}.
+    \item P.~25, L.~48: \texttt{weigh} $\rightarrow$ \texttt{weight}
+    % \textcolor{red}{Fixed}.
+    \item P.~25, L.~51: ``If the mps(I)'' $\rightarrow$ ``If mps(I)''
+    % \textcolor{red}{Fixed}.
+    \item P.~26, L.~28: \texttt{amosum-lazy-p} $\rightarrow$ reformat
+    % \textcolor{red}{Fixed}
+    \item P.~27, L.~48: $C_2 = 5 * part\_size \ldots$ $\rightarrow$ $C_2 = 10 * part\_size \ldots$ ?
+    \item P.~28, L.~9: (K) $\rightarrow$ (KC)
+
+    % \textcolor{red}{Fixed}.
+    
+    \item P.~28, L.~12: ``it is possible'' $\rightarrow$ ``is it possible?''
+    % \textcolor{red}{Rephrased}.
+    \item P.~30: Is AMOWASP the same as AMOWASP-BASE-PY? If yes, I suggest using the same name. If not, please explain the difference.
+    % \textcolor{red}{Fixed}.
+    \item P.~37, top sentence: Seems to indicate that AMO constructs are always delegated to an internal propagator, but to my knowledge that only happens whenever they are complex.
+    % \textcolor{red}{Rephrased}.
+   
+\end{enumerate}
+
+\begin{response}
+    \begin{itemize}
+        \item Point 14: In the new version of the paper those symbols have been renamed.
+    However, we emphasized inference rules (RA), (RT) and (RF) in the current version of the paper.
+        \item Point 19: After revisiting the structure of the paper, the remaining Corollaries have been converted to theorems, each with its corresponding proof.
+        \item Point 35: Removed last line.
+         \item Point 49: Actually, the value is correct. $C_2$ is computed as 10 times the Gauss summation formula: $C_2 = 10 \cdot \frac{n(n+1)}{2},$ where $n = \textit{part\_size}$, i.e., $C_2$ is the maximal possible sum reachable by considering all literals in the aggregate set to be true.
+    \item All remaining points have been addressed. Note that some comments no longer apply to the revised manuscript, as Sections 3 and 4 have been substantially reorganized and revised.
+    \end{itemize}
+\end{response}
+
+\section{Response to Reviewer 2}
+
+\vspace{0.5cm}
+\revieweranswered
+While the paper presents interesting ideas for combining AMO constraints with SUM constraints, it lacks coherence and doesn't come accross one complete whole.
+Instead it feels more as the conference version of the paper, with extra sections added on top where certain concepts are redefined in a way that improves upon the way they were defined in the conference version. The better practice for the journal paper would in my opinion be to directly define the concepts in the more general (and intuitive!) way.
+Take for example section 3.2, where propagation for AMOSUM constraints is introduced in a cumbersome way and later, in section 4.1, propagation for AMOSUM constraints is introduced again in the obvious way, namely "if a literal put to the other value results in the constraint becoming unsatisfiable, the literal is propagated". This gives the feeling that the conference paper was doing something too cumbersome, and for the journal version, the authors found a more natural way of defining it, but instead of immediately defining propagation the right way, they decided to patch the cumbersome propagation in a different section which they then called "Enhanced propagation for AMOSUM", while in fact, the propagation as it is defined in this section is the more natural definition.
+
+On top of that, due to the re-introduction of propagation, notation needs to be overloaded and introduced again, while in essence, it keeps the same meaning; e.g., the notion of the maximum weight of a part given a partial interpretation is introduced twice with slightly different meaning, although the different definitions end up meaning the same thing. This is often unnecessarily confusing and results in many symbols with "primed versions" that are almost equal to the non-primed symbol.
+
+
+
+\begin{response}
+Thank you for this suggestion.
+We merged the previous Sections~3 and~4 into a single section that presents only the final version of our contribution. As a result, the intermediate ("prime") version has been removed, and the IJCAI version is now discussed only in the Related Work section.
+
+In particular, we applied the following changes:
+\begin{itemize}
+    \item We merged the previous Sections~3 and~4 into a single section presenting only the final version of our approach.
+    \item We created a new Section~4 dedicated exclusively to the minimization process.
+    \item We moved the discussion of the differences with the IJCAI version to the Related Work section.
+\end{itemize}
+\end{response}
+
+\vspace{0.5cm}
+\revieweranswered
+One thing that is missing in the paper is an analysis of consistency obtained by the propagation rules.
+My hypothesis is that the propagation rule in section 4.1, together with propagation rules (R1), (R3) from section 3.2 seem to be able to maintain domain consistency.
+In that sense, the paper feels to be incomplete.
+Moreover, I think that starting the paper from domain consistency could result in a much improved presentation.
+I could imagine the following story:
+\begin{enumerate}
+    \item  Obtaining domain consistency is the gold standard, it is best we can expect to propagate.
+    \item  Domain consistency would propagate a literal $lit$ in an assignment assg if the constraint is inconsistent in $ assg \cup lit$
+    \item The question of course is, how one can efficiently detect such literals. This would mean that we need notions such as "the max weight that can still be reached with/without this literal"
+    \item After defining these notions, we naturally obtain (R1), (R3), (R4)
+    \item We should then still of course prove that these rules indeed guarantee domain consistency
+    \item And, we then still need algorithms that actually find literals satisfying the rules
+\end{enumerate}
+I think rewriting in this way would seriously improve readability of the paper.
+
+
+\begin{response}
+We thank the reviewer for this suggestion. While we did not adopt the proposed narrative directly, we incorporated its underlying intuition into our presentation. In particular, we agree that the propagation rules can be understood as capturing a consistency-like notion, and we added a brief explanatory remark within our existing flow to make this connection more explicit.
+Moreover, we added Proposition 3.2, showing that exhaustive application of (RA), (RT), and (RF) establishes domain consistency for an individual \textsc{amosum} constraint under an AMO-consistent assignment. We also clarified that this characterization concerns the eager propagation rules; the lazy variants intentionally trade propagation completeness for reduced propagation overhead, and it does not constitute a claim about program-level stable-model reasoning.
+\end{response}
+
+
+\vspace{0.5cm}
+\revieweranswered
+Section 5.2 is incomplete. It defines new atoms to integrate the propagators, but doesn't explain how these new atoms are used. Moreover, the definition of these atoms is using choice rules. It is not clear to me what the point is (how they will be used later on and why choice rules make sense).
+
+\begin{response}
+Thank you for pointing this out; the need for choice rules was not sufficiently explained. We use choice rules since when the body of the \textsc{amosum} construct is undefined, a normal rule would leave the head atom undefined as well, allowing the solver to select auxiliary atoms as branching literals and thereby increasing the search space. To address this, we set these atoms to false during the initial preprocessing step of the propagator. However, with a normal rule, setting an auxiliary atom to false would propagate backwards and force the body to be false as well. Choice rules avoid this issue: setting the head atom to false does not constrain the body in any way, which is precisely why we need them.
+We updated the paper to clarify this decision.
+\end{response}
+
+\vspace{0.5cm}
+\revieweranswered 
+Similarly, section 4.4 is not clear: the minimization on the sum seems to still require quadratic work, similar to the Maximal Subset Sum algorithm. It would be nice to have an algorithm depicting the algorithm of minimization on the fly, in a similar way as the Maximal Subset Sum algorithm to allow for a better comparison.
+
+\begin{response}
+Thanks for pointing this out.
+We clarified why the on-the-fly minimization algorithm avoids an additional quadratic post-processing pass by integrating construction and minimization into one $O(n^2)$ procedure.
+Moreover, we now present Algorithm 3, which directly constructs a subset-minimal \(\sigma\)-reason. This procedure replaces the previous formula-based description and makes the computation of the subset-minimal reason fully explicit and operational.
+\end{response}
+
+\vspace{0.5cm}
+\revieweranswered 
+Minors:
+\begin{enumerate}
+    \item P.~7, L.~53: \texttt{satisfaction}
+    % \textcolor{red}{Fixed.}
+    \item P.~10, L.~56 (and other locations): Missing $\sigma$ with $\operatorname{part}$.
+    % \textcolor{red}{Fixed.}
+    \item P.~14, L.~27: $mwh'(I,s)$ should be $wh(l')$ instead of $l'$ if $l'$ is a true literal in $s$ under $I$.
+    % \textcolor{red}{Fixed.}
+    \item P.~14, L.~55: (26) should be (R2)?
+    % \textcolor{red}{Fixed.}
+    \item P.~14, L.~52: $rsn'$ is the same as $rsn$.
+    % \textcolor{red}{Fixed.}
+    \item P.~15, L.~52: $\neg l$ should be in a set, as union is only defined for sets.
+    % \textcolor{red}{Fixed.}
+    \item P.~18, L.~18: $l$ should be $l'$.
+    % \textcolor{red}{Fixed.}
+    \item P.~18, Theorem 4.4: $l$ should be negated.
+    \item P.~21, L.~56: Should be $l$ in the condition.
+    % \textcolor{red}{Fixed.}
+    \item P.~23, L.~34: This is \emph{not} the formulation using the ASP-Core-2 standard, as it uses the AMOSUM constraint.
+    % \textcolor{red}{Fixed.}
+    \item P.~24, (37): \texttt{group} does not contain a \texttt{part}.
+    % \textcolor{red}{Fixed.}
+    \item P.~25, L.~12: \texttt{assume}
+    % \textcolor{red}{Fixed.}
+    \item P.~25, L.~50: \texttt{group} = \texttt{part}
+    % \textcolor{red}{Fixed.}
+\end{enumerate}
+
+\begin{response}
+    All fixed. Note that some comments no longer apply to the revised manuscript, as Sections 3 and 4 have been substantially reorganized and revised.
+\end{response}
+
+\section{Response to Reviewer 3}
+
+\vspace{0.5cm}
+\revieweranswered
+Overall, the presentation is reasonably clear. The empirical analysis is handled well. On the other hand, Sections 3 and 4 suffer from very heavy notation. Maybe this can't be avoided, but the number of definitions and abbreviations which are introduced make it hard to evaluate the accuracy of the main theorems and their proofs.
+
+\begin{response}
+Thank you for this comment, which was also raised by the other reviewers.
+We merged the previous Sections~3 and~4 into a single section (Section~3) that presents only the final version of the propagation rules, namely (RA), (RT), and (RF).
+As a consequence, the intermediate ``primed'' notions (e.g., $\mwh'$ and $\mathit{rsn}'$) have been removed, together with the rules R2--R4 and the related corollaries, and the comparison with the IJCAI version has been moved to the Related Work section.
+Reason minimization is now presented separately, in Section~4.
+We also revised the proofs of the main theorems, fixing the errors pointed out by the other reviewers.
+\end{response}
+
+\vspace{0.5cm}
+\reviewertodo
+Usability: The article doesn't contain a compelling example showcasing that the base ASP encoding of AMOSUM constraints (which involves a collection of AMO constraints via the \#sum aggregate and a SUM constraint, also via the \#sum aggregate) is realistic/natural. For instance, in Example 1.2, the condition that ``x and y cannot be dispatched simultaneously'' is encoded as
+\begin{align*}
+    \text{:- } \#\mathit{sum}\{1,x : \mathit{dispatch}(x);\ 1,y : \mathit{dispatch}(y)\} > 1 \qquad (1)
+\end{align*}
+Summing tuples with weight 1 is more naturally encoded as a \#count, and in this case, it is much more direct to just write
+\begin{align*}
+    \text{:- } \mathit{dispatch}(x), \mathit{dispatch}(y). \qquad (2)
+\end{align*}
+While a simple introductory example is helpful, it would be much more convincing if the Introduction included an example where the use of \#sum aggregates didn't make the program more convoluted than necessary.
+
+\begin{response}
+\notanswered{Example~1.2 still uses the \#sum version (1).
+To do: in Example~1.2, write the \textsc{amo} in the natural way, i.e., the binary constraint (2), or, better, a choice rule with an upper bound per operator,
+$\{\mathit{dispatch}(U) : \mathit{unit}(U,C,O)\} \le 1 \text{ :- } \mathit{operator}(O).$,
+which is how the \textsc{amo} constraints are written in all our benchmarks; also adapt the sentence that introduces \textsc{amo} as a special case of \textsc{count}/\textsc{sum}.
+Then answer: thank you, we rewrote the example with the natural encoding; whatever syntax is used, the solver handles the \textsc{amo} with its own propagator, separately from the \textsc{sum}.}
+\end{response}
+
+\vspace{0.5cm}
+\revieweranswered
+The same issue arises in Example 5.1: why do we go out of our way writing
+$\{ \mathit{col}(X,C) : \mathit{colour}(C) \} \le 1 \text{ :- } \mathit{node}(X)$ + an AMOSUM constraint
+When we could write
+$\{ \mathit{col}(X,C) : \mathit{colour}(C) \} = 1 \text{ :- } \mathit{node}(X)$ + an standard SUM constraint
+
+\begin{response}
+Thank you for this comment; the motivation of Example~5.1 was not clear.
+The two programs model different problems: Example~5.1 now explicitly considers a \emph{partial} weighted variant of graph coloring, in which each node can be assigned at most one color but may also remain uncolored, so an exactly-one constraint is not a correct model of it.
+The variant in which every node must be colored is the one of Example~5.2, which uses the choice rule with ``$= 1$'' suggested by the reviewer, and the \textsc{eosum} construct in place of the standard \textsc{sum} constraint.
+In both cases, the \textsc{amo} (resp.\ \textsc{eo}) relation is written with the usual choice rule, and the only difference from the plain ASP encoding is that the \textsc{sum} constraint is replaced by an \textsc{amosum} (resp.\ \textsc{eosum}) constraint.
+\end{response}
+
+\vspace{0.5cm}
+\revieweranswered
+This issue weakens the argument made by Section 6. That section reports that programs encoded in base ASP in the style of examples 1.2 and 1.5 are solved more slowly than programs encoded with AMOSUM constraints + new propagators. But if your standard ASP practitioner would sooner write constraint (2) rather than (1), what does outperforming (1) tell us? This issue could be resolved by including an example which truly requires AMO constraints based on \#sum, rather than just supporting the possibility of being written in that manner.
+
+\begin{response}
+We thank the reviewer for raising this point; the description of the baseline encodings was not clear enough.
+None of the plain encodings used in Section~6 expresses \textsc{amo} constraints through \#sum aggregates: they use the encodings that an ASP practitioner would naturally write.
+More specifically, the \textsc{amo} (resp.\ \textsc{eo}) relations are expressed by choice rules with an upper bound of the form $\{ \ldots \} \le 1$ (resp.\ $\{ \ldots \} = 1$) in WGC, KS, GA, NS, and TSP (where, in addition, the incoming edges of a city are constrained by binary constraints), and by binary constraints of the form (2) in CA, while the weighted condition is expressed by a single standard \#sum constraint.
+The \textsc{amosum} encodings differ from the plain ones \emph{only} in the replacement of this \#sum constraint with the corresponding \textsc{amosum} (or \textsc{eosum}) constraint.
+Therefore, the experiments compare our propagators with the natural encodings, which \textsc{clingo} and \textsc{wasp} handle with their built-in (and highly optimized) \textsc{amo} and \textsc{sum} propagators.
+
+\notanswered{To do in the paper: state this explicitly in Section~6 (e.g., in Section~6.1 or in the experimental settings), possibly reporting the plain and the \textsc{amosum} encoding of one benchmark. Double-check the NS encoding before sending the answer.}
+\end{response}
+
+\vspace{0.5cm}
+\reviewertodo
+Beyond that, it seems that these constructs broaden the gap between ``ASP as an off-the-shelf technology that anyone can use effectively,'' and ``ASP as a tool that only select insiders can use effectively.'' A deeper discussion of how straightforward/natural ASP programs can be re-written using AMOSUM constraints to improve performance would be helpful to bridge this gap.
+
+\begin{response}
+\notanswered{The paper has no such discussion.
+To do: add a short paragraph (e.g., at the end of Section~5.1, ``ASP construct'') describing the rewriting pattern: a program containing a choice rule $\{ a(X,Y) : d(Y) \} \le 1 \text{ :- } g(X)$ (resp.\ $= 1$) and a constraint $\text{:- } \#\mathit{sum}\{ W,X : a(X,Y), w(Y,W)\} < B$ over the same atoms is rewritten by replacing only the \#sum constraint with $\#\textsc{amosum}\{ W : a(X,Y), w(Y,W)\ [X]\} \ge B$ (resp.\ $\#\textsc{eosum}$), where the part annotation is the variable that identifies the group of the choice rule; the rest of the program is unchanged.
+Then answer: the construct requires the user only to annotate each element with the identifier of its \textsc{amo} group, which is already explicit in the program; mention as future work the automatic detection of this pattern in plain programs (e.g., at grounding time, along the lines of the automatic detection of \textsc{amo}/\textsc{eo} relations by Ans\'otegui et al.\ 2019, already cited in the Related Work), so that the user does not need to write the construct at all.}
+\end{response}
+
+\vspace{0.5cm}
+\revieweranswered
+A strange thing is that some Corollaries (e.g. 1 and 2) are supported by proofs, whereas others (e.g. 3 and 4) are said to follow directly from preceding results. Corollaries requiring a serious proof should probably be theorems in their own right.
+
+\begin{response}
+Thank you for pointing this out (a similar comment was raised by Reviewer~1).
+After the reorganization of Sections~3 and~4, the revised manuscript no longer contains corollaries: the original Corollary~1 and Corollaries~3 and~4 have been removed, while the remaining ones (e.g., the original Corollary~2, now Theorem~3.4) have been converted into theorems, each with its own proof.
+\end{response}
+
+\vspace{0.5cm}
+\reviewertodo
+In the empirical analysis section, ``avoiding conflicts'' is positioned as an important criteria, but it is not clearly explained why this is so important. For readers unfamiliar with solvers, this is very confusing.
+
+\begin{response}
+\notanswered{The paper still does not explain it.
+To do: in Section~6.3 (synthetic benchmark), where the number of conflicts is introduced as the measure, add a sentence like: ``In CDCL solvers, a conflict occurs whenever the current branch of the search cannot be extended to a solution, so that the solver has to learn a clause and backtrack; the number of conflicts therefore measures the part of the search space that is explored in vain, and it is a measure of the search effort that does not depend on the implementation of the propagators. An instance solved without conflicts is solved by propagation alone, without backtracking.'' Point to Section~2.3, where conflicts are defined.
+Then answer: thank you, we added this explanation.}
+\end{response}
+
+\vspace{0.5cm}
+\reviewertodo
+In the conclusions section, the authors specifically point to the effectiveness of AMOSUM constraints in the nurse scheduling problem. This is surprising, since the benchmarks report ties, marginal gains, or degradation in performance compared to base solvers. Certainly the NS problem seems to be the problem least positively impacted by the propagators in Tables 5 and 6 -- why was it singled out in the conclusions?
+
+\begin{response}
+\notanswered{The sentence is still in the Conclusion (``In this work, we have already demonstrated their effectiveness in the context of nurse scheduling \ldots''), while Section~6 now says that NS is the only benchmark where plain \textsc{clingo} is the best.
+To do: rewrite that paragraph, e.g., ``In this work, we have already demonstrated their effectiveness on several problems inspired by real-world applications, such as group assignment, combinatorial auctions, and the traveling salesman problem; on the other hand, nurse scheduling remains a challenging domain, where plain \textsc{clingo} still performs best, and a deeper analysis of this case is left for future work.''
+Then answer: the reviewer is right, that sentence was a leftover of an earlier version; we rewrote it according to the current results.}
+\end{response}
+
+\vspace{0.5cm}
+\reviewertodo
+Theorem 3.2: specify the L and L' that act as witnesses. Under what conditions is ``$L' \supseteq L$ is not guaranteed''?
+
+\begin{response}
+\notanswered{The proof of Theorem~3.2 (now \texttt{thm:inferences}) still only says that a witness is given in Example~3.x, without naming it, and there is no statement about when the two sets coincide.
+To do: in the proof, add ``For example, consider $\sigma_4$ of Example~3.x and $I = [\overline{w}]$: (RT) infers $z$, while the \textsc{sum} constraint infers nothing, that is, $L = \{z\}$ and $L' = \emptyset$.''; after the theorem, add a remark: ``If every part of $\sigma$ is a singleton, $\mwh_\sigma(J,s) = w \cdot J^\uparrow(\ell)$ for the unique $(w : \ell\ [s]) \in \sigma$, so (RT) and the \textsc{sum} inference coincide and $L = L'$. The inclusion can be strict only if some part contains at least two literals, because only then the \textsc{amo} relation lowers the maximum contribution of a part.''
+Then answer with the witness and the condition above.}
+\end{response}
+
+\vspace{0.5cm}
+\reviewertodo
+Page 27: how does the synthetic benchmark assess the properties of section 3.3? which properties?
+
+\begin{response}
+\notanswered{Section~6.1 still says ``designed to empirically assess the properties discussed in Section~3.3'' without naming them (the results paragraph only cites Theorem~3.2).
+To do: name them in Section~6.1: Theorem~3.2 ((RT) infers strictly more literals than the \textsc{sum} propagator) and the (RF) inferences; explain that with an unachievable bound $\mps_\sigma([\,]) = C_1 <$ bound, so \textsc{amosum} detects the inconsistency at the root, while the \textsc{sum} propagator only sees the bound $C_2$ and has to search, and that with an achievable bound the partition makes the \textsc{amo} relations essential for propagation.
+Then answer: we clarified which properties the synthetic benchmark assesses.}
+\end{response}
+
+\vspace{0.5cm}
+\revieweranswered
+Typos and minor comments:
+\begin{enumerate}
+    \item Example 1.1: ``dispatch unit'' $\rightarrow$ ``dispatch a unit''
+    \item Page 7: ``assignemt''
+    \item Page 9: ``branching literal'' is undefined
+    \item Page 10: ``textscsum''
+    \item Page 11: ``relation is model of'' $\rightarrow$ ``relation $\models$''?
+    \item Page 11: ``could had increased'' $\rightarrow$ ``could have increased''
+    \item Page 14: ``assuming l true'' $\rightarrow$ ``assuming l is true''
+    \item Page 14: ``differently from (26)'' -- equation 26 appears on page 17
+    \item Page 15: ``an interpretations I'' $\rightarrow$ ``an interpretation I''
+    \item Page 20: ``ci increases of'' $\rightarrow$ ``ci increases by''
+    \item Page 21, line 15: increment contributes, maybe?
+    \item Page 22, line 37: ``I' represent the'' $\rightarrow$ ``I' represents the''
+    \item Page 25: ``highest weigh'' $\rightarrow$ ``highest weight''
+    \item Page 26, line 38: the word ``reaches'' is confusing, since the bound $\bnd_\sigma$ is not changing, right?
+\end{enumerate}
+
+\begin{response}
+    Thank you, all fixed. In particular:
+    \begin{itemize}
+        \item Point 3: branching literals are now introduced in the Introduction and in Section~2.3, where the CDCL algorithm is described.
+        \item Points 8, 11, and 12: the corresponding sentences no longer appear in the revised manuscript, as Sections~3 and~4 have been substantially reorganized and revised.
+    \end{itemize}
+    \notanswered{Still to fix in the paper:
+    point 5, Section~3.1 still says ``Regarding the relation \emph{is model of}'' (write ``Regarding the relation $\models$'');
+    point 7, Section~3.2 still says ``assuming $\ell$ true'' (write ``assuming $\ell$ is true'');
+    point 14, Section~5.4 still says ``when the bound $\bnd_\sigma$ reaches at least 70\% of the current maximum possible sum'': the bound is fixed and it is the maximum possible sum that decreases during the search, so write ``when the bound $\bnd_\sigma$ is at least 70\% of the current maximum possible sum, that is, once the maximum possible sum has decreased to at most $\bnd_\sigma / 0.7$''; then answer point 14 with ``Yes, the bound does not change; we rephrased the sentence''.}
+\end{response}
+
+\end{document}

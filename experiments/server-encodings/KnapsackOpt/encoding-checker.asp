@@ -1,0 +1,1 @@
+#maximize{V*VALUE,X: in_knapsack(X,V), object(X,_,VALUE)}.
