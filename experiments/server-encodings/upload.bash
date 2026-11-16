@@ -1,7 +1,13 @@
 #!/bin/bash
 cd "$(dirname "$0")" || exit 1
 SERVER_BENCHDIR=clown:/home/mazzotta/Experiments/instances/
-BENCHS=(GroupAssignmentOpt CombinatorialAuctionsOpt KnapsackOpt TspOpt GraphColouringOpt WOD)
+
+AMOSUM_BENCHS=(CombinatorialAuctions GraphColouring GroupAssignment Knapsack Nurse TspDecisional)
+# amomaximize (optimization) benchmarks
+AMOMAXIMIZE_BENCHS=(GroupAssignmentOpt CombinatorialAuctionsOpt KnapsackOpt TspOpt GraphColouringOpt WOD)
+
+BENCHS=("${AMOMAXIMIZE_BENCHS[@]}")
+BENCHS+=("${AMOSUM_BENCHS[@]}")
 
 includes=()
 for i in "${BENCHS[@]}"; do

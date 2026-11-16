@@ -5,6 +5,8 @@ __pycache__/
 
 .*
 
+review
+
 # C extensions
 *.so
 

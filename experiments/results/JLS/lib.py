@@ -16,8 +16,8 @@ XLSX_DIR = HERE / "results_xlsx"
 # columns of the TSV files (no header line; the last tab is followed by nothing)
 TSV_HEADER = ["execid", "benchmark", "instance", "executable", "output", "status", "exit_code",
               "real", "time", "user", "system", "memory", "problem", "cost", "_empty"]
-KEY = ["benchmark", "instance"]                     # an instance
-RUN = KEY + ["executable"]                          # a run
+KEY = ["bench", "instance"]                         # an instance (bench: the short name, the same across renamings)
+RUN = KEY + ["solver"]    
 
 EXIT_OPTIMUM = 30                                   # clingo/amoclingo: optimum found (and proven)
 
@@ -109,6 +109,17 @@ def clean(df: pd.DataFrame, dedup: bool = True) -> pd.DataFrame:
     """Types, solver/benchmark/family names; duplicated runs (same benchmark, instance, executable) keep the last one:
     a rerun is appended after the run it replaces (e.g. 2026-11-10: amo-ijca on WGC, the first run had 10 s timeouts)."""
     df = df.copy()
+
+    def extract_date(exec_id: pd.Series):
+        return pd.to_datetime(exec_id.str.extract(r"(\d{4}-\d{2}-\d{2}-\d{2}-\d{2}).*")[0], format="%Y-%m-%d-%H-%M")
+    df = df.assign(_date=extract_date(df["execid"])).sort_values("_date", kind="stable")
+
+    cost = pd.to_numeric(df["cost"].astype(str).str.replace(",", ""), errors="coerce")
+    
+    df["solver"] = df["executable"].map(solver_name)
+    df["bench"] = df["benchmark"].map(lambda b: BENCHMARK_NAMES.get(b, b))
+    df["family"] = [_family(b, i) for b, i in zip(df["benchmark"], df["instance"])]
+    
     if dedup:
         dup = df.duplicated(subset=RUN, keep=False)
         if dup.any():
@@ -119,11 +130,8 @@ def clean(df: pd.DataFrame, dedup: bool = True) -> pd.DataFrame:
         df[c] = pd.to_numeric(df[c].astype(str).str.replace(",", ""), errors="coerce")
     df["exit_code"] = df["exit_code"].astype(int)
     # cost only when a model was found ("Decision": no model)
-    cost = pd.to_numeric(df["cost"].astype(str).str.replace(",", ""), errors="coerce")
     df["cost"] = cost.where(df["problem"] == "Optimization")
-    df["solver"] = df["executable"].map(solver_name)
-    df["bench"] = df["benchmark"].map(lambda b: BENCHMARK_NAMES.get(b, b))
-    df["family"] = [_family(b, i) for b, i in zip(df["benchmark"], df["instance"])]
+    df.drop(columns="_date", inplace=True)
     return df.reset_index(drop=True)
 
 
