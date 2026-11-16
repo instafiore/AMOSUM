@@ -235,7 +235,7 @@ run_benchmark() {
 }
 
 # benchs="CombinatorialAuctionsAmomaximize|KnapsackAmomaximize|TSP|WeightedGraphColouringAmomaximize|WOD"
-benchs="CombinatorialAuctionsOpt"
+benchs="GroupAssignmentOpt"
 solvers='./(amoclingo.*opt=su|clingo-amo)'
 # run_benchmark "$benchs" "Lite" "$solvers"
 run_benchmark "$benchs" "Normal" "$solvers"

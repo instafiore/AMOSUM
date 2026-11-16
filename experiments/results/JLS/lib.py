@@ -57,8 +57,8 @@ FAMILY_REGEX = {
 # --------------------------------------------------------------------------------------------------------------------
 
 def solver_name(executable: str) -> str:
-    """amoclingo-reas=ijca-lazy=fals-prog=1-opt=su -> amo[ijca,lazy=fals,prog=1,opt=su]; clingo-plain-* -> clingo"""
-    if executable.startswith("clingo-plain"):
+    """amoclingo-reas=ijca-lazy=fals-prog=1-opt=su -> amo[ijca,lazy=fals,prog=1,opt=su]; clingo-* -> clingo"""
+    if executable.startswith("clingo"):
         return "clingo"
     m = re.match(r"^amoclingo-(.*)$", executable)
     if not m:
