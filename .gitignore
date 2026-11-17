@@ -193,3 +193,6 @@ vscode
 
 
 *.stats
+
+# the result extractors ("output" contains "out")
+!scripts/extract_output_*.py
