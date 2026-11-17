@@ -5,6 +5,7 @@
 \setbeamertemplate{footline}[frame number]
 \usepackage[T1]{fontenc}
 \usepackage{lmodern}
+\usepackage{nicefrac}
 \usepackage{amsmath,amssymb}
 \usepackage{listings}
 \usepackage{tikz}
@@ -371,7 +372,208 @@ $\lambda$ & $\lambda C$ & $\sum\max(0,\cdot)$ & $L(\lambda)$ & $< 22$?\\\midrule
 \end{itemize}
 \end{frame}
 
-\begin{frame}[fragile]{Option 3, step 5: from the toy to the benchmark}
+\begin{frame}{Option 3, step 5: what $\lambda$ is}
+\scriptsize
+\begin{columns}[T]
+\begin{column}{.52\textwidth}
+\textbf{The classical Lagrangian} of $\max \sum_i p_i x_i$ s.t.\ $\sum_i w_i x_i \le C$:
+\[
+L(\lambda) = \max_{x}\ \Big[\sum_i p_i x_i - \lambda\Big(\sum_i w_i x_i - C\Big)\Big],\quad \lambda\ge0 .
+\]
+\begin{itemize}\setlength\itemsep{1pt}
+\item Over capacity: you \textbf{pay} $\lambda$ per unit too many.
+\item Under capacity: you \textbf{earn} $\lambda$ per unused unit.
+\item On every feasible $x$ the penalty term is $\ge 0$, so $L(\lambda) \ge$ the true optimum: an \textbf{upper bound}.
+\end{itemize}
+\textbf{Our question is feasibility}: is that optimum $\ge K$? Require the Lagrangian to reach $K$:
+\[
+\begin{aligned}
+&\textstyle\sum_i p_i x_i - \lambda\big(\sum_i w_i x_i - C\big) \ge K\\
+\iff\ &\textstyle\sum_i (p_i - \lambda w_i)\,x_i \ge K - \lambda C,
+\end{aligned}
+\]
+i.e.\ \textbf{the merged constraint of step 3}: an upper bound and, at the same time, an implied constraint a propagator can use.
+\end{column}
+\begin{column}{.45\textwidth}
+\textbf{$\lambda$ = the price of one unit of capacity} (shadow price, dual variable). At the best $\lambda$ it is the
+\textbf{marginal value of capacity}: what one more unit adds to the LP optimum.
+\begin{center}
+\begin{tabular}{ccc}\toprule
+$C$ & Dantzig & LP value\\\midrule
+6 & $17 + \nicefrac14\cdot 8$ & 19\\
+7 & $17 + \nicefrac24\cdot 8$ & 21\\
+8 & $17 + \nicefrac34\cdot 8$ & 23\\\bottomrule
+\end{tabular}
+\end{center}
+Each unit is worth $2$ $=$ the ratio of the critical item $=$ the best $\lambda$.\\[2mm]
+\textbf{No side is special}: dividing by $\lambda$ gives
+$\tfrac1\lambda \sum_i p_i x_i - \sum_i w_i x_i \ge \tfrac{K}{\lambda} - C$, the same inequality with the \emph{value}
+priced at $\frac1\lambda$. Which constraint is ``the objective'' does not matter, hence every \texttt{\#jointsum}
+statement is both target and side constraint.
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Option 3, step 6: an AMO is a capacity too}
+\footnotesize
+An AMO $\sum_{i\in G} x_i \le 1$ is a knapsack where \textbf{every literal costs 1 and the capacity is 1}. Give it a price
+$\mu_G$, exactly like $\lambda$. For one group with weights $p_1 \ge p_2 \ge \dots$:
+\[
+L_G(\mu) \;=\; \mu\cdot 1 \;+\; \sum_{i\in G} \max(0,\ p_i - \mu), \qquad \text{slope} = 1 - \#\{i : p_i > \mu\}.
+\]
+\begin{columns}[T]
+\begin{column}{.5\textwidth}
+\begin{itemize}\setlength\itemsep{2pt}
+\item $\mu < p_2$: at least two weights above $\mu$, slope $\le -1$, $L_G$ decreases.
+\item $p_2 \le \mu \le p_1$: only $p_1$ above, slope $0$, $L_G = \mu + (p_1 - \mu) = \mathbf{p_1}$.
+\item $\mu > p_1$: none above, slope $+1$, $L_G$ increases.
+\end{itemize}
+\vspace{1mm}
+So $\min_\mu L_G = p_1$, \textbf{the max weight}, reached for \textbf{every $\mu \in [p_2, p_1]$}.
+\end{column}
+\begin{column}{.48\textwidth}
+\centering
+Group $[a] = \{a_1{:}8,\ a_2{:}16\}$:\\[1mm]
+\begin{tabular}{c|ccccc}
+$\mu$ & 0 & 8 & 12 & 16 & 20\\\hline
+$L_a(\mu)$ & 24 & 16 & 16 & 16 & 20
+\end{tabular}\\[2mm]
+\begin{tikzpicture}[x=2.4mm,y=1.1mm]
+  \draw[-{Stealth}] (0,10) -- (23,10) node[below left]{\scriptsize $\mu$};
+  \draw[-{Stealth}] (0,10) -- (0,27) node[left]{\scriptsize $L_a$};
+  \foreach \x in {0,8,16,20} \draw (\x,10) -- (\x,9.5) node[below]{\tiny\x};
+  \foreach \y in {16,24} \draw (0,\y) -- (-0.4,\y) node[left]{\tiny\y};
+  \fill[new!20] (8,10) rectangle (16,16);
+  \draw[ultra thick, acc] (0,24) -- (8,16) -- (16,16) -- (21,21);
+  \node[new] at (12,13) {\tiny $[p_2,p_1]$};
+\end{tikzpicture}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Option 3, step 6 (cont.): why the price of an AMO is the max weight}
+\footnotesize
+The same three views we used for $\lambda$, on the AMO knapsack (cost 1 per literal, capacity 1):
+\begin{itemize}\setlength\itemsep{4pt}
+\item \textbf{Dantzig}: the ratio of literal $i$ is $p_i / 1 = p_i$. Greedy takes the best literal ($p_1$), which fills the
+  capacity \emph{exactly}; the critical item is the second best ($p_2$). The LP optimum is $p_1$, and with an exact fit
+  any price between the next ratio and the last ratio taken is optimal: $\mu \in [p_2, p_1]$.
+  \emph{(Same as the toy knapsack: with $C = 5$ items 1 and 2 fit exactly, and every $\lambda \in [2,3]$ is optimal.)}
+\item \textbf{Shadow price}: one unit \emph{less} capacity (no literal allowed) loses $p_1$; one unit \emph{more} (two
+  literals allowed) gains $p_2$. The value of the unit is between them.
+\item \textbf{Penalty}: with $\mu = p_1$, taking any literal pays exactly what it is worth or more, so the best is to take
+  nothing and cash the bonus $\mu\cdot 1 = p_1$; with $\mu < p_2$ two literals would be worth taking, and the bound is loose.
+\end{itemize}
+\vspace{2mm}
+\begin{block}{amosum's mps is a Lagrangian bound}
+Summing over the groups: $\displaystyle\sum_G \min_{\mu_G} L_G(\mu_G) = \sum_G \max_{i\in G} p_i = \textbf{mps}$.
+amosum already computes the LP bound of ``target $+$ its AMO constraints'', with one price per group.
+\end{block}
+\end{frame}
+
+\begin{frame}{Option 3, step 7: the two ends of $[p_2, p_1]$ are amosum's two rules}
+\scriptsize
+Value $\ge K$ with $[a] = \{a_1{:}8,\ a_2{:}16\}$, $[b] = \{b_1{:}9,\ b_2{:}18\}$ (used again in the next slides).
+Merging each AMO with its price $\mu_G$:
+\[
+\sum_G \sum_{i\in G} (p_i - \mu_G)\,x_i \;\ge\; K - \sum_G \mu_G .
+\]
+\textbf{Conflict}: for any $\mu_G \in [p_2, p_1]$ the max left side is $\sum_G (p_1 - \mu_G)$, so the check reads
+$\text{mps} < K$. With $K = 35$: $34 < 35$, conflict, as in amosum.\\[1mm]
+\textbf{Propagation}, $K = 30$ (amosum: mps 34, slack 4). Both ends give the same bound; each shows one rule directly:\\[1mm]
+\begin{columns}[T]
+\begin{column}{.49\textwidth}
+\textcolor{acc}{\textbf{$\mu_G = p_1$ (max)}}: $\mu_a = 16$, $\mu_b = 18$
+\[
+-8a_1 + 0a_2 - 9b_1 + 0b_2 \;\ge\; 30 - 34 = -4
+\]
+Max left side 0, slack 4. Setting $a_1$ costs 8, $b_1$ costs 9, both $> 4$:
+\textbf{$\neg a_1$, $\neg b_1$}, amosum's ``lighter literals are false''.
+\end{column}
+\begin{column}{.49\textwidth}
+\textcolor{acc}{\textbf{$\mu_G = p_2$ (second max)}}: $\mu_a = 8$, $\mu_b = 9$
+\[
+0a_1 + 8a_2 + 0b_1 + 9b_2 \;\ge\; 30 - 17 = 13
+\]
+Max left side 17, slack 4. Without $a_2$: $9 < 13$; without $b_2$: $8 < 13$:
+\textbf{$a_2$, $b_2$}, amosum's ``the max must be true''.
+\end{column}
+\end{columns}
+\vspace{2mm}
+\textbf{So}: amosum $=$ Lagrange on the AMO constraints, with $\mu_G$ anywhere in [second max, max] of its group, re-priced as
+literals are assigned. \texttt{\#jointsum} keeps these prices and \textbf{adds one more price $\lambda$} for the capacity (next slides).
+\end{frame}
+
+\begin{frame}[fragile]{Option 3, step 8: add AMO groups, i.e.\ the \texttt{\#amosum} case}
+\footnotesize
+Same idea as the benchmark: an item can be taken \textbf{0, 1 or 2 times}. Literal $a_V$ = ``item $a$ taken $V$ times'',
+and at most one $a_V$ per item (\textbf{AMO group} $[a]$). Two items: $a$ ($w{=}2$, $p{=}8$) and $b$ ($w{=}3$, $p{=}9$).
+\begin{columns}[T]
+\begin{column}{.5\textwidth}
+\begin{center}
+\begin{tabular}{ccrrr}\toprule
+group & literal & weight & value & $p - 3w$\\\midrule
+$[a]$ & $a_1$ & 2 & 8 & 2\\
+      & $a_2$ & 4 & 16 & 4\\
+$[b]$ & $b_1$ & 3 & 9 & 0\\
+      & $b_2$ & 6 & 18 & 0\\\bottomrule
+\end{tabular}
+\end{center}
+\begin{lstlisting}
+#amosum{ V*P,X : in(X,V), obj(X,_,P) [X] } >= 26.
+#sum{ V*W,X,V : in(X,V), obj(X,W,_) } <= 7.
+\end{lstlisting}
+\end{column}
+\begin{column}{.48\textwidth}
+\begin{itemize}\setlength\itemsep{2pt}
+\item \textbf{What amosum sees today}: the value constraint alone, with mps $= \max(8,16) + \max(9,18) = 34 \ge 26$.
+  No conflict, nothing propagated.
+\item \textbf{The truth}: within capacity 7 the best is $a_2 + b_1$: weight 7, value $25 < 26$, so \textbf{UNSAT}.
+\item \textbf{Dantzig} over single copies: $a$, $a$ (ratio 4, weight 4, value 16), then $b$ (ratio 3, weight 3, value 9),
+  capacity 0. LP $= 25 < 26$. The critical item is the second copy of $b$, so $\lambda = 3$.
+\end{itemize}
+\end{column}
+\end{columns}
+\vspace{1mm}
+(Here $V$ copies cost $V w$ and give $V p$, so each group is a straight line. Groups with arbitrary options need the hull, Part III.)
+\end{frame}
+
+\begin{frame}{Option 3, step 9: the merged constraint \emph{is} an \texttt{\#amosum}}
+\footnotesize
+Merge with $\lambda = 3$ as in step 3: weight $p - 3w$ per literal, \textbf{same groups}, bound $26 - 3\cdot 7 = 5$:
+\[
+\#\texttt{amosum}\{\,2: a_1;\ 4: a_2\ [a];\quad 0: b_1;\ 0: b_2\ [b]\,\} \;\ge\; 5 .
+\]
+\begin{columns}[T]
+\begin{column}{.5\textwidth}
+\textbf{Which aggregate checks it?}
+\begin{itemize}\setlength\itemsep{2pt}
+\item \texttt{\#sum} ignores the AMO: its max takes $a_1$ \emph{and} $a_2$, $2+4 = 6 \ge 5$. \textbf{No conflict}.
+\item \texttt{\#amosum} knows the AMO: mps $= \max(2,4) + \max(0,0) = 4 < 5$. \textbf{Conflict}, i.e.\ UNSAT at the root.
+\end{itemize}
+\textbf{Propagation} (take $K = 25$, bound $4$, slack 0):
+amosum's rule ``the max of a group must be true'' gives $a_2$ (without it mps $= 2 < 4$). Then capacity removes $b_2$
+($4+6 > 7$) and value needs $b_1$: the optimum $a_2 + b_1$, found with \textbf{no choice}. Today's amosum (mps 34) derives nothing.
+\end{column}
+\begin{column}{.48\textwidth}
+\begin{block}{The connection}
+For every $\lambda \ge 0$:
+\[
+L(\lambda) \;=\; \lambda C \;+\; \text{mps}_\lambda,
+\]
+where $\text{mps}_\lambda$ is \textbf{amosum's mps on the weights $p - \lambda w$}.
+\begin{itemize}\setlength\itemsep{1pt}
+\item $\lambda = 0$: $L(0) = \text{mps}_0 = 34$, exactly \textbf{today's amosum}.
+\item $\lambda = 3$: $L(3) = 21 + 4 = 25$, the LP.
+\end{itemize}
+So \texttt{\#jointsum} $=$ amosum whose weights are \textbf{re-priced by the capacity} with the best $\lambda$, recomputed at
+every node; same groups, same mps, same propagation rules.
+\end{block}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Option 3, step 10: from the toy to the benchmark}
 \footnotesize
 \textbf{Integers}: $\lambda = r_c = p_c / w_c = N/D$ is a fraction. Multiply the merged constraint by $D$:
 \[
@@ -385,7 +587,7 @@ coefficient $V\!\cdot c_X$, with $c_X = D p_X - N w_X$).
 \begin{lstlisting}
 #sum{ V*C,X,V : in_knapsack(X,V), ... }
 \end{lstlisting}
-\texttt{\#sum} doesn't know the AMO, so its largest left side takes $V{=}1,2,3$ together: $c+2c+3c = 6c$, not $3c$.
+As in step 9, \texttt{\#sum} doesn't know the AMO, so its largest left side takes $V{=}1,2,3$ together: $c+2c+3c = 6c$, not $3c$.
 For 20 copies: $210c$ instead of $20c$. The bound is too weak and clingo does not refute (60\,s timeout).
 \end{column}
 \begin{column}{.48\textwidth}
@@ -400,7 +602,7 @@ The largest left side is now $20\,c_X^{+}$ per item, the true one, so the root c
 \texttt{lagr.py} runs Dantzig with 20 copies per item, finds the critical item and prints \texttt{lagr(N,D)}.
 \end{frame}
 
-\begin{frame}[fragile]{Option 3, step 6: the aggregate and the results}
+\begin{frame}[fragile]{Option 3, step 11: the aggregate and the results}
 \footnotesize
 \file{experiments/jointsum/motivating\_example/encoding-plain-amo-lagr.asp} (added to the plain encoding):
 \begin{lstlisting}
