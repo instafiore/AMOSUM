@@ -64,7 +64,7 @@ def solver_name(executable: str) -> str:
     if not m:
         return executable
     opts = dict(kv.split("=", 1) for kv in m.group(1).split("-") if "=" in kv)
-    name = "amo-" + opts.get("reas", "?")
+    name = "amomaximize-" + opts.get("reas", "?")
     if opts.get("lazy", "fals").startswith("t"):
         name += "-lazy"
     if opts.get("prog", "1") != "1":                # progression, default 1
