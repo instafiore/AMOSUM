@@ -148,16 +148,16 @@ def _family(benchmark: str, instance: str) -> str:
 def add_metrics(df: pd.DataFrame) -> pd.DataFrame:
     """Maximization, over the solvers in df:
     - optimum: the solver proved the optimum (exit code 30)
-    - best:    the best cost of the instance among the solvers
+    - best:    the best cost of the instance among the solvers (NaN if no solver found a model)
     - win:     the solver found the best cost
-    - score:   cost / best in [0, 1]; 0 without a model
+    - score:   (cost + 1) / (best + 1) in [0, 1] (the +1 handles best = 0); 0 without a model
     """
     df = df.copy()
     df["solved"] = df["cost"].notna()
     df["optimum"] = df["exit_code"] == EXIT_OPTIMUM
     df["best"] = df.groupby(KEY)["cost"].transform("max")
     df["win"] = df["solved"] & (df["cost"] == df["best"])
-    score = (df["cost"] / df["best"]).where(df["best"] > 0, (df["cost"] == df["best"]).astype(float))
+    score = (df["cost"] + 1) / (df["best"] + 1)
     df["score"] = score.fillna(0.0)
     return df
 
