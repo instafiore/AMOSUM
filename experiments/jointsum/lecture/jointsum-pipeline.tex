@@ -414,6 +414,59 @@ statement is both target and side constraint.
 \end{columns}
 \end{frame}
 
+\begin{frame}{Option 3, step 5 (cont.): $\lambda$ is what one more unit of capacity is worth}
+\scriptsize
+\begin{columns}[T]
+\begin{column}{.5\textwidth}
+\textbf{Experiment}: keep the toy items, change only the capacity $C$, recompute the LP (Dantzig).
+\begin{center}
+\begin{tabular}{ccc}\toprule
+$C$ & Dantzig filling & LP$(C)$\\\midrule
+5 & item 1, item 2 & 17\\
+6 & item 1, item 2, $\nicefrac14$ of item 3 & 19\\
+\textbf{7} & item 1, item 2, $\nicefrac24$ of item 3 & \textbf{21}\\
+8 & item 1, item 2, $\nicefrac34$ of item 3 & 23\\
+9 & item 1, item 2, item 3 & 25\\
+10 & \dots, $\nicefrac15$ of item 4 & 26\\\bottomrule
+\end{tabular}
+\end{center}
+\textbf{Why $+2$ per unit at $C = 7$}: the extra unit is filled with more of the \textbf{critical item} (item 3, from
+$\nicefrac24$ to $\nicefrac34$), and one unit of item 3 is worth its ratio $p_3/w_3 = 8/4 = 2$:
+\[
+\text{LP}(8) - \text{LP}(7) = 2 = r_c = \lambda^{*}.
+\]
+\end{column}
+\begin{column}{.48\textwidth}
+\centering
+\begin{tikzpicture}[x=3.3mm,y=0.8mm]
+  \draw[-{Stealth}] (0,0) -- (17,0) node[below left]{\tiny $C$};
+  \draw[-{Stealth}] (0,0) -- (0,35) node[left]{\tiny LP$(C)$};
+  \foreach \x in {2,5,7,9,14} \draw (\x,0) -- (\x,-0.8) node[below]{\tiny\x};
+  \foreach \y in {8,17,25,30} \draw (0,\y) -- (-0.3,\y) node[left]{\tiny\y};
+  \draw[ultra thick, acc] (0,0) -- (2,8) -- (5,17) -- (9,25) -- (14,30) -- (16.5,30);
+  \node[acc, right] at (0.6,3)    {\tiny slope 4};
+  \node[acc, right] at (3.4,11)   {\tiny 3};
+  \node[acc, right] at (7.3,18.5) {\tiny slope \textbf{2}};
+  \node[acc, below right] at (11.5,27.5) {\tiny 1};
+  \node[acc, above] at (15.5,30) {\tiny 0};
+  \draw[dashed, new] (7,0) -- (7,21);
+  \fill[new] (7,21) circle (2.5pt) node[above left]{\tiny 21};
+\end{tikzpicture}
+\begin{itemize}\setlength\itemsep{1pt}
+\item LP$(C)$ is concave and piecewise linear; its \textbf{slopes are the ratios} $4, 3, 2, 1$, in Dantzig's order.
+\item The slope at $C$ is the ratio of the item being filled, the critical item: \textbf{the best $\lambda$}.
+\end{itemize}
+\end{column}
+\end{columns}
+\vspace{1mm}
+\begin{itemize}\setlength\itemsep{1pt}
+\item \textbf{From the formula}: $L(\lambda) = \lambda C + \sum_i \max(0, p_i - \lambda w_i)$ grows by exactly $\lambda$ per unit
+  of $C$. With $\lambda = 2$: $L = 14 + 7 = 21$ at $C = 7$, and $16 + 7 = 23$ at $C = 8$.
+\item \textbf{At a kink} ($C = 5$: items 1 and 2 fit exactly) the slope is 3 on the left and 2 on the right, and every
+  $\lambda \in [2, 3]$ is optimal. The AMO case (next slides) is always such a kink.
+\end{itemize}
+\end{frame}
+
 \begin{frame}{Option 3, step 6: an AMO is a capacity too}
 \footnotesize
 An AMO $\sum_{i\in G} x_i \le 1$ is a knapsack where \textbf{every literal costs 1 and the capacity is 1}. Give it a price
@@ -573,7 +626,96 @@ every node; same groups, same mps, same propagation rules.
 \end{columns}
 \end{frame}
 
-\begin{frame}[fragile]{Option 3, step 10: from the toy to the benchmark}
+\begin{frame}{Option 3, step 10: a literal in two side constraints}
+\scriptsize
+\begin{columns}[T]
+\begin{column}{.49\textwidth}
+\textcolor{acc}{\textbf{Nested: AMO groups inside one capacity}}\\[1mm]
+In step 8 every literal is in \emph{two} side constraints: its AMO (price $\mu_G$) and the capacity (price $\lambda$).
+Merging all of them, each literal pays both prices:
+$\sum_G\sum_{i\in G} (p_i - \lambda w_i - \mu_G)\,x_i \ge K - \lambda C - \sum_G \mu_G$.\\[1mm]
+\textbf{Fix $\lambda$}: each group sees the re-priced weights $p_i - \lambda w_i$, and its best price is step 6 on them,
+$\mu_G = \max(0, \max_{i\in G}(p_i - \lambda w_i))$. So
+\[
+L(\lambda) = \lambda C + \textstyle\sum_G \max\big(0, \max_{i\in G}(p_i - \lambda w_i)\big),
+\]
+the dual form of Part III: \textbf{each group in closed form} (amosum's max on re-priced weights), only $\lambda$ to search.\\[1mm]
+\textbf{Numbers} ($\lambda = 3$): re-priced $a_1{:}2$, $a_2{:}4$, $b_1{:}0$, $b_2{:}0$; $\mu_a = 4$, $\mu_b = 0$;
+$L = 21 + 4 + 0 = 25$, the LP.\\[1mm]
+\textbf{Knapsack benchmark}: \texttt{in\_knapsack(X,V)} is in the value target, the AMO of $X$ and the capacity.
+Disjoint AMOs inside one capacity: nested, exactly what v1 handles.
+\end{column}
+\begin{column}{.49\textwidth}
+\textcolor{acc}{\textbf{Not nested: one literal in two AMO groups}}\\[1mm]
+$x{:}10$ in $G_1$ and $G_2$; $y{:}6$ in $G_1$; $z{:}6$ in $G_2$. Taking $x$ excludes both $y$ and $z$:
+best $= y + z = 12$, LP $= 12$.
+\begin{center}
+\begin{tabular}{lr}\toprule
+bound & value\\\midrule
+max of each group, $x$ counted in both & 20\\
+$x$ \textbf{owned} by $G_1$ only & 16\\
+Lagrange, $\mu_1 = \mu_2 = 6$ & \textbf{12}\\\bottomrule
+\end{tabular}
+\end{center}
+\begin{itemize}\setlength\itemsep{1pt}
+\item With $\mu_1 = \mu_2 = 6$, $x$'s reduced weight is $10 - 6 - 6 < 0$: it is never worth taking.
+\item The best $\mu$'s are \textbf{not} ``the max of each group'' ($6 < 10$ in both): they depend on each other through
+  $x$. No closed form per group: a \textbf{general LP}.
+\item Same with \textbf{two capacities} on the same literals: two coupled $\lambda$'s, no greedy.
+\item \textbf{Weight splitting} is the same thing: give $x$ weight $\alpha$ in $G_1$ and $10-\alpha$ in $G_2$; the bound
+  $\max(\alpha,6) + \max(10-\alpha,6)$ is $12$ at $\alpha = 5$, the LP again.
+\end{itemize}
+\end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}{Option 3, step 11: overlapping AMOs, owner or split?}
+\scriptsize
+\textbf{amosum today} (\file{core/py/propagator.py}): the \emph{first} group that contains a literal \textbf{owns} it (full
+weight); every later group keeps it as a \textbf{moved literal with weight 0}. That is one particular split. \textbf{Any split
+whose parts add up to the literal's weight is sound}: each group contributes at most its max, and a true literal is
+counted once in total.
+\begin{columns}[T]
+\begin{column}{.49\textwidth}
+\textcolor{acc}{\textbf{The owner is arbitrary}}: $x{:}10$ in $G_1, G_2$; $y{:}9$ in $G_1$; $z{:}1$ in $G_2$.
+Best $= 10$ ($x$ alone, or $y + z$), LP $= 10$.
+\begin{center}
+\begin{tabular}{lllr}\toprule
+ & $G_1$ & $G_2$ & bound\\\midrule
+owner $G_1$ & $x{:}10$, $y{:}9$ & $x{:}0$, $z{:}1$ & $10 + 1 = 11$\\
+owner $G_2$ & $x{:}0$, $y{:}9$ & $x{:}10$, $z{:}1$ & $9 + 10 = 19$\\
+split $9 + 1$ & $x{:}9$, $y{:}9$ & $x{:}1$, $z{:}1$ & $9 + 1 = \mathbf{10}$\\\bottomrule
+\end{tabular}
+\end{center}
+Same program, read in a different order: 11 or 19.
+\end{column}
+\begin{column}{.49\textwidth}
+\textcolor{acc}{\textbf{A split frozen at the root}}: step 10's example ($x{:}10$, $y{:}6$, $z{:}6$), split $5 + 5$.
+Now $y$ becomes false:
+\begin{center}
+\begin{tabular}{lr}\toprule
+bound after $\neg y$ & value\\\midrule
+truth ($x$ alone) & 10\\
+re-split ($\alpha = 0$) & 10\\
+frozen split $5 + 5$: $5 + \max(5, 6)$ & 11\\
+owner $G_1$: $10 + \max(0, 6)$ & 16\\\bottomrule
+\end{tabular}
+\end{center}
+Like Option 3's frozen $\lambda$: optimal at the root, weaker deeper, still far better than the owner.
+\end{column}
+\end{columns}
+\vspace{1mm}
+\begin{itemize}\setlength\itemsep{1pt}
+\item \textbf{Static split at the root}: the best split = the LP dual prices (Lagrangian decomposition; each AMO has an
+  integral polytope, so it equals the LP of all the AMOs). Solve one LP at the root, give each group its share (scaled to
+  integers). \textbf{The propagator does not change}: a moved literal gets weight $\alpha$ instead of 0.
+\item \textbf{Re-split at every node}: exact, but the prices are coupled, so an LP per node: metaprop's territory.
+\item \textbf{Plan}: v1 = owner, as amosum (identical behaviour); v1.1 = optional \texttt{--split=lp} at the root; dynamic
+  re-splitting only if the benchmarks show the frozen split is the bottleneck.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Option 3, step 12: from the toy to the benchmark}
 \footnotesize
 \textbf{Integers}: $\lambda = r_c = p_c / w_c = N/D$ is a fraction. Multiply the merged constraint by $D$:
 \[
@@ -602,7 +744,7 @@ The largest left side is now $20\,c_X^{+}$ per item, the true one, so the root c
 \texttt{lagr.py} runs Dantzig with 20 copies per item, finds the critical item and prints \texttt{lagr(N,D)}.
 \end{frame}
 
-\begin{frame}[fragile]{Option 3, step 11: the aggregate and the results}
+\begin{frame}[fragile]{Option 3, step 13: the aggregate and the results}
 \footnotesize
 \file{experiments/jointsum/motivating\_example/encoding-plain-amo-lagr.asp} (added to the plain encoding):
 \begin{lstlisting}
