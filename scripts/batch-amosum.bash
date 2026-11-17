@@ -31,7 +31,7 @@ CHECK_UNSAT=0          # 1: an UNSATISFIABLE run is confirmed with clingo (solve
 CHECK_OPTIMUM=0        # 1: an OPTIMUM FOUND run is confirmed with clingo (solves the whole optimization: can be slow)
 
 expName="amomaximize"
-expDescription="search-best"
+expDescription="clingo"
 EXEC_ID="$EXEC_DATE${expName:+:$expName}${expDescription:+:$expDescription}"
 RESULT_DIR="$RESULT_HOME/$EXEC_ID"
 
@@ -236,7 +236,8 @@ run_benchmark() {
 
 # benchs="CombinatorialAuctionsAmomaximize|KnapsackAmomaximize|TSP|WeightedGraphColouringAmomaximize|WOD"
 benchs="GroupAssignmentOpt"
-solvers='./(amoclingo.*opt=su|clingo-amo)'
+# solvers='./(amoclingo.*opt=su|clingo-amo)'
+solvers='/clingo-amo\.bash$'          # rerun of clingo only (the first run had no cost: wrong parser)
 # run_benchmark "$benchs" "Lite" "$solvers"
 run_benchmark "$benchs" "Normal" "$solvers"
 

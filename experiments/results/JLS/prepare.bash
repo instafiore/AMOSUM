@@ -89,7 +89,7 @@ for f in "${files[@]}"; do
                 next
             line = expid OFS bench OFS inst OFS solver OFS
             for (i = 1; i <= NF; i++)
-                if (i != 2 && $i != "unk")
+                if ($i != "unk")
                     line = line $i OFS
             print line
         }' "$f"
