@@ -38,14 +38,14 @@ ClingoSolver::~ClingoSolver(){
     for(Core* c: unsatCores) delete c;
 }
 
-void ClingoSolver::setTORC(const Assignment* a, size_t priority) noexcept { 
-    this->setPolarity0(priority); // Target Optimistic 
-    this->setRest(a, priority); // Rest Conservative
+void ClingoSolver::setTORC(const Assignment* a) noexcept { 
+    this->setPolarity0(); // Target Optimistic 
+    this->setRest(a); // Rest Conservative
 }
 
-void ClingoSolver::setRest(const Assignment* a, size_t priority) noexcept { 
+void ClingoSolver::setRest(const Assignment* a) noexcept { 
     if(getterRestLiterals->rest == nullptr) return;
-    this->program->setPolaritiesLocalSearch(a, priority, getterRestLiterals->rest); // Rest Conservative
+    this->program->setPolaritiesLocalSearch(a, getterRestLiterals->rest); // Rest Conservative
 }
 
 
@@ -166,8 +166,8 @@ std::pair<ClingoAssignment*, const clingo::ClingoResult> ClingoSolver::solve(con
             handleError(clingo_solve_handle_core(handle, &corePointer, &coreSize));
             for(size_t i=0; i<coreSize; ++i){ 
                 const clingo_literal_t& assumption = corePointer[i];
-                if(collectUnsatCores) core->add(assumption);
                 blamedAssumptions.add(assumption);
+                if(collectUnsatCores && program->isSoft(assumption)) core->add(assumption);   // pins and other non-targets out of the lower bound
             }
             if(collectUnsatCores){
                 unsatCores.push_back(core);
@@ -356,7 +356,7 @@ int64_t ClingoSolver::getCostFromFacts(const UMNWeightFunction* weightFunction) 
             cost += weightFunction->at(l->id);
         }
     }else{
-        for(const clingo_literal_t& plit: this->getterDerivedFromAss->derivedFromAssumption(CONSTANTS::TOP)){
+        for(const clingo_literal_t& plit: this->getterDerivedFromAss->derivedFromAssumption(program->TOP())){
             cost += weightFunction->at(plit);
         }
     }

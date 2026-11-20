@@ -33,6 +33,7 @@ AmosumClingoBackend::AmosumClingoBackend(AmosumClingoSolver& solver) noexcept: s
     solver.disableRestDetection();
     solver.disableGetDerivedFromAssDetection();
     solver.setCollectUnsatCores(false);
+    solver.unpinAll();
 }
 
 AmosumConstraint* AmosumClingoBackend::amomaximize() noexcept{

@@ -64,6 +64,8 @@ struct Program{
     uint32_t maxOriginLiteralId;
     uint32_t maxLiteralId;
     std::unordered_set<int64_t> weights;
+    std::unique_ptr<PerfectNHash<clingo_literal_t, clingo_literal_t>> mapTarget2External;
+    const int64_t ZEROCOST = 0;
     inline bool orderSoftLiterals(const Literal* a, const Literal* b) const noexcept{ return byDescendingWeight(a,b); }
     bool byDescendingWeight(const Literal* a, const Literal* b) const noexcept;
     inline bool isWeighted() const noexcept{ return weights.size() > 1; }
@@ -76,15 +78,21 @@ struct Program{
     clingo_control* ctl;
     clingo_backend_t * bk;
         
-    static int64_t preprocessCost(Vector<const Literal*>&  softLiterals, UMNWeightFunction& weightFunction, MapLiteralId2Literal* mapLiteralId2Literal, bool update = true)noexcept;
+    // negative weights are normalized (w·l = w + |w|·¬l), both polarities of an atom merged, zero weights dropped
+    static int64_t preprocessCost(Vector<const Literal*>&  softLiterals, UMNWeightFunction& weightFunction, MapLiteralId2Literal* mapLiteralId2Literal)noexcept;
     static std::vector<std::pair<const Literal*, const Literal*>> bothPolarityLiterals(Vector<const Literal*>& softLiterals, MapLiteralId2Literal* mapLiteralId2Literal)noexcept;
-    
+    static std::unordered_map<clingo_atom_t, std::vector<const Literal*>> groupById(Vector<const Literal*>& literals)noexcept;
+
     int64_t preprocessedCost;
     void addRule(Rule* &&rule, bool adding2Backend = false) noexcept;
     Literal* freshLiteral() noexcept;
+    Literal* externalLiteral(clingo_external_type_e type = clingo_external_type_false) noexcept;
+    // the backend of ctl: bk is non-null only while open (it belongs to ctl, never freed here)
+    void openBackend() noexcept { if(bk != nullptr) return; handleError(clingo_control_backend(ctl, &bk)); handleError(clingo_backend_begin(bk)); }
+    void closeBackend() noexcept { if(bk == nullptr) return; handleError(clingo_backend_end(bk)); bk = nullptr; }
     PBConstraint* addPBConstraint(int64_t bound = 0, Vector<const Literal*>* &&literals = nullptr, UMNWeightFunction* weightFunction = nullptr)noexcept;
     std::string literalIdsToString(const std::vector<clingo_literal_t> literalIds) noexcept;
-    inline const int64_t& weight(const clingo_literal_t& literalId) const {return weightFunction->at(literalId);}
+    inline const int64_t& weight(const clingo_literal_t& literalId) const {return (uint32_t)std::abs(literalId) > maxSoftLiteralId ? ZEROCOST : weightFunction->at(literalId);}
     inline std::string weightsToString(bool useLiteralIds = false) noexcept{ return weightFunction->toString(!useLiteralIds ? mapLiteralId2Literal.get() : nullptr); }
     inline std::string toString() noexcept{ std::vector<std::string> res; for(const std::unique_ptr<Rule>& r: rules) res.push_back(r->toString(mapLiteralId2Literal.get())); return join("\n", std::move(std::move(res)));}
     std::vector<Cluster> partition(size_t minSize = CONSTANTS::INFPlus32, size_t m = CONSTANTS::NONE64, Vector<const Literal*>* targetLiterals = nullptr)noexcept;
@@ -94,7 +102,6 @@ struct Program{
     bool isOptimizationProblem;
 
     virtual ~Program(){
-        if(bk != nullptr) free(bk);
         if(ctl != nullptr){
             // no longer interrupted by the signal handler (only if it is this program's control)
             clingo_control_t* own = ctl;
@@ -104,11 +111,20 @@ struct Program{
     }
 
     friend ClingoSolver;
-    void setPolaritiesLocalSearch(const Assignment* ass = nullptr, size_t priority = CONSTANTS::INFPlus32, Vector<const Literal *>* literals = nullptr) noexcept;
+    void setPolaritiesLocalSearch(const Assignment* ass = nullptr, Vector<const Literal *>* literals = nullptr) noexcept;
+    void setPolarityLocalSearch(const Literal* l, bool polarity) noexcept { setPolarityLocalSearch(l->id, polarity); }
+    void setPolarityLocalSearch(const clingo_literal_t l, bool polarity) noexcept;
+    // pin: the external of a soft literal set true, so its sign heuristic (above the default polarity) applies
+    void pinLocalSearch(const clingo_literal_t l) noexcept;
+    void unpinLocalSearch(const clingo_literal_t l) noexcept;
     // a new atom true iff one of `literals` is (one rule per literal), added through the backend after grounding
     const fiore::Literal* addDisjunction(const std::vector<const fiore::Literal*>& literals, const std::string& name) noexcept;
+    // TOP/BOTTOM of the program literals: an atom reserved in clingo (CONSTANTS::TOP/BOTTOM are the solver ones)
+    inline clingo_literal_t TOP() const noexcept { return top; }
+    inline clingo_literal_t BOTTOM() const noexcept { return bottom; }
 protected:
     size_t priorityPolarity;
+    bool negativeWeights;
     
     struct ProgramGrounder{
 
@@ -195,21 +211,18 @@ protected:
                 LOG(LogLevel::INFO_1," Minimize Callback size soft: ",size);
             #endif 
             g->program->maxSoftLiteralId = 0;
+            g->program->negativeWeights = false;
             for(size_t i = 0; i < size; ++i){
                 const clingo_literal_t &literalId = literals[i].literal;
                 const clingo_atom_t &atomId = std::abs(literals[i].literal);
                 #ifdef __debug__
                     LOG(LogLevel::DEBUG,"Adding soft literal: ",literalId, " with weight: ",literals[i].weight);
                 #endif
-                auto it =  g->weightDict.find(literalId);
                 if(g->program->maxSoftLiteralId < atomId) g->program->maxSoftLiteralId = atomId;
                 const clingo_weight_t &w =  literals[i].weight;
                 g->program->weights.emplace(w);
-                if(w < 0){
-                    // In case this benchmark has negative weights we stop the run!
-                    setExitCode(1, true, "No negative weights supported");
-                }
-                it == g->weightDict.end() ? g->weightDict[literals[i].literal] = w : it->second += w;
+                g->program->negativeWeights |= w < 0;          // normalized by preprocessCost
+                g->weightDict[literalId] += w;
             }
             #ifdef __debug__
                 LOG(LogLevel::DEBUG," weightDictSize: ",g->weightDict.size());
@@ -234,7 +247,8 @@ protected:
     };
     Program();
     void backendAddRule(const Rule* rule) noexcept;
-    
+    clingo_literal_t top;
+    clingo_literal_t bottom;
 };
 
 

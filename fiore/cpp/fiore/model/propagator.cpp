@@ -44,8 +44,8 @@ void ClingoPropagatorInitializer::init(clingo_propagate_init* _init, ClingoSolve
         setDefault(mapSlitIdPlitsTmp, not_(slitId), std::make_pair<>(false,std::unordered_set<const Literal*>()));
         mapSlitIdPlitsTmp[not_(slitId)].second.insert(negatedLiteral);
     }
-    this->mapSoftPlit2SoftSlit[CONSTANTS::TOP] = CONSTANTS::TOP;
-    this->mapSoftPlit2SoftSlit[CONSTANTS::BOTTOM] = CONSTANTS::BOTTOM;
+    this->mapSoftPlit2SoftSlit[solver->program->TOP()] = CONSTANTS::TOP;
+    this->mapSoftPlit2SoftSlit[solver->program->BOTTOM()] = CONSTANTS::BOTTOM;
     auto cmd = ArgParse::getInstance();
     const bool torc = cmd->get(CONSTANTS::polarityHeuristic) == CONSTANTS::polarityHeuristicTORC;
     solver->program->readRestLiterals = torc;

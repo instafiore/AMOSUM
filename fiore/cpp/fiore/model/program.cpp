@@ -44,7 +44,8 @@ PBConstraint::PBConstraint(const Program* program, const int64_t upperBound, Vec
     #endif
 }
 
-Program::Program(): restLiterals(new Vector<const Literal*>), ctl(nullptr), bk(nullptr), isOptimizationProblem(false), priorityPolarity(1){}
+Program::Program(): restLiterals(new Vector<const Literal*>), maxSoftLiteralId(0), ctl(nullptr), bk(nullptr), isOptimizationProblem(false),
+    priorityPolarity(1), negativeWeights(false), top(0), bottom(0){}
 
 void Program::addRule(Rule* &&rule, bool adding2Backend) noexcept{
     #ifdef __debug__
@@ -56,14 +57,29 @@ void Program::addRule(Rule* &&rule, bool adding2Backend) noexcept{
 }
 
 Literal* Program::freshLiteral() noexcept{
-    handleError(clingo_backend_begin(bk));
+    const bool wasOpen = bk != nullptr;
+    openBackend();
         clingo_atom_t id;
         handleError(clingo_backend_add_atom(bk,NULL,&id));
-    handleError(clingo_backend_end(bk));
-    this->addRule(new Rule(true, std::vector<clingo_atom_t>{id},  std::vector<clingo_literal_t>()), true);
+        this->addRule(new Rule(true, std::vector<clingo_atom_t>{id},  std::vector<clingo_literal_t>()), true);   // backendAddRule keeps it open
+    if(!wasOpen) closeBackend();
     std::string name = createLiteralString(id);
     Literal* newLiteral = new Literal(id, name);
     mapLiteralId2Literal->addFreshLiteral(newLiteral);
+    if(id > maxLiteralId) maxLiteralId = id;
+    return newLiteral;
+}
+
+Literal* Program::externalLiteral(clingo_external_type_e type) noexcept{
+    const bool wasOpen = bk != nullptr;
+    openBackend();
+    clingo_atom_t id;
+    handleError(clingo_backend_add_atom(bk,NULL,&id));
+    Literal* newLiteral = new Literal(id, createLiteralString(id));
+    mapLiteralId2Literal->addFreshLiteral(newLiteral);
+    handleError(clingo_backend_external(bk, newLiteral->id, type));
+    if(!wasOpen) closeBackend();
+    if(id > maxLiteralId) maxLiteralId = id;
     return newLiteral;
 }
 
@@ -83,28 +99,50 @@ std::string Program::literalIdsToString(const std::vector<clingo_literal_t> lite
     return o.str();
 }
 
-int64_t Program::preprocessCost(Vector<const Literal*>&  ownedLiterals, 
-    UMNWeightFunction& weightFunction, MapLiteralId2Literal* mapLiteralId2Literal, bool update)noexcept{
-    std::vector<std::pair<const Literal*, const Literal*>> bothPolarityLiteralVec = Program::bothPolarityLiterals(ownedLiterals, mapLiteralId2Literal);
+int64_t Program::preprocessCost(Vector<const Literal*>& ownedLiterals, UMNWeightFunction& weightFunction, MapLiteralId2Literal* mapLiteralId2Literal)noexcept{
+    std::unordered_map<clingo_atom_t, std::vector<const Literal*>> byAtom = Program::groupById(ownedLiterals);
     int64_t preprocessedCost = 0;
-    for(const std::pair<const Literal*, const Literal*>& literals: bothPolarityLiteralVec){
+    for(auto&[atom, literals]: byAtom){
+        // negative weights: w·l = w + |w|·¬l
+        const bool bothPolarity = literals.size() >= 2;
         std::vector<int64_t> weights;
-        weights.push_back(weightFunction.at(literals.first->id));
-        weights.push_back(weightFunction.at(literals.second->id));
-        int64_t minWeight = *std::min_element(weights.begin(), weights.end());
-        if(update){
-            for(const Literal* literal: std::vector<const Literal*>{literals.first, literals.second}){
-                int64_t newWeight = weightFunction.at(literal->id) - minWeight;
-                if(newWeight == 0) ownedLiterals.remove(literal);
-                weightFunction.set(literal->id, newWeight);
+        for(size_t i = 0; i < literals.size(); ++i){
+            const Literal* literal = literals[i];
+            int64_t& w = weightFunction.get(literal->id);
+            if(w < 0){
+                preprocessedCost += w;
+                int64_t& wOpposite = weightFunction.get(not_(literal->id));
+                if(!bothPolarity){
+                    const Literal* opposite = mapLiteralId2Literal->literal(not_(literal->id));
+                    assert(!ownedLiterals.contains(opposite));
+                    ownedLiterals.push_back(opposite);
+                    literals.push_back(opposite);
+                }
+                wOpposite += std::abs(w);
+                w = 0;
             }
+            weights.push_back(w);
         }
+        // both polarities: the minimum goes into the constant
+        assert(literals.size() <= 2);
+        if(!bothPolarity) continue;
+        const int64_t minWeight = *std::min_element(weights.begin(), weights.end());
+        for(const Literal* literal: literals) weightFunction.get(literal->id) -= minWeight;
         preprocessedCost += minWeight;
     }
+    auto newEnd = std::remove_if(ownedLiterals.begin(), ownedLiterals.end(),
+        [&weightFunction](const Literal* l){ assert(weightFunction.at(l->id) >= 0); return weightFunction.at(l->id) == 0; });
+    ownedLiterals.resize(newEnd - ownedLiterals.begin());
     #ifdef __debug__
         LOG(LogLevel::INFO, "preprocessedCost: ", preprocessedCost, " - Program::preprocessCost");
     #endif
     return preprocessedCost;
+}
+
+std::unordered_map<clingo_atom_t, std::vector<const Literal*>> Program::groupById(Vector<const Literal*>& literals) noexcept{
+    std::unordered_map<clingo_atom_t, std::vector<const Literal*>> groups;
+    for(const Literal* l: literals) groups[std::abs(l->id)].push_back(l);
+    return groups;
 }
 
 
@@ -238,7 +276,7 @@ void Program::ProgramGrounder::addArgControl(std::string key, std::string value)
 Program::ProgramGrounder::ProgramGrounder(): program(nullptr), first(true){}
 
 const fiore::Literal* Program::addDisjunction(const std::vector<const fiore::Literal*>& literals, const std::string& name) noexcept{
-    // a local backend: Program::bk is freed by ~Program(), but a backend belongs to its control
+    // a local backend (Program::bk is open only inside openBackend/closeBackend)
     clingo_backend_t* backend;
     handleError(clingo_control_backend(ctl, &backend));
     handleError(clingo_backend_begin(backend));
@@ -393,6 +431,28 @@ Program* Program::ProgramGrounder::ground(const std::vector<std::string>& ASPInp
     first = false;
     for(const Literal* l: *program->softLiterals) program->softAtomIds.insert(std::abs(l->id));
 
+    // one external per soft literal (false), with a sign heuristic above the default polarity, active while it is true
+    program->openBackend();
+    program->mapTarget2External.reset(new PerfectNHash<clingo_literal_t, clingo_literal_t>(program->maxSoftLiteralId + 1));
+    for(const Literal* literal: *program->softLiterals){
+        const Literal* external = program->externalLiteral();
+        program->mapTarget2External->set(literal->id, external->id);
+        handleError(clingo_backend_heuristic(program->bk, std::abs(literal->id), clingo_heuristic_type_sign,
+            literal->id > 0 ? 1 : -1, program->priorityPolarity + 1, &program->mapTarget2External->get(literal->id), 1));
+    }
+    // TOP/BOTTOM of the program literals: an atom reserved in clingo, so later atoms (addDisjunction) never get its id,
+    // and an external set to true, so clingo also sees it as true
+    clingo_atom_t topAtom;
+    handleError(clingo_backend_add_atom(program->bk, NULL, &topAtom));
+    program->top = topAtom;
+    program->bottom = -program->top;
+    handleError(clingo_backend_external(program->bk, program->top, clingo_external_type_true));
+    if(topAtom > program->maxLiteralId) program->maxLiteralId = topAtom;
+    // program-level sentinels: named literals, found by lookup like any other literal
+    program->mapLiteralId2Literal->addLiteral(new Literal(program->top, "T"));
+    program->mapLiteralId2Literal->addLiteral(new Literal(program->bottom, "F"));
+    program->closeBackend();
+
     #ifdef __debug__
         auto endCreationgSoftLiterals = elapsedTime(startCreationgSoftLiterals);
         LOG(LogLevel::INFO_1, "Creation softLiterals time: ", endCreationgSoftLiterals);
@@ -407,38 +467,40 @@ bool Program::byDescendingWeight(const Literal* a, const Literal* b) const noexc
 };
 
 void Program::backendAddRule(const Rule* rule) noexcept{
-    handleError(clingo_backend_begin(bk));
+    const bool wasOpen = bk != nullptr;          // freshLiteral calls it with the backend open
+    openBackend();
         handleError(clingo_backend_rule(bk, rule->choice, rule->head.data(), rule->head.size(), rule->body.data(), rule->body.size()));
-    handleError(clingo_backend_end(bk));
+    if(!wasOpen) closeBackend();
 }
 
 
-void Program::setPolaritiesLocalSearch(const Assignment* ass, size_t priority, Vector<const Literal *>* literals) noexcept{
-    handleError(clingo_control_backend(ctl, &bk));    
-    handleError(clingo_backend_begin(bk));
-        const size_t p = priority == CONSTANTS::INFPlus32 ? ++priorityPolarity : priority;
-        #ifdef __debug__
-            std::vector<const Literal*> lits;
-        #endif
-        const Vector<const Literal*>* literalsToApply = literals == nullptr ? this->softLiterals.get() : literals;
-        for(const Literal* l: *literalsToApply){
-            const bool& isTrue = ass != nullptr ? ass->isTrue(l) : false;
-            const bool& positive = l->positive();
-            const clingo_atom_t& id = std::abs(l->id);
-            int bias;
-            if(positive) 
-                bias = isTrue ? 1 : -1;
-            else 
-                bias = isTrue ? -1 : 1;
-            #ifdef __debug__
-                if(bias > 0) lits.push_back(this->mapLiteralId2Literal->get(id));
-            #endif
-            handleError(clingo_backend_heuristic(bk, id,clingo_heuristic_type_sign, bias, p, NULL, 0));
-        }
-        #ifdef __debug__
-            LOG(LogLevel::INFO,"Setting polarity local search with priority: ",priorityPolarity," with: ", lits, " and answer set: ", ass);
-        #endif
-    handleError(clingo_backend_end(bk));
+void Program::setPolaritiesLocalSearch(const Assignment* ass, Vector<const Literal *>* literals) noexcept{
+    const Vector<const Literal*>* literalsToApply = literals == nullptr ? this->softLiterals.get() : literals;
+    const bool wasOpen = bk != nullptr;
+    openBackend();
+    for(const Literal* l: *literalsToApply) setPolarityLocalSearch(l, ass != nullptr && ass->isTrue(l));
+    if(!wasOpen) closeBackend();
+    #ifdef __debug__
+        LOG(LogLevel::INFO, "Setting polarity local search with priority: ", priorityPolarity, " and answer set: ", ass);
+    #endif
+}
+
+// one priority for every call: the last statement wins
+void Program::setPolarityLocalSearch(const clingo_literal_t l, bool polarity) noexcept{
+    const bool wasOpen = bk != nullptr;
+    openBackend();
+    const clingo_atom_t atom = std::abs(l);
+    polarity = (l > 0) == polarity;                         // the atom's sign that gives l the value `polarity`
+    handleError(clingo_backend_heuristic(bk, atom, clingo_heuristic_type_sign, polarity ? 1 : -1, priorityPolarity, NULL, 0));
+    if(!wasOpen) closeBackend();
+}
+
+void Program::pinLocalSearch(const clingo_literal_t l) noexcept{
+    handleError(clingo_control_assign_external(ctl, mapTarget2External->get(l), clingo_truth_value_true));
+}
+
+void Program::unpinLocalSearch(const clingo_literal_t l) noexcept{
+    handleError(clingo_control_assign_external(ctl, mapTarget2External->get(l), clingo_truth_value_false));
 }
 
 } // namespace fiore

@@ -46,10 +46,16 @@ friend ClingoPropagatorInitializer;
         return pb;
     }
 
-    inline void setPolarity0(size_t priority = CONSTANTS::INFPlus32) noexcept { if(!changedPolTargets) return; changedPolTargets = false; this->program->setPolaritiesLocalSearch(nullptr, priority, nullptr); }
-    inline void setPolarityBasedOnAssignment(const Assignment* ass, size_t priority = CONSTANTS::INFPlus32) noexcept { changedPolTargets = true; this->program->setPolaritiesLocalSearch(ass, priority, nullptr); }
-    void setTORC(const Assignment* a, size_t priority = CONSTANTS::INFPlus32) noexcept;
-    void setRest(const Assignment* a, size_t priority = CONSTANTS::INFPlus32) noexcept;
+    inline void setPolarity0() noexcept { if(!changedPolTargets) return; changedPolTargets = false; this->program->setPolaritiesLocalSearch(nullptr, nullptr); }
+    inline void setPolarityBasedOnAssignment(const Assignment* ass) noexcept { changedPolTargets = true; this->program->setPolaritiesLocalSearch(ass); }
+    inline void setPolarity(const clingo_literal_t l, bool polarity) noexcept { changedPolTargets = true; this->program->setPolarityLocalSearch(l, polarity); }
+    inline void setPolarity(const Literal* l, bool polarity) noexcept { setPolarity(l->id, polarity); }
+    // pins: a soft literal's polarity fixed above the default one (pol0/random polarity cannot overwrite it)
+    inline void pin(const clingo_literal_t l) noexcept { this->program->pinLocalSearch(l); }
+    inline void unpin(const clingo_literal_t l) noexcept { this->program->unpinLocalSearch(l); }
+    inline void unpinAll() noexcept { for(const Literal* l: *program->softLiterals) unpin(l->id); }
+    void setTORC(const Assignment* a) noexcept;
+    void setRest(const Assignment* a) noexcept;
     std::pair<ClingoAssignment*, const clingo::ClingoResult> solve(const std::vector<clingo_literal_t>& assumptions = {}) noexcept;
     bool atLeast2Models(const std::vector<clingo_literal_t>* assumptions);
     std::pair<std::vector<clingo_literal_t>, std::unordered_map<clingo_literal_t, std::vector<clingo_literal_t>>> removeFromIToLastAssumptionAndReturn(const size_t i) noexcept;

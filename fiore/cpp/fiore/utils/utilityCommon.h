@@ -392,7 +392,7 @@ struct MapInterface{
 };
 
 struct MapLiteralId2LiteralInterface: public MapInterface<int32_t, const Literal*>{
-    virtual const Literal* const& literal(const int32_t& literalId) const = 0;
+    virtual const Literal* const& literal(const int32_t& literalId, bool fresh = false) const = 0;
     virtual void addLiteral(const Literal* literal)noexcept = 0;
     virtual void addFreshLiteral(const Literal* literal)noexcept = 0;
     
@@ -548,28 +548,32 @@ struct PerfectNHash: public NHash<K, V, std::vector<V>, VMapper, DMapper>{
 
 struct MapLiteralId2Literal: public MapLiteralId2LiteralInterface{
     mutable std::unordered_map<int32_t, const Literal*> map;
+    mutable std::unordered_map<int32_t, const Literal*> mapFreshatoms;     // atoms added after grounding (fresh, external)
     MapLiteralId2Literal(const size_t& N = 0) noexcept{}
     MapLiteralId2Literal(const MapLiteralId2Literal&) = delete;
     MapLiteralId2Literal& operator=(const MapLiteralId2Literal&) = delete;
 
-    inline const Literal* const& literal(const int32_t& literalId) const override{
-        auto it =  map.find(literalId);
-        if(it != map.end()){ return it->second;}
+    inline const Literal* const& literal(const int32_t& literalId, bool fresh = false) const override{
+        // a fresh atom asked without the flag (amosum's __tuple__/__same__) keeps its pointer
+        if(!fresh && (mapFreshatoms.count(literalId) > 0 || mapFreshatoms.count(not_(literalId)) > 0)) fresh = true;
+        auto& m = !fresh ? map : mapFreshatoms;
+        auto it =  m.find(literalId);
+        if(it != m.end()){ return it->second;}
         std::string name;
-        
-        auto itOpposite = map.find(not_(literalId));
-        if(itOpposite != map.end()){
+
+        auto itOpposite = m.find(not_(literalId));
+        if(itOpposite != m.end()){
             const Literal* const & l = itOpposite->second;
             const Literal* nl = !(*l);
-            map[literalId] = nl;
-            return map[literalId];
+            m[literalId] = nl;
+            return m[literalId];
         }
-        
-        if(literalId == CONSTANTS::BOTTOM || literalId == CONSTANTS::TOP) name = literalId == CONSTANTS::BOTTOM ? "F" : "T";
-        else name = createLiteralString(literalId);
+
+        // the program-level TOP/BOTTOM sentinels are registered as named literals by ground()
+        name = createLiteralString(literalId);
         const Literal* newLiteral = new Literal(literalId, name);
-        map[literalId] = newLiteral;
-        return map[literalId];
+        m[literalId] = newLiteral;
+        return m[literalId];
     }
 
     inline void addLiteral(const Literal* literal)noexcept override{
@@ -577,13 +581,14 @@ struct MapLiteralId2Literal: public MapLiteralId2LiteralInterface{
     }
 
     inline void addFreshLiteral(const Literal* literal)noexcept override{
-        addLiteral(literal);
+        mapFreshatoms[literal->id] = literal;
     }
 
     inline std::string toString() const;
 
     virtual ~MapLiteralId2Literal(){
         for(auto&[key, value] : map) if(value != nullptr) delete value;
+        for(auto&[key, value] : mapFreshatoms) if(value != nullptr) delete value;
     }
 };
 
