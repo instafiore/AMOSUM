@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Configuration: @TAG@
+# Configuration: --reason=ijcai --lazy=false --progression=1 --opt-strategy=sat-unsat --lang=cpp --verbose=progression-last-model
 #
 
 trap ":" 24 15

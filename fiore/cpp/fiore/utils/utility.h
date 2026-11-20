@@ -55,15 +55,11 @@ private:
 
 struct PerfectWeightFunction: public WeightFunction<std::vector<int64_t>>{
     
-    PerfectWeightFunction(size_t N, int64_t defaultValue = 0)noexcept:  WeightFunction<std::vector<int64_t>>(N, std::move(defaultValue)){
-        this->_data = new std::vector<int64_t>(this->N, defaultValue);
-    }
+    PerfectWeightFunction(size_t N, int64_t defaultValue = 0)noexcept:  WeightFunction<std::vector<int64_t>>(N, std::move(defaultValue)){}
 };
 
 struct UMNWeightFunction: public WeightFunction<std::unordered_map<size_t, int64_t>>{
-    UMNWeightFunction(size_t N, int64_t defaultValue = 0)noexcept:  WeightFunction<std::unordered_map<size_t, int64_t>>(N, std::move(defaultValue)){
-        this->_data = new std::unordered_map<size_t, int64_t>();
-    }
+    UMNWeightFunction(size_t N, int64_t defaultValue = 0)noexcept:  WeightFunction<std::unordered_map<size_t, int64_t>>(N, std::move(defaultValue)){}
 };
 
 

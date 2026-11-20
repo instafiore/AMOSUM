@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Configuration: @TAG@
+# Configuration: --reason=minfly --lazy=false --lang=cpp --verbose=progression-last-model
 #
 
 trap ":" 24 15

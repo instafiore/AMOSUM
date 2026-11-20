@@ -31,7 +31,7 @@ CHECK_UNSAT=0          # 1: an UNSATISFIABLE run is confirmed with clingo (solve
 CHECK_OPTIMUM=0        # 1: an OPTIMUM FOUND run is confirmed with clingo (solves the whole optimization: can be slow)
 
 expName="amomaximize"
-expDescription="clingo"
+expDescription="search-strategies"
 EXEC_ID="$EXEC_DATE${expName:+:$expName}${expDescription:+:$expDescription}"
 RESULT_DIR="$RESULT_HOME/$EXEC_ID"
 
@@ -234,10 +234,11 @@ run_benchmark() {
     done
 }
 
-# benchs="CombinatorialAuctionsAmomaximize|KnapsackAmomaximize|TSP|WeightedGraphColouringAmomaximize|WOD"
-benchs="GroupAssignmentOpt"
-# solvers='./(amoclingo.*opt=su|clingo-amo)'
-solvers='/clingo-amo\.bash$'          # rerun of clingo only (the first run had no cost: wrong parser)
+benchs="GroupAssignmentOpt|CombinatorialAuctionsAmomaximize|KnapsackAmomaximize|TSP|WeightedGraphColouringAmomaximize|WOD"
+# the search strategies with the best amomaximize configuration (nomin, lazy): sat-unsat and unsat-sat with
+# progression n, n^2 (nsq), 2^n (exp), and binary search
+solvers='/amoclingo-reas=nomi-lazy=true-(prog=(n|nsq|exp)-opt=(su|us)|opt=bin)\.sh$'
+# solvers='/clingo-amo\.bash$'          # clingo only
 # run_benchmark "$benchs" "Lite" "$solvers"
 run_benchmark "$benchs" "Normal" "$solvers"
 

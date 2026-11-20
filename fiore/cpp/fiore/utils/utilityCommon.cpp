@@ -19,7 +19,7 @@ std::ostream& operator<<(std::ostream& out, const char* value) {
 std::ostream& operator<<(std::ostream& out, const Literal& literal){ return out<<literal.toString(); }
 std::ostream& operator<<(std::ostream& out, const TruthValue& truthValue){return out<<truthValue.toString();}
 std::ostream& operator<<(std::ostream& out, const PrintableRegex& p){ return out<<p.input; }
-std::ostream& operator<<(std::ostream& out, const MapLiteralId2Literal map){ return out<<map.toString();}
+std::ostream& operator<<(std::ostream& out, const MapLiteralId2Literal& map){ return out<<map.toString();}
 // template std::ostream& operator<< <Literal*, Hasher>(std::ostream&, const PerfectVector<Literal*,Hasher>&);
 
 } // namespace fiore

@@ -88,7 +88,6 @@ template<typename K, typename V, typename D, typename H = Hasher, typename VMapp
 std::ostream& operator<<(std::ostream& out, const Hash<K,V,D,H,VMapper,DMapper>& hash){ out<<hash.toString();return out;}
 
 
-
 template <typename T1, typename T2>
 std::ostream& operator<<(std::ostream& out, const std::pair<T1, T2>& pair) noexcept { return out<<"("<<pair.first<<", "<<pair.second<<")"; }
 

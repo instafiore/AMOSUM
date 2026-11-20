@@ -411,21 +411,33 @@ template<typename T>
 inline constexpr bool is_std_vector_v = is_std_vector<T>::value;
 
 
+
+
 template<typename K, typename V, typename D, typename H = Hasher, typename VMapper = V, typename DMapper = D>
 class Hash{
 
 protected:
     const size_t N;
-    D* _data;
     const V defaultValue;
+    D _data;
     V defaultValueMutable;
     H hasher;
+    static constexpr bool isVector = std::is_same_v<D, std::vector<V>>;
+    static constexpr bool isMap = std::is_same_v<D, std::unordered_map<size_t, V>>;
+    static D construct(const size_t& N, V defaultValue){
+        constexpr bool isVector = std::is_same_v<D, std::vector<V>>;
+        constexpr bool isMap = std::is_same_v<D, std::unordered_map<size_t, V>>;
+        static_assert(isVector || isMap);
+        if constexpr (isMap) return std::unordered_map<size_t,V>();
+        else return std::vector<V>(N, defaultValue);
+    }
 
 public:
 
     inline size_t hashKey(const K& key) const{return this->hasher(key);}
-    inline const D& data() const noexcept { return *this->_data;}
-    Hash(const size_t& N, V defaultValue = V()): N(N), defaultValue(defaultValue){}
+    inline const D& data() const noexcept { return this->_data;}
+    Hash(const size_t& N, V defaultValue = V()): N(N), defaultValue(defaultValue), _data(construct(N,defaultValue)){
+    }
 
     inline size_t size() const noexcept {return this->N;}
 
@@ -435,43 +447,38 @@ public:
         const size_t& key = this->hasher(keyInput);
         assert(key < this->N);
         defaultValueMutable = defaultValue;
-        if constexpr (std::is_same_v<D, std::unordered_map<size_t, V>>) {
-            auto& umap = *this->_data;
+        if constexpr (isMap) {
+            auto& umap = this->_data;
             auto it = umap.find(key);
             return (it != umap.end()) ? it->second : defaultValueMutable;
-        } else {
-            return (*this->_data)[key];
-        }
+        } else if constexpr (isVector) return this->_data[key];
     }
     inline void set(const K& key, const V& value) { 
         this->setUsingHash(this->hasher(key), value);
     }
 
+    inline void clear() noexcept{
+        if constexpr (isMap) _data.clear(); 
+    }
+
     virtual inline const V& getUsingHash(const size_t& key) const{ 
         assert(key < this->N);
         if constexpr (std::is_same_v<D, std::unordered_map<size_t, V>>) {
-            auto& umap = *this->_data;
+            auto& umap = this->_data;
             auto it = umap.find(key);
             return (it != umap.end()) ? it->second : defaultValue;
         } else {
-            return (*this->_data)[key];
+            return this->_data[key];
         }
     }
-    virtual inline void setUsingHash(const size_t& key, const V& value) { (*this->_data)[key] = value; }
+    virtual inline void setUsingHash(const size_t& key, const V& value) { this->_data[key] = value; }
 
-    virtual ~Hash(){
-        if(_data != nullptr) delete _data;
-        if constexpr (std::is_pointer_v<V>){ 
-            if(defaultValue != nullptr){ 
-                delete defaultValue;
-            }
-        }
-    }
+    virtual ~Hash() = default;
 
     template<typename T = V>
     requires is_std_vector_v<T>
     void add(const K& k, const typename T::value_type& value) {
-        auto& vec = (*this->_data)[this->hasher(k)];
+        auto& vec = this->_data[this->hasher(k)];
         vec.push_back(value);
     }
 
@@ -512,32 +519,21 @@ template<typename K, typename V, typename H = Hasher, typename VMapper = V, type
 class PerfectHash: public Hash<K, V, std::vector<V>, H, VMapper, DMapper>{
 protected:
 public:
-    PerfectHash(size_t N, V defaultValue = V())noexcept: Hash<K, V, std::vector<V>, H, VMapper, DMapper>(N, std::move(defaultValue)){
-        this->_data = new std::vector<V>(N,defaultValue);
-    }
+    PerfectHash(size_t N, V defaultValue = V())noexcept: Hash<K, V, std::vector<V>, H, VMapper, DMapper>(N, std::move(defaultValue)){}
 };
 
 template<typename K, typename V, typename H = Hasher, typename VMapper = V, typename DMapper = std::unordered_map<int32_t,V>>
 class UMHash: public Hash<K, V, std::unordered_map<size_t,V>, H, VMapper, DMapper>{
     
 public:
-    UMHash(size_t N, V defaultValue = V())noexcept:  Hash<K, V, std::unordered_map<size_t,V>, H, VMapper, DMapper>(N, std::move(defaultValue)){
-        this->_data = new std::unordered_map<size_t,V>();
-        for(size_t i = 1; i < this->size(); ++i) (*this->_data)[i] = defaultValue;
-    }
+    UMHash(size_t N, V defaultValue = V())noexcept:  Hash<K, V, std::unordered_map<size_t,V>, H, VMapper, DMapper>(N, std::move(defaultValue)){}
 };
 
 
 template<typename K, typename V, typename VMapper = V, typename DMapper = std::unordered_map<size_t,V>>
 struct UMNHash: public NHash<K, V, std::unordered_map<size_t,V>, VMapper, DMapper>{
 
-    UMNHash(const size_t& N, V defaultValue = V()) noexcept: NHash<K, V, std::unordered_map<size_t,V>, VMapper, DMapper>(N*2, std::move(defaultValue)), originalSize(N){
-        // it is a (N * 2) vector where:
-        //      values[:N-1]    are the values for the positive element
-        //      values[N:]      are the values for the negative negative
-        this->_data = new std::unordered_map<size_t, V>();
-        for(size_t i = 1; i < this->size(); ++i) (*this->_data)[i] = defaultValue;
-    }    
+    UMNHash(const size_t& N, V defaultValue = V()) noexcept: NHash<K, V, std::unordered_map<size_t,V>, VMapper, DMapper>(N*2, std::move(defaultValue)), originalSize(N){}    
 
 protected:
     const size_t originalSize;
@@ -546,80 +542,34 @@ protected:
 
 template<typename K, typename V, typename VMapper = V, typename DMapper = std::vector<V>>
 struct PerfectNHash: public NHash<K, V, std::vector<V>, VMapper, DMapper>{
-
-    PerfectNHash(const size_t& N, V defaultValue = V()) noexcept: NHash<K, V, std::vector<V>, VMapper, DMapper>(N, std::move(defaultValue)){
-        // it is a (N * 2) vector where:
-        //      values[:N-1]    are the values for the positive literals
-        //      values[N:]      are the values for the negative literals
-        // data = std::vector<T>(N*2, defaultValue);
-        this->_data = new std::vector<V>(this->N, defaultValue);
-    }    
-
-    // inline void enlargeData(const clingo_literal_t& upTo)noexcept{
-    //     const clingo_literal_t& r = upTo - this->N;
-    //     std::vector<V> extend = std::vector<V>(r+1, this->defaultValue);
-    //     extendVector(this->data, extend);
-    //     this->N = this->data.size();
-    // }   
+    PerfectNHash(const size_t& N, V defaultValue = V()) noexcept: NHash<K, V, std::vector<V>, VMapper, DMapper>(N, std::move(defaultValue)){}    
 };
 
 
-
-// struct MapLiteralId2Literal: public MapLiteralId2LiteralInterface, public Hash<int32_t, const Literal*, std::unordered_map<int32_t, const Literal*>, std::hash<int32_t>, const Literal*, std::unordered_map<int32_t, const Literal*>>{
-
-//     MapLiteralId2Literal(const size_t& N = 0) noexcept: Hash<int32_t, const Literal*, std::unordered_map<int32_t, const Literal*>, std::hash<int32_t>, const Literal*, std::unordered_map<int32_t, const Literal*>>(N, nullptr){}
-
-//     const Literal* const& literal(const int32_t& literalId)override{
-//         return this->getUsingHash(key);
-//     }
-
-//     inline const Literal* const& getUsingHash(const size_t& key) const override{ 
-//         assert(key < this->N); 
-//         auto it = this->data().find(key);
-//         assert(it != this->data().end());
-//         return it->second;
-//     }
-
-//     inline virtual void addLiteral(const Literal* literal)noexcept override{this->set(literal->id, literal);}
-//     inline virtual void addFreshLiteral(const Literal* literal)noexcept override{literalsNotInMap.emplace(literal->id, literal);}
-
-//     ~MapLiteralId2Literal(){
-//         for(auto&[key, value] : this->data())if(value != nullptr) delete value;
-//         for(auto&[key, value] : literalsNotInMap) if(value != nullptr) delete value;
-//     }
-
-// private:
-//     mutable std::unordered_map<int32_t, const Literal*> literalsNotInMap;
-// };
-
-
 struct MapLiteralId2Literal: public MapLiteralId2LiteralInterface{
-    std::unordered_map<int32_t, const Literal*> map;
-    mutable std::unordered_map<int32_t, const Literal*> literalsNotInMap;
-
+    mutable std::unordered_map<int32_t, const Literal*> map;
     MapLiteralId2Literal(const size_t& N = 0) noexcept{}
+    MapLiteralId2Literal(const MapLiteralId2Literal&) = delete;
+    MapLiteralId2Literal& operator=(const MapLiteralId2Literal&) = delete;
 
     inline const Literal* const& literal(const int32_t& literalId) const override{
         auto it =  map.find(literalId);
-        if(it == map.end()){
-            it =  map.find(not_(literalId));
-            if(it != map.end()){
-                const Literal* const & l = it->second;
-                const Literal* nl = !(*l);
-                literalsNotInMap[not_(literalId)] = nl;
-                return literalsNotInMap[not_(literalId)];
-            }
-            if(literalsNotInMap.find(literalId) == literalsNotInMap.end()) {
-                std::string name;
-                if(literalId == CONSTANTS::BOTTOM || literalId == CONSTANTS::TOP)
-                    name = literalId == CONSTANTS::BOTTOM ? "F" : "T";
-                else
-                    name = createLiteralString(literalId);
-                literalsNotInMap[literalId] = new Literal(literalId, name);
-            }
-            return literalsNotInMap[literalId];
+        if(it != map.end()){ return it->second;}
+        std::string name;
+        
+        auto itOpposite = map.find(not_(literalId));
+        if(itOpposite != map.end()){
+            const Literal* const & l = itOpposite->second;
+            const Literal* nl = !(*l);
+            map[literalId] = nl;
+            return map[literalId];
         }
-        return it->second;
+        
+        if(literalId == CONSTANTS::BOTTOM || literalId == CONSTANTS::TOP) name = literalId == CONSTANTS::BOTTOM ? "F" : "T";
+        else name = createLiteralString(literalId);
+        const Literal* newLiteral = new Literal(literalId, name);
+        map[literalId] = newLiteral;
+        return map[literalId];
     }
 
     inline void addLiteral(const Literal* literal)noexcept override{
@@ -634,47 +584,10 @@ struct MapLiteralId2Literal: public MapLiteralId2LiteralInterface{
 
     virtual ~MapLiteralId2Literal(){
         for(auto&[key, value] : map) if(value != nullptr) delete value;
-        for(auto&[key, value] : literalsNotInMap) if(value != nullptr) delete value;
     }
 };
 
-std::ostream& operator<<(std::ostream& out, const MapLiteralId2Literal map);
-
-// struct MapLiteralId2Literal: public PerfectNHash<int32_t, const Literal*>{
-
-//     MapLiteralId2Literal(const size_t& N) noexcept: PerfectNHash<int32_t, const Literal*>(N, nullptr){}
-
-//     const Literal* const& literal(const int32_t& literalId){
-//         const size_t key = this->hasher(literalId);
-//         return this->getUsingHash(key);
-//     }
-
-//     inline const Literal* const& getUsingHash(const size_t& key) const override{ 
-//         assert(key < this->N); 
-//         const int32_t literalId = key < originalSize ? key : originalSize - key;
-//         const Literal* &literal = (*this->_data)[key];
-//         if(literal == nullptr){
-//             std::string name = createLiteralString(literalId);
-//             if(literalId == CONSTANTS::BOTTOM || literalId == CONSTANTS::TOP)
-//                 name = literalId == CONSTANTS::BOTTOM ? "F" : "T";
-//             if(literalsNotInMap.find(literalId) == literalsNotInMap.end()) 
-//                 literalsNotInMap[literalId] = new Literal(literalId, name);
-//             return literalsNotInMap[literalId];
-//         }
-//         return literal;
-//     }
-
-//     inline virtual void addLiteral(const Literal* literal)noexcept{this->set(literal->id, literal);}
-//     inline virtual void addFreshLiteral(const Literal* literal)noexcept{literalsNotInMap.emplace(literal->id, literal);}
-
-//     ~MapLiteralId2Literal(){
-//         for(auto& value : this->data()) if(value != nullptr) delete value;
-//         for(auto&[key, value] : literalsNotInMap) if(value != nullptr) delete value;
-//     }
-
-// private:
-//     mutable std::unordered_map<int32_t, const Literal*> literalsNotInMap;
-// };
+std::ostream& operator<<(std::ostream& out, const MapLiteralId2Literal& map);
 
 template<typename K, typename V, typename D, typename VMapper = V, typename DMapper = D>
 struct SymmetricFunction: public Hash<K, V, D, HasherHandlingNegatives, VMapper, DMapper>{
@@ -683,8 +596,8 @@ protected:
 
     virtual inline void setUsingHash(const size_t& key, const V& value) noexcept override { 
         assert(key < this->N * 2);
-        if(key < this->N) (*this->_data)[key] = value; 
-        else (*this->_data)[key - this->N] = !value; 
+        if(key < this->N) this->_data[key] = value; 
+        else this->_data[key - this->N] = !value; 
     }
 
 public:
@@ -696,7 +609,7 @@ public:
     virtual inline const V getSymmetricValue(const K& key) const noexcept { 
         size_t keyH = this->hasher(key);
         assert(keyH < this->N * 2);
-        return keyH < this->N ? (*this->_data)[keyH] : !(*this->_data)[keyH - this->N]; 
+        return keyH < this->N ? this->getUsingHash(keyH) : !this->getUsingHash(keyH - this->N); 
     }
 };
 
@@ -712,7 +625,7 @@ struct Interpretation: public SymmetricFunction<int32_t, TruthValue, D, const Li
     
     inline bool isTrue(const int32_t& literalId) const noexcept{
         int32_t id = std::abs(literalId);
-        TruthValue &value = (*this->_data)[id];
+        const TruthValue& value = this->getUsingHash(id);
         if(value.isUndef()) return false;
         if(literalId < 0) return value.isFalse();
         return value.isTrue();
@@ -722,25 +635,23 @@ struct Interpretation: public SymmetricFunction<int32_t, TruthValue, D, const Li
 
     inline bool isUndef(const int32_t& literalId) const noexcept{
         int32_t id = std::abs(literalId);
-        TruthValue &value = (*this->_data)[id];
-        if(value.isUndef()) return true;
-        return false;
+        return this->getUsingHash(id).isUndef();
     }
 
     void set(const int32_t& literalId,  const char value){
         // ! Attention: char has to be a value in intervall [0,2]
         int32_t id = std::abs(literalId);
-        D* d = this->_data;
+        D& d = this->_data;
         if(value == TruthValue::U){
-            (*d)[id].Undefined(); 
+            d[id].Undefined(); 
             return;
         }
         if(literalId < 0){
-            if(value == TruthValue::T) (*d)[id].False();
-            else (*d)[id].True();
+            if(value == TruthValue::T) d[id].False();
+            else d[id].True();
         }else{
-            if(value == TruthValue::T) (*d)[id].True();
-            else (*d)[id].False();
+            if(value == TruthValue::T) d[id].True();
+            else d[id].False();
         }
     }
 
@@ -754,23 +665,12 @@ struct Interpretation: public SymmetricFunction<int32_t, TruthValue, D, const Li
 };
 
 struct PerfectInterpretation: public Interpretation<std::vector<TruthValue>>{
-
     PerfectInterpretation(size_t N, TruthValue defaultValue = TruthValue())noexcept:  
-        Interpretation<std::vector<TruthValue>>(N, std::move(defaultValue)) {
-        this->_data = new std::vector<TruthValue>(N,defaultValue);
-    }
-
+        Interpretation<std::vector<TruthValue>>(N, std::move(defaultValue)) {}
 };
 
 struct UMInterpretation: public Interpretation<std::unordered_map<size_t,TruthValue>>{
-
-    UMInterpretation(size_t N, TruthValue defaultValue = TruthValue())noexcept:  
-        Interpretation<std::unordered_map<size_t,TruthValue>>(N, std::move(defaultValue)) {
-        this->_data = new std::unordered_map<size_t,TruthValue>();
-        if(defaultValue != TruthValue::Default)
-            for(size_t atomId = 1; atomId < this->size(); ++atomId) (*this->_data)[atomId] = defaultValue;
-    }
-
+    UMInterpretation(size_t N, TruthValue defaultValue = TruthValue())noexcept:  Interpretation<std::unordered_map<size_t,TruthValue>>(N, std::move(defaultValue)) {}
 };
 
 
@@ -782,7 +682,10 @@ struct Set: public Hash<V, int, D>{
     inline bool contains (const V& elem) const {  return this->hasher(elem) >= this->N ? false : this->at(elem) == count; }
     inline void add(const V& elem){ this->set(elem, count); }
     inline void remove(const V& elem){  this->set(elem, count-1); }
-    inline void clear()noexcept{ ++count; }
+    inline void clear()noexcept{ 
+        if constexpr (Hash<V, int, D>::isVector) ++count;
+        else this->_data.clear();
+    }
 
 private:
     int count;
@@ -791,17 +694,12 @@ private:
 
 template<typename V>
 struct PerfectSet: public Set<V, std::vector<int>>{
-    PerfectSet(const size_t& N): Set<V, std::vector<int>>(N){
-        this->_data = new std::vector<int>(this->N, this->defaultValue);
-    }
+    PerfectSet(const size_t& N): Set<V, std::vector<int>>(N){}
 };
 
 template<typename V>
-struct UMSet: public Set<V, std::vector<int>>{
-    UMSet(const size_t& N): Set<V, std::vector<int>>(N){
-        this->_data = new std::unordered_map<size_t, int>();
-        for(size_t i = 1; i < this->size(); ++i) (*this->_data)[i] = this->defaultValue;
-    }
+struct UMSet: public Set<V, std::unordered_map<size_t,int>>{
+    UMSet(const size_t& N): Set<V, std::unordered_map<size_t,int>>(N){}
 };
 
 template<typename V, typename D, typename VMapper = V>
@@ -812,7 +710,10 @@ struct NSet: public NHash<V, int, D>{
     inline bool contains (const V& elem) const {   return elem >= ((int)this->originalSize) || elem <= -((int)this->originalSize) ? false : this->at(elem) == count; }
     inline void add(const V& elem){ this->set(elem, count); }
     inline void remove(const V& elem){  this->set(elem, count-1); }
-    inline void clear()noexcept{ ++count; }
+    inline void clear()noexcept{ 
+        if constexpr (NHash<V, int, D>::isVector) ++count;
+        else this->_data.clear();
+    }
 
     std::string toStringSet(MapLiteralId2Literal* mapLiteralId2Literal = nullptr) const noexcept;
 private:
@@ -822,17 +723,12 @@ private:
 
 template<typename V>
 struct PerfectNSet: public NSet<V, std::vector<int>>{
-    PerfectNSet(const size_t& N): NSet<V, std::vector<int>>(N){
-        this->_data = new std::vector<int>(this->N, this->defaultValue);
-    }
+    PerfectNSet(const size_t& N): NSet<V, std::vector<int>>(N){}
 };
 
 template<typename V>
-struct UMNSet: public NSet<V, std::vector<int>>{
-    UMNSet(const size_t& N): NSet<V, std::vector<int>>(N){
-        this->_data = new std::unordered_map<size_t, int>();
-        for(size_t i = 1; i < this->size(); ++i) (*this->_data)[i] = this->defaultValue;
-    }
+struct UMNSet: public NSet<V, std::unordered_map<size_t,int>>{
+    UMNSet(const size_t& N): NSet<V, std::unordered_map<size_t,int>>(N){}
 };
 
 template<typename V, typename Checker, typename Indexer>
@@ -914,7 +810,7 @@ public:
     void sort(bool (*key)(V, V) = nullptr)noexcept override;
     template<typename Compare>
     void sort(Compare key)noexcept;
-    inline void clear()noexcept override{ this->data.clear(); checker.clear(); }
+    inline void clear()noexcept override{ this->data.clear(); checker.clear(); indexer.clear(); }
     void set(const size_t& i, const V& elem)noexcept override;
     void reverse()noexcept override;
     void resize(size_t k) noexcept override;
