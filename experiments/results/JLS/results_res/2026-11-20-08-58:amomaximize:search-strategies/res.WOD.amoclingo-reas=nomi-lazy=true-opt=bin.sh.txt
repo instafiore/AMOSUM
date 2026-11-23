@@ -1,0 +1,103 @@
+results/WOD/001-wod-u182-t110-s10-cp0_7.asp.out	unk	unk	complete	30	19.549	18.850	17.900	0.950	478.4	Optimization	18057
+results/WOD/002-wod-u126-t68-s10-cp0_2.asp.out	unk	unk	complete	30	97.112	91.920	87.660	4.260	2061.2	Optimization	11643
+results/WOD/003-wod-u188-t139-s10-cp0_7.asp.out	unk	unk	complete	30	15.659	14.980	14.110	0.870	359.5	Optimization	18700
+results/WOD/004-wod-u176-t162-s10-cp0_5.asp.out	unk	unk	outof memory	137	235.769	211.670	200.030	11.640	8231.3	Decision	0
+results/WOD/005-wod-u431-t439-s10-cp0_2.asp.out	unk	unk	outof memory	137	201.352	188.160	174.930	13.230	8204.3	Decision	0
+results/WOD/006-wod-u313-t65-s10-cp0_7.asp.out	unk	unk	complete	30	12.799	12.100	11.030	1.070	297.3	Optimization	30738
+results/WOD/007-wod-u70-t49-s10-cp0_2.asp.out	unk	unk	complete	30	1.365	1.090	1.000	0.090	61.2	Optimization	6334
+results/WOD/008-wod-u366-t406-s10-cp0_7.asp.out	unk	unk	outof memory	137	550.738	531.910	512.880	19.030	8216.1	Decision	0
+results/WOD/009-wod-u152-t129-s10-cp0_5.asp.out	unk	unk	outof memory	137	141.212	129.850	122.250	7.600	8210.2	Decision	0
+results/WOD/010-wod-u211-t167-s10-cp0_5.asp.out	unk	unk	complete	30	9.644	9.030	8.410	0.620	349.1	Optimization	20950
+results/WOD/011-wod-u239-t78-s10-cp0_2.asp.out	unk	unk	complete	30	3.463	3.150	3.000	0.150	188.5	Optimization	22424
+results/WOD/012-wod-u137-t43-s10-cp0_7.asp.out	unk	unk	complete	30	2.405	2.120	2.010	0.110	124.1	Optimization	13328
+results/WOD/013-wod-u264-t295-s10-cp0_7.asp.out	unk	unk	outof memory	137	180.274	170.250	160.540	9.710	8248.4	Decision	0
+results/WOD/014-wod-u443-t371-s10-cp0_7.asp.out	unk	unk	complete	30	377.684	376.130	362.100	14.030	1868.8	Optimization	44264
+results/WOD/015-wod-u349-t239-s10-cp0_2.asp.out	unk	unk	outof memory	137	140.450	128.850	120.970	7.880	8199.1	Decision	0
+results/WOD/016-wod-u270-t169-s10-cp0_2.asp.out	unk	unk	complete	30	5.047	4.510	4.320	0.190	211.4	Optimization	26304
+results/WOD/017-wod-u179-t174-s10-cp0_2.asp.out	unk	unk	complete	30	2.952	2.660	2.530	0.130	153.8	Optimization	17431
+results/WOD/018-wod-u356-t171-s10-cp0_5.asp.out	unk	unk	complete	30	41.515	40.160	37.100	3.060	1171.8	Optimization	35377
+results/WOD/019-wod-u359-t278-s10-cp0_7.asp.out	unk	unk	outof memory	137	231.671	219.950	207.970	11.980	8236.8	Decision	0
+results/WOD/020-wod-u415-t365-s10-cp0_7.asp.out	unk	unk	complete	30	334.158	332.360	316.710	15.650	1731.0	Optimization	41466
+results/WOD/021-wod-u221-t92-s10-cp0_2.asp.out	unk	unk	complete	30	140.987	134.490	128.520	5.970	5564.1	Optimization	21121
+results/WOD/022-wod-u55-t14-s10-cp0_5.asp.out	unk	unk	complete	30	5.494	5.210	5.010	0.200	299.7	Optimization	4658
+results/WOD/023-wod-u88-t41-s10-cp0_2.asp.out	unk	unk	complete	30	6.708	6.280	5.990	0.290	343.8	Optimization	7912
+results/WOD/024-wod-u419-t110-s10-cp0_7.asp.out	unk	unk	complete	30	169.681	162.650	155.950	6.700	3895.8	Optimization	41519
+results/WOD/025-wod-u180-t200-s10-cp0_7.asp.out	unk	unk	outof memory	137	193.599	180.380	169.220	11.160	8195.3	Decision	0
+results/WOD/026-wod-u497-t176-s10-cp0_7.asp.out	unk	unk	outof memory	137	371.702	345.100	331.130	13.970	8226.2	Decision	0
+results/WOD/027-wod-u126-t85-s10-cp0_7.asp.out	unk	unk	outof memory	137	185.711	170.220	161.370	8.850	8206.9	Decision	0
+results/WOD/028-wod-u373-t318-s10-cp0_2.asp.out	unk	unk	complete	30	24.869	23.730	21.640	2.090	455.8	Optimization	36858
+results/WOD/029-wod-u185-t221-s10-cp0_2.asp.out	unk	unk	outof memory	137	181.146	167.390	157.870	9.520	8236.9	Decision	0
+results/WOD/030-wod-u205-t74-s10-cp0_5.asp.out	unk	unk	complete	30	8.945	8.340	8.070	0.270	253.2	Optimization	20049
+results/WOD/031-wod-u313-t132-s10-cp0_7.asp.out	unk	unk	outof memory	137	208.733	195.620	184.020	11.600	8229.4	Decision	0
+results/WOD/032-wod-u345-t348-s10-cp0_7.asp.out	unk	unk	outof memory	137	509.620	487.210	463.400	23.810	8234.8	Decision	0
+results/WOD/033-wod-u202-t198-s10-cp0_7.asp.out	unk	unk	outof memory	137	198.512	184.860	174.790	10.070	8204.2	Decision	0
+results/WOD/034-wod-u255-t253-s10-cp0_7.asp.out	unk	unk	complete	30	48.020	46.830	41.600	5.230	789.0	Optimization	25453
+results/WOD/035-wod-u423-t483-s10-cp0_2.asp.out	unk	unk	complete	30	33.275	32.120	30.850	1.270	743.2	Optimization	42075
+results/WOD/036-wod-u308-t175-s10-cp0_5.asp.out	unk	unk	complete	30	74.415	72.130	68.180	3.950	2646.1	Optimization	30589
+results/WOD/037-wod-u457-t530-s10-cp0_5.asp.out	unk	unk	outof memory	137	491.683	474.180	453.800	20.380	8216.8	Decision	0
+results/WOD/038-wod-u200-t165-s10-cp0_7.asp.out	unk	unk	complete	30	13.685	13.030	11.850	1.180	427.6	Optimization	19906
+results/WOD/039-wod-u157-t57-s10-cp0_5.asp.out	unk	unk	complete	30	2.545	2.270	2.140	0.130	127.6	Optimization	15262
+results/WOD/040-wod-u295-t99-s10-cp0_5.asp.out	unk	unk	complete	30	13.671	13.060	12.090	0.970	300.3	Optimization	29034
+results/WOD/041-wod-u218-t157-s10-cp0_7.asp.out	unk	unk	outof memory	137	197.422	176.180	166.160	10.020	8223.1	Decision	0
+results/WOD/042-wod-u112-t76-s10-cp0_5.asp.out	unk	unk	complete	30	2.487	2.210	2.110	0.100	124.7	Optimization	10936
+results/WOD/043-wod-u323-t252-s10-cp0_7.asp.out	unk	unk	outof memory	137	194.888	184.070	173.990	10.080	8239.7	Decision	0
+results/WOD/044-wod-u144-t113-s10-cp0_7.asp.out	unk	unk	complete	30	10.027	9.430	8.560	0.870	240.5	Optimization	14300
+results/WOD/045-wod-u252-t216-s10-cp0_2.asp.out	unk	unk	outof memory	137	180.513	167.050	156.980	10.070	8238.6	Decision	0
+results/WOD/046-wod-u420-t192-s10-cp0_2.asp.out	unk	unk	complete	30	18.843	18.240	17.200	1.040	479.0	Optimization	41018
+results/WOD/047-wod-u163-t42-s10-cp0_2.asp.out	unk	unk	complete	30	0.988	0.820	0.770	0.050	67.1	Optimization	14454
+results/WOD/048-wod-u253-t183-s10-cp0_5.asp.out	unk	unk	complete	30	18.927	18.290	16.440	1.850	535.8	Optimization	25151
+results/WOD/049-wod-u492-t525-s10-cp0_2.asp.out	unk	unk	outof memory	137	288.847	268.350	252.940	15.410	8192.6	Decision	0
+results/WOD/050-wod-u88-t73-s10-cp0_7.asp.out	unk	unk	complete	30	4.238	3.970	3.830	0.140	126.5	Optimization	8659
+results/WOD/051-wod-u334-t226-s10-cp0_2.asp.out	unk	unk	outof memory	137	225.877	204.700	193.330	11.370	8226.9	Decision	0
+results/WOD/052-wod-u247-t234-s10-cp0_7.asp.out	unk	unk	outof memory	137	291.247	269.300	254.560	14.740	8200.9	Decision	0
+results/WOD/053-wod-u230-t270-s10-cp0_5.asp.out	unk	unk	outof memory	137	141.043	131.340	123.270	8.070	8216.8	Decision	0
+results/WOD/054-wod-u110-t101-s10-cp0_7.asp.out	unk	unk	outof memory	137	182.282	162.590	153.400	9.190	8192.3	Decision	0
+results/WOD/055-wod-u450-t97-s10-cp0_7.asp.out	unk	unk	outof memory	137	223.927	202.700	193.080	9.620	8224.9	Decision	0
+results/WOD/056-wod-u378-t447-s10-cp0_7.asp.out	unk	unk	outof memory	137	467.434	450.310	429.070	21.240	8195.4	Decision	0
+results/WOD/057-wod-u213-t166-s10-cp0_2.asp.out	unk	unk	complete	30	4.495	4.200	4.030	0.170	170.7	Optimization	20677
+results/WOD/058-wod-u497-t465-s10-cp0_7.asp.out	unk	unk	outof memory	137	674.545	659.490	640.360	19.130	8211.8	Decision	0
+results/WOD/059-wod-u273-t91-s10-cp0_7.asp.out	unk	unk	complete	30	19.403	18.770	17.160	1.610	755.5	Optimization	27013
+results/WOD/060-wod-u131-t34-s10-cp0_7.asp.out	unk	unk	complete	30	6.835	6.230	5.970	0.260	212.7	Optimization	12679
+results/WOD/061-wod-u207-t220-s10-cp0_7.asp.out	unk	unk	complete	30	40.671	39.410	36.290	3.120	1332.7	Optimization	20631
+results/WOD/062-wod-u203-t131-s10-cp0_7.asp.out	unk	unk	complete	30	22.666	22.050	20.440	1.610	470.4	Optimization	20166
+results/WOD/063-wod-u204-t132-s10-cp0_7.asp.out	unk	unk	outof memory	137	238.955	217.450	206.070	11.380	8240.9	Decision	0
+results/WOD/064-wod-u238-t112-s10-cp0_5.asp.out	unk	unk	complete	30	7.859	6.720	5.950	0.770	273.1	Optimization	23436
+results/WOD/065-wod-u227-t269-s10-cp0_7.asp.out	unk	unk	outof memory	137	165.165	148.510	138.540	9.970	8223.5	Decision	0
+results/WOD/066-wod-u330-t187-s10-cp0_7.asp.out	unk	unk	complete	30	38.717	37.550	33.540	4.010	770.7	Optimization	32851
+results/WOD/067-wod-u492-t468-s10-cp0_2.asp.out	unk	unk	outof memory	137	169.434	152.780	142.570	10.210	8237.5	Decision	0
+results/WOD/068-wod-u221-t165-s10-cp0_7.asp.out	unk	unk	complete	30	16.166	15.550	14.150	1.400	475.2	Optimization	22012
+results/WOD/069-wod-u100-t98-s10-cp0_7.asp.out	unk	unk	outof memory	137	136.408	121.220	113.620	7.600	8206.5	Decision	0
+results/WOD/070-wod-u195-t85-s10-cp0_5.asp.out	unk	unk	complete	30	8.592	7.960	7.550	0.410	296.5	Optimization	19107
+results/WOD/071-wod-u209-t206-s10-cp0_5.asp.out	unk	unk	outof memory	137	175.941	161.120	152.770	8.350	8234.2	Decision	0
+results/WOD/072-wod-u262-t93-s10-cp0_5.asp.out	unk	unk	outof memory	137	157.067	127.390	119.350	8.040	8258.1	Decision	0
+results/WOD/073-wod-u463-t445-s10-cp0_2.asp.out	unk	unk	complete	30	40.961	39.740	35.990	3.750	842.7	Optimization	46010
+results/WOD/074-wod-u138-t49-s10-cp0_5.asp.out	unk	unk	complete	30	172.873	162.560	154.960	7.600	6303.6	Optimization	13307
+results/WOD/075-wod-u417-t286-s10-cp0_5.asp.out	unk	unk	complete	30	105.191	103.950	97.290	6.660	1050.5	Optimization	41569
+results/WOD/076-wod-u76-t86-s10-cp0_5.asp.out	unk	unk	complete	30	184.794	173.760	165.680	8.080	5420.9	Optimization	7443
+results/WOD/077-wod-u223-t165-s10-cp0_5.asp.out	unk	unk	outof memory	137	189.279	170.520	160.450	10.070	8238.8	Decision	0
+results/WOD/078-wod-u79-t79-s10-cp0_2.asp.out	unk	unk	complete	30	25.438	23.950	22.720	1.230	932.2	Optimization	7427
+results/WOD/079-wod-u372-t363-s10-cp0_7.asp.out	unk	unk	outof memory	137	327.474	318.410	298.200	20.210	8267.3	Decision	0
+results/WOD/080-wod-u261-t55-s10-cp0_5.asp.out	unk	unk	outof memory	137	206.484	184.420	173.990	10.430	8248.6	Decision	0
+results/WOD/081-wod-u454-t136-s10-cp0_7.asp.out	unk	unk	outof memory	137	205.038	184.810	173.650	11.160	8227.8	Decision	0
+results/WOD/082-wod-u411-t102-s10-cp0_7.asp.out	unk	unk	outof memory	137	168.945	150.370	140.100	10.270	8197.2	Decision	0
+results/WOD/083-wod-u374-t183-s10-cp0_2.asp.out	unk	unk	outof memory	137	237.280	213.850	199.870	13.980	8213.3	Decision	0
+results/WOD/084-wod-u61-t14-s10-cp0_5.asp.out	unk	unk	complete	30	3.291	2.970	2.840	0.130	185.7	Optimization	5322
+results/WOD/085-wod-u281-t215-s10-cp0_5.asp.out	unk	unk	outof memory	137	189.488	170.120	159.690	10.430	8262.2	Decision	0
+results/WOD/086-wod-u150-t75-s10-cp0_5.asp.out	unk	unk	complete	30	6.807	6.210	5.980	0.230	246.3	Optimization	14662
+results/WOD/087-wod-u163-t94-s10-cp0_2.asp.out	unk	unk	complete	30	107.032	101.830	97.230	4.600	4317.9	Optimization	15591
+results/WOD/088-wod-u331-t301-s10-cp0_5.asp.out	unk	unk	outof memory	137	207.145	189.210	174.950	14.260	8214.7	Decision	0
+results/WOD/089-wod-u375-t131-s10-cp0_2.asp.out	unk	unk	outof memory	137	140.090	124.300	116.050	8.250	8264.9	Decision	0
+results/WOD/090-wod-u457-t450-s10-cp0_5.asp.out	unk	unk	complete	30	308.298	306.830	300.740	6.090	1712.5	Optimization	45645
+results/WOD/091-wod-u314-t193-s10-cp0_2.asp.out	unk	unk	complete	30	22.752	22.150	20.890	1.260	312.6	Optimization	30741
+results/WOD/092-wod-u55-t46-s10-cp0_5.asp.out	unk	unk	complete	30	24.968	23.360	22.290	1.070	955.6	Optimization	5282
+results/WOD/093-wod-u213-t200-s10-cp0_5.asp.out	unk	unk	outof memory	137	256.837	232.220	217.390	14.830	8226.8	Decision	0
+results/WOD/094-wod-u153-t166-s10-cp0_7.asp.out	unk	unk	outof memory	137	164.193	146.000	136.270	9.730	8230.7	Decision	0
+results/WOD/095-wod-u98-t90-s10-cp0_5.asp.out	unk	unk	complete	30	5.099	4.770	4.590	0.180	224.8	Optimization	9666
+results/WOD/096-wod-u369-t355-s10-cp0_2.asp.out	unk	unk	outof memory	137	147.845	131.620	122.260	9.360	8196.1	Decision	0
+results/WOD/097-wod-u372-t341-s10-cp0_2.asp.out	unk	unk	complete	30	16.757	16.120	15.260	0.860	515.8	Optimization	36884
+results/WOD/098-wod-u153-t89-s10-cp0_5.asp.out	unk	unk	complete	30	3.492	3.200	3.040	0.160	165.2	Optimization	15033
+results/WOD/099-wod-u176-t202-s10-cp0_7.asp.out	unk	unk	outof memory	137	139.181	122.710	114.120	8.590	8224.5	Decision	0
+results/WOD/100-wod-u315-t327-s10-cp0_5.asp.out	unk	unk	complete	30	58.522	57.350	54.240	3.110	895.8	Optimization	31444
+results/WOD/encoding-amosum-amo.asp.out	unk	unk	complete	0	0.139	0.000	0.000	0.000	0.0	Decision	0
+results/WOD/encoding-checker.asp.out	unk	unk	complete	0	0.138	0.000	0.000	0.000	0.0	Decision	0
+results/WOD/encoding-plain-amo.asp.out	unk	unk	complete	0	0.140	0.000	0.000	0.000	0.0	Decision	0

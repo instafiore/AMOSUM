@@ -234,7 +234,8 @@ run_benchmark() {
     done
 }
 
-benchs="GroupAssignmentOpt|CombinatorialAuctionsAmomaximize|KnapsackAmomaximize|TSP|WeightedGraphColouringAmomaximize|WOD"
+# benchs="GroupAssignmentOpt|CombinatorialAuctionsOpt|KnapsackOpt|TspOpt|GraphColouringOpt|WOD"
+benchs="CombinatorialAuctionsOpt|KnapsackOpt|TspOpt|GraphColouringOpt"
 # the search strategies with the best amomaximize configuration (nomin, lazy): sat-unsat and unsat-sat with
 # progression n, n^2 (nsq), 2^n (exp), and binary search
 solvers='/amoclingo-reas=nomi-lazy=true-(prog=(n|nsq|exp)-opt=(su|us)|opt=bin)\.sh$'
