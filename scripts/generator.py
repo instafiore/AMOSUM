@@ -97,9 +97,12 @@ CONFIGS = [
 # AMOMAXIMIZE: the search strategies with the best configuration above (nomin, lazy: the most wins and the best
 # mean score over the 6 optimization benchmarks); binary search does not use --progression
 BEST = dict(reason="nomin", lazy="true")
+BASE = dict(reason="ijcai", lazy="false")
+
 for strategy in ["sat-unsat", "unsat-sat"]:
     for progression in ["n", "n^2", "2^n"]:
         CONFIGS.append(dict(**BEST, progression=progression, opt_strategy=strategy))
+        CONFIGS.append(dict(**BASE, progression=progression, opt_strategy=strategy))
         
 CONFIGS.append(dict(**BEST, opt_strategy="binary"))
 
