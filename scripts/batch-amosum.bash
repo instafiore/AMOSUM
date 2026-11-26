@@ -238,7 +238,7 @@ run_benchmark() {
 benchs="CombinatorialAuctionsOpt|KnapsackOpt|TspOpt|GraphColouringOpt"
 # the search strategies with the best amomaximize configuration (nomin, lazy): sat-unsat and unsat-sat with
 # progression n, n^2 (nsq), 2^n (exp), and binary search
-solvers='/amoclingo-reas=ijca-lazy=false-(prog=(n|nsq|exp)-opt=(su|us)|opt=bin)\.sh$'
+solvers='/amoclingo-reas=ijca-lazy=fals-(prog=(n|nsq|exp)-opt=(su|us)|opt=bin)\.sh$'
 # solvers='/clingo-amo\.bash$'          # clingo only
 # run_benchmark "$benchs" "Lite" "$solvers"
 run_benchmark "$benchs" "Normal" "$solvers"
